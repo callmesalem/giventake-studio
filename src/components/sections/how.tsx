@@ -3,19 +3,19 @@ const steps = [
     mark: "I",
     label: "Tell",
     title: "Tell us your idea",
-    body: "A 30-minute strategy call. We map the problem, the users, and what to build first.",
+    body: "A 30-minute call. We ask about the business, the users, and what's actually broken. You leave with a clear next step, not a sales pitch.",
   },
   {
     mark: "II",
     label: "Make",
-    title: "We design & build",
-    body: "Weekly demos, tight feedback loops. You watch it come together, with no black box.",
+    title: "We design and build",
+    body: "You see progress every week. Real screens, real data, real code. If something isn't landing, we catch it early instead of at the end.",
   },
   {
     mark: "III",
     label: "Ship",
-    title: "Launch & grow",
-    body: "We ship it, monitor it, and keep improving. Iterate as fast as your business moves.",
+    title: "Launch and iterate",
+    body: "We push it live, watch how it's used, and keep improving. Most projects keep shipping after launch, on a monthly retainer.",
   },
 ];
 

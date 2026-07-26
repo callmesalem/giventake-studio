@@ -49,14 +49,14 @@ export function ContactCTA() {
             <span className="italic">something great.</span>
           </h2>
           <p className="mt-8 max-w-md font-display text-xl italic leading-snug text-paper/75">
-            Tell us about your project. We reply within one business day with next steps.
+            Send us a few lines about what you're working on. You'll hear back within one business day, usually the same afternoon.
           </p>
 
           <ul className="mt-10 space-y-3 border-t border-paper/20 pt-6">
             {[
-              ["A", "Free 30-minute strategy call"],
-              ["B", "Clear scope, timeline, and price before we start"],
-              ["C", "Weekly demos once we're building"],
+              ["A", "A 30-minute strategy call, free"],
+              ["B", "A fixed scope, timeline, and price in writing"],
+              ["C", "Weekly demos once the build starts"],
             ].map(([m, i]) => (
               <li key={m} className="flex items-baseline gap-4">
                 <span className="stamp h-6 w-6 text-[11px] border-paper text-paper">{m}</span>
@@ -76,9 +76,9 @@ export function ContactCTA() {
               {submitted ? (
                 <div className="flex flex-col items-start py-10">
                   <span className="stamp h-10 w-10 text-lg border-copper text-copper">✓</span>
-                  <h3 className="mt-6 font-display text-3xl italic text-ink">Received, thank you.</h3>
+                  <h3 className="mt-6 font-display text-3xl italic text-ink">Got it, thanks.</h3>
                   <p className="mt-2 max-w-sm text-[15px] text-ink/70">
-                    We'll be in touch within one business day.
+                    We'll read it today and get back to you within one business day.
                   </p>
                 </div>
               ) : (

@@ -6,9 +6,9 @@ const tiers = [
     tagline: "Landing pages and simple builds.",
     features: [
       "Marketing site or landing page",
-      "CMS and basic integrations",
-      "Launch in 2 to 3 weeks",
-      "30 days of post-launch support",
+      "CMS your team can actually use",
+      "Live in two to three weeks",
+      "30 days of tweaks after launch",
     ],
     cta: "Start a project",
   },
@@ -16,12 +16,12 @@ const tiers = [
     mark: "II",
     name: "Growth",
     price: "Custom quote",
-    tagline: "Custom systems, apps, and automations.",
+    tagline: "Custom apps, automations, and internal tools.",
     features: [
-      "Web app or internal tool",
-      "AI and automation integrations",
-      "Weekly demos, clear milestones",
-      "60 days of post-launch support",
+      "Web app or internal tool built to spec",
+      "AI and automation where it earns its keep",
+      "Weekly demos and a shared roadmap",
+      "60 days of support after launch",
     ],
     cta: "Request a quote",
     featured: true,
@@ -30,12 +30,12 @@ const tiers = [
     mark: "III",
     name: "Dedicated",
     price: "Monthly retainer",
-    tagline: "An ongoing team, without hiring.",
+    tagline: "An ongoing team, without hiring one.",
     features: [
-      "Senior team by the month",
-      "Continuous shipping",
-      "Direct Slack access, weekly reviews",
-      "Pause or cancel any time",
+      "Senior team billed by the month",
+      "Continuous shipping against your roadmap",
+      "Shared Slack, weekly reviews",
+      "Pause or cancel with 30 days' notice",
     ],
     cta: "Book consultation",
   },
@@ -57,7 +57,7 @@ export function Pricing() {
             </h2>
           </div>
           <p className="col-span-12 max-w-md font-display text-xl italic leading-snug text-ink/70 lg:col-span-4 lg:self-end">
-            Every project is scoped after a call. No fixed packages, just clear numbers before we start.
+            Every project gets scoped on a call. You'll have a fixed number and a timeline in writing before we start.
           </p>
         </div>
 

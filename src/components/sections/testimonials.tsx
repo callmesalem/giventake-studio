@@ -1,16 +1,16 @@
 const testimonials = [
   {
-    quote: "We went from a Notion doc to a working product in six weeks. It's the closest thing to hiring a CTO without hiring a CTO.",
+    quote: "They cut our client booking process from three days of back-and-forth to same-day. I stopped hearing about scheduling in our Monday meetings, which is the highest compliment I can give a piece of software.",
     name: "Alex Rivera",
     role: "Founder, Northlane",
   },
   {
-    quote: "They replaced three tools and a part-time contractor. Our team actually enjoys using what they built for us.",
+    quote: "We were paying for four SaaS tools and a part-time developer to keep them stitched together. GivenTake replaced all of it with one system in about two months. Our finance team runs month-end in a day now.",
     name: "Priya Menon",
     role: "COO, Meridian Logistics",
   },
   {
-    quote: "Every week there was a demo. Every week it got better. I never had to translate my ideas into engineer.",
+    quote: "I sent them a messy Google Doc. Six weeks later my clients were paying invoices through a portal with our logo on it. They also called out two things in my scope that would've wasted a month.",
     name: "James Whitaker",
     role: "Owner, Harbor & Co.",
   },

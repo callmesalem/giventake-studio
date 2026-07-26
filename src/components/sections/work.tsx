@@ -1,10 +1,10 @@
 const projects = [
-  { title: "Meridian Ops", kind: "Internal Tools", body: "Operations dashboard replacing six spreadsheets for a logistics team.", tech: ["React", "Postgres", "Stripe"], swatch: "bg-indigo" },
-  { title: "Northlane AI", kind: "AI Application", body: "AI intake assistant that qualifies leads and books meetings automatically.", tech: ["Next.js", "OpenAI", "Twilio"], swatch: "bg-copper" },
-  { title: "Harbor & Co.", kind: "Website", body: "Marketing site and CMS for a boutique consultancy, in the founders' voice.", tech: ["Astro", "Sanity", "Vercel"], swatch: "bg-ochre" },
-  { title: "Cedar Portal", kind: "Client Portal", body: "White-labeled client portal with document sharing, billing, and approvals.", tech: ["React", "Postgres", "Auth"], swatch: "bg-ink" },
-  { title: "Fieldwork", kind: "Automation", body: "CRM, quoting, and invoicing tied together with zero manual data entry.", tech: ["n8n", "Airtable", "Stripe"], swatch: "bg-copper-deep" },
-  { title: "Studio Ledger", kind: "MVP", body: "Booking and payments MVP for a growing studio, launched in six weeks.", tech: ["Next.js", "Postgres", "Stripe"], swatch: "bg-indigo" },
+  { title: "Meridian Ops", kind: "Internal Tools", body: "Dispatch and billing dashboard for a 40-truck logistics company. Replaced six shared spreadsheets and a legacy Access database.", tech: ["React", "Postgres", "Stripe"], swatch: "bg-indigo" },
+  { title: "Northlane AI", kind: "AI Application", body: "Inbound lead qualifier that reads emails, scores them, and books meetings on the sales team's calendar. Cut response time from a day to under an hour.", tech: ["Next.js", "OpenAI", "Twilio"], swatch: "bg-copper" },
+  { title: "Harbor & Co.", kind: "Website", body: "Website and CMS rebuild for a design consultancy. Their team publishes case studies themselves now, without touching a Figma export.", tech: ["Astro", "Sanity", "Vercel"], swatch: "bg-ochre" },
+  { title: "Cedar Portal", kind: "Client Portal", body: "Client portal for a boutique accounting firm. Document requests, e-signatures, and billing in one place, branded as theirs.", tech: ["React", "Postgres", "Auth"], swatch: "bg-ink" },
+  { title: "Fieldwork", kind: "Automation", body: "Quoting, invoicing, and CRM stitched together for a contracting business. Field crews stopped re-typing job details three times.", tech: ["n8n", "Airtable", "Stripe"], swatch: "bg-copper-deep" },
+  { title: "Studio Ledger", kind: "MVP", body: "Booking and payments MVP for a photo studio. Launched in six weeks and paid for itself in the first month of bookings.", tech: ["Next.js", "Postgres", "Stripe"], swatch: "bg-indigo" },
 ];
 
 export function Work() {
