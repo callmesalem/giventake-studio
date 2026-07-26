@@ -6,12 +6,12 @@ import {
 } from "@/components/ui/accordion";
 
 const faqs = [
-  { q: "How long does a project take?", a: "Most landing pages ship in 2 to 3 weeks. Custom apps and automations typically run 6 to 12 weeks. We share a firm timeline after the strategy call." },
-  { q: "Can you build from just an idea?", a: "Yes. Most engagements start from a rough idea or a spreadsheet. We turn it into scope, then a working product. You don't need to speak engineer." },
-  { q: "Do I need technical knowledge?", a: "None required. You bring the business context, we bring the technology. Weekly demos keep you in the loop without needing to read code." },
-  { q: "Can you improve existing software?", a: "Yes. We regularly take over half-finished projects, add features, fix performance, and modernize legacy stacks." },
-  { q: "What technologies do you use?", a: "React, Next.js, TypeScript, Postgres, and modern AI tooling. We pick the stack that fits the problem, not the other way around." },
-  { q: "Do you offer ongoing support?", a: "Yes, through monthly retainers. Ship continuously, get bug fixes and iterations, cancel any time." },
+  { q: "How long does a project take?", a: "Depends on what you're building. A landing page is usually two to three weeks. A real web app or internal tool is closer to six to twelve weeks. After our first call I can give you a tighter number for your specific project." },
+  { q: "Can you build from just an idea?", a: "Yeah, that's how most of our projects start. You bring the context of your business and what you're trying to solve. We handle turning it into scope, screens, and code. You don't need a spec doc or wireframes." },
+  { q: "Do I need technical knowledge?", a: "No. Honestly, some of my favorite clients have never opened a code editor. My job is to translate what you know about your business into the software, and to show you progress every week in a way that makes sense." },
+  { q: "Can you improve existing software?", a: "Yes, and we do it often. Sometimes it's picking up a project a previous developer left half-finished. Sometimes it's adding features to something that's working but showing its age. We'll take a look and tell you honestly whether it's worth fixing or worth rebuilding." },
+  { q: "What technologies do you use?", a: "Mostly React, Next.js, and TypeScript on the front end, Postgres on the back end, plus whatever AI or automation tooling makes sense for the problem. We pick the stack based on what you're building, not what's trendy that quarter." },
+  { q: "Do you offer ongoing support?", a: "Yes. Most clients keep us on a monthly retainer after launch, so we can keep shipping features, fix things, and adjust as they learn more from users. You can pause or cancel with 30 days' notice." },
 ];
 
 export function FAQ() {
