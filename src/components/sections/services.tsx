@@ -1,18 +1,18 @@
 const services = [
   { mark: "I", title: "Website Development", give: "Your story", take: "A site that converts",
-    body: "Marketing sites built to be fast, accessible, and edited without calling a developer." },
+    body: "Marketing sites that load fast, rank, and can be edited by someone on your team without opening a support ticket." },
   { mark: "II", title: "Web Applications", give: "Your operation", take: "Software that fits",
-    body: "Custom software shaped to how your business actually works, not another off-the-shelf compromise." },
+    body: "Custom software for the parts of your business that don't fit into Notion, Airtable, or an off-the-shelf SaaS." },
   { mark: "III", title: "AI Integrations", give: "Your data", take: "Practical AI",
-    body: "AI woven into your product and workflows. No hype: chat, generation, extraction, decisions." },
+    body: "The useful parts of AI wired into your product: drafting, extraction, search, and routing. We skip the hype and ship the workflows." },
   { mark: "IV", title: "Business Automation", give: "Manual work", take: "Autopilot",
-    body: "Connect the tools you already pay for. Sales, ops, billing, and reporting on autopilot." },
+    body: "The tools you already pay for, connected. Leads land in your CRM, invoices go out, reports write themselves." },
   { mark: "V", title: "Internal Tools", give: "Spreadsheets", take: "Real dashboards",
-    body: "Dashboards, admin panels, and portals your team will actually use every day." },
+    body: "Dashboards, admin panels, and ops tools your team opens every morning instead of another spreadsheet." },
   { mark: "VI", title: "MVP Development", give: "A rough idea", take: "A shippable v1",
-    body: "A real, working product in front of customers in weeks. Built to grow, not to be thrown away." },
+    body: "A working product in front of real users in six to ten weeks. Built to be extended, not thrown away." },
   { mark: "VII", title: "Ongoing Development", give: "A roadmap", take: "A senior team on tap",
-    body: "A team retained by the month. Ship continuously, without the overhead of a payroll." },
+    body: "A retained team by the month. You get continuous shipping without the overhead of running a payroll." },
 ];
 
 export function Services() {
