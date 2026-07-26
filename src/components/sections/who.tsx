@@ -1,50 +1,71 @@
-import { Store, Lightbulb, TrendingUp } from "lucide-react";
-
 const cards = [
   {
-    icon: Store,
+    mark: "A",
     title: "Small Businesses",
-    body: "Modernize your operations with websites, portals, and automations that replace the patchwork of tools you're paying for today.",
+    body: "Modernize the way you operate. Replace the patchwork of tools you're paying for with one system that fits the way you actually work.",
+    give: "Your workflow",
+    take: "A working system",
   },
   {
-    icon: Lightbulb,
+    mark: "B",
     title: "Founders",
-    body: "You have the idea and the customers. We become the technical co-founder you'd otherwise spend a year searching for.",
+    body: "You have the idea and the customers. We become the technical co-founder you'd otherwise spend a year trying to find.",
+    give: "The idea",
+    take: "A shipped product",
   },
   {
-    icon: TrendingUp,
+    mark: "C",
     title: "Growing Companies",
-    body: "Ship product without a hiring cycle. A senior team that plugs in when you need it and steps back when you don't.",
+    body: "Ship product without a hiring cycle. A senior team that plugs in when you need it, and steps back when you don't.",
+    give: "The roadmap",
+    take: "Continuous shipping",
   },
 ];
 
 export function WhoWeHelp() {
   return (
-    <section id="who" className="border-b border-border/60">
-      <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
-        <div className="mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
-          <div className="max-w-xl">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand">Who we help</p>
-            <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight md:text-4xl">
-              Built for the people running the business.
+    <section id="who" className="border-b border-ink/80 bg-paper-2/40">
+      <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
+        <div className="mb-14 grid grid-cols-12 gap-6">
+          <div className="col-span-12 lg:col-span-8">
+            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-copper">
+              № 03 / For whom
+            </span>
+            <h2 className="mt-6 font-display text-4xl font-light leading-[1] tracking-[-0.02em] text-ink md:text-6xl">
+              Built for the people
+              <br />
+              <span className="italic">running the business.</span>
             </h2>
           </div>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Whether it's your first product or your fifth internal tool, we meet you where you are.
-          </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {cards.map(({ icon: Icon, title, body }) => (
+        <div className="grid gap-0 border border-ink md:grid-cols-3">
+          {cards.map((c, i) => (
             <article
-              key={title}
-              className="group relative rounded-2xl border border-border/70 bg-card p-7 transition hover:border-foreground/20 hover:shadow-[0_1px_0_0_var(--border),0_20px_40px_-20px_color-mix(in_oklab,var(--brand)_20%,transparent)]"
+              key={c.title}
+              className={`flex flex-col justify-between bg-paper p-8 ${
+                i < cards.length - 1 ? "border-b border-ink md:border-b-0 md:border-r" : ""
+              }`}
             >
-              <div className="mb-8 grid h-10 w-10 place-items-center rounded-lg border border-border/70 bg-background">
-                <Icon className="h-5 w-5 text-brand" strokeWidth={1.6} />
+              <div>
+                <span className="stamp h-10 w-10 text-xl">{c.mark}</span>
+                <h3 className="mt-8 font-display text-3xl font-normal leading-tight text-ink">
+                  {c.title}
+                </h3>
+                <p className="mt-3 text-[15px] leading-relaxed text-ink/70">{c.body}</p>
               </div>
-              <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              <div className="mt-10 border-t border-ink/20 pt-4">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-baseline gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-ink/50">
+                  <span>Given</span>
+                  <span>↔</span>
+                  <span className="text-right">Taken</span>
+                </div>
+                <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-baseline gap-2 font-display text-[17px] italic text-ink">
+                  <span>{c.give}</span>
+                  <span className="text-copper not-italic">→</span>
+                  <span className="text-right not-italic">{c.take}</span>
+                </div>
+              </div>
             </article>
           ))}
         </div>

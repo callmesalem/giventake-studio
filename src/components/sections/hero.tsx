@@ -1,49 +1,97 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { AmpersandMark, ScribedUnderline, ArrowRightThin } from "@/components/marks";
+
+const ledger = [
+  ["idea", "product"],
+  ["sketch", "system"],
+  ["notion", "software"],
+  ["prompt", "platform"],
+  ["backlog", "shipped"],
+  ["problem", "process"],
+];
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-border/60">
-      {/* animated aurora background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-grid bg-radial-fade opacity-60" />
-        <div className="absolute left-1/2 top-[-20%] aurora h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--brand),transparent_70%)] opacity-30 blur-3xl" />
-        <div className="absolute right-[-10%] top-[10%] aurora h-[500px] w-[500px] rounded-full bg-[radial-gradient(closest-side,oklch(0.7_0.18_190),transparent_70%)] opacity-20 blur-3xl [animation-delay:-6s]" />
+    <section className="relative border-b border-ink/80">
+      {/* top masthead rule */}
+      <div className="border-b border-ink/80">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-ink/70">
+          <span>Vol. 001 · The Trade Ledger</span>
+          <span className="hidden sm:inline">Est. 2024 · Made by hand</span>
+          <span>Issue №{new Date().getFullYear()}</span>
+        </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 pt-20 pb-24 md:pt-32 md:pb-32">
-        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
-            <Sparkles className="h-3 w-3 text-brand" />
-            Your on-demand development team
+      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-6 px-6 pt-14 pb-20 md:pt-20 md:pb-28">
+        {/* LEFT — editorial headline */}
+        <div className="col-span-12 lg:col-span-8">
+          <div className="mb-8 flex items-center gap-4">
+            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink/60">
+              № 01 / Manifesto
+            </span>
+            <span className="h-px flex-1 bg-ink/25" />
           </div>
 
-          <h1 className="text-gradient-brand text-balance text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
-            Stop looking for developers.
+          <h1 className="font-display text-[13vw] font-light leading-[0.92] tracking-[-0.02em] text-ink md:text-[104px]">
+            Stop looking
             <br />
-            <span className="text-foreground">Start building.</span>
+            for developers.
+            <br />
+            <span className="relative inline-block">
+              <span className="italic font-normal">Start building.</span>
+              <ScribedUnderline className="absolute left-[2%] right-[2%] top-full h-[0.35em] w-[96%] text-copper" />
+            </span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-balance text-lg text-muted-foreground md:text-xl">
-            We build websites, apps, AI tools, automations, and business systems for the people running the business. No coding, no hiring, no technical headaches.
-          </p>
-
-          <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
-            <Button asChild size="lg" className="h-11 rounded-full px-6 text-sm font-medium">
-              <a href="#contact">
-                Book free strategy call
-                <ArrowRight className="ml-1.5 h-4 w-4" />
-              </a>
-            </Button>
-            <Button asChild size="lg" variant="ghost" className="h-11 rounded-full px-6 text-sm font-medium">
-              <a href="#work">View our work</a>
-            </Button>
+          <div className="mt-12 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
+            <p className="max-w-xl text-lg leading-[1.55] text-ink/75 md:text-xl">
+              GivenTake Goods Devs is an on-demand development team for
+              operators, founders, and businesses. You give us the intent.
+              We give back the working software.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row md:flex-col md:items-end">
+              <Button asChild size="lg" className="h-11 rounded-none bg-ink px-6 font-mono text-[12px] uppercase tracking-[0.2em] text-paper hover:bg-copper">
+                <a href="#contact">Book a call</a>
+              </Button>
+              <Button asChild size="lg" variant="ghost" className="h-11 rounded-none px-2 font-mono text-[12px] uppercase tracking-[0.2em] text-ink hover:bg-transparent hover:text-copper">
+                <a href="#work">See the work &rarr;</a>
+              </Button>
+            </div>
           </div>
-
-          <p className="mt-8 text-xs text-muted-foreground">
-            Trusted by founders and operators shipping without an engineering team.
-          </p>
         </div>
+
+        {/* RIGHT — the signature Trade Ledger */}
+        <aside className="col-span-12 lg:col-span-4">
+          <div className="sticky top-24 border border-ink bg-paper">
+            <div className="flex items-center justify-between border-b border-ink px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-ink">
+              <span>The Trade Ledger</span>
+              <AmpersandMark className="h-5 w-5 text-ink" />
+            </div>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-ink/60 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-ink/60">
+              <span>Given</span>
+              <span className="px-3">↔</span>
+              <span className="text-right">Taken</span>
+            </div>
+            <ul>
+              {ledger.map(([given, taken], i) => (
+                <li
+                  key={given}
+                  className={`grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3 font-display text-[18px] italic text-ink ${
+                    i < ledger.length - 1 ? "border-b border-ink/15" : ""
+                  }`}
+                >
+                  <span>{given}</span>
+                  <ArrowRightThin className="h-3 w-6 text-copper" />
+                  <span className="text-right not-italic font-normal">{taken}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center justify-between border-t border-ink bg-ink px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-paper">
+              <span>Signed</span>
+              <span className="font-display text-base italic normal-case tracking-normal">GivenTake &amp; Co.</span>
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
   );
