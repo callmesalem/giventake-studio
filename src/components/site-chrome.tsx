@@ -72,7 +72,7 @@ export function SiteFooter() {
               <span className="text-sm font-semibold tracking-tight">GivenTake Goods Devs</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              Your on-demand development team — websites, apps, AI, and automations without hiring.
+              Your on-demand development team for websites, apps, AI, and automations without hiring.
             </p>
             <div className="mt-6 flex items-center gap-2">
               {[
