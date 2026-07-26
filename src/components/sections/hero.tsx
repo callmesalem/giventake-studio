@@ -45,9 +45,9 @@ export function Hero() {
 
           <div className="mt-12 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
             <p className="max-w-xl text-lg leading-[1.55] text-ink/75 md:text-xl">
-              GivenTake Goods Devs is an on-demand development team for
-              operators, founders, and businesses. You give us the intent.
-              We give back the working software.
+              We're a small development team that businesses hire instead of trying to
+              find, vet, and manage engineers themselves. You tell us what you need built.
+              A few weeks later, you're using it.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row md:flex-col md:items-end">
               <Button asChild size="lg" className="h-11 rounded-none bg-ink px-6 font-mono text-[12px] uppercase tracking-[0.2em] text-paper hover:bg-copper">
