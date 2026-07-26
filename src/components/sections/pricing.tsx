@@ -65,9 +65,9 @@ export function Pricing() {
           {tiers.map((t, i) => (
             <article
               key={t.name}
-              className={`relative flex flex-col bg-paper p-8 ${
-                i < tiers.length - 1 ? "border-b border-ink md:border-b-0 md:border-r" : ""
-              } ${t.featured ? "bg-ink text-paper" : ""}`}
+              className={`relative flex flex-col p-8 ${
+                t.featured ? "bg-ink text-paper" : "bg-paper"
+              } ${i < tiers.length - 1 ? "border-b border-ink md:border-b-0 md:border-r" : ""}`}
             >
               {t.featured && (
                 <div className="absolute -top-3 left-8 border border-ink bg-copper px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.22em] text-paper">
