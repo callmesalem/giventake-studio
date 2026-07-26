@@ -32,7 +32,7 @@ const projects = [
   {
     title: "Fieldwork",
     kind: "Business Automation",
-    body: "Automations connecting CRM, quoting, and invoicing — zero manual data entry.",
+    body: "Automations connecting CRM, quoting, and invoicing, with zero manual data entry.",
     tech: ["n8n", "Airtable", "Stripe"],
     gradient: "from-[oklch(0.68_0.18_20)] to-[oklch(0.55_0.2_340)]",
   },
