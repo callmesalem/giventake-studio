@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Websites, apps, AI, and automations built by a senior team, without hiring engineers.",
+          "We build websites, apps, AI tools, automations, and business systems for small businesses, founders, and growing companies. No coding, no hiring.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
