@@ -57,7 +57,7 @@ export function ContactCTA() {
             Let's build something great.
           </h2>
           <p className="mt-4 max-w-md text-muted-foreground">
-            Tell us about your project. We'll reply within one business day with next steps — no pitch decks, no runaround.
+            Tell us about your project. We'll reply within one business day with next steps. No pitch decks, no runaround.
           </p>
 
           <ul className="mt-8 space-y-3 text-sm">
@@ -80,7 +80,7 @@ export function ContactCTA() {
               <div className="grid h-12 w-12 place-items-center rounded-full bg-brand/10">
                 <Check className="h-6 w-6 text-brand" />
               </div>
-              <h3 className="mt-5 text-lg font-semibold tracking-tight">Thanks — we've got it.</h3>
+              <h3 className="mt-5 text-lg font-semibold tracking-tight">Thanks, we've got it.</h3>
               <p className="mt-2 max-w-sm text-sm text-muted-foreground">
                 We'll be in touch within one business day.
               </p>

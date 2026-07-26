@@ -11,7 +11,7 @@ const steps = [
     icon: PenTool,
     number: "02",
     title: "We design & build",
-    body: "Weekly demos, tight feedback loops. You watch it come together — no black box.",
+    body: "Weekly demos, tight feedback loops. You watch it come together, with no black box.",
   },
   {
     icon: Rocket,

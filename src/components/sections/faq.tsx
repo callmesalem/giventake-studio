@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: "Can you build from just an idea?",
-    a: "Yes. Most of our engagements start from a rough idea or a spreadsheet. We turn it into scope, then a working product — you don't need to speak engineer.",
+    a: "Yes. Most of our engagements start from a rough idea or a spreadsheet. We turn it into scope, then a working product. You don't need to speak engineer.",
   },
   {
     q: "Do I need technical knowledge?",
@@ -24,11 +24,11 @@ const faqs = [
   },
   {
     q: "What technologies do you use?",
-    a: "React, Next.js, TypeScript, Postgres, and modern AI tooling. We pick the stack that fits the problem — not the other way around.",
+    a: "React, Next.js, TypeScript, Postgres, and modern AI tooling. We pick the stack that fits the problem, not the other way around.",
   },
   {
     q: "Do you offer ongoing support?",
-    a: "Yes — via monthly retainers. Ship continuously, get bug fixes and iterations, cancel any time.",
+    a: "Yes, via monthly retainers. Ship continuously, get bug fixes and iterations, cancel any time.",
   },
 ];
 

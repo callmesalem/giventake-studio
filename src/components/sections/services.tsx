@@ -18,7 +18,7 @@ const services = [
   {
     icon: AppWindow,
     title: "Web Applications",
-    body: "Custom software tailored to how your business actually operates — not another off-the-shelf compromise.",
+    body: "Custom software tailored to how your business actually operates, not another off-the-shelf compromise.",
   },
   {
     icon: Sparkles,
