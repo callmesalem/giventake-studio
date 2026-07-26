@@ -53,7 +53,7 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="mt-5 max-w-sm font-display text-xl italic leading-snug text-paper/70">
-              You give us the intent. We give back the working software.
+              A small development team you can hire the way you'd hire a firm, without the firm.
             </p>
             <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.22em] text-paper/50">
               Booking projects for {new Date().getFullYear()}
