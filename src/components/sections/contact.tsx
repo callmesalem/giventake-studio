@@ -76,9 +76,9 @@ export function ContactCTA() {
               {submitted ? (
                 <div className="flex flex-col items-start py-10">
                   <span className="stamp h-10 w-10 text-lg border-copper text-copper">✓</span>
-                  <h3 className="mt-6 font-display text-3xl italic text-ink">Received, thank you.</h3>
+                  <h3 className="mt-6 font-display text-3xl italic text-ink">Got it, thanks.</h3>
                   <p className="mt-2 max-w-sm text-[15px] text-ink/70">
-                    We'll be in touch within one business day.
+                    We'll read it today and get back to you within one business day.
                   </p>
                 </div>
               ) : (
