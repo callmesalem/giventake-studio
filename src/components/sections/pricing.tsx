@@ -53,7 +53,7 @@ export function Pricing() {
             Work with us the way that fits.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Every project is scoped after a call. No fixed packages — just clear numbers before we start.
+            Every project is scoped after a call. No fixed packages, just clear numbers before we start.
           </p>
         </div>
 
