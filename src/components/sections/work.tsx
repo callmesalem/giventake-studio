@@ -1,10 +1,32 @@
-const projects = [
-  { title: "Meridian Ops", kind: "Internal Tools", body: "Dispatch and billing dashboard for a 40-truck logistics company. Replaced six shared spreadsheets and a legacy Access database.", tech: ["React", "Postgres", "Stripe"], swatch: "bg-indigo" },
-  { title: "Northlane AI", kind: "AI Application", body: "Inbound lead qualifier that reads emails, scores them, and books meetings on the sales team's calendar. Cut response time from a day to under an hour.", tech: ["Next.js", "OpenAI", "Twilio"], swatch: "bg-copper" },
-  { title: "Harbor & Co.", kind: "Website", body: "Website and CMS rebuild for a design consultancy. Their team publishes case studies themselves now, without touching a Figma export.", tech: ["Astro", "Sanity", "Vercel"], swatch: "bg-ochre" },
-  { title: "Cedar Portal", kind: "Client Portal", body: "Client portal for a boutique accounting firm. Document requests, e-signatures, and billing in one place, branded as theirs.", tech: ["React", "Postgres", "Auth"], swatch: "bg-ink" },
-  { title: "Fieldwork", kind: "Automation", body: "Quoting, invoicing, and CRM stitched together for a contracting business. Field crews stopped re-typing job details three times.", tech: ["n8n", "Airtable", "Stripe"], swatch: "bg-copper-deep" },
-  { title: "Studio Ledger", kind: "MVP", body: "Booking and payments MVP for a photo studio. Launched in six weeks and paid for itself in the first month of bookings.", tech: ["Next.js", "Postgres", "Stripe"], swatch: "bg-indigo" },
+const commissions = [
+  {
+    title: "A booking system for a service business",
+    kind: "Client Software",
+    body: "Customers book, pay, and reschedule themselves. You stop living in your inbox and text messages.",
+    tags: ["Scheduling", "Payments", "Client Portal"],
+    swatch: "bg-indigo",
+  },
+  {
+    title: "An internal dashboard replacing spreadsheets",
+    kind: "Internal Tools",
+    body: "One place to see jobs, invoices, and status, instead of five shared Google Sheets nobody trusts.",
+    tags: ["Dashboards", "Postgres", "Auth"],
+    swatch: "bg-copper",
+  },
+  {
+    title: "An AI-assisted intake tool",
+    kind: "AI Application",
+    body: "Leads or requests come in, get summarized, tagged, and routed. Your team acts on real signal, not raw inbox.",
+    tags: ["LLMs", "Automation", "Email"],
+    swatch: "bg-ochre",
+  },
+  {
+    title: "A rebuilt marketing site",
+    kind: "Website",
+    body: "A site that reflects what your business actually does now, with a CMS your team can update without a developer.",
+    tags: ["Next.js", "CMS", "SEO"],
+    swatch: "bg-ink",
+  },
 ];
 
 export function Work() {
@@ -12,56 +34,72 @@ export function Work() {
     <section id="work" className="border-b border-ink/80">
       <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
         <div className="mb-14 grid grid-cols-12 gap-6">
-          <div className="col-span-12 lg:col-span-8">
+          <div className="col-span-12 lg:col-span-9">
             <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-copper">
-              № 06 / The Archive
+              № 06 / The Roster
             </span>
             <h2 className="mt-6 font-display text-4xl font-light leading-[1] tracking-[-0.02em] text-ink md:text-6xl">
-              Real systems,
+              Taking on our first
               <br />
-              <span className="italic">shipped for real businesses.</span>
+              <span className="italic">commissions of 2026.</span>
             </h2>
+            <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-ink/70">
+              We're a new studio. That means founder-level attention on every project, and rates
+              that reflect a team building its own track record, not agency overhead.
+            </p>
           </div>
         </div>
 
-        <div className="grid gap-0 border border-ink md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((p, i) => (
+        <div className="grid gap-0 border border-ink md:grid-cols-2">
+          {commissions.map((p, i) => (
             <article
               key={p.title}
               className={`group flex flex-col bg-paper transition hover:bg-paper-2/60 ${
-                i % 3 !== 2 ? "lg:border-r border-ink/20" : ""
-              } ${i < projects.length - 1 ? "border-b border-ink/20" : ""} ${
-                i % 2 !== 1 ? "md:border-r md:border-ink/20" : ""
+                i % 2 === 0 ? "md:border-r md:border-ink/20" : ""
+              } ${i < commissions.length - 2 ? "border-b border-ink/20" : "border-b border-ink/20 md:border-b-0"} ${
+                i === commissions.length - 2 ? "md:border-b-0" : ""
               }`}
             >
-              <div className={`relative aspect-[16/10] overflow-hidden border-b border-ink/20 ${p.swatch}`}>
-                <div className="absolute inset-0 opacity-25" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(241,235,221,0.35) 0 1px, transparent 1px 24px), repeating-linear-gradient(0deg, rgba(241,235,221,0.35) 0 1px, transparent 1px 24px)" }} />
+              <div className={`relative aspect-[16/7] overflow-hidden border-b border-ink/20 ${p.swatch}`}>
+                <div
+                  className="absolute inset-0 opacity-25"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, rgba(241,235,221,0.35) 0 1px, transparent 1px 24px), repeating-linear-gradient(0deg, rgba(241,235,221,0.35) 0 1px, transparent 1px 24px)",
+                  }}
+                />
                 <div className="absolute left-5 top-5 font-mono text-[10px] uppercase tracking-[0.22em] text-paper/80">
-                  Plate {String(i + 1).padStart(2, "0")}
+                  Commission {String(i + 1).padStart(2, "0")}
                 </div>
-                <div className="absolute inset-x-6 bottom-6">
-                  <div className="font-display text-2xl italic text-paper">{p.title}</div>
+                <div className="absolute left-6 bottom-6 right-6">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-paper/70">
+                    {p.kind}
+                  </div>
                 </div>
               </div>
               <div className="flex flex-1 flex-col p-6">
-                <div className="flex items-baseline justify-between gap-4">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/50">
-                    {p.kind}
-                  </p>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-copper transition group-hover:translate-x-1">
-                    View →
-                  </span>
-                </div>
-                <h3 className="mt-2 font-display text-2xl font-normal leading-tight text-ink">
+                <h3 className="font-display text-2xl font-normal leading-tight text-ink">
                   {p.title}
                 </h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-ink/70">{p.body}</p>
+                <p className="mt-3 text-[14px] leading-relaxed text-ink/70">{p.body}</p>
                 <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60">
-                  {p.tech.map((t, j) => (
+                  {p.tags.map((t, j) => (
                     <span key={t}>
-                      {t}{j < p.tech.length - 1 ? " · " : ""}
+                      {t}
+                      {j < p.tags.length - 1 ? " · " : ""}
                     </span>
                   ))}
+                </div>
+                <div className="mt-6 flex items-baseline justify-between border-t border-ink/20 pt-4">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/50">
+                    Available now
+                  </span>
+                  <a
+                    href="#contact"
+                    className="font-mono text-[10px] uppercase tracking-[0.22em] text-copper transition hover:translate-x-1"
+                  >
+                    Commission →
+                  </a>
                 </div>
               </div>
             </article>

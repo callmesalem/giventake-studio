@@ -60,19 +60,25 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-2">
             {[
               {
                 title: "Services",
-                items: ["Websites", "Web Apps", "AI", "Automation"],
+                items: [
+                  { label: "Websites", href: "#services" },
+                  { label: "Web Apps", href: "#services" },
+                  { label: "AI", href: "#services" },
+                  { label: "Automation", href: "#services" },
+                ],
               },
               {
                 title: "Studio",
-                items: ["Work", "About", "Contact", "FAQ"],
-              },
-              {
-                title: "Elsewhere",
-                items: ["Twitter", "LinkedIn", "GitHub", "Email"],
+                items: [
+                  { label: "Work", href: "#work" },
+                  { label: "How it works", href: "#how" },
+                  { label: "Contact", href: "#contact" },
+                  { label: "FAQ", href: "#faq" },
+                ],
               },
             ].map((g) => (
               <div key={g.title}>
@@ -81,9 +87,9 @@ export function SiteFooter() {
                 </p>
                 <ul className="mt-4 space-y-2.5">
                   {g.items.map((i) => (
-                    <li key={i}>
-                      <a href="#" className="font-display text-lg text-paper transition hover:text-copper">
-                        {i}
+                    <li key={i.label}>
+                      <a href={i.href} className="font-display text-lg text-paper transition hover:text-copper">
+                        {i.label}
                       </a>
                     </li>
                   ))}
