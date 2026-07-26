@@ -1,24 +1,45 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { Hero } from "@/components/sections/hero";
+import { TrustedPartner } from "@/components/sections/trusted";
+import { WhoWeHelp } from "@/components/sections/who";
+import { Services } from "@/components/sections/services";
+import { CTA } from "@/components/sections/cta";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "GivenTake Goods Devs — Your On-Demand Development Team" },
+      {
+        name: "description",
+        content:
+          "We build websites, apps, AI tools, automations, and business systems for small businesses, founders, and growing companies. No coding, no hiring.",
+      },
+      { property: "og:title", content: "GivenTake Goods Devs — Your On-Demand Development Team" },
+      {
+        property: "og:description",
+        content:
+          "Websites, apps, AI, and automations built by a senior team — without hiring engineers.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-background text-foreground antialiased">
+      <SiteHeader />
+      <main>
+        <Hero />
+        <TrustedPartner />
+        <WhoWeHelp />
+        <Services />
+        <CTA />
+      </main>
+      <SiteFooter />
     </div>
   );
 }
