@@ -25,7 +25,7 @@ export function TrustedPartner() {
         </div>
         <div className="col-span-12 lg:col-span-6 lg:col-start-7 lg:pt-6">
           <p className="max-w-md font-display text-xl italic leading-snug text-ink/70">
-            One team where you'd normally hire six freelancers. One point of contact. One integrated system.
+            One team doing the work you'd normally split across five or six freelancers. You get one point of contact and one system that fits together.
           </p>
           <div className="mt-10 grid grid-cols-2 divide-x divide-y divide-ink/20 border border-ink/20 sm:grid-cols-3">
             {items.map(({ g: G, label }) => (
