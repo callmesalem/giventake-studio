@@ -1,10 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Hero } from "@/components/sections/hero";
 import { TrustedPartner } from "@/components/sections/trusted";
 import { WhoWeHelp } from "@/components/sections/who";
 import { Services } from "@/components/sections/services";
-import { CTA } from "@/components/sections/cta";
+import { HowItWorks } from "@/components/sections/how";
+import { Work } from "@/components/sections/work";
+import { Testimonials } from "@/components/sections/testimonials";
+import { Pricing } from "@/components/sections/pricing";
+import { FAQ } from "@/components/sections/faq";
+import { ContactCTA } from "@/components/sections/contact";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,9 +43,15 @@ function Index() {
         <TrustedPartner />
         <WhoWeHelp />
         <Services />
-        <CTA />
+        <section id="how"><HowItWorks /></section>
+        <Work />
+        <Testimonials />
+        <Pricing />
+        <section id="faq"><FAQ /></section>
+        <ContactCTA />
       </main>
       <SiteFooter />
+      <Toaster />
     </div>
   );
 }
