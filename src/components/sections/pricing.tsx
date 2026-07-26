@@ -57,7 +57,7 @@ export function Pricing() {
             </h2>
           </div>
           <p className="col-span-12 max-w-md font-display text-xl italic leading-snug text-ink/70 lg:col-span-4 lg:self-end">
-            Every project is scoped after a call. No fixed packages, just clear numbers before we start.
+            Every project gets scoped on a call. You'll have a fixed number and a timeline in writing before we start.
           </p>
         </div>
 
