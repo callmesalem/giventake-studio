@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
+import { Route as DataRequestRouteImport } from './routes/data-request'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -30,6 +31,11 @@ const DoNotSellRoute = DoNotSellRouteImport.update({
   path: '/do-not-sell',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DataRequestRoute = DataRequestRouteImport.update({
+  id: '/data-request',
+  path: '/data-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CookiesRoute = CookiesRouteImport.update({
   id: '/cookies',
   path: '/cookies',
@@ -44,6 +50,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cookies': typeof CookiesRoute
+  '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cookies': typeof CookiesRoute
+  '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -59,21 +67,42 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cookies': typeof CookiesRoute
+  '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cookies' | '/do-not-sell' | '/privacy' | '/terms'
+  fullPaths:
+    | '/'
+    | '/cookies'
+    | '/data-request'
+    | '/do-not-sell'
+    | '/privacy'
+    | '/terms'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cookies' | '/do-not-sell' | '/privacy' | '/terms'
-  id: '__root__' | '/' | '/cookies' | '/do-not-sell' | '/privacy' | '/terms'
+  to:
+    | '/'
+    | '/cookies'
+    | '/data-request'
+    | '/do-not-sell'
+    | '/privacy'
+    | '/terms'
+  id:
+    | '__root__'
+    | '/'
+    | '/cookies'
+    | '/data-request'
+    | '/do-not-sell'
+    | '/privacy'
+    | '/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CookiesRoute: typeof CookiesRoute
+  DataRequestRoute: typeof DataRequestRoute
   DoNotSellRoute: typeof DoNotSellRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
@@ -102,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DoNotSellRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/data-request': {
+      id: '/data-request'
+      path: '/data-request'
+      fullPath: '/data-request'
+      preLoaderRoute: typeof DataRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cookies': {
       id: '/cookies'
       path: '/cookies'
@@ -122,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CookiesRoute: CookiesRoute,
+  DataRequestRoute: DataRequestRoute,
   DoNotSellRoute: DoNotSellRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
