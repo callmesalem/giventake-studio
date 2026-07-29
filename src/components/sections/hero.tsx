@@ -1,4 +1,5 @@
 import { IconArrowRight, IconPlay } from "@/components/marks";
+import { BrandSignature } from "@/components/brand-signature";
 
 export function Hero() {
   return (
@@ -64,109 +65,10 @@ export function Hero() {
           </div>
         </div>
 
-        {/* RIGHT — floating mockup cards */}
-        <div className="relative min-h-[520px] lg:min-h-[600px]">
-          {/* Card 1 — Booking calendar */}
-          <div className="absolute right-0 top-0 w-[280px] rounded-2xl border border-hairline bg-white p-4 shadow-lift float-a sm:w-[320px]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-ink">
-                  New booking
-                </p>
-                <p className="mt-0.5 text-[15px] font-semibold text-ink">
-                  Confirmed · Thu 4:30pm
-                </p>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-300 to-teal-600" />
-            </div>
-            <div className="mt-4 grid grid-cols-7 gap-1 text-center">
-              {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-                <div key={i} className="text-[10px] font-medium text-muted-ink">{d}</div>
-              ))}
-              {Array.from({ length: 21 }).map((_, i) => {
-                const active = i === 10;
-                const hot = i === 11;
-                return (
-                  <div
-                    key={i}
-                    className={`aspect-square rounded-md text-[10px] font-medium ${
-                      active
-                        ? "bg-ink text-white"
-                        : hot
-                        ? "bg-violet-soft text-violet"
-                        : "bg-secondary text-muted-ink"
-                    }`}
-                  />
-                );
-              })}
-            </div>
-            <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-violet-soft px-2.5 py-2 text-[12px] font-medium text-violet">
-              <span className="h-1.5 w-1.5 rounded-full bg-violet" />
-              2 open slots this week
-            </div>
-          </div>
-
-          {/* Card 2 — Admin dashboard */}
-          <div className="absolute left-0 top-[220px] w-[300px] rounded-2xl border border-hairline bg-white p-4 shadow-lift float-b sm:w-[340px]">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-ink">
-                Ops overview
-              </p>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Live
-              </span>
-            </div>
-            <div className="mt-3 grid grid-cols-3 gap-3">
-              {[
-                { l: "Jobs", v: "24" },
-                { l: "Invoices", v: "12" },
-                { l: "MRR", v: "$18.4k" },
-              ].map((k) => (
-                <div key={k.l}>
-                  <p className="text-[10px] font-medium text-muted-ink">{k.l}</p>
-                  <p className="mt-0.5 text-[18px] font-semibold tracking-tight text-ink">{k.v}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex h-16 items-end gap-1.5">
-              {[40, 60, 45, 72, 55, 82, 68, 90, 74, 88, 95, 78].map((h, i) => (
-                <div
-                  key={i}
-                  className={`flex-1 rounded-t ${i === 11 ? "bg-ink" : "bg-secondary"}`}
-                  style={{ height: `${h}%` }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Card 3 — AI intake */}
-          <div className="absolute right-4 top-[420px] w-[290px] rounded-2xl border border-hairline bg-white p-4 shadow-lift float-c sm:w-[330px]">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-soft">
-                <span className="text-[13px] font-semibold text-violet">M</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="truncate text-[13px] font-semibold text-ink">Maya · Acme Co.</p>
-                  <span className="text-[10px] text-muted-ink">2m</span>
-                </div>
-                <p className="text-[11px] text-muted-ink">Auto-summarized by intake</p>
-              </div>
-            </div>
-            <p className="mt-3 text-[13px] leading-snug text-ink">
-              Founder, needs an MVP client portal wired to their existing Stripe. Wants a call this week.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {["Founder", "MVP", "Priority"].map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-hairline bg-secondary px-2 py-0.5 text-[10px] font-medium text-ink"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
+        {/* RIGHT — brand signature: The Exchange */}
+        <div className="relative flex items-center justify-center lg:justify-end">
+          <div className="w-full max-w-[520px]">
+            <BrandSignature />
           </div>
         </div>
       </div>
