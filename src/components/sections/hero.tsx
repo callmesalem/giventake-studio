@@ -1,4 +1,5 @@
 import { IconArrowRight, IconPlay } from "@/components/marks";
+import { BrandSignature } from "@/components/brand-signature";
 
 export function Hero() {
   return (
