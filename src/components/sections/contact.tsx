@@ -21,19 +21,39 @@ const schema = z.object({
   timeline: z.string().min(1, "Select a timeline"),
 });
 
+// Owner: replace with your real inbox before launch.
+const CONTACT_EMAIL = "hello@giventake.dev";
+
 export function ContactCTA() {
-  const [submitted, setSubmitted] = useState(false);
+  const [handedOff, setHandedOff] = useState(false);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
+    const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
     const result = schema.safeParse(data);
     if (!result.success) {
       toast.error(result.error.issues[0]?.message ?? "Please check the form");
       return;
     }
-    setSubmitted(true);
+    // No backend is wired up. Hand off to the user's mail client with the
+    // brief pre-filled — nothing is stored, nothing is silently discarded.
+    const subject = `Project brief · ${result.data.name}${result.data.company ? ` · ${result.data.company}` : ""}`;
+    const body = [
+      `Name: ${result.data.name}`,
+      `Email: ${result.data.email}`,
+      result.data.company ? `Company: ${result.data.company}` : null,
+      `Budget: ${result.data.budget}`,
+      `Timeline: ${result.data.timeline}`,
+      "",
+      "Project:",
+      result.data.description,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    const href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = href;
+    setHandedOff(true);
     form.reset();
   }
 
