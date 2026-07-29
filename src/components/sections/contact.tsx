@@ -21,19 +21,39 @@ const schema = z.object({
   timeline: z.string().min(1, "Select a timeline"),
 });
 
+// Owner: replace with your real inbox before launch.
+const CONTACT_EMAIL = "hello@giventake.dev";
+
 export function ContactCTA() {
-  const [submitted, setSubmitted] = useState(false);
+  const [handedOff, setHandedOff] = useState(false);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
+    const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
     const result = schema.safeParse(data);
     if (!result.success) {
       toast.error(result.error.issues[0]?.message ?? "Please check the form");
       return;
     }
-    setSubmitted(true);
+    // No backend is wired up. Hand off to the user's mail client with the
+    // brief pre-filled — nothing is stored, nothing is silently discarded.
+    const subject = `Project brief · ${result.data.name}${result.data.company ? ` · ${result.data.company}` : ""}`;
+    const body = [
+      `Name: ${result.data.name}`,
+      `Email: ${result.data.email}`,
+      result.data.company ? `Company: ${result.data.company}` : null,
+      `Budget: ${result.data.budget}`,
+      `Timeline: ${result.data.timeline}`,
+      "",
+      "Project:",
+      result.data.description,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    const href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = href;
+    setHandedOff(true);
     form.reset();
   }
 
@@ -80,7 +100,7 @@ export function ContactCTA() {
         </div>
 
         <div className="rounded-2xl border border-hairline bg-white p-6 shadow-lift md:p-8">
-          {submitted ? (
+          {handedOff ? (
             <div className="flex flex-col items-start py-10">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-soft text-violet">
                 <svg viewBox="0 0 20 20" className="h-6 w-6" fill="none">
@@ -88,10 +108,14 @@ export function ContactCTA() {
                 </svg>
               </div>
               <h3 className="mt-6 text-[24px] font-semibold tracking-tight text-ink">
-                Got it, thanks.
+                Almost there.
               </h3>
               <p className="mt-2 max-w-sm text-[15px] text-muted-ink">
-                We'll read it today and get back to you within one business day.
+                Your mail client should have opened with the brief pre-filled. Hit send and we&rsquo;ll reply within one business day. If nothing opened, email us directly at{" "}
+                <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-ink underline">
+                  {CONTACT_EMAIL}
+                </a>
+                .
               </p>
             </div>
           ) : (

@@ -41,26 +41,12 @@ export function Hero() {
             </a>
           </div>
 
-          {/* social proof */}
-          <div className="mt-12 flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {[
-                "from-violet-400 to-indigo-600",
-                "from-amber-300 to-orange-500",
-                "from-emerald-300 to-teal-600",
-                "from-rose-300 to-pink-500",
-                "from-sky-300 to-blue-600",
-              ].map((g, i) => (
-                <div
-                  key={i}
-                  className={`h-8 w-8 rounded-full border-2 border-paper bg-gradient-to-br ${g}`}
-                />
-              ))}
-            </div>
-            <p className="text-[13px] leading-tight text-muted-ink">
-              Trusted by founders and operators
-              <br />
-              shipping real software in 2026.
+          {/* honest status line — no fabricated social proof */}
+          <div className="mt-12 flex items-start gap-3 border-t border-hairline pt-6">
+            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse-dot" />
+            <p className="text-[13px] leading-[1.55] text-muted-ink">
+              New studio, taking on our first commissions of 2026. Founder-led,
+              so you get direct access to whoever is actually building your product.
             </p>
           </div>
         </div>
