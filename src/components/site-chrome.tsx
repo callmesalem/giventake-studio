@@ -87,6 +87,7 @@ export function SiteFooter() {
         { label: "Privacy", href: "/privacy" },
         { label: "Terms", href: "/terms" },
         { label: "Cookies", href: "/cookies" },
+        { label: "Data request", href: "/data-request" },
         { label: "Do Not Sell or Share", href: "/do-not-sell" },
       ],
     },
