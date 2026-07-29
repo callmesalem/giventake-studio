@@ -19,6 +19,7 @@ const schema = z.object({
   description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
   budget: z.string().min(1, "Select a budget"),
   timeline: z.string().min(1, "Select a timeline"),
+  consent: z.string().refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
 });
 
 // Owner: replace with your real inbox before launch.
@@ -170,6 +171,34 @@ export function ContactCTA() {
                   </Select>
                 </Field>
               </div>
+
+              <label className="mt-2 flex items-start gap-3 rounded-xl border border-hairline bg-paper p-3.5">
+                <input
+                  type="checkbox"
+                  name="consent"
+                  required
+                  className="mt-0.5 h-4 w-4 flex-none accent-ink"
+                />
+                <span className="text-[12.5px] leading-relaxed text-muted-ink">
+                  I've read the{" "}
+                  <a href="/privacy" className="font-medium text-ink underline">
+                    Privacy Policy
+                  </a>{" "}
+                  and agree that GivenTake Goods Devs may use the details I've submitted to reply
+                  to my enquiry and prepare a proposal. My data is not sold, not used to train AI
+                  models, and I can request deletion any time at{" "}
+                  <a href="mailto:privacy@giventake.dev" className="font-medium text-ink underline">
+                    privacy@giventake.dev
+                  </a>
+                  .
+                </span>
+              </label>
+
+              <p className="text-[11.5px] leading-relaxed text-muted-ink">
+                Submitting this form opens your email client with the brief pre-filled — the message
+                is sent from your inbox, not stored on our servers. Please don't include sensitive
+                personal, financial, or health information.
+              </p>
 
               <button
                 type="submit"
