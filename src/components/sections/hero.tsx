@@ -71,7 +71,6 @@ export function Hero() {
             <BrandSignature />
           </div>
         </div>
-        </div>
       </div>
     </section>
   );
