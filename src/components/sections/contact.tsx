@@ -100,7 +100,7 @@ export function ContactCTA() {
         </div>
 
         <div className="rounded-2xl border border-hairline bg-white p-6 shadow-lift md:p-8">
-          {submitted ? (
+          {handedOff ? (
             <div className="flex flex-col items-start py-10">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-soft text-violet">
                 <svg viewBox="0 0 20 20" className="h-6 w-6" fill="none">
@@ -108,10 +108,14 @@ export function ContactCTA() {
                 </svg>
               </div>
               <h3 className="mt-6 text-[24px] font-semibold tracking-tight text-ink">
-                Got it, thanks.
+                Almost there.
               </h3>
               <p className="mt-2 max-w-sm text-[15px] text-muted-ink">
-                We'll read it today and get back to you within one business day.
+                Your mail client should have opened with the brief pre-filled. Hit send and we&rsquo;ll reply within one business day. If nothing opened, email us directly at{" "}
+                <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-ink underline">
+                  {CONTACT_EMAIL}
+                </a>
+                .
               </p>
             </div>
           ) : (
