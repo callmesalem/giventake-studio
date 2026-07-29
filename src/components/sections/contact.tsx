@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { z } from "zod";
 import { toast } from "sonner";
+import { IconArrowRight } from "@/components/marks";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -37,113 +38,124 @@ export function ContactCTA() {
   }
 
   return (
-    <section id="contact" className="border-b border-ink/80 bg-ink text-paper">
-      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-8 px-6 py-24 md:py-32">
-        <div className="col-span-12 lg:col-span-5">
-          <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-ochre">
-            № 10 / Commission
-          </span>
-          <h2 className="mt-6 font-display text-5xl font-light leading-[0.95] tracking-[-0.02em] text-paper md:text-7xl">
-            Let's build
-            <br />
-            <span className="italic">something great.</span>
+    <section id="contact" className="border-b border-hairline bg-paper">
+      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-24 md:py-28 lg:grid-cols-[1fr_1.15fr]">
+        <div>
+          <p className="text-[13px] font-medium text-violet">Contact</p>
+          <h2 className="mt-3 font-display text-5xl font-medium leading-[0.98] tracking-[-0.035em] text-ink md:text-6xl">
+            Let's build something great.
           </h2>
-          <p className="mt-8 max-w-md font-display text-xl italic leading-snug text-paper/75">
+          <p className="mt-6 max-w-md text-[17px] leading-relaxed text-muted-ink">
             Send us a few lines about what you're working on. You'll hear back within one business day, usually the same afternoon.
           </p>
 
-          <ul className="mt-10 space-y-3 border-t border-paper/20 pt-6">
+          <ul className="mt-10 space-y-4">
             {[
-              ["A", "A 30-minute strategy call, free"],
-              ["B", "A fixed scope, timeline, and price in writing"],
-              ["C", "Weekly demos once the build starts"],
-            ].map(([m, i]) => (
-              <li key={m} className="flex items-baseline gap-4">
-                <span className="stamp h-6 w-6 text-[11px] border-paper text-paper">{m}</span>
-                <span className="font-display text-lg text-paper/90">{i}</span>
+              "A 30-minute strategy call, free",
+              "A fixed scope, timeline, and price in writing",
+              "Weekly demos once the build starts",
+            ].map((i) => (
+              <li key={i} className="flex items-start gap-3">
+                <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-violet-soft text-violet">
+                  <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none">
+                    <path d="M4 10l4 4 8-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <span className="text-[15px] text-ink">{i}</span>
               </li>
             ))}
           </ul>
+
+          <div className="mt-12 rounded-2xl border border-hairline bg-white p-5 shadow-soft">
+            <p className="text-[12px] font-medium uppercase tracking-wider text-muted-ink">
+              Prefer email?
+            </p>
+            <a
+              href="mailto:hello@giventake.dev"
+              className="mt-1 block text-[16px] font-semibold text-ink hover:text-violet"
+            >
+              hello@giventake.dev
+            </a>
+          </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-6 lg:col-start-7">
-          <div className="border border-paper/25 bg-paper text-ink">
-            <div className="flex items-center justify-between border-b border-ink/30 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.22em] text-ink/60">
-              <span>Commission Form</span>
-              <span>№ {new Date().getFullYear()}</span>
+        <div className="rounded-2xl border border-hairline bg-white p-6 shadow-lift md:p-8">
+          {submitted ? (
+            <div className="flex flex-col items-start py-10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-soft text-violet">
+                <svg viewBox="0 0 20 20" className="h-6 w-6" fill="none">
+                  <path d="M4 10l4 4 8-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h3 className="mt-6 text-[24px] font-semibold tracking-tight text-ink">
+                Got it, thanks.
+              </h3>
+              <p className="mt-2 max-w-sm text-[15px] text-muted-ink">
+                We'll read it today and get back to you within one business day.
+              </p>
             </div>
-            <div className="p-6 md:p-8">
-              {submitted ? (
-                <div className="flex flex-col items-start py-10">
-                  <span className="stamp h-10 w-10 text-lg border-copper text-copper">✓</span>
-                  <h3 className="mt-6 font-display text-3xl italic text-ink">Got it, thanks.</h3>
-                  <p className="mt-2 max-w-sm text-[15px] text-ink/70">
-                    We'll read it today and get back to you within one business day.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={onSubmit} className="space-y-5" noValidate>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <Field label="Name">
-                      <Input name="name" required maxLength={100} placeholder="Jane Doe" className="rounded-none border-0 border-b border-ink/30 bg-transparent px-0 focus-visible:ring-0 focus-visible:border-copper" />
-                    </Field>
-                    <Field label="Email">
-                      <Input name="email" type="email" required maxLength={255} placeholder="jane@company.com" className="rounded-none border-0 border-b border-ink/30 bg-transparent px-0 focus-visible:ring-0 focus-visible:border-copper" />
-                    </Field>
-                  </div>
-                  <Field label="Company">
-                    <Input name="company" maxLength={120} placeholder="Company Inc." className="rounded-none border-0 border-b border-ink/30 bg-transparent px-0 focus-visible:ring-0 focus-visible:border-copper" />
-                  </Field>
-                  <Field label="Project description">
-                    <Textarea
-                      name="description"
-                      required
-                      maxLength={1500}
-                      rows={4}
-                      placeholder="What are you building, and what problem does it solve?"
-                      className="rounded-none border-0 border-b border-ink/30 bg-transparent px-0 focus-visible:ring-0 focus-visible:border-copper"
-                    />
-                  </Field>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <Field label="Budget">
-                      <Select name="budget" required>
-                        <SelectTrigger className="rounded-none border-0 border-b border-ink/30 bg-transparent px-0 focus:ring-0">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="2.5-10k">$2.5k to $10k</SelectItem>
-                          <SelectItem value="10-25k">$10k to $25k</SelectItem>
-                          <SelectItem value="25-75k">$25k to $75k</SelectItem>
-                          <SelectItem value="75k+">$75k+</SelectItem>
-                          <SelectItem value="retainer">Monthly retainer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field label="Timeline">
-                      <Select name="timeline" required>
-                        <SelectTrigger className="rounded-none border-0 border-b border-ink/30 bg-transparent px-0 focus:ring-0">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="asap">ASAP</SelectItem>
-                          <SelectItem value="1-3mo">1 to 3 months</SelectItem>
-                          <SelectItem value="3-6mo">3 to 6 months</SelectItem>
-                          <SelectItem value="exploring">Just exploring</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </div>
+          ) : (
+            <form onSubmit={onSubmit} className="space-y-5" noValidate>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Name">
+                  <Input name="name" required maxLength={100} placeholder="Jane Doe" className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0" />
+                </Field>
+                <Field label="Email">
+                  <Input name="email" type="email" required maxLength={255} placeholder="jane@company.com" className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0" />
+                </Field>
+              </div>
+              <Field label="Company">
+                <Input name="company" maxLength={120} placeholder="Company Inc." className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0" />
+              </Field>
+              <Field label="Project description">
+                <Textarea
+                  name="description"
+                  required
+                  maxLength={1500}
+                  rows={4}
+                  placeholder="What are you building, and what problem does it solve?"
+                  className="rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
+                />
+              </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Budget">
+                  <Select name="budget" required>
+                    <SelectTrigger className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2.5-10k">$2.5k to $10k</SelectItem>
+                      <SelectItem value="10-25k">$10k to $25k</SelectItem>
+                      <SelectItem value="25-75k">$25k to $75k</SelectItem>
+                      <SelectItem value="75k+">$75k+</SelectItem>
+                      <SelectItem value="retainer">Monthly retainer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Timeline">
+                  <Select name="timeline" required>
+                    <SelectTrigger className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asap">ASAP</SelectItem>
+                      <SelectItem value="1-3mo">1 to 3 months</SelectItem>
+                      <SelectItem value="3-6mo">3 to 6 months</SelectItem>
+                      <SelectItem value="exploring">Just exploring</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
 
-                  <button
-                    type="submit"
-                    className="mt-2 w-full border border-ink bg-ink px-6 py-3.5 font-mono text-[11px] uppercase tracking-[0.22em] text-paper transition hover:bg-copper hover:border-copper"
-                  >
-                    Send commission →
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
+              <button
+                type="submit"
+                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90"
+              >
+                Send project brief
+                <IconArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </section>
@@ -153,7 +165,7 @@ export function ContactCTA() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/60">
+      <label className="text-[13px] font-medium text-ink">
         {label}
       </label>
       {children}

@@ -1,115 +1,120 @@
 import type { SVGProps } from "react";
 
-/* GivenTake ampersand mark — hand-drawn feel, stroke-based */
-export function AmpersandMark({ className = "", ...props }: SVGProps<SVGSVGElement>) {
+type IconProps = { className?: string } & SVGProps<SVGSVGElement>;
+
+/* Wordmark logo: a filled square with a subtle notch */
+export function LogoMark({ className = "", ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 40 40" fill="none" className={className} {...props}>
-      <rect x="1" y="1" width="38" height="38" rx="2" stroke="currentColor" strokeWidth="1.25" />
-      <text
-        x="50%"
-        y="55%"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontFamily="Fraunces, serif"
-        fontStyle="italic"
-        fontWeight="500"
-        fontSize="26"
-        fill="currentColor"
-      >
-        &amp;
-      </text>
+    <svg viewBox="0 0 24 24" fill="none" className={className} {...props}>
+      <rect x="2" y="2" width="20" height="20" rx="5" fill="currentColor" />
+      <path d="M8 12h5M13 12v5" stroke="var(--paper)" strokeWidth="1.75" strokeLinecap="round" />
+      <circle cx="16" cy="8" r="1.4" fill="var(--paper)" />
     </svg>
   );
 }
 
-/* Hand-drawn underline that scribes itself under a word */
-export function ScribedUnderline({ className = "" }: { className?: string }) {
+/* Simple 1.5px stroke geometric icons */
+export function IconGlobe({ className = "" }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 300 14"
-      fill="none"
-      preserveAspectRatio="none"
-      aria-hidden
-    >
-      <path
-        d="M2 8 C 40 2, 90 12, 140 6 S 240 10, 298 4"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        className="animate-underline"
-      />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3.5 12h17M12 3.5c2.5 3 2.5 14 0 17M12 3.5c-2.5 3-2.5 14 0 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-/* Monoline glyphs — hand-drawn feel via stroke, no icon pack */
-export function GlyphExchange({ className = "" }: { className?: string }) {
+export function IconApp({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className}>
-      <path d="M4 11h20l-4-4M28 21H8l4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="3.25" y="4.25" width="17.5" height="15.5" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3.25 9h17.5M6.5 6.7h.01M9 6.7h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-export function GlyphFrame({ className = "" }: { className?: string }) {
+export function IconSpark({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className}>
-      <rect x="4" y="7" width="24" height="18" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M4 12h24M8 10.5v0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M12 3v6M12 15v6M3 12h6M15 12h6M6 6l3.5 3.5M14.5 14.5L18 18M18 6l-3.5 3.5M9.5 14.5L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-export function GlyphStack({ className = "" }: { className?: string }) {
+export function IconLoop({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className}>
-      <path d="M16 4 3 11l13 7 13-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-      <path d="M3 17l13 7 13-7M3 23l13 7 13-7" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M5 14a7 7 0 0 1 12-5M19 10a7 7 0 0 1-12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M14 6l3 3-3 3M10 18l-3-3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-export function GlyphSpark({ className = "" }: { className?: string }) {
+export function IconGrid({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className}>
-      <path d="M16 4v10M16 18v10M4 16h10M18 16h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <circle cx="16" cy="16" r="2" stroke="currentColor" strokeWidth="1.4" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
 
-export function GlyphLoop({ className = "" }: { className?: string }) {
+export function IconRocket({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className}>
-      <path d="M6 20a8 8 0 1 1 14 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M22 21l-2 4-4-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M14.5 3.5c3 0 6 3 6 6-3 3-5 4-9 8l-5-5c4-4 5-6 8-9zM7.5 12.5l4 4M4 20c1-3 3-4 5-2s-2 5-5 5c0-1 0-2 0-3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="15" cy="9" r="1.5" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
 
-export function GlyphKey({ className = "" }: { className?: string }) {
+export function IconInfinity({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className}>
-      <circle cx="10" cy="16" r="5" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M15 16h13M23 16v4M27 16v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M4 12c0-2.5 2-4.5 4.5-4.5S12 12 12 12s1 4.5 3.5 4.5S20 14.5 20 12s-2-4.5-4.5-4.5S12 12 12 12s-1 4.5-3.5 4.5S4 14.5 4 12z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-export function GlyphSprout({ className = "" }: { className?: string }) {
+export function IconArrowRight({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className}>
-      <path d="M16 28V14M16 14c0-5 4-8 9-8-.5 5-4 8-9 8zM16 18c0-4-3-6-7-6 .5 4 3 6 7 6z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M4 12h15M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-/* Arrow used inline in ledger rows */
-export function ArrowRightThin({ className = "" }: { className?: string }) {
+export function IconPlay({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 12" fill="none" className={className} aria-hidden>
-      <path d="M0 6h22M17 1l5 5-5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 8.5v7l6-3.5-6-3.5z" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconBriefcase({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="3.25" y="6.5" width="17.5" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M9 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v1.5M3.25 12h17.5" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+export function IconSeed({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M12 20v-8M12 12c0-4 3-7 8-7-.5 4-3 7-8 7zM12 15c0-3-2-5-6-5 .5 3 2 5 6 5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconTrend({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M4 17l5-6 4 3 7-9M14 5h6v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
