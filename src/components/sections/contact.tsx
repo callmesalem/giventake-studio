@@ -19,7 +19,7 @@ const schema = z.object({
   description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
   budget: z.string().min(1, "Select a budget"),
   timeline: z.string().min(1, "Select a timeline"),
-  consent: z.literal("on", { message: "Please confirm you've read the privacy notice" }),
+  consent: z.string().refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
 });
 
 // Owner: replace with your real inbox before launch.
