@@ -1,5 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { LogoMark } from "@/components/marks";
+import { useConsent } from "@/lib/consent";
+
+function CookieSettingsLink() {
+  const { openPreferences } = useConsent();
+  return (
+    <button type="button" onClick={openPreferences} className="hover:text-ink">
+      Cookie settings
+    </button>
+  );
+}
 
 const nav = [
   { label: "Services", href: "#services" },
@@ -74,9 +84,9 @@ export function SiteFooter() {
       title: "Company",
       items: [
         { label: "Contact", href: "#contact" },
-        { label: "About", href: "#" },
-        { label: "Privacy", href: "#" },
-        { label: "Terms", href: "#" },
+        { label: "Privacy", href: "/privacy" },
+        { label: "Terms", href: "/terms" },
+        { label: "Cookies", href: "/cookies" },
       ],
     },
   ];
@@ -130,9 +140,14 @@ export function SiteFooter() {
           <p className="text-[12px] text-muted-ink">
             © {new Date().getFullYear()} GivenTake Goods Devs. All rights reserved.
           </p>
-          <p className="text-[12px] text-muted-ink">
-            Built by hand, shipped weekly.
-          </p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-muted-ink">
+            <a href="/privacy" className="hover:text-ink">Privacy</a>
+            <a href="/terms" className="hover:text-ink">Terms</a>
+            <a href="/cookies" className="hover:text-ink">Cookies</a>
+            <CookieSettingsLink />
+            <span aria-hidden>·</span>
+            <span>Built by hand, shipped weekly.</span>
+          </div>
         </div>
       </div>
     </footer>
