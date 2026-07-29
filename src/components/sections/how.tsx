@@ -1,19 +1,16 @@
 const steps = [
   {
-    mark: "I",
-    label: "Tell",
+    n: "1",
     title: "Tell us your idea",
     body: "A 30-minute call. We ask about the business, the users, and what's actually broken. You leave with a clear next step, not a sales pitch.",
   },
   {
-    mark: "II",
-    label: "Make",
+    n: "2",
     title: "We design and build",
     body: "You see progress every week. Real screens, real data, real code. If something isn't landing, we catch it early instead of at the end.",
   },
   {
-    mark: "III",
-    label: "Ship",
+    n: "3",
     title: "Launch and iterate",
     body: "We push it live, watch how it's used, and keep improving. Most projects keep shipping after launch, on a monthly retainer.",
   },
@@ -21,40 +18,33 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="border-b border-ink/80 bg-ink text-paper">
-      <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
-        <div className="mb-16 grid grid-cols-12 gap-6">
-          <div className="col-span-12 lg:col-span-8">
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-ochre">
-              № 05 / The Process
-            </span>
-            <h2 className="mt-6 font-display text-4xl font-light leading-[1] tracking-[-0.02em] text-paper md:text-6xl">
-              From idea to live product
-              <br />
-              in <span className="italic">three movements.</span>
-            </h2>
-          </div>
+    <section className="border-b border-hairline">
+      <div className="mx-auto max-w-7xl px-6 py-24 md:py-28">
+        <div className="mb-14 max-w-2xl">
+          <p className="text-[13px] font-medium text-violet">How it works</p>
+          <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
+            From idea to live product in three steps.
+          </h2>
         </div>
 
-        <ol className="grid gap-10 md:grid-cols-3 md:gap-8">
-          {steps.map((s, i) => (
-            <li key={s.mark} className="relative border-t border-paper/40 pt-6">
-              <div className="flex items-baseline justify-between">
-                <span className="font-display text-6xl font-light italic text-copper">{s.mark}</span>
-                <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-paper/50">
-                  Movement {i + 1}
-                </span>
+        <div className="relative grid gap-6 md:grid-cols-3">
+          {/* connector line */}
+          <div className="absolute left-0 right-0 top-6 hidden h-px bg-hairline md:block" />
+          {steps.map((s) => (
+            <article
+              key={s.n}
+              className="relative rounded-2xl border border-hairline bg-white p-7 shadow-soft"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-hairline bg-paper text-[16px] font-semibold text-ink">
+                {s.n}
               </div>
-              <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.22em] text-ochre">
-                {s.label}
-              </p>
-              <h3 className="mt-2 font-display text-3xl font-normal leading-tight text-paper">
+              <h3 className="mt-6 text-[22px] font-semibold tracking-tight text-ink">
                 {s.title}
               </h3>
-              <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-paper/70">{s.body}</p>
-            </li>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-ink">{s.body}</p>
+            </article>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );

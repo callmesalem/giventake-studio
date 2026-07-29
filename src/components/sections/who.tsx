@@ -1,71 +1,50 @@
+import { IconBriefcase, IconSeed, IconTrend } from "@/components/marks";
+
 const cards = [
   {
-    mark: "A",
-    title: "Small Businesses",
+    Icon: IconBriefcase,
+    title: "Small businesses",
     body: "You're running the business on a stack of tools that don't really talk to each other. We replace the duct tape with software that fits how your team actually works.",
-    give: "Your workflow",
-    take: "A working system",
   },
   {
-    mark: "B",
+    Icon: IconSeed,
     title: "Founders",
     body: "You have paying customers and a clear idea. What you don't have is a year to find a technical co-founder. We fill that seat until it makes sense to hire one.",
-    give: "The idea",
-    take: "A shipped product",
   },
   {
-    mark: "C",
-    title: "Growing Companies",
+    Icon: IconTrend,
+    title: "Growing companies",
     body: "Your roadmap is longer than your engineering team. We plug in for the next quarter of shipping, then step back once it's out the door.",
-    give: "The roadmap",
-    take: "Continuous shipping",
   },
 ];
 
 export function WhoWeHelp() {
   return (
-    <section id="who" className="border-b border-ink/80 bg-paper-2/40">
-      <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
-        <div className="mb-14 grid grid-cols-12 gap-6">
-          <div className="col-span-12 lg:col-span-8">
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-copper">
-              № 03 / For whom
-            </span>
-            <h2 className="mt-6 font-display text-4xl font-light leading-[1] tracking-[-0.02em] text-ink md:text-6xl">
-              Built for the people
-              <br />
-              <span className="italic">running the business.</span>
-            </h2>
-          </div>
+    <section id="who" className="border-b border-hairline">
+      <div className="mx-auto max-w-7xl px-6 py-24 md:py-28">
+        <div className="mb-14 max-w-2xl">
+          <p className="text-[13px] font-medium text-violet">Who we help</p>
+          <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
+            You focus on the business. We build the technology.
+          </h2>
+          <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
+            One team doing the work you'd normally split across five or six freelancers. One point of contact, one system that fits together.
+          </p>
         </div>
 
-        <div className="grid gap-0 border border-ink md:grid-cols-3">
-          {cards.map((c, i) => (
+        <div className="grid gap-4 md:grid-cols-3">
+          {cards.map((c) => (
             <article
               key={c.title}
-              className={`flex flex-col justify-between bg-paper p-8 ${
-                i < cards.length - 1 ? "border-b border-ink md:border-b-0 md:border-r" : ""
-              }`}
+              className="group rounded-2xl border border-hairline bg-white p-7 shadow-soft transition hover:shadow-lift"
             >
-              <div>
-                <span className="stamp h-10 w-10 text-xl">{c.mark}</span>
-                <h3 className="mt-8 font-display text-3xl font-normal leading-tight text-ink">
-                  {c.title}
-                </h3>
-                <p className="mt-3 text-[15px] leading-relaxed text-ink/70">{c.body}</p>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-soft text-violet">
+                <c.Icon className="h-6 w-6" />
               </div>
-              <div className="mt-10 border-t border-ink/20 pt-4">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-baseline gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-ink/50">
-                  <span>Given</span>
-                  <span>↔</span>
-                  <span className="text-right">Taken</span>
-                </div>
-                <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-baseline gap-2 font-display text-[17px] italic text-ink">
-                  <span>{c.give}</span>
-                  <span className="text-copper not-italic">→</span>
-                  <span className="text-right not-italic">{c.take}</span>
-                </div>
-              </div>
+              <h3 className="mt-6 text-[22px] font-semibold tracking-tight text-ink">
+                {c.title}
+              </h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-ink">{c.body}</p>
             </article>
           ))}
         </div>
