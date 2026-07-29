@@ -87,6 +87,7 @@ export function SiteFooter() {
         { label: "Privacy", href: "/privacy" },
         { label: "Terms", href: "/terms" },
         { label: "Cookies", href: "/cookies" },
+        { label: "Do Not Sell or Share", href: "/do-not-sell" },
       ],
     },
   ];
@@ -144,9 +145,10 @@ export function SiteFooter() {
             <a href="/privacy" className="hover:text-ink">Privacy</a>
             <a href="/terms" className="hover:text-ink">Terms</a>
             <a href="/cookies" className="hover:text-ink">Cookies</a>
+            <a href="/do-not-sell" className="font-medium text-ink underline decoration-hairline underline-offset-4 hover:decoration-ink">
+              Do Not Sell or Share My Personal Information
+            </a>
             <CookieSettingsLink />
-            <span aria-hidden>·</span>
-            <span>Built by hand, shipped weekly.</span>
           </div>
         </div>
       </div>
