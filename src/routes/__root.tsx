@@ -83,7 +83,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "google-site-verification", content: "Px8gSZ1_p2Xkq7OUjUN6imyaIuCAMrOWU08OR2FvvrI" },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "GivenTake Goods Devs" },
     ],
     links: [
       // Fetch the main sheet at high priority even though it is applied
