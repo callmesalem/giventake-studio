@@ -62,11 +62,12 @@ export function Hero() {
         </div>
 
         {/* RIGHT — brand signature: The Exchange */}
-        <div className="relative flex items-center justify-center lg:justify-end">
-          <div className="w-full max-w-[520px]">
+        <div data-crit="hero-right" className="relative flex items-center justify-center lg:justify-end">
+          <div data-crit="hero-signature" className="w-full max-w-[520px]">
             <BrandSignature />
           </div>
         </div>
+
       </div>
     </section>
   );
