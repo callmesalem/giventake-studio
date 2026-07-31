@@ -15,17 +15,17 @@ import { ContactCTA } from "@/components/sections/contact";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GivenTake Goods Devs: Your On-Demand Development Team" },
+      { title: "GivenTake Goods Devs | AI-Native Development Team for Hire" },
       {
         name: "description",
         content:
-          "We build websites, apps, AI tools, automations, and business systems for small businesses, founders, and growing companies. No coding, no hiring.",
+          "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders. One developer, AI-assisted delivery.",
       },
-      { property: "og:title", content: "GivenTake Goods Devs: Your On-Demand Development Team" },
+      { property: "og:title", content: "GivenTake Goods Devs | AI-Native Development Team for Hire" },
       {
         property: "og:description",
         content:
-          "We build websites, apps, AI tools, automations, and business systems for small businesses, founders, and growing companies. No coding, no hiring.",
+          "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders. One developer, AI-assisted delivery.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

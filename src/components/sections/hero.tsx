@@ -21,7 +21,7 @@ export function Hero() {
           </h1>
 
           <p className="mt-8 max-w-xl text-[17px] leading-[1.55] text-muted-ink md:text-[18px]">
-            We're a small development team that businesses hire instead of trying to find, vet, and manage engineers themselves. Tell us what you need built. A few weeks later, you're using it.
+            I'm a solo developer who builds with AI coding agents and modern tools. You get the speed of a small team without the overhead of hiring one. Tell me what you need. A few weeks later, you're using it.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -45,8 +45,7 @@ export function Hero() {
           <div className="mt-12 flex items-start gap-3 border-t border-hairline pt-6">
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-muted-ink">
-              New studio, taking on our first commissions of 2026. Founder-led,
-              so you get direct access to whoever is actually building your product.
+              New studio, taking on our first commissions of 2026. AI-assisted delivery means faster prototypes and fewer handoffs. Founder-led, so you talk directly to whoever is building your product.
             </p>
           </div>
         </div>

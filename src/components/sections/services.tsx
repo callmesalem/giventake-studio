@@ -1,9 +1,10 @@
-import { IconGlobe, IconApp, IconSpark, IconLoop, IconGrid, IconRocket, IconInfinity } from "@/components/marks";
+import { IconBot, IconGlobe, IconApp, IconSpark, IconLoop, IconGrid, IconRocket, IconInfinity } from "@/components/marks";
 
 const services = [
+  { Icon: IconBot, title: "Agentic systems & AI workflows", body: "Custom AI agents that handle intake, research, drafting, or routing. Built to plug into your existing tools, not replace your team." },
   { Icon: IconGlobe, title: "Website development", body: "Marketing sites that load fast, rank, and can be edited by someone on your team without opening a support ticket." },
   { Icon: IconApp, title: "Web applications", body: "Custom software for the parts of your business that don't fit into Notion, Airtable, or an off-the-shelf SaaS." },
-  { Icon: IconSpark, title: "AI integrations", body: "The useful parts of AI wired into your product: drafting, extraction, search, and routing. We skip the hype and ship the workflows." },
+  { Icon: IconSpark, title: "AI integrations", body: "LLM-powered features wired into your product: summarization, extraction, search, and routing. We skip the demo and ship the workflow." },
   { Icon: IconLoop, title: "Business automation", body: "The tools you already pay for, connected. Leads land in your CRM, invoices go out, reports write themselves." },
   { Icon: IconGrid, title: "Internal tools", body: "Dashboards, admin panels, and ops tools your team opens every morning instead of another spreadsheet." },
   { Icon: IconRocket, title: "MVP development", body: "A working product in front of real users in six to ten weeks. Built to be extended, not thrown away." },

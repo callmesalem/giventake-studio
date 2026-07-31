@@ -4,17 +4,17 @@ const cards = [
   {
     Icon: IconBriefcase,
     title: "Small businesses",
-    body: "You're running the business on a stack of tools that don't really talk to each other. We replace the duct tape with software that fits how your team actually works.",
+    body: "You're running the business on a stack of tools that don't really talk to each other. We replace the duct tape with AI-assisted software that fits how your team actually works, without hiring a full engineer.",
   },
   {
     Icon: IconSeed,
     title: "Founders",
-    body: "You have paying customers and a clear idea. What you don't have is a year to find a technical co-founder. We fill that seat until it makes sense to hire one.",
+    body: "You have paying customers and a clear idea. What you don't have is a year to find a technical co-founder. Our AI-native workflow gets an MVP in front of users in weeks, not months.",
   },
   {
     Icon: IconTrend,
     title: "Growing companies",
-    body: "Your roadmap is longer than your engineering team. We plug in for the next quarter of shipping, then step back once it's out the door.",
+    body: "Your roadmap is longer than your engineering team. We plug in with agentic workflows and custom code for the next quarter of shipping, then step back once it's out the door.",
   },
 ];
 

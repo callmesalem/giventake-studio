@@ -5,10 +5,10 @@
  */
 
 const facts = [
+  { k: "AI-assisted delivery", v: "Faster builds, fewer meetings" },
   { k: "Founder-led", v: "Every project" },
   { k: "Weeks, not quarters", v: "Typical timeline" },
-  { k: "Built in the open", v: "Weekly demos" },
-  { k: "No lock-in", v: "You own the code" },
+  { k: "You own the code", v: "No lock-in" },
 ];
 
 export function TrustedPartner() {

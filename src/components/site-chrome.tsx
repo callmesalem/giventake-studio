@@ -105,7 +105,7 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-muted-ink">
-              Your on-demand development team. We build software for businesses that would rather ship than hire.
+              Your on-demand, AI-native development team. We build software for businesses that would rather ship than hire.
             </p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-3 py-1.5 text-[12px] font-medium text-muted-ink">
               <span className="relative flex h-2 w-2">

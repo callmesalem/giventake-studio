@@ -138,7 +138,7 @@ export function ContactCTA() {
                   required
                   maxLength={1500}
                   rows={4}
-                  placeholder="What are you building, and what problem does it solve?"
+                  placeholder="What are you building? Mention if you want AI automation, an internal agent, or a traditional web app."
                   className="rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
                 />
               </Field>

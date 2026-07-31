@@ -2,30 +2,30 @@ import { IconArrowRight } from "@/components/marks";
 
 const commissions = [
   {
+    title: "An agentic intake and routing system",
+    kind: "AI application",
+    body: "Leads come in, get summarized, tagged, and routed to the right person by a custom AI agent. The team acts on real signal, not raw inbox.",
+    tags: ["AI Agents", "LLM Workflows", "Email"],
+    preview: "intake",
+  },
+  {
     title: "A booking system for a service business",
     kind: "Client software",
-    body: "Customers book, pay, and reschedule themselves. The owner stopped living in their inbox.",
+    body: "Customers book, pay, and reschedule themselves. Shipped with AI-assisted development, so the owner stopped living in their inbox in weeks, not months.",
     tags: ["Scheduling", "Payments", "Client Portal"],
     preview: "calendar",
   },
   {
     title: "An internal dashboard replacing spreadsheets",
     kind: "Internal tools",
-    body: "One place to see jobs, invoices, and status, instead of five shared Google Sheets nobody trusts.",
+    body: "One place to see jobs, invoices, and status, instead of five shared Google Sheets nobody trusts. Built fast with AI agents and reviewed by a human.",
     tags: ["Dashboards", "Postgres", "Auth"],
     preview: "dashboard",
   },
   {
-    title: "An AI-assisted intake tool",
-    kind: "AI application",
-    body: "Leads come in, get summarized, tagged, and routed. The team acts on real signal, not raw inbox.",
-    tags: ["LLMs", "Automation", "Email"],
-    preview: "intake",
-  },
-  {
     title: "A rebuilt marketing site",
     kind: "Website",
-    body: "A site that reflects what the business actually does now, with a CMS the team can update.",
+    body: "A site that reflects what the business actually does now, with AI-assisted content and code, plus a CMS the team can update.",
     tags: ["Next.js", "CMS", "SEO"],
     preview: "site",
   },
@@ -110,10 +110,10 @@ export function Work() {
         <div className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Work</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
-            Taking on our first commissions of 2026.
+            Built with AI agents, reviewed by a human.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            A new studio. Founder-level attention on every project, and rates that reflect a team building its own track record.
+            These are the kinds of projects we ship. AI handles the repetitive parts; I handle architecture, review, and delivery.
           </p>
         </div>
 

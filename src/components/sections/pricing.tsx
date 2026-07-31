@@ -7,6 +7,7 @@ const tiers = [
     tagline: "Landing pages and simple builds.",
     features: [
       "Marketing site or landing page",
+      "AI-assisted content and code",
       "CMS your team can actually use",
       "Live in two to three weeks",
       "30 days of tweaks after launch",
@@ -19,7 +20,7 @@ const tiers = [
     tagline: "Custom apps, automations, and internal tools.",
     features: [
       "Web app or internal tool built to spec",
-      "AI and automation where it earns its keep",
+      "AI agents and automation where they earn their keep",
       "Weekly demos and a shared roadmap",
       "60 days of support after launch",
     ],
@@ -29,9 +30,9 @@ const tiers = [
   {
     name: "Dedicated",
     price: "Monthly retainer",
-    tagline: "An ongoing team, without hiring one.",
+    tagline: "An AI-native team, without hiring one.",
     features: [
-      "Senior team billed by the month",
+      "Senior developer billed by the month",
       "Continuous shipping against your roadmap",
       "Shared Slack, weekly reviews",
       "Pause or cancel with 30 days' notice",
