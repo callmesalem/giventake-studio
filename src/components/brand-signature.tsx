@@ -109,6 +109,7 @@ export function BrandSignature() {
   return (
     <div className="relative isolate">
       <div
+        data-crit="signature-card"
         className="relative overflow-hidden rounded-3xl border border-hairline bg-card shadow-lift"
         role="group"
         aria-label="The Exchange: what we take in and what we ship."
@@ -257,6 +258,7 @@ export function BrandSignature() {
 
         {/* Interactive label layer */}
         <ul
+          data-crit="signature-layer"
           className="pointer-events-none absolute inset-0 m-0 list-none p-0"
           aria-label="Jump to a section by exchange"
         >
