@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/reveal";
 import { IconArrowRight } from "@/components/marks";
 import { CaseStudies } from "@/components/sections/case-studies";
 
@@ -108,7 +109,7 @@ export function Work() {
   return (
     <section id="work" className="border-b border-hairline bg-secondary/50">
       <div className="mx-auto max-w-7xl px-6 py-24 md:py-28">
-        <div className="mb-14 max-w-2xl">
+        <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Work</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
             Built with AI agents, reviewed by a human.
@@ -116,50 +117,51 @@ export function Work() {
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
             These are the kinds of projects we ship. AI handles the repetitive parts; I handle architecture, review, and delivery.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {commissions.map((p) => (
-            <article
-              key={p.title}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-hairline bg-white transition hover:shadow-lift"
-            >
-              <div className={`relative h-56 overflow-hidden border-b border-hairline p-6 ${bgTint[p.preview]}`}>
-                <div className="absolute left-5 top-5 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-ink backdrop-blur">
-                  {p.kind}
+          {commissions.map((p, i) => (
+            <Reveal key={p.title} delay={i * 80}>
+              <article className="card-lift group flex h-full flex-col overflow-hidden rounded-2xl border border-hairline bg-white">
+                <div className={`relative h-56 overflow-hidden border-b border-hairline p-6 ${bgTint[p.preview]}`}>
+                  <div className="absolute left-5 top-5 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-ink backdrop-blur">
+                    {p.kind}
+                  </div>
+                  <div className="mt-10 h-full">
+                    <Preview kind={p.preview} />
+                  </div>
                 </div>
-                <div className="mt-10 h-full">
-                  <Preview kind={p.preview} />
+                <div className="flex flex-1 flex-col p-6">
+                  <h3 className="text-[20px] font-semibold tracking-tight text-ink">
+                    {p.title}
+                  </h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-muted-ink">{p.body}</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {p.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded-full border border-hairline bg-secondary px-2.5 py-1 text-[11px] font-medium text-ink"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                  <a
+                    href="#contact"
+                    className="btn-icon-nudge mt-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-violet transition group-hover:gap-2.5"
+                  >
+                    Commission this
+                    <IconArrowRight className="h-4 w-4" />
+                  </a>
                 </div>
-              </div>
-              <div className="flex flex-1 flex-col p-6">
-                <h3 className="text-[20px] font-semibold tracking-tight text-ink">
-                  {p.title}
-                </h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-ink">{p.body}</p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {p.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full border border-hairline bg-secondary px-2.5 py-1 text-[11px] font-medium text-ink"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <a
-                  href="#contact"
-                  className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-violet transition group-hover:gap-2.5"
-                >
-                  Commission this
-                  <IconArrowRight className="h-4 w-4" />
-                </a>
-              </div>
-            </article>
+              </article>
+            </Reveal>
           ))}
         </div>
 
-        <CaseStudies />
+        <Reveal delay={120}>
+          <CaseStudies />
+        </Reveal>
       </div>
     </section>
   );

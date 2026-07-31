@@ -35,17 +35,18 @@ export function SiteHeader() {
             <a
               key={n.label}
               href={n.href}
-              className="text-sm font-medium text-muted-ink transition hover:text-ink"
+              className="nav-link text-sm font-medium text-muted-ink transition hover:text-ink"
             >
               {n.label}
             </a>
           ))}
         </nav>
 
+
         <div className="flex items-center gap-2">
           <a
             href="#contact"
-            className="hidden text-sm font-medium text-muted-ink transition hover:text-ink sm:inline-flex"
+            className="nav-link hidden text-sm font-medium text-muted-ink transition hover:text-ink sm:inline-flex"
           >
             Book a call
           </a>
@@ -56,6 +57,7 @@ export function SiteHeader() {
             Start a project
           </a>
         </div>
+
       </div>
     </header>
   );
