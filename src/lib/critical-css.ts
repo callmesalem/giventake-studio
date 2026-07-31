@@ -24,4 +24,14 @@ body{margin:0;background:var(--crit-paper);color:var(--crit-ink);font-family:"In
 @media(min-width:640px){[data-crit="hero-title"]{font-size:56px}}
 @media(min-width:768px){[data-crit="hero-grid"]{padding:96px 24px 128px}[data-crit="hero-title"]{font-size:72px}}
 @media(min-width:1024px){[data-crit="hero-grid"]{grid-template-columns:1.15fr 1fr;gap:64px}[data-crit="hero-title"]{font-size:80px}}
+/* Entrance + ambient motion declared up front: the first painted frame already
+   has the final rules, so promoting the main stylesheet never re-triggers or
+   flashes hero content. Ambient loops stay paused until <html data-motion="on">. */
+@keyframes rise-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.rise-in{animation:rise-in .7s cubic-bezier(.22,1,.36,1) backwards;will-change:opacity,transform}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.85)}}
+.pulse-dot{animation:pulse-dot 2s ease-in-out infinite;animation-play-state:paused}
+:root[data-motion="on"] .pulse-dot{animation-play-state:running}
+@media(prefers-reduced-motion:reduce){.rise-in{animation:none;opacity:1;transform:none}.pulse-dot{animation:none}}
+
 `;
