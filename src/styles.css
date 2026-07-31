@@ -138,6 +138,12 @@
   --ring: #6366f1;
   --brand: #6366f1;
   --brand-foreground: #ffffff;
+
+  /* hero background glow */
+  --hero-glow-1: #6366f1;
+  --hero-glow-2: #818cf8;
+  --hero-glow-3: #d4a857;
+  --hero-glow-opacity: 0.10;
 }
 
 @layer base {
