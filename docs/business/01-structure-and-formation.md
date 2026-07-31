@@ -110,16 +110,22 @@ establish who owns the company.
 
 ---
 
-## The decision: form a new LLC ⚠️ **recommendation reversed**
+## The decision: form a new LLC ✅ **decided**
 
-**Recommendation: form a new Ohio LLC for the software business — do not run it through GivenTake Goods LLC.**
+**Form a new Ohio LLC for the software business. Do not run it through GivenTake Goods LLC.**
 
-> **This reverses the earlier recommendation in this document.** The original
+> **This reversed an earlier recommendation in this document.** The original
 > advice was to register a trade name under the existing entity, on the
-> assumption it was a clean, general-purpose LLC. Three facts changed that:
-> the entity **performed contractor work**, it **held an Ohio vendor's licence**,
-> and it has been **dormant since**. Each one is manageable alone. Together they
-> make the existing entity the wrong container for a new business.
+> assumption it was a clean, general-purpose LLC. It isn't: the entity
+> **performed contractor work**, held an **Ohio vendor's licence**, and has since
+> stopped trading entirely.
+>
+> **Note on why "I stopped doing that work" doesn't resolve it.** The construction
+> statute of repose runs from **substantial completion of each job**, not from
+> when the business wound down. Ceasing to trade in, say, 2023 does not end the
+> exposure in 2023 — it ends roughly ten years after the last job was completed.
+> A dormant entity with a live tail is precisely the thing you don't want
+> underneath a new business, because it looks harmless and isn't.
 
 ### Why: the construction liability tail
 
@@ -153,21 +159,22 @@ A new LLC does not make that tail disappear — it stays with GivenTake Goods LL
 where it belongs. What it does is make sure the tail cannot reach the software
 business.
 
-### Why: the vendor's licence
+### The vendor's licence — likely resolved, worth confirming
 
-A vendor's licence was obtained, and the business then went quiet. Ohio requires
-a return **every filing period even when sales are zero**. Missed returns put the
-account in delinquency, accrue penalties (up to $50 or 10% of unpaid tax per
-period, plus interest), and can lead the Department of Taxation to revoke the
-licence for inactivity.
+A vendor's licence was obtained and is no longer held. If it was **formally
+cancelled with a final return filed**, this is closed and there is nothing to do.
 
-So the entity may be carrying an open tax account with an unfiled-return trail
-and accruing penalties, with notices going to a residential address. That has to
-be cleaned up regardless of which entity you use going forward — see
-[07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md) — but you do not
-want to be applying for a **new** vendor's licence, opening insurance
-underwriting, and onboarding clients under an entity that is delinquent with the
-Ohio Department of Taxation.
+The one thing to check is *how* it ended. Ohio requires a sales tax return **every
+filing period even when sales are zero**, so a licence that was simply abandoned
+rather than cancelled can leave unfiled periods behind — with penalties and
+estimated assessments attached, and notices going to a residential address. A
+licence revoked by the Department for inactivity is not the same as one you
+closed out.
+
+One lookup settles it → [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md) §1.
+
+Either way this no longer drives the structure decision. The construction tail
+does that on its own.
 
 ### Why the cost objection disappears
 
