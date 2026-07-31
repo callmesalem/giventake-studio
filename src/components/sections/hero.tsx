@@ -39,9 +39,9 @@ export function Hero() {
             data-crit="hero-lede"
             className="mt-8 max-w-xl text-[17px] leading-[1.55] text-muted-ink md:text-[18px]"
           >
-            I'm a solo developer who builds with AI coding agents and modern tools. You get the
-            speed of a small team without the overhead of hiring one. Tell me what you need. A few
-            weeks later, you're using it.
+            We're a development studio that builds with AI coding agents and modern tools. You get
+            the speed of a small team without the overhead of hiring one. Tell us what you need. A
+            few weeks later, you're using it.
           </p>
 
           <div data-crit="hero-cta" className="mt-10 flex flex-wrap items-center gap-3 rise-in">
@@ -71,8 +71,8 @@ export function Hero() {
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-muted-ink">
               New studio, taking on our first commissions of 2026. AI-assisted delivery means faster
-              prototypes and fewer handoffs. Founder-led, so you talk directly to whoever is
-              building your product.
+              prototypes and fewer handoffs. You deal with the studio directly — no account
+              managers, no work passed down a chain.
             </p>
           </div>
         </div>

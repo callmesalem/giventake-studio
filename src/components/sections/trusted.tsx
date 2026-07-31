@@ -8,7 +8,7 @@ import { Reveal } from "@/components/reveal";
 
 const facts = [
   { k: "AI-assisted delivery", v: "Faster builds, fewer meetings" },
-  { k: "Founder-led", v: "Every project" },
+  { k: "Direct, no handoffs", v: "Every project" },
   { k: "Weeks, not quarters", v: "Typical timeline" },
   { k: "You own the code", v: "No lock-in" },
 ];
