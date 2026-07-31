@@ -1,6 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { LogoMark } from "@/components/marks";
 import { useConsent } from "@/lib/consent";
+import { offers } from "@/lib/offers";
+
+/**
+ * Header and footer render on every route, so section links MUST be
+ * root-relative ("/#pricing"), never a bare hash ("#pricing"). A bare hash only
+ * resolves against the current document, so on /services/*, /privacy, /terms,
+ * /cookies, /do-not-sell and /data-request it silently does nothing.
+ */
 
 function CookieSettingsLink() {
   const { openPreferences } = useConsent();
@@ -17,11 +25,11 @@ function CookieSettingsLink() {
 }
 
 const nav = [
-  { label: "Services", href: "#services" },
-  { label: "Work", href: "#work" },
-  { label: "How", href: "#how" },
-  { label: "Guardrails", href: "#guardrails" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Services", href: "/services" },
+  { label: "Work", href: "/#work" },
+  { label: "Process", href: "/process" },
+  { label: "Guardrails", href: "/#guardrails" },
+  { label: "Pricing", href: "/#pricing" },
 ];
 
 export function SiteHeader() {
@@ -55,13 +63,13 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <a
-            href="#contact"
+            href="/#contact"
             className="nav-link hidden text-sm font-medium text-muted-ink transition hover:text-ink sm:inline-flex"
           >
             Book a call
           </a>
           <a
-            href="#contact"
+            href="/#contact"
             className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-white transition hover:opacity-90"
           >
             Start a project
@@ -75,28 +83,30 @@ export function SiteHeader() {
 export function SiteFooter() {
   const groups = [
     {
+      // Real offer pages rather than four labels pointing at one homepage
+      // anchor — these are the pages that most need internal links.
       title: "Services",
       items: [
-        { label: "Websites", href: "#services" },
-        { label: "Web Apps", href: "#services" },
-        { label: "AI Integrations", href: "#services" },
-        { label: "Automation", href: "#services" },
+        ...offers.map((o) => ({ label: o.title, href: `/services/${o.slug}` })),
+        { label: "All services", href: "/services" },
       ],
     },
     {
       title: "Studio",
       items: [
-        { label: "Work", href: "#work" },
-        { label: "Pricing", href: "#pricing" },
-        { label: "How it works", href: "#how" },
-        { label: "Guardrails", href: "#guardrails" },
-        { label: "FAQ", href: "#faq" },
+        { label: "Work", href: "/#work" },
+        { label: "Pricing", href: "/#pricing" },
+        { label: "Our process", href: "/process" },
+        { label: "How we use AI", href: "/how-we-use-ai" },
+        { label: "Articles", href: "/articles" },
+        { label: "Guardrails", href: "/#guardrails" },
+        { label: "FAQ", href: "/#faq" },
       ],
     },
     {
       title: "Company",
       items: [
-        { label: "Contact", href: "#contact" },
+        { label: "Contact", href: "/#contact" },
         { label: "Privacy", href: "/privacy" },
         { label: "Terms", href: "/terms" },
         { label: "Cookies", href: "/cookies" },

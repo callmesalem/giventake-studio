@@ -1,5 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/reveal";
-import { IconBot, IconTest, IconLock, IconReview } from "@/components/marks";
+import { IconBot, IconTest, IconLock, IconReview, IconArrowRight } from "@/components/marks";
 
 const guardrails = [
   {
@@ -50,6 +51,25 @@ export function QualityGuardrails() {
             </Reveal>
           ))}
         </div>
+
+        <Reveal delay={120}>
+          <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3">
+            <Link
+              to="/how-we-use-ai"
+              className="btn-icon-nudge inline-flex items-center gap-1.5 text-[14px] font-medium text-violet"
+            >
+              Exactly how we use AI
+              <IconArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/process"
+              className="btn-icon-nudge inline-flex items-center gap-1.5 text-[14px] font-medium text-violet"
+            >
+              The process every project runs through
+              <IconArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

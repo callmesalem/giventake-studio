@@ -198,6 +198,23 @@ function OfferPage() {
               </p>
               <p className="mt-2.5 text-[16px] leading-relaxed text-ink">{offer.goodFit}</p>
             </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3">
+              <Link
+                to="/process"
+                className="btn-icon-nudge inline-flex items-center gap-1.5 text-[14px] font-medium text-violet"
+              >
+                The full process, start to finish
+                <IconArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/how-we-use-ai"
+                className="btn-icon-nudge inline-flex items-center gap-1.5 text-[14px] font-medium text-violet"
+              >
+                How we use AI
+                <IconArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </section>
 

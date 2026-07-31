@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/reveal";
+import { OfferCard } from "@/components/offer-card";
 import { offers } from "@/lib/offers";
 import {
   IconBot,
@@ -102,29 +103,17 @@ export function Services() {
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {offers.map((o) => (
-                <Link
-                  key={o.slug}
-                  to="/services/$slug"
-                  params={{ slug: o.slug }}
-                  className="card-lift group flex h-full flex-col rounded-2xl border border-hairline bg-white p-5 shadow-soft transition hover:border-ink"
-                >
-                  <p className="text-[16px] font-semibold leading-snug tracking-tight text-ink">
-                    {o.title}
-                  </p>
-                  <p className="mt-2 flex-1 text-[13.5px] leading-relaxed text-muted-ink">
-                    {o.tagline}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between border-t border-hairline pt-3.5">
-                    <span className="text-[14px] font-semibold text-ink">{o.priceFrom}</span>
-                    <span className="text-[12px] text-muted-ink">{o.timeline}</span>
-                  </div>
-                  <span className="btn-icon-nudge mt-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-violet group-hover:gap-2.5">
-                    See what's included
-                    <IconArrowRight className="h-4 w-4" />
-                  </span>
-                </Link>
+                <OfferCard key={o.slug} offer={o} />
               ))}
             </div>
+
+            <Link
+              to="/services"
+              className="btn-icon-nudge mt-7 inline-flex items-center gap-1.5 text-[14px] font-medium text-violet"
+            >
+              See all services with pricing
+              <IconArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </Reveal>
       </div>
