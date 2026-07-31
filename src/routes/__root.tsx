@@ -156,9 +156,10 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){var s=function(){var l=document.querySelectorAll('link[data-main-css]');for(var i=0;i<l.length;i++){l[i].media='all'}};if(window.requestAnimationFrame){requestAnimationFrame(function(){requestAnimationFrame(s)})}else{s()}})();",
+              "(function(){var d=document.documentElement;var s=function(){var l=document.querySelectorAll('link[data-main-css]');for(var i=0;i<l.length;i++){l[i].media='all'}var m=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(!m){d.setAttribute('data-motion','on')}};if(window.requestAnimationFrame){requestAnimationFrame(function(){requestAnimationFrame(s)})}else{s()}})();",
           }}
         />
+
         <noscript>
           <link rel="stylesheet" href={appCss} />
         </noscript>

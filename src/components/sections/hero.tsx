@@ -10,12 +10,16 @@ export function Hero() {
       >
         {/* LEFT */}
         <div data-crit="hero-left" className="flex flex-col justify-center">
-          <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-hairline bg-white px-3 py-1.5 text-[12px] font-medium text-muted-ink shadow-soft rise-in">
+          <div
+            data-crit="hero-badge"
+            className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-hairline bg-white px-3 py-1.5 text-[12px] font-medium text-muted-ink shadow-soft rise-in"
+          >
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 pulse-dot" />
             </span>
             Booking projects for 2026
           </div>
+
 
           {/* LCP element: no entrance animation so it paints on the first frame */}
           <h1
@@ -35,9 +39,10 @@ export function Hero() {
           </p>
 
 
-          <div className="mt-10 flex flex-wrap items-center gap-3 rise-in">
+          <div data-crit="hero-cta" className="mt-10 flex flex-wrap items-center gap-3 rise-in">
             <a
               href="#contact"
+              data-crit="hero-cta-primary"
               className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90"
             >
               Start a project
@@ -45,6 +50,7 @@ export function Hero() {
             </a>
             <a
               href="#work"
+              data-crit="hero-cta-secondary"
               className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-5 py-3.5 text-[14px] font-medium text-ink transition hover:border-ink"
             >
               <IconPlay className="h-4 w-4" />
@@ -52,21 +58,26 @@ export function Hero() {
             </a>
           </div>
 
-          {/* honest status line — no fabricated social proof */}
-          <div className="mt-12 flex items-start gap-3 border-t border-hairline pt-6 rise-in">
+          {/* honest status line, no fabricated social proof */}
+          <div
+            data-crit="hero-note"
+            className="mt-12 flex items-start gap-3 border-t border-hairline pt-6 rise-in"
+          >
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-muted-ink">
               New studio, taking on our first commissions of 2026. AI-assisted delivery means faster prototypes and fewer handoffs. Founder-led, so you talk directly to whoever is building your product.
             </p>
           </div>
+
         </div>
 
         {/* RIGHT — brand signature: The Exchange */}
-        <div className="relative flex items-center justify-center lg:justify-end">
-          <div className="w-full max-w-[520px]">
+        <div data-crit="hero-right" className="relative flex items-center justify-center lg:justify-end">
+          <div data-crit="hero-signature" className="w-full max-w-[520px]">
             <BrandSignature />
           </div>
         </div>
+
       </div>
     </section>
   );

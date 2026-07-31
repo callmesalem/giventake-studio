@@ -109,6 +109,7 @@ export function BrandSignature() {
   return (
     <div className="relative isolate">
       <div
+        data-crit="signature-card"
         className="relative overflow-hidden rounded-3xl border border-hairline bg-card shadow-lift"
         role="group"
         aria-label="The Exchange: what we take in and what we ship."
@@ -135,6 +136,7 @@ export function BrandSignature() {
         </div>
 
         <svg
+          data-crit="signature-svg"
           viewBox="0 0 520 560"
           className="block h-auto w-full"
           preserveAspectRatio="xMidYMid meet"
@@ -256,6 +258,7 @@ export function BrandSignature() {
 
         {/* Interactive label layer */}
         <ul
+          data-crit="signature-layer"
           className="pointer-events-none absolute inset-0 m-0 list-none p-0"
           aria-label="Jump to a section by exchange"
         >
@@ -331,6 +334,7 @@ export function BrandSignature() {
 
       <div
         aria-hidden="true"
+        data-crit="signature-caption"
         className="mt-4 flex items-center justify-between px-1 text-[11px] text-muted-foreground"
       >
         <span className="font-mono uppercase tracking-[0.18em]">Give &amp; take, on repeat</span>
