@@ -1,17 +1,34 @@
+import { lazy, Suspense, type ComponentType } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Hero } from "@/components/sections/hero";
 import { TrustedPartner } from "@/components/sections/trusted";
-import { WhoWeHelp } from "@/components/sections/who";
-import { Services } from "@/components/sections/services";
-import { HowItWorks } from "@/components/sections/how";
-import { QualityGuardrails } from "@/components/sections/quality";
-import { Work } from "@/components/sections/work";
-import { Testimonials } from "@/components/sections/testimonials";
-import { Pricing } from "@/components/sections/pricing";
-import { FAQ, faqs } from "@/components/sections/faq";
-import { ContactCTA } from "@/components/sections/contact";
+import { faqs } from "@/lib/faq-data";
+
+/* Only the header, hero and the row directly under it ship in the critical
+   bundle. Everything below the fold is a separate chunk: the server still
+   streams the full HTML (so crawlers and no-JS visitors see every section),
+   and the browser hydrates each boundary as its chunk arrives, after the LCP
+   headline has already painted. */
+const named = <K extends string>(key: K, load: () => Promise<Record<K, ComponentType>>) =>
+  lazy(() => load().then((m) => ({ default: m[key] })));
+
+const WhoWeHelp = named("WhoWeHelp", () => import("@/components/sections/who"));
+const Services = named("Services", () => import("@/components/sections/services"));
+const HowItWorks = named("HowItWorks", () => import("@/components/sections/how"));
+const QualityGuardrails = named("QualityGuardrails", () => import("@/components/sections/quality"));
+const Work = named("Work", () => import("@/components/sections/work"));
+const Testimonials = named("Testimonials", () => import("@/components/sections/testimonials"));
+const Pricing = named("Pricing", () => import("@/components/sections/pricing"));
+const FAQ = named("FAQ", () => import("@/components/sections/faq"));
+const ContactCTA = named("ContactCTA", () => import("@/components/sections/contact"));
+const Toaster = named("Toaster", () => import("@/components/ui/sonner"));
+
+/* Reserves roughly the section's height so a client-only render (or a slow
+   chunk) never shifts the page. */
+function Placeholder({ h }: { h: number }) {
+  return <div aria-hidden="true" style={{ minHeight: h }} />;
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -58,18 +75,20 @@ function Index() {
       <main>
         <Hero />
         <TrustedPartner />
-        <WhoWeHelp />
-        <Services />
-        <section id="how"><HowItWorks /></section>
-        <QualityGuardrails />
-        <Work />
-        <Testimonials />
-        <Pricing />
-        <section id="faq"><FAQ /></section>
-        <ContactCTA />
+        <Suspense fallback={<Placeholder h={520} />}>
+          <WhoWeHelp />
+          <Services />
+          <section id="how"><HowItWorks /></section>
+          <QualityGuardrails />
+          <Work />
+          <Testimonials />
+          <Pricing />
+          <section id="faq"><FAQ /></section>
+          <ContactCTA />
+        </Suspense>
       </main>
       <SiteFooter />
-      <Toaster />
+      <Suspense fallback={null}><Toaster /></Suspense>
     </div>
   );
 }
