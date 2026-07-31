@@ -23,7 +23,13 @@ body{margin:0;background:var(--crit-paper);color:var(--crit-ink);font-family:"In
 [data-crit="hero-lede"]{margin:32px 0 0;max-width:36rem;font-size:17px;line-height:1.55;color:var(--crit-muted)}
 @media(min-width:640px){[data-crit="hero-title"]{font-size:56px}}
 @media(min-width:768px){[data-crit="hero-grid"]{padding:96px 24px 128px}[data-crit="hero-title"]{font-size:72px}}
-@media(min-width:1024px){[data-crit="hero-grid"]{grid-template-columns:1.15fr 1fr;gap:64px}[data-crit="hero-title"]{font-size:80px}}
+/* Reserve the brand signature's intrinsic box so promoting the main stylesheet
+   does not resize the hero (the SVG would otherwise fall back to its default
+   replaced-element size before the utility classes land). */
+[data-crit="hero-right"]{position:relative;display:flex;align-items:center;justify-content:center}
+[data-crit="hero-signature"]{width:100%;max-width:520px}
+[data-crit="signature-svg"]{display:block;width:100%;height:auto;aspect-ratio:520/560}
+@media(min-width:1024px){[data-crit="hero-grid"]{grid-template-columns:1.15fr 1fr;gap:64px}[data-crit="hero-title"]{font-size:80px}[data-crit="hero-right"]{justify-content:flex-end}}
 /* Entrance + ambient motion declared up front: the first painted frame already
    has the final rules, so promoting the main stylesheet never re-triggers or
    flashes hero content. Ambient loops stay paused until <html data-motion="on">. */
