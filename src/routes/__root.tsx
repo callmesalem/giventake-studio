@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { criticalCss } from "../lib/critical-css";
+
 import { ConsentProvider } from "../lib/consent";
 import { ConsentBanner } from "../components/consent-banner";
 
@@ -94,7 +96,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/226b1f7b-7a97-4f06-b92a-6d2bf819247d" },
     ],
     links: [
-      { rel: "stylesheet", href: appCss },
+      // Loaded non-blocking: the inlined critical CSS paints the header and
+      // hero, then this sheet is promoted to `all` right after first paint.
+      { rel: "stylesheet", href: appCss, media: "print", "data-main-css": "" },
+
       {
         rel: "preload",
         as: "font",
@@ -141,7 +146,17 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){var s=function(){var l=document.querySelectorAll('link[data-main-css]');for(var i=0;i<l.length;i++){l[i].media='all'}};if(window.requestAnimationFrame){requestAnimationFrame(function(){requestAnimationFrame(s)})}else{s()}})();",
+          }}
+        />
+        <noscript>
+          <link rel="stylesheet" href={appCss} />
+        </noscript>
       </head>
       <body>
         {children}
@@ -150,6 +165,7 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
+
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
