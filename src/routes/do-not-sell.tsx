@@ -5,12 +5,13 @@ import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { useConsent } from "@/lib/consent";
 
 export const Route = createFileRoute("/do-not-sell")({
-  head: () => pageHead({
-    path: "/do-not-sell",
-    title: "Do Not Sell or Share My Personal Information · GivenTake Goods Devs",
-    description:
-      "Exercise your CCPA and CPRA right to opt out of the sale or sharing of your personal information by GivenTake Goods Devs.",
-  }),
+  head: () =>
+    pageHead({
+      path: "/do-not-sell",
+      title: "Do Not Sell or Share My Personal Information · GivenTake Goods Devs",
+      description:
+        "Exercise your CCPA and CPRA right to opt out of the sale or sharing of your personal information by GivenTake Goods Devs.",
+    }),
   component: DoNotSellPage,
 });
 

@@ -3,12 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => pageHead({
-    path: "/privacy",
-    title: "Privacy Policy · GivenTake Goods Devs",
-    description:
-      "How GivenTake Goods Devs collects, uses, and protects your data. GDPR, CCPA, and ePrivacy compliant.",
-  }),
+  head: () =>
+    pageHead({
+      path: "/privacy",
+      title: "Privacy Policy · GivenTake Goods Devs",
+      description:
+        "How GivenTake Goods Devs collects, uses, and protects your data. GDPR, CCPA, and ePrivacy compliant.",
+    }),
   component: PrivacyPage,
 });
 
@@ -22,15 +23,20 @@ function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="mt-3 text-[13px] text-muted-ink">
-          Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+          Last updated:{" "}
+          {new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
         </p>
 
         <div className="prose-content mt-10 space-y-8 text-[15px] leading-relaxed text-ink">
           <Section title="1. Who we are">
             <p>
-              GivenTake Goods Devs ("we", "us") is a small development studio operating this website.
-              We are the data controller for any personal information you submit through this site.
-              You can reach us at{" "}
+              GivenTake Goods Devs ("we", "us") is a small development studio operating this
+              website. We are the data controller for any personal information you submit through
+              this site. You can reach us at{" "}
               <a href="mailto:hello@giventake.dev" className="underline">
                 hello@giventake.dev
               </a>
@@ -45,12 +51,12 @@ function PrivacyPage() {
                 description, budget range, and timeline. You provide this voluntarily.
               </li>
               <li>
-                <strong>Technical data:</strong> IP address, browser type, device type, referrer, and
-                pages visited. Collected only if you accept analytics or marketing cookies.
+                <strong>Technical data:</strong> IP address, browser type, device type, referrer,
+                and pages visited. Collected only if you accept analytics or marketing cookies.
               </li>
               <li>
-                <strong>Approximate location:</strong> derived from your IP address (country / region
-                level). We do not collect precise GPS location.
+                <strong>Approximate location:</strong> derived from your IP address (country /
+                region level). We do not collect precise GPS location.
               </li>
               <li>
                 <strong>Cookies and similar technologies:</strong> see our{" "}

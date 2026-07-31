@@ -55,7 +55,10 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: ogImageUrl },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "GivenTake Goods Devs — Your On-Demand Development Team" },
+      {
+        property: "og:image:alt",
+        content: "GivenTake Goods Devs — Your On-Demand Development Team",
+      },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "GivenTake Goods Devs | Your On-Demand Development Team" },
       {
@@ -64,7 +67,10 @@ export const Route = createFileRoute("/")({
           "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools — built with human review.",
       },
       { name: "twitter:image", content: ogImageUrl },
-      { name: "twitter:image:alt", content: "GivenTake Goods Devs — Your On-Demand Development Team" },
+      {
+        name: "twitter:image:alt",
+        content: "GivenTake Goods Devs — Your On-Demand Development Team",
+      },
     ],
     links: [{ rel: "canonical", href: `${BASE_URL}/` }],
     scripts: [
@@ -105,7 +111,9 @@ function Index() {
         </Suspense>
       </main>
       <SiteFooter />
-      <Suspense fallback={null}><Toaster /></Suspense>
+      <Suspense fallback={null}>
+        <Toaster />
+      </Suspense>
     </div>
   );
 }

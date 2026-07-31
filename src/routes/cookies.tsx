@@ -4,12 +4,13 @@ import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { useConsent } from "@/lib/consent";
 
 export const Route = createFileRoute("/cookies")({
-  head: () => pageHead({
-    path: "/cookies",
-    title: "Cookie Policy · GivenTake Goods Devs",
-    description:
-      "Every cookie and tracker used by GivenTake Goods Devs, its purpose, its lifetime, and how to opt out.",
-  }),
+  head: () =>
+    pageHead({
+      path: "/cookies",
+      title: "Cookie Policy · GivenTake Goods Devs",
+      description:
+        "Every cookie and tracker used by GivenTake Goods Devs, its purpose, its lifetime, and how to opt out.",
+    }),
   component: CookiesPage,
 });
 
@@ -62,7 +63,12 @@ function CookiesPage() {
           Cookie Policy
         </h1>
         <p className="mt-3 text-[13px] text-muted-ink">
-          Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+          Last updated:{" "}
+          {new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
         </p>
 
         <p className="mt-8 text-[15px] leading-relaxed text-muted-ink">
@@ -127,7 +133,10 @@ function CookiesPage() {
                   Meta
                 </a>
                 ,{" "}
-                <a href="https://www.tiktok.com/legal/page/global/privacy-policy/en" className="underline">
+                <a
+                  href="https://www.tiktok.com/legal/page/global/privacy-policy/en"
+                  className="underline"
+                >
                   TikTok
                 </a>
                 ,{" "}

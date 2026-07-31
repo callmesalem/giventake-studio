@@ -18,7 +18,6 @@ const tiers = [
     cta: "Start small",
   },
   {
-
     name: "Starter",
     price: "From $2,500",
     tagline: "Landing pages and simple builds.",
@@ -85,7 +84,9 @@ export function Pricing() {
             Work with us the way that fits.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Budgets start at $500 for small builds. Every project is scoped on a call. You'll get a fixed number, a clear timeline, and a written statement of what's included before we start.
+            Budgets start at $500 for small builds. Every project is scoped on a call. You'll get a
+            fixed number, a clear timeline, and a written statement of what's included before we
+            start.
           </p>
         </Reveal>
 
@@ -166,11 +167,15 @@ export function Pricing() {
               What's included with every project
             </h3>
             <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-              Agentic delivery means AI coding agents do the bulk of the construction, and I verify the work. Here's what that means for you in practical terms.
+              Agentic delivery means AI coding agents do the bulk of the construction, and I verify
+              the work. Here's what that means for you in practical terms.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {included.map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85">
+                <li
+                  key={item}
+                  className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85"
+                >
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
                   <span>{item}</span>
                 </li>

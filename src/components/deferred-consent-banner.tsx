@@ -18,14 +18,18 @@ export function DeferredConsentBanner() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const idle = (window as unknown as {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-    }).requestIdleCallback;
+    const idle = (
+      window as unknown as {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      }
+    ).requestIdleCallback;
 
     if (idle) {
       const id = idle(() => setReady(true), { timeout: 2000 });
-      return () => (window as unknown as { cancelIdleCallback?: (id: number) => void })
-        .cancelIdleCallback?.(id);
+      return () =>
+        (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(
+          id,
+        );
     }
 
     const t = window.setTimeout(() => setReady(true), 200);

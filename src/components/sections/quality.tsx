@@ -1,10 +1,5 @@
 import { Reveal } from "@/components/reveal";
-import {
-  IconBot,
-  IconTest,
-  IconLock,
-  IconReview,
-} from "@/components/marks";
+import { IconBot, IconTest, IconLock, IconReview } from "@/components/marks";
 
 const guardrails = [
   {
@@ -50,9 +45,7 @@ export function QualityGuardrails() {
                 <h3 className="mt-5 text-[18px] font-semibold tracking-tight text-ink">
                   {g.title}
                 </h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-                  {g.body}
-                </p>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">{g.body}</p>
               </article>
             </Reveal>
           ))}

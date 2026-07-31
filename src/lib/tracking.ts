@@ -20,13 +20,25 @@ import type { ConsentState } from "./consent";
 type Loaded = Record<string, boolean>;
 const loaded: Loaded = {};
 
+// Vendor pixel bootstrap types are intentionally loose: these objects are
+// defined by third-party scripts and only the small surface we call is typed.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRecord = Record<string, any>;
+
 declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
-    fbq?: ((...args: unknown[]) => void) & { callMethod?: unknown; queue?: unknown[]; loaded?: boolean; version?: string; push?: unknown };
+    fbq?: ((...args: unknown[]) => void) & {
+      callMethod?: (...args: unknown[]) => void;
+      queue?: unknown[];
+      loaded?: boolean;
+      version?: string;
+      push?: unknown;
+    };
     _fbq?: unknown;
-    ttq?: any;
+    ttq?: AnyRecord;
+    TiktokAnalyticsObject?: string;
     _linkedin_data_partner_ids?: string[];
     lintrk?: (...args: unknown[]) => void;
   }
@@ -44,9 +56,8 @@ function injectScript(src: string, id: string) {
 function ensureGtagBootstrap() {
   window.dataLayer = window.dataLayer || [];
   if (!window.gtag) {
-    window.gtag = function gtag() {
-      // eslint-disable-next-line prefer-rest-params
-      window.dataLayer!.push(arguments);
+    window.gtag = function gtag(...args: unknown[]) {
+      window.dataLayer!.push(args);
     };
     // Consent Mode v2 defaults — deny until updated.
     window.gtag("consent", "default", {
@@ -88,23 +99,29 @@ function loadGA4() {
 function loadMetaPixel() {
   const id = import.meta.env.VITE_META_PIXEL_ID as string | undefined;
   if (!id || loaded.meta) return;
-  // Standard Meta Pixel bootstrap.
-  (function (f: any, b, e, v, n?: any, t?: any, s?: any) {
+
+  // Standard Meta Pixel bootstrap (vendor code), rewritten to satisfy project lint rules.
+  (function (f: AnyRecord, b: Document, e: string, v: string) {
     if (f.fbq) return;
-    n = f.fbq = function () {
-      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-    };
+    const n: AnyRecord = (f.fbq = function (...args: unknown[]) {
+      if (n.callMethod) {
+        n.callMethod(...args);
+      } else {
+        n.queue.push(args);
+      }
+    });
     if (!f._fbq) f._fbq = n;
     n.push = n;
     n.loaded = true;
     n.version = "2.0";
     n.queue = [];
-    t = b.createElement(e);
+    const t = b.createElement(e) as HTMLScriptElement;
     t.async = true;
     t.src = v;
-    s = b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t, s);
+    const s = b.getElementsByTagName(e)[0] as HTMLScriptElement;
+    s.parentNode!.insertBefore(t, s);
   })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+
   window.fbq?.("init", id);
   window.fbq?.("track", "PageView");
   loaded.meta = true;
@@ -113,40 +130,57 @@ function loadMetaPixel() {
 function loadTikTokPixel() {
   const id = import.meta.env.VITE_TIKTOK_PIXEL_ID as string | undefined;
   if (!id || loaded.tiktok) return;
-  (function (w: any, d, t) {
+
+  // Standard TikTok Pixel bootstrap (vendor code), rewritten to satisfy project lint rules.
+  (function (w: AnyRecord, d: Document, t: string) {
     w.TiktokAnalyticsObject = t;
     const ttq = (w[t] = w[t] || []);
-    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
-    ttq.setAndDefer = function (t: any, e: any) {
-      t[e] = function () {
-        t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+    ttq.methods = [
+      "page",
+      "track",
+      "identify",
+      "instances",
+      "debug",
+      "on",
+      "off",
+      "once",
+      "ready",
+      "alias",
+      "group",
+      "enableCookie",
+      "disableCookie",
+    ];
+    ttq.setAndDefer = function (target: AnyRecord, method: string) {
+      target[method] = function (...args: unknown[]) {
+        target.push([method, ...args]);
       };
     };
     for (let i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-    ttq.instance = function (t: any) {
-      const e = ttq._i[t] || [];
-      for (let n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
-      return e;
+    ttq.instance = function (pixelId: string) {
+      const inst = ttq._i[pixelId] || [];
+      for (let i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(inst, ttq.methods[i]);
+      return inst;
     };
-    ttq.load = function (e: string) {
-      const n = "https://analytics.tiktok.com/i18n/pixel/events.js";
+    ttq.load = function (pixelId: string) {
+      const base = "https://analytics.tiktok.com/i18n/pixel/events.js";
       ttq._i = ttq._i || {};
-      ttq._i[e] = [];
-      ttq._i[e]._u = n;
+      ttq._i[pixelId] = [];
+      ttq._i[pixelId]._u = base;
       ttq._t = ttq._t || {};
-      ttq._t[e] = +new Date();
+      ttq._t[pixelId] = +new Date();
       ttq._o = ttq._o || {};
-      ttq._o[e] = {};
+      ttq._o[pixelId] = {};
       const o = d.createElement("script");
       o.type = "text/javascript";
       o.async = true;
-      o.src = n + "?sdkid=" + e + "&lib=" + t;
+      o.src = base + "?sdkid=" + pixelId + "&lib=" + t;
       const a = d.getElementsByTagName("script")[0];
       a.parentNode!.insertBefore(o, a);
     };
     ttq.load(id);
     ttq.page();
   })(window, document, "ttq");
+
   loaded.tiktok = true;
 }
 

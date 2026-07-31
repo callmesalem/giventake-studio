@@ -5,7 +5,12 @@ import { useConsent } from "@/lib/consent";
 function CookieSettingsLink() {
   const { openPreferences } = useConsent();
   return (
-    <button type="button" data-consent-trigger="footer" onClick={openPreferences} className="hover:text-ink">
+    <button
+      type="button"
+      data-consent-trigger="footer"
+      onClick={openPreferences}
+      className="hover:text-ink"
+    >
       Cookie settings
     </button>
   );
@@ -21,8 +26,14 @@ const nav = [
 
 export function SiteHeader() {
   return (
-    <header data-crit="header" className="sticky top-0 z-50 border-b border-hairline bg-paper/80 backdrop-blur-xl">
-      <div data-crit="header-inner" className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+    <header
+      data-crit="header"
+      className="sticky top-0 z-50 border-b border-hairline bg-paper/80 backdrop-blur-xl"
+    >
+      <div
+        data-crit="header-inner"
+        className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6"
+      >
         <Link to="/" className="flex items-center gap-2.5">
           <LogoMark className="h-7 w-7 text-ink" />
           <span className="text-[15px] font-semibold tracking-tight text-ink">
@@ -42,7 +53,6 @@ export function SiteHeader() {
           ))}
         </nav>
 
-
         <div className="flex items-center gap-2">
           <a
             href="#contact"
@@ -57,7 +67,6 @@ export function SiteHeader() {
             Start a project
           </a>
         </div>
-
       </div>
     </header>
   );
@@ -109,7 +118,8 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-muted-ink">
-              Your on-demand, AI-native development team. We build software for businesses that would rather ship than hire.
+              Your on-demand, AI-native development team. We build software for businesses that
+              would rather ship than hire.
             </p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-3 py-1.5 text-[12px] font-medium text-muted-ink">
               <span className="relative flex h-2 w-2">
@@ -147,10 +157,19 @@ export function SiteFooter() {
             © {new Date().getFullYear()} GivenTake Goods Devs. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-muted-ink">
-            <a href="/privacy" className="hover:text-ink">Privacy</a>
-            <a href="/terms" className="hover:text-ink">Terms</a>
-            <a href="/cookies" className="hover:text-ink">Cookies</a>
-            <a href="/do-not-sell" className="font-medium text-ink underline decoration-hairline underline-offset-4 hover:decoration-ink">
+            <a href="/privacy" className="hover:text-ink">
+              Privacy
+            </a>
+            <a href="/terms" className="hover:text-ink">
+              Terms
+            </a>
+            <a href="/cookies" className="hover:text-ink">
+              Cookies
+            </a>
+            <a
+              href="/do-not-sell"
+              className="font-medium text-ink underline decoration-hairline underline-offset-4 hover:decoration-ink"
+            >
               Do Not Sell or Share My Personal Information
             </a>
             <CookieSettingsLink />

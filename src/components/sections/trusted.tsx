@@ -26,9 +26,7 @@ export function TrustedPartner() {
           {facts.map((f, i) => (
             <Reveal key={f.k} delay={i * 60}>
               <div className="flex flex-col items-center text-center">
-                <div className="text-[18px] font-semibold tracking-tight text-ink">
-                  {f.k}
-                </div>
+                <div className="text-[18px] font-semibold tracking-tight text-ink">{f.k}</div>
                 <div className="mt-1 text-[12px] text-muted-ink">{f.v}</div>
               </div>
             </Reveal>

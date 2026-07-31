@@ -29,7 +29,8 @@ export function WhoWeHelp() {
             You focus on the business. We build the technology.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            One team doing the work you'd normally split across five or six freelancers. One point of contact, one system that fits together.
+            One team doing the work you'd normally split across five or six freelancers. One point
+            of contact, one system that fits together.
           </p>
         </Reveal>
 

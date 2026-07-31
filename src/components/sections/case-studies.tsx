@@ -71,7 +71,8 @@ export function CaseStudies() {
             Agentic workflows, real outcomes.
           </h3>
           <p className="mt-4 text-[17px] leading-relaxed text-muted-ink">
-            These are not mockups. Each block shows the actual workflow output, the before/after result, and the part I kept in human hands.
+            These are not mockups. Each block shows the actual workflow output, the before/after
+            result, and the part I kept in human hands.
           </p>
         </Reveal>
       </div>
@@ -133,8 +134,7 @@ export function CaseStudies() {
 
                   <div className="mt-8">
                     <p className="text-[14px] leading-relaxed text-muted-ink">
-                      <span className="font-semibold text-ink">Agentic delivery:</span>{" "}
-                      {s.agentic}
+                      <span className="font-semibold text-ink">Agentic delivery:</span> {s.agentic}
                     </p>
                     <a
                       href="#contact"
