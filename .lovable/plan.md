@@ -1,127 +1,57 @@
-## Goal
+Plan: UI polish and motion for GivenTake Goods Devs
 
-Make it clear that GivenTake Goods Devs is an AI-native development studio where software is built with AI coding agents and "vibe coding" workflows. Keep the honest founder voice, avoid hype terms like "unlock" or "autonomous AI," and update every section where a visitor would reasonably expect to see this positioning.
+Scope: whole-page visual upgrade, intensity level 6 (present but not overwhelming).
 
-## Key message
+1. Background texture
+- Add a paper-like noise/grain overlay on top of the existing dot grid using a CSS `data:image/svg+xml` or inline base64 noise pattern.
+- Keep it extremely subtle (opacity ~0.03-0.05) so it adds texture without hurting contrast or readability.
+- Make it dark-mode aware: slightly lighter noise on dark backgrounds.
+- Apply it as a fixed pseudo-element so it never repaints per section.
 
-"One developer + AI agents shipping faster than a traditional team." This is the framing we'll use instead of hiding the AI angle or pretending it's a conventional agency.
+2. Hover micro-interactions
+- Cards: add a small translateY(-3px) + shadow lift on hover (services, pricing, work, case studies, quality guardrails).
+- Buttons: add a gentle scale(1.02) and icon nudge on hover; keep transitions short (150-200ms) and ease-out.
+- Navigation links: add an underline/scale micro-interaction that starts from the center.
+- Ensure all hover states still pass contrast and focus-visible is clearly defined.
 
-## Copy changes
+3. Scroll-triggered reveals
+- Create a lightweight `Reveal` component using the Intersection Observer API (client-only, lazy-loaded) to add a `is-visible` class.
+- Animate sections up with a fade + translateY(16px) once they enter the viewport.
+- Stagger child cards within a section by a small delay (50-80ms each) so grids feel alive.
+- Respect `prefers-reduced-motion`: if the user prefers reduced motion, skip the transform and just fade, or disable entirely.
+- Do NOT animate the hero H1 or above-the-fold content; this preserves the LCP target.
 
-### 1. Hero — headline and subhead
+4. Ambient gradient motion
+- Add a slow, large-scale gradient blob behind the hero and a secondary one behind the pricing/quality section.
+- Use CSS-only `@keyframes` with `transform` and `opacity` only (no blur/height/width animation that would cause layout/paint).
+- Park it behind the same `data-motion="on"` gate so it does not run until after first paint.
+- Keep opacity low (~0.15) and colors tied to the existing violet/ink palette.
 
-- **LIVE pill** stays "Booking projects for 2026" but add a small secondary line or keep it.
-- **Subhead** becomes:
-  "I'm a solo developer who builds with AI coding agents and modern tools. You get the speed of a small team without the overhead of hiring one. Tell me what you need. A few weeks later, you're using it."
-- **CTAs** stay: "Start a project" and "See the work".
-- **Honest status line** adds one line about the method:
-  "New studio, taking on our first commissions of 2026. AI-assisted delivery means faster prototypes and fewer handoffs."
+5. Cursor-driven depth effect
+- Add a client-only, lazy-loaded `PointerGlow` component that tracks the mouse position near the hero and brand signature.
+- It renders a soft radial gradient that follows the cursor at a reduced opacity (CSS custom properties updated via refs, not React state, to avoid re-renders).
+- Defer loading until after the LCP window and only on desktop viewports.
+- Disable when `prefers-reduced-motion` is true or on touch devices.
 
-### 2. Trusted partner band — add the AI-native angle
+6. Performance and accessibility safeguards
+- All new animations use CSS transforms and opacity only.
+- Keep the existing `data-motion="on"` gating pattern so motion is non-blocking.
+- Add `prefers-reduced-motion` media queries that disable or simplify all new motion.
+- Verify no new JavaScript is loaded in the critical path for the first paint (lazy-load scroll/observer logic and pointer effect).
+- Run a quick Lighthouse/CLS check to confirm LCP and CLS are not regressed.
 
-Replace the current four facts with:
+Files expected to change:
+- src/styles.css — noise overlay, new keyframes, motion utilities
+- src/components/sections/hero.tsx — add ambient gradient and pointer glow container
+- src/components/sections/services.tsx, pricing.tsx, work.tsx, case-studies.tsx, quality.tsx, testimonials.tsx, how.tsx, who.tsx — wrap sections/cards in Reveal, add hover lift
+- src/components/site-chrome.tsx — nav/button hover micro-interactions
+- src/components/reveal.tsx (new) — Intersection Observer wrapper
+- src/components/pointer-glow.tsx (new) — cursor-driven glow
+- src/routes/index.tsx — lazy-load Reveal and PointerGlow as non-critical chunks
 
-- "AI-assisted delivery" / "Faster builds, fewer meetings"
-- "Founder-led" / "Every project"
-- "Weeks, not quarters" / "Typical timeline"
-- "You own the code" / "No lock-in"
-
-### 3. Who we help — keep audiences, add AI framing
-
-- **Small businesses**: mention that AI tools can integrate their existing stack without a full engineering hire.
-- **Founders**: add that the AI-native workflow means MVPs ship in weeks, not months.
-- **Growing companies**: note that agentic workflows can fill gaps between hires.
-
-### 4. Services — add "Agentic systems" as a service
-
-Add an eighth service card at the top or near the top:
-
-- **Title:** "Agentic systems & AI workflows"
-- **Body:** "Custom AI agents that handle intake, research, drafting, or routing. Built to plug into your existing tools, not replace your team."
-- **Icon:** a simple bot/agent glyph (or reuse `IconSpark` if no new icon is needed).
-
-Reframe the existing "AI integrations" copy to be more specific:
-- **Body:** "LLM-powered features wired into your product: summarization, extraction, search, and routing. We skip the demo and ship the workflow."
-
-### 5. How it works — add an AI step
-
-Insert a fourth step between "We design and build" and "Launch and iterate" (or fold into step 2):
-
-- **Step 2b (optional):** "AI agents do the heavy lifting"
-  "Code generation, tests, and repetitive tasks are handled by AI agents. I review, refine, and ship. You get quality code without the traditional agency clock."
-
-Or, simpler: rewrite step 2 to include it:
-- **Step 2:** "We design and build with AI"
-  "I use AI coding agents and modern frameworks to move fast. You see progress every week. Real screens, real data, real code. If something isn't landing, we catch it early."
-
-### 6. Work — reframe the examples as AI-built projects
-
-Update the section intro:
-- **H2:** "Built with AI agents, reviewed by a human."
-- **Body:** "These are the kinds of projects we ship. AI handles the repetitive parts; I handle architecture, review, and delivery."
-
-Reframe the project cards:
-- **AI intake tool** already fits — make it the lead example and mention it's an agentic workflow.
-- **Booking system** and **dashboard** can note "shipped in weeks with AI-assisted development."
-- **Marketing site** can mention "AI-assisted content and code, fully editable by your team."
-
-Add tags where appropriate: "AI Agents", "LLM Workflows", "Vibe Coding".
-
-### 7. Pricing — keep tiers, add AI speed angle
-
-- **Starter:** "AI-assisted build" in features, keep timeline "Live in two to three weeks."
-- **Growth:** "AI agents + custom code for the parts that matter."
-- **Dedicated:** "A retained AI-native team. Continuous shipping without the overhead."
-
-### 8. Founder note — explain the AI-native approach honestly
-
-Add a paragraph to the founder note:
-
-"I build with AI coding agents and modern tools. That means I can prototype faster, write less boilerplate, and spend more time on the parts that actually need judgment: architecture, UX, and making sure the thing solves your problem. It's not magic, and it's not a replacement for thinking. It's just a better way to ship."
-
-### 9. FAQ — add one AI-specific question, tweak others
-
-Add:
-- **Q:** "Do you use AI to write the code?"
-- **A:** "Yes. I use AI coding agents to handle scaffolding, tests, and repetitive work, then review, refine, and ship everything myself. You still get one person responsible for the outcome."
-
-Update the technologies FAQ to mention agentic tools:
-- "Mostly React, Next.js, TypeScript, and Postgres, plus AI agent workflows and LLM integrations where they fit. We pick the stack based on the problem, not the trend."
-
-### 10. Contact form — add a field or placeholder hint
-
-- In the project description placeholder, hint at AI/agentic work: "What are you building? Mention if you want AI automation, an internal agent, or a traditional web app."
-- Keep the form logic unchanged.
-
-### 11. Footer / meta — minor SEO update
-
-- **Footer tagline:** "Your on-demand, AI-native development team."
-- **SEO title/description in `src/routes/index.tsx`:** update to include "AI-native" and "agentic development" without keyword stuffing.
-  - Title: "GivenTake Goods Devs | AI-Native Development Team for Hire"
-  - Description: "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders. One developer, AI-assisted delivery."
-
-## Files to change
-
-- `src/routes/index.tsx` — SEO meta
-- `src/components/sections/hero.tsx` — headline area, subhead, status line
-- `src/components/sections/trusted.tsx` — facts band
-- `src/components/sections/who.tsx` — audience cards
-- `src/components/sections/services.tsx` — add agentic service, reframe AI copy
-- `src/components/sections/how.tsx` — process step copy
-- `src/components/sections/work.tsx` — section intro and project framing
-- `src/components/sections/pricing.tsx` — feature bullets
-- `src/components/sections/testimonials.tsx` — founder note
-- `src/components/sections/faq.tsx` — add AI question, update tech answer
-- `src/components/sections/contact.tsx` — placeholder text
-- `src/components/site-chrome.tsx` — footer tagline
-
-## Out of scope
-
-- No new design system or layout changes.
-- No new dependencies or components.
-- No changes to the consent, tracking, or legal pages.
-- No changes to form submission logic or contact email.
-
-## Verification
-
-After edits, run a quick site scan to confirm all sections read consistently, no broken imports, and the new service card renders correctly on mobile and desktop.
+Success criteria:
+- Visual texture is visible on close inspection but not distracting.
+- Cards and buttons feel responsive to hover.
+- Sections fade in naturally on scroll without jank.
+- Lighthouse mobile LCP stays under the current target; CLS does not regress.
+- Reduced-motion users see a static, still-fully-usable page.
