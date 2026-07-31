@@ -6,6 +6,7 @@ import { TrustedPartner } from "@/components/sections/trusted";
 import { WhoWeHelp } from "@/components/sections/who";
 import { Services } from "@/components/sections/services";
 import { HowItWorks } from "@/components/sections/how";
+import { QualityGuardrails } from "@/components/sections/quality";
 import { Work } from "@/components/sections/work";
 import { Testimonials } from "@/components/sections/testimonials";
 import { Pricing } from "@/components/sections/pricing";
