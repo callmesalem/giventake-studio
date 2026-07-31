@@ -1,7 +1,6 @@
 /**
  * Founder note — replaces fake testimonials.
- * Honest positioning as a new studio; placeholders clearly marked so
- * the owner can drop in real name/bio/photo before launch.
+ * Honest positioning as a new studio. No fabricated case studies or quotes.
  */
 
 export function Testimonials() {
