@@ -49,6 +49,9 @@ export function Testimonials() {
                 unclear, or wrong, you&rsquo;re talking to whoever can fix it.
               </p>
               <p>
+                I build with AI coding agents and modern tools. That means I can prototype faster, write less boilerplate, and spend more time on the parts that actually need judgment: architecture, UX, and making sure the thing solves your problem. It&rsquo;s not magic, and it&rsquo;s not a replacement for thinking. It&rsquo;s just a better way to ship.
+              </p>
+              <p>
                 Early clients also get closer attention and more flexible scoping
                 than an established agency has time for. Rates reflect a team
                 building its own track record, not agency overhead.
