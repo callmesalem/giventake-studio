@@ -15,6 +15,7 @@ const nav = [
   { label: "Services", href: "#services" },
   { label: "Work", href: "#work" },
   { label: "How", href: "#how" },
+  { label: "Guardrails", href: "#guardrails" },
   { label: "Pricing", href: "#pricing" },
 ];
 
@@ -77,6 +78,7 @@ export function SiteFooter() {
         { label: "Work", href: "#work" },
         { label: "Pricing", href: "#pricing" },
         { label: "How it works", href: "#how" },
+        { label: "Guardrails", href: "#guardrails" },
         { label: "FAQ", href: "#faq" },
       ],
     },
