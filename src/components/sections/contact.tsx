@@ -12,14 +12,10 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { IconArrowRight } from "@/components/marks";
+import { contactSchema } from "@/lib/intake-schema";
+import { submitContact } from "@/lib/intake";
 
-const schema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().email("Enter a valid email").max(255),
-  company: z.string().trim().max(120).optional(),
-  description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
-  budget: z.string().min(1, "Select a budget"),
-  timeline: z.string().min(1, "Select a timeline"),
+const schema = contactSchema.extend({
   consent: z
     .string()
     .refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
@@ -27,35 +23,61 @@ const schema = z.object({
 
 const CONTACT_EMAIL = "hello@giventake.dev";
 
-export function ContactCTA() {
-  const [handedOff, setHandedOff] = useState(false);
+type Outcome = "idle" | "sent" | "mailto";
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
-    const result = schema.safeParse(data);
-    if (!result.success) {
-      toast.error(result.error.issues[0]?.message ?? "Please check the form");
-      return;
-    }
-    const subject = `Project brief · ${result.data.name}${result.data.company ? ` · ${result.data.company}` : ""}`;
+export function ContactCTA() {
+  const [outcome, setOutcome] = useState<Outcome>("idle");
+  const [submitting, setSubmitting] = useState(false);
+
+  /** Fallback used when no mail provider is configured, or the send fails. */
+  function handOffToMailClient(d: z.infer<typeof schema>) {
+    const subject = `Project brief · ${d.name}${d.company ? ` · ${d.company}` : ""}`;
     const body = [
-      `Name: ${result.data.name}`,
-      `Email: ${result.data.email}`,
-      result.data.company ? `Company: ${result.data.company}` : null,
-      `Budget: ${result.data.budget}`,
-      `Timeline: ${result.data.timeline}`,
+      `Name: ${d.name}`,
+      `Email: ${d.email}`,
+      d.company ? `Company: ${d.company}` : null,
+      `Budget: ${d.budget}`,
+      `Timeline: ${d.timeline}`,
       "",
       "Project:",
-      result.data.description,
+      d.description,
     ]
       .filter(Boolean)
       .join("\n");
-    const href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = href;
-    setHandedOff(true);
-    form.reset();
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setOutcome("mailto");
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
+    const parsed = schema.safeParse(data);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
+      return;
+    }
+
+    const { consent: _consent, ...payload } = parsed.data;
+    setSubmitting(true);
+    try {
+      const result = await submitContact({ data: payload });
+      if (result.status === "sent") {
+        setOutcome("sent");
+        form.reset();
+        return;
+      }
+      if (result.status === "error") toast.error(result.message);
+      handOffToMailClient(parsed.data);
+      form.reset();
+    } catch {
+      // Network failure or the server function is unavailable — never drop the
+      // enquiry, hand it to the mail client instead.
+      handOffToMailClient(parsed.data);
+      form.reset();
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -111,7 +133,7 @@ export function ContactCTA() {
 
         <Reveal delay={100}>
           <div className="rounded-2xl border border-hairline bg-white p-6 shadow-lift md:p-8">
-            {handedOff ? (
+            {outcome !== "idle" ? (
               <div className="flex flex-col items-start py-10">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-soft text-violet">
                   <svg viewBox="0 0 20 20" className="h-6 w-6" fill="none">
@@ -125,15 +147,35 @@ export function ContactCTA() {
                   </svg>
                 </div>
                 <h3 className="mt-6 text-[24px] font-semibold tracking-tight text-ink">
-                  Almost there.
+                  {outcome === "sent" ? "Brief received." : "Almost there."}
                 </h3>
                 <p className="mt-2 max-w-sm text-[15px] text-muted-ink">
-                  Your mail client should have opened with the brief pre-filled. Hit send and
-                  we&rsquo;ll reply within one business day. If nothing opened, email us directly at{" "}
-                  <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-ink underline">
-                    {CONTACT_EMAIL}
-                  </a>
-                  .
+                  {outcome === "sent" ? (
+                    <>
+                      Thanks &mdash; we&rsquo;ve got it and we&rsquo;ll reply within one business
+                      day. If you don&rsquo;t hear back, email us directly at{" "}
+                      <a
+                        href={`mailto:${CONTACT_EMAIL}`}
+                        className="font-semibold text-ink underline"
+                      >
+                        {CONTACT_EMAIL}
+                      </a>
+                      .
+                    </>
+                  ) : (
+                    <>
+                      Your mail client should have opened with the brief pre-filled. Hit send and
+                      we&rsquo;ll reply within one business day. If nothing opened, email us
+                      directly at{" "}
+                      <a
+                        href={`mailto:${CONTACT_EMAIL}`}
+                        className="font-semibold text-ink underline"
+                      >
+                        {CONTACT_EMAIL}
+                      </a>
+                      .
+                    </>
+                  )}
                 </p>
               </div>
             ) : (
@@ -240,17 +282,22 @@ export function ContactCTA() {
                 </label>
 
                 <p className="text-[11.5px] leading-relaxed text-muted-ink">
-                  Submitting this form opens your email client with the brief pre-filled — the
-                  message is sent from your inbox, not stored on our servers. Please don't include
+                  Your brief is emailed to us so we can reply — see the{" "}
+                  <a href="/privacy" className="font-medium text-ink underline">
+                    Privacy Policy
+                  </a>{" "}
+                  for how long we keep it. If your browser can&rsquo;t reach us, it will open your
+                  mail client with the brief pre-filled instead. Please don&rsquo;t include
                   sensitive personal, financial, or health information.
                 </p>
 
                 <button
                   type="submit"
-                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90"
+                  disabled={submitting}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Send project brief
-                  <IconArrowRight className="h-4 w-4" />
+                  {submitting ? "Sending…" : "Send project brief"}
+                  {!submitting && <IconArrowRight className="h-4 w-4" />}
                 </button>
               </form>
             )}

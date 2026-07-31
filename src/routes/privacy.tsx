@@ -113,7 +113,11 @@ function PrivacyPage() {
           <Section title="5. Sharing and processors">
             <p>We share limited data with vetted service providers acting on our instructions:</p>
             <ul className="list-disc space-y-2 pl-5">
-              <li>Email delivery (transactional mail from our own inbox).</li>
+              <li>
+                Email delivery provider — form submissions are sent to us by email through a
+                transactional mail service. It transmits the message; it is not used to build
+                marketing lists.
+              </li>
               <li>Google Analytics 4 (aggregate site analytics, IP anonymized).</li>
               <li>Meta, TikTok, and LinkedIn pixels (ad measurement, marketing cookies only).</li>
               <li>Cloudflare (hosting, security, DDoS protection).</li>

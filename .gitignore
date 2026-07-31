@@ -16,6 +16,12 @@ dist-ssr
 .nitro
 *.local
 
+# Environment — .env now holds real secrets (mail provider key).
+# .env.example is committed and must never contain values.
+.env
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
