@@ -5,12 +5,14 @@ import { PointerGlow } from "@/components/pointer-glow";
 export function Hero() {
   return (
     <section data-crit="hero" className="relative overflow-hidden border-b border-hairline">
+      {/* Premium animated background — CSS-only, motion-gated, reduced-motion safe */}
+      <div aria-hidden="true" className="hero-aurora">
+        <div className="aurora-orb -top-32 -left-24 h-[480px] w-[480px] bg-[var(--hero-glow-1)]" />
+        <div className="aurora-orb top-[35%] -right-32 h-[420px] w-[420px] bg-[var(--hero-glow-2)]" />
+        <div className="aurora-orb bottom-[-80px] left-[40%] h-[320px] w-[320px] bg-[var(--hero-glow-3)]" />
+      </div>
+
       <PointerGlow className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 pt-16 pb-24 md:pt-24 md:pb-32 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-        {/* Ambient gradient blobs behind the hero content */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          <div className="ambient-blob blob-a absolute -top-20 -left-20 h-[420px] w-[420px] bg-violet/30" />
-          <div className="ambient-blob blob-b absolute top-1/3 right-[-120px] h-[360px] w-[360px] bg-indigo-400/30" />
-        </div>
 
         {/* LEFT */}
         <div data-crit="hero-left" className="relative z-10 flex flex-col justify-center">
