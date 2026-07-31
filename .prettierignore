@@ -7,3 +7,7 @@ package-lock.json
 bun.lock
 routeTree.gen.ts
 tests/a11y/screenshots/
+
+# Business and contract documents. Prose and wide tables, not code — prettier's
+# markdown table reflow rewrites them on every run without converging.
+docs/
