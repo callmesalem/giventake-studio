@@ -188,6 +188,10 @@
     0 20px 48px -20px rgba(10, 10, 10, 0.12);
 }
 
+/* Ambient motion is parked until the document signals it is past first paint
+   (`<html data-motion="on">`, set in a post-paint rAF). Paused animations do no
+   per-frame work, so nothing here competes with the LCP paint. */
+
 /* Floating card drift */
 @keyframes float-a {
   0%, 100% { transform: translateY(0) rotate(-1.5deg); }
@@ -202,9 +206,21 @@
   50% { transform: translateY(-6px) rotate(-0.6deg); }
 }
 
-@utility float-a { animation: float-a 7s ease-in-out infinite; }
-@utility float-b { animation: float-b 8s ease-in-out infinite; }
-@utility float-c { animation: float-c 9s ease-in-out infinite; }
+@utility float-a {
+  animation: float-a 7s ease-in-out infinite;
+  animation-play-state: paused;
+  :root[data-motion="on"] & { animation-play-state: running; }
+}
+@utility float-b {
+  animation: float-b 8s ease-in-out infinite;
+  animation-play-state: paused;
+  :root[data-motion="on"] & { animation-play-state: running; }
+}
+@utility float-c {
+  animation: float-c 9s ease-in-out infinite;
+  animation-play-state: paused;
+  :root[data-motion="on"] & { animation-play-state: running; }
+}
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -212,12 +228,34 @@
 }
 @utility pulse-dot {
   animation: pulse-dot 2s ease-in-out infinite;
+  animation-play-state: paused;
+  :root[data-motion="on"] & { animation-play-state: running; }
 }
 
+/* Entrance animation. Declared in the critical CSS too, so the first painted
+   frame already knows this rule and content never flashes in and then re-runs
+   when the main stylesheet is promoted. `backwards` (not `both`) keeps the
+   element out of a permanent hidden state if the animation never starts. */
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @utility rise-in {
-  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  will-change: opacity, transform;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .float-a,
+  .float-b,
+  .float-c,
+  .pulse-dot {
+    animation: none;
+  }
+}
+
