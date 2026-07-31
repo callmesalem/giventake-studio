@@ -236,10 +236,11 @@ export function BrandSignature() {
               return (
                 <line
                   key={i}
-                  x1={Math.cos(a) * 46}
-                  y1={Math.sin(a) * 46}
-                  x2={Math.cos(a) * 50}
-                  y2={Math.sin(a) * 50}
+                  x1={(Math.cos(a) * 46).toFixed(3)}
+                  y1={(Math.sin(a) * 46).toFixed(3)}
+                  x2={(Math.cos(a) * 50).toFixed(3)}
+                  y2={(Math.sin(a) * 50).toFixed(3)}
+
                   stroke="currentColor"
                   className="text-foreground"
                   strokeOpacity="0.4"
