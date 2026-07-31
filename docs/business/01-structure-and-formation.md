@@ -52,20 +52,18 @@ counsel pulls:
 - **Client due diligence.** A procurement team that pulls your Articles and finds
   "wholesaling consumer products" has a question you'd rather not answer mid-deal.
 
-**Fix:** file a **Certificate of Amendment or Restatement (Form 543A)** with the
-Ohio Secretary of State, **$50** ($100 for two-day expedite). Amend the purpose to
-a general clause — "any lawful purpose for which a limited liability company may
-be organized under Chapter 1706 of the Ohio Revised Code" — rather than swapping
-one narrow description for another. A general clause never needs amending again.
+**Resolved by forming a new entity.** The original fix here was a Certificate of
+Amendment (Form 543A, $50) to broaden the purpose clause. That is no longer the
+plan — see "The decision" below. On the new entity you simply write a
+general-purpose clause on day one, which costs nothing and never needs amending.
 
-Do this **before** the insurance application, not after. It is $50 and one form,
-and it removes the mismatch entirely.
+The insurance-mismatch reasoning above still stands, and it is part of why the
+recommendation changed: applying for technology E&O against an entity whose
+public record describes contracting and wholesaling was always going to be an
+awkward application. Now it doesn't have to happen at all.
 
-**VERIFY (attorney):** confirm the amendment is the right instrument and that a
-general purpose clause is the right drafting. Note also that Ohio requires a
-certificate of amendment within 30 days where information in the original
-articles "is discovered to be materially false or inaccurate" — worth asking
-whether an outdated purpose statement engages that provision.
+**Only relevant if you later resume trading through GivenTake Goods LLC** — at
+that point, amend the purpose to match whatever it actually does.
 
 ### 2. The statutory agent address is a residential apartment
 
@@ -112,111 +110,166 @@ establish who owns the company.
 
 ---
 
-## The decision: trade name, not a second LLC
+## The decision: form a new LLC ⚠️ **recommendation reversed**
 
-**Recommendation: register "GivenTake Goods Devs" as a trade name under the existing GivenTake Goods LLC.**
+**Recommendation: form a new Ohio LLC for the software business — do not run it through GivenTake Goods LLC.**
 
-This was worth thinking about carefully rather than defaulting, because the answer
-would have been different if the existing entity were your insurance-claims
-business. It isn't — GivenTake Goods LLC is a contractor-services and wholesaling
-entity, and the naming already lines up. That changes the calculus.
+> **This reverses the earlier recommendation in this document.** The original
+> advice was to register a trade name under the existing entity, on the
+> assumption it was a clean, general-purpose LLC. Three facts changed that:
+> the entity **performed contractor work**, it **held an Ohio vendor's licence**,
+> and it has been **dormant since**. Each one is manageable alone. Together they
+> make the existing entity the wrong container for a new business.
 
-**One check before this recommendation is final. TODO(you):** does GivenTake
-Goods LLC hold any **trade licence or contractor registration** — state licensing
-through the Ohio Construction Industry Licensing Board (HVAC, plumbing,
-electrical, refrigeration, hydronics), or a municipal contractor registration?
+### Why: the construction liability tail
 
-Ohio does not license general contracting at the state level, so most likely the
-answer is no. But if the entity does hold a licence, the licensing-entanglement
-concern I originally raised about the claims business comes back in a different
-form: running an unrelated software business under a licensed contracting entity
-can complicate the licence, the contractor's bond, and the general-liability
-policy underwritten for construction work. If that's the case, tell me and the
-recommendation shifts toward a separate LLC.
+This is the decisive fact, and it is the one most people miss.
 
-### Why a second LLC is usually proposed
+Ohio's construction statute of repose (**ORC § 2305.131**) allows claims arising
+from a defective or unsafe condition of an improvement to real property to be
+brought **up to ten years after substantial completion**. It applies to claims
+sounding in **both tort and contract**. And if a defect is discovered in years
+eight through ten, the claimant gets **a further two years from discovery** — so
+the real outside edge is closer to twelve years.
 
-The argument for a separate entity is liability segregation: if the software
-business is sued, only the software business's assets are exposed. That argument
-is strong when the two businesses have genuinely different risk profiles — for
-example, a licensed or regulated trade sitting alongside an unregulated one,
-where a regulator's action against one could entangle the other.
+GivenTake Goods LLC performed contractor work starting around 2022. That means
+the entity carries construction-defect exposure into roughly **2032–2035**,
+depending on when the last job was completed.
 
-### Why it doesn't apply here
+Now consider what happens if the software studio lives inside that entity:
 
-- **No regulated trade to firewall.** GivenTake Goods is not a licensed business,
-  so there is no licensing or regulatory cross-contamination to prevent.
-- **The real liability control is insurance, not entity count.** For a solo
-  software studio, technology E&O coverage does far more protective work than a
-  second LLC. A second entity with no assets in it protects nothing; an E&O
-  policy pays defence costs. See [03-insurance-and-risk.md](./03-insurance-and-risk.md).
-- **A second entity multiplies the compliance surface.** New EIN, new bank
-  account, new bookkeeping, separate tax treatment, separate contracts, and two
-  sets of records to keep from commingling. Every one of those is a place a solo
-  operator can slip, and slipping is what actually pierces a liability shield.
-- **You'd be splitting one brand across two entities.** "GivenTake Goods Devs"
-  under "GivenTake Goods LLC" reads as one business with a product line. Under a
-  differently-named LLC it reads as a shell.
+- A construction claim in 2029 reaches the **software business's** bank account,
+  receivables, equipment, and client relationships. Same entity, same assets.
+- **Your technology E&O policy will not cover it.** Tech E&O covers professional
+  services in technology. A defective-construction claim is squarely outside it.
+- **The old general liability policy is probably long lapsed.** If the contracting
+  work was insured at the time on an occurrence-based GL policy, that policy may
+  still respond to a claim for work performed during its period — worth checking.
+  If it was claims-made, or if there was no GL at all, the exposure is uninsured.
+- So the entity would be carrying an **uninsured, decade-long liability tail**
+  underneath a brand-new business. That is the opposite of what an entity is for.
 
-### When to revisit
+A new LLC does not make that tail disappear — it stays with GivenTake Goods LLC,
+where it belongs. What it does is make sure the tail cannot reach the software
+business.
 
-Form a separate entity if any of these become true:
+### Why: the vendor's licence
 
-- You take on employees or a partner in one line of business but not the other
-- The software business takes outside investment
-- You start handling regulated client data (health, financial, government) where
-  a contractual or regulatory requirement forces separation
-- The two lines diverge enough that one's risk profile makes the other
-  uninsurable or materially more expensive
+A vendor's licence was obtained, and the business then went quiet. Ohio requires
+a return **every filing period even when sales are zero**. Missed returns put the
+account in delinquency, accrue penalties (up to $50 or 10% of unpaid tax per
+period, plus interest), and can lead the Department of Taxation to revoke the
+licence for inactivity.
 
-Until then, one entity with clean books is the right structure.
+So the entity may be carrying an open tax account with an unfiled-return trail
+and accruing penalties, with notices going to a residential address. That has to
+be cleaned up regardless of which entity you use going forward — see
+[07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md) — but you do not
+want to be applying for a **new** vendor's licence, opening insurance
+underwriting, and onboarding clients under an entity that is delinquent with the
+Ohio Department of Taxation.
+
+### Why the cost objection disappears
+
+The original argument against a second LLC was compliance overhead and cost.
+Run the numbers now:
+
+| Path | Filings | Cost |
+|---|---|---|
+| **Reuse existing entity** | 543A purpose amendment ($50) + 534A trade name ($39) + possible reinstatement ($25) | **$89–114** |
+| **New LLC** | Form 610 ($99). **No trade name filing needed** — the entity name is the brand name | **$99** |
+
+Effectively identical. And the new-LLC path is *simpler*: no purpose amendment
+because you write the purpose correctly on day one, and no DBA layer because
+`GivenTake Goods Devs LLC` is both the legal name and the brand.
+
+The remaining costs of a second entity are a new EIN (free, same day online) and
+a new bank account (an afternoon). The existing bank account being open was the
+last real advantage of reuse, and it is worth about one afternoon.
+
+### What you give up
+
+Being straight about the trade-off:
+
+- **The 2022 formation date.** Business age has some value for business credit,
+  net-30 vendor applications, and perception. A new entity starts at zero. This
+  is real but small, and it is not worth a decade of uninsured construction
+  exposure.
+- **Two entities to keep separate.** You now genuinely do need separate books,
+  separate accounts, and no commingling. That discipline was recommended anyway.
+
+### Naming
+
+`GivenTake Goods Devs LLC` may not be **distinguishable** from `GIVENTAKE GOODS
+LLC` on the Ohio SOS records — entity designators (LLC, Ltd., Co.) do not create
+distinguishability, and an added word sometimes does not either.
+
+If it is rejected, this is easily solved: **Form 590, Consent for Use of Similar
+Name**, signed on behalf of the existing entity. Since you control both, the
+consent is a formality.
+
+**TODO(you):** run the name through the Ohio SOS business search before filing.
+Have a second choice ready.
+
+### When reuse would have been right
+
+For the record, so the reasoning is reviewable: if the entity had been formed and
+never traded, reuse would have been correct — the 2022 formation date is free
+value, and the purpose amendment is trivial. It is specifically the **contractor
+work performed** that makes the entity unsuitable, because that is what created a
+long-tail liability an E&O policy will not answer for.
 
 ---
 
-## Filings and setup
+## Filings and setup — new entity
 
-### 1. Ohio trade name registration — **Form 534A**
+### 1. Form a new Ohio LLC — **Form 610, $99**
 
-- **Fee:** $39 (expedited service available at additional cost)
-- **File with:** Ohio Secretary of State, via the online business portal
-- **Choose "trade name", not "fictitious name".** This distinction matters and
-  is easy to get wrong on the form:
-  - A **trade name** is checked against existing Ohio business names for
-    distinguishability and grants you **exclusive** statewide use.
-  - A **fictitious name** is merely _reported_. It grants **no exclusivity** —
-    anyone else can report the same one.
-  - You are building a brand, so you want the trade name. If the name is
-    rejected as not distinguishable, that is information worth having before you
-    print anything.
-- **Before filing:** search the Ohio SOS business database for conflicts, and
-  separately search the USPTO database. State trade-name registration is not a
-  trademark and gives you no protection against a federal trademark holder.
+- **Name:** `GivenTake Goods Devs LLC` (check distinguishability first; Form 590
+  consent from the existing entity if needed — see "Naming" above)
+- **Purpose:** write a **general-purpose clause** — "any lawful purpose for which
+  a limited liability company may be organized under Chapter 1706 of the Ohio
+  Revised Code." The purpose field is optional, and a general clause never needs
+  amending. This is the mistake the 2022 filing made; don't repeat it.
+- **File with:** Ohio Secretary of State, OhioBusinessCentral.gov
+- **Before filing:** search the Ohio SOS business database, and separately search
+  the USPTO. State registration is not a trademark and gives you no protection
+  against a federal trademark holder.
 
-- ✅ Articles of Organization — **received and reviewed** (see "Entity of record")
-- **TODO(you):** current standing with the Ohio SOS — an entity not in good
-  standing cannot file, so this blocks the 534A
-- **TODO(you):** operating agreement, if one exists
-- **TODO(you):** any trade names already registered to the entity
+**No trade name filing (534A) is needed** on this path — the legal name and the
+brand name are the same. That saves $39 and a document.
 
-### 2. Certificate of Amendment — **Form 543A, $50**
+### 2. New EIN
 
-Amend the purpose clause to a general one before applying for insurance. See
-"Entity of record" §1 above for why this matters more than it looks like it does.
+Free, online, same day, at IRS.gov. **A new entity needs its own EIN** — the
+existing one belongs to GivenTake Goods LLC and cannot be reused.
 
-### 3. Statutory agent
+### 3. New bank account
+
+The existing account stays with GivenTake Goods LLC. Open a separate account for
+the new entity and **never run the two businesses through one account** — with
+two live entities, commingling is now the single most likely way to lose the
+liability protection this whole restructure is for.
+
+### 4. Statutory agent
 
 Ohio requires every LLC to maintain a statutory agent with an Ohio street address
 — no PO boxes. This is where service of process and state correspondence go.
 
-**Current agent of record: Shukri Salem, at a Parma apartment address.** That
-works legally, but it means a home address is on the public record and it is not
-an address you want published in the site's Terms and Privacy pages.
+This is worth getting right on the new entity from the start, because **failure
+to maintain a statutory agent is the one way an Ohio LLC dies**: the SOS gives
+notice, and if it is not cured within 30 days the articles are cancelled without
+further notice. (Reinstatement is Form 525-A, $25 — but avoid needing it.)
 
-**Recommended:** appoint a commercial statutory agent ($50–$150/yr). This gives
-you an Ohio street address that is servable, professional, and publishable — and
-it solves the `BUSINESS_ADDRESS` placeholder in `src/lib/seo.ts` at the same
-time. Changing the agent is a separate SOS filing; ask whether it can be combined
-with the 543A amendment to save a fee.
+**On the existing entity, the agent of record is Shukri Salem at a Parma
+apartment address.** That works legally, but it means a home address is on the
+public record and it is not an address to publish in the site's Terms and Privacy
+pages.
+
+**Recommended:** appoint a commercial statutory agent ($50–$150/yr) **for the new
+entity**. This gives you an Ohio street address that is servable, professional,
+and publishable — and it solves the `BUSINESS_ADDRESS` placeholder in
+`src/lib/seo.ts` at the same time.
 
 A virtual office with a real Cleveland-area street address is the alternative and
 often costs about the same.
@@ -231,51 +284,56 @@ their pricing for states where it doesn't exist. Decline it.
 What you _do_ still need to keep current: the statutory agent designation, and
 any change of address filed with the SOS.
 
-### 5. Operating agreement
+### 6. Operating agreement — write one for the new entity
 
-The Articles do not identify members, and Ohio does not require them to. **If no
-operating agreement exists, nothing currently documents who owns this company** —
-that is worth fixing on its own, independent of the software business.
+Ohio does not require an operating agreement and does not require the Articles to
+name members. That means for a single-member LLC, **the operating agreement is
+the only document establishing who owns the company**. Banks, insurers, and
+courts all expect one.
 
-**VERIFY (attorney):** confirm two things in the operating agreement, or draft one:
+**Draft one at formation** rather than adding it later. It should include:
 
-- **Purpose clause.** If it mirrors the Articles' "contractor services and
-  wholesaling consumer products," broaden it to a general-purpose clause ("any
-  lawful business") alongside the 543A amendment.
-- **Member authorisation.** Record a written member resolution adding the
-  software line of business and authorising the trade name registration. For a
-  single-member LLC this feels like theatre, but it is exactly the kind of record
-  that makes the entity look like a real entity rather than an alter ego if
-  anyone ever challenges the liability shield.
+- Member identity and ownership percentage
+- A **general purpose clause** — matching the Articles
+- Management structure and signing authority
+- Capital contributions
+- What happens on death, disability, or transfer
 
-### 6. EIN and banking
+**VERIFY (attorney).** This is inexpensive to do properly and awkward to
+reconstruct after the fact.
 
-Same legal entity, so the **existing EIN and bank account carry over** — no new
-applications needed. A trade name is not a separate taxpayer.
+**Separately: does GivenTake Goods LLC have an operating agreement?** If not,
+that's worth fixing on its own — that entity is going to keep existing to hold
+the construction tail, and it should be properly documented too.
 
-What to do anyway:
+### 7. Keeping the two entities separate
 
-- **Separate the books by line of business.** Either a dedicated bank
-  sub-account or an accounting class/tag in your bookkeeping. Not legally
-  required, but it makes the sales-tax analysis in
-  [02-ohio-tax.md](./02-ohio-tax.md) tractable, and it is what "we kept the
-  businesses separate" actually means in practice.
-- **Add the trade name to the bank account** so you can deposit cheques made out
-  to "GivenTake Goods Devs". Banks generally want to see the filed 534A.
-- **Never pay personal expenses from the business account.** Commingling is the
-  single most common reason courts disregard a small LLC's liability shield —
+With two live entities, this stops being bookkeeping hygiene and becomes the
+thing the whole restructure depends on. If the two are run out of one account,
+a claimant against the contracting entity can argue they were never really
+separate — and the liability isolation you paid $99 for evaporates.
+
+- **Separate bank accounts.** Not sub-accounts. Separate.
+- **Separate books.** Separate accounting files or clearly separated entities in
+  one system.
+- **Separate contracts, invoices, and email signatures.** Client-facing documents
+  must name the correct entity.
+- **No paying one entity's bills from the other's account.** If one entity needs
+  to fund the other, document it as a loan or a capital contribution.
+- **Never pay personal expenses from either business account.** Commingling is
+  the single most common reason courts disregard a small LLC's liability shield —
   more common by far than any entity-structure mistake.
 
-### 7. Local registration
+### 8. Local registration
 
-The agent address of record puts the business in **Parma, Cuyahoga County**.
+The existing entity's address of record is in **Parma, Cuyahoga County**.
 
-**TODO(you):** confirm this is where you actually operate from — the agent
-address and the place of business can differ, and the municipal income tax
-follows where the work is done, not where the agent sits. Parma also may require
+**TODO(you):** confirm where the software business will actually operate from.
+The agent address and the place of business can differ, and municipal income tax
+follows where the work is done, not where the agent sits. Parma may also require
 a local business registration independent of the state.
 
-Cuyahoga County is also the venue to use in the MSA's governing-law clause. See
+Cuyahoga County is the venue used in the MSA's governing-law clause. See
 [02-ohio-tax.md](./02-ohio-tax.md) for the municipal tax consequences, which are
 significant — Parma's rate is among the higher ones in Ohio.
 
@@ -283,15 +341,24 @@ significant — Parma's rate is among the higher ones in Ohio.
 
 ## Summary of costs
 
-| Item                                  | Cost                      | Recurring         |
-| ------------------------------------- | ------------------------- | ----------------- |
-| Ohio trade name (Form 534A)           | $39                       | One-time          |
-| **Certificate of Amendment (543A)**   | **$50**                   | One-time          |
-| Commercial statutory agent            | $50–$150                  | Annual            |
-| Ohio annual report                    | **$0 — not required**     | —                 |
-| New EIN / bank account                | **$0 — reusing existing** | —                 |
-| Operating agreement (draft or amend)  | Attorney time             | One-time          |
+**New entity — GivenTake Goods Devs LLC:**
 
-The structural setup here is cheap. The expensive items are insurance
-([03](./03-insurance-and-risk.md)) and the sales-tax question
-([02](./02-ohio-tax.md)) — spend your attention there.
+| Item                              | Cost                  | Recurring |
+| --------------------------------- | --------------------- | --------- |
+| Ohio LLC formation (Form 610)     | $99                   | One-time  |
+| Form 590 consent, if name rejected | $0 (filed with 610)  | —         |
+| Trade name (534A)                 | **$0 — not needed**   | —         |
+| New EIN                           | $0                    | —         |
+| New bank account                  | $0                    | —         |
+| Commercial statutory agent        | $50–$150              | Annual    |
+| Ohio annual report                | **$0 — not required** | —         |
+| Operating agreement               | Attorney time         | One-time  |
+
+**Legacy entity — GivenTake Goods LLC:** see
+[07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md). Costs there depend
+entirely on what the vendor's licence sweep turns up.
+
+The structural setup is still cheap — about $100 plus an agent. The expensive
+items are insurance ([03](./03-insurance-and-risk.md)), the sales-tax question
+([02](./02-ohio-tax.md)), and whatever the legacy vendor's licence account has
+been accruing ([07](./07-legacy-entity-cleanup.md)). Spend your attention there.

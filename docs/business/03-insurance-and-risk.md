@@ -59,7 +59,31 @@ the exposure is small, but:
   equipment, often cheaply
 - Buy it if a client requires it or if you ever meet clients in person
 
-### 4. Not yet
+### 4. The legacy contractor exposure is a separate problem
+
+**Tech E&O will not cover construction-defect claims from GivenTake Goods LLC's
+contracting work.** That exposure runs up to ten years from substantial
+completion under ORC § 2305.131 — into roughly 2032–2035 — and it belongs to the
+old entity, which is precisely why the software business is being set up in a new
+one ([01-structure-and-formation.md](./01-structure-and-formation.md)).
+
+Two things to do with your broker in the same conversation as the E&O quote:
+
+- [ ] **Find out whether the old contracting GL policy was occurrence-based.**
+      If it was, it generally still responds to claims arising from work done
+      during its period, even though it has lapsed — which materially reduces the
+      tail. If it was claims-made and lapsed with no tail purchased, or if there
+      was no GL at all, the exposure is uninsured
+- [ ] **Ask whether a tail or completed-operations extension can still be bought**
+      for the prior work
+
+Details in [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md) §6.
+
+**Do not let the broker write the new tech E&O to cover both businesses.** That
+would defeat the separation — and an insurer that discovers construction work
+under a technology policy has grounds to dispute the whole thing.
+
+### 5. Not yet
 
 - **Workers' comp** — required in Ohio once you have employees. Ohio is a
   monopolistic state fund (coverage comes from the Ohio Bureau of Workers'

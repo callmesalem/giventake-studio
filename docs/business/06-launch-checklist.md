@@ -38,27 +38,30 @@ These block contracting. Signing without them is the expensive kind of mistake.
 
 - [x] **Articles of Organization reviewed** — GivenTake Goods LLC, Ohio SOS doc
       202225804070, filed 9/15/2022, Parma / Cuyahoga County
-- [ ] **TODO(you): confirm the LLC is in good standing** with the Ohio SOS
-      _Blocks: every other filing. An entity not in good standing cannot file_
-- [ ] **TODO(you): does the LLC hold any contractor licence or registration?**
-      _If yes, the trade-name recommendation needs revisiting_
+- [x] **Structure decided** — form a **new Ohio LLC**, do not run the studio
+      through GivenTake Goods LLC. That entity performed contractor work and
+      carries a construction-defect tail to roughly 2032–2035 under ORC 2305.131
       → [01-structure-and-formation.md](./01-structure-and-formation.md)
-- [ ] **File Certificate of Amendment, Form 543A ($50)** — broaden the purpose
-      clause from "contractor services and wholesaling consumer products" to a
-      general-purpose clause
-      _Do this **before** the insurance application. A carrier comparing a tech
-      E&O application against articles describing contracting and wholesaling has
-      an opening to dispute coverage later_
-- [ ] **Appoint a commercial statutory agent** — the current agent address is a
-      residential apartment, and it is not an address to publish on the website
-- [ ] **File Ohio Form 534A** trade name registration ($39)
-      → [01-structure-and-formation.md](./01-structure-and-formation.md)
-      _Blocks: contracting under the name "GivenTake Goods Devs"_
-- [ ] **TODO(you): does an operating agreement exist?** The Articles don't
-      identify members, so absent one, nothing documents who owns the company
-- [ ] **Confirm/amend the operating agreement purpose clause**; record a member
-      resolution adding the software line of business
-- [ ] **Bind Tech E&O + cyber insurance**, $1M/$1M
+- [ ] **Check name availability** for `GivenTake Goods Devs LLC` on the Ohio SOS
+      search. If not distinguishable from the existing entity, file **Form 590**
+      consent alongside — you control both, so it's a formality
+- [ ] **Form the new LLC — Form 610, $99**, with a **general-purpose clause**
+      _Blocks: everything downstream. No 534A trade name filing needed on this path_
+- [ ] **Get a new EIN** (free, IRS.gov, same day) — the existing EIN belongs to
+      the old entity and cannot be reused
+- [ ] **Open a separate bank account** for the new entity
+- [ ] **Appoint a commercial statutory agent** for the new entity — gives you a
+      publishable business address and avoids the one failure mode that actually
+      kills an Ohio LLC
+- [ ] **Draft an operating agreement** for the new entity. Ohio doesn't require
+      one and the Articles don't name members, so it's the only document
+      establishing ownership
+- [ ] **Start the legacy entity sweep** → [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md)
+      _The vendor's licence item can be running in parallel — it has money
+      attached and blocks a clean new vendor's licence application_
+- [ ] **Update `LEGAL_ENTITY` in `src/lib/seo.ts`** to the new entity name once
+      formed. The Terms and Privacy pages render it
+- [ ] **Bind Tech E&O + cyber insurance**, $1M/$1M — **in the new entity's name**
       → [03-insurance-and-risk.md](./03-insurance-and-risk.md)
       _Blocks: first engagement. Claims-made policies do not cover work performed
       before the retroactive date_
@@ -141,7 +144,9 @@ Not blocking, but each one prevents a predictable first-year problem.
 - [ ] Annually: insurance renewal — **never let it lapse**, claims-made coverage
       does not survive a gap
 - [ ] Annually: review provider list against the published privacy policy
-- [ ] Ongoing: keep the statutory agent designation current with the Ohio SOS
+- [ ] Ongoing: keep the statutory agent designation current **for both entities**
+      — failure to maintain one is the single way an Ohio LLC gets cancelled
+- [ ] Ongoing: keep the two entities' books and bank accounts strictly separate
 
 ---
 
@@ -149,8 +154,8 @@ Not blocking, but each one prevents a predictable first-year problem.
 
 If everything else slips, do not let these slip:
 
-1. **Insurance before the first engagement.** Claims-made coverage cannot be
-   bought retroactively after something goes wrong.
+1. **Insurance before the first engagement**, in the new entity's name.
+   Claims-made coverage cannot be bought retroactively after something goes wrong.
 2. **A signed SOW before any work starts.** Scope disputes are the most common
    small-studio claim and are entirely preventable.
 3. **The sales-tax question answered before the first invoice.** Uncollected tax

@@ -1,16 +1,17 @@
 # GivenTake Goods Devs — business and compliance
 
 Working documents for standing up the development studio as a real, compliant
-business. Written for **Ohio**, operating through the existing **GivenTake Goods LLC**.
+business. Written for **Ohio**.
 
-| Doc                                                              | What it covers                                               |
-| ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| [01-structure-and-formation.md](./01-structure-and-formation.md) | Trade name vs. new LLC, the decision and why, Ohio filings   |
-| [02-ohio-tax.md](./02-ohio-tax.md)                               | Sales tax (the hard one), CAT, municipal net profit, federal |
-| [03-insurance-and-risk.md](./03-insurance-and-risk.md)           | Tech E&O, cyber, the AI exclusion to ask about               |
-| [04-ai-delivery-policy.md](./04-ai-delivery-policy.md)           | The operational policy behind an AI-built studio             |
-| [05-pricing-and-positioning.md](./05-pricing-and-positioning.md) | Pricing strategy, positioning, go-to-market                  |
-| [06-launch-checklist.md](./06-launch-checklist.md)               | Sequenced checklist with blocking dependencies               |
+| Doc                                                                | What it covers                                                                     |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [01-structure-and-formation.md](./01-structure-and-formation.md)   | New LLC vs. trade name, the decision and why, Ohio filings                         |
+| [02-ohio-tax.md](./02-ohio-tax.md)                                 | Sales tax (the hard one), CAT, municipal net profit, federal                       |
+| [03-insurance-and-risk.md](./03-insurance-and-risk.md)             | Tech E&O, cyber, the AI exclusion to ask about                                     |
+| [04-ai-delivery-policy.md](./04-ai-delivery-policy.md)             | The operational policy behind an AI-built studio                                   |
+| [05-pricing-and-positioning.md](./05-pricing-and-positioning.md)   | Pricing strategy, positioning, go-to-market                                        |
+| [06-launch-checklist.md](./06-launch-checklist.md)                 | Sequenced checklist with blocking dependencies                                     |
+| [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md)       | Cleaning up GivenTake Goods LLC — vendor's licence, tax accounts, construction tail |
 
 Contract templates live in [`../contracts/`](../contracts/).
 
@@ -36,6 +37,22 @@ marked **TODO(you)**; items needing a professional are marked **VERIFY**.
 
 **Entity confirmed** from the filed Articles of Organization: GIVENTAKE GOODS
 LLC, Ohio SOS doc 202225804070, filed 9/15/2022, Parma / Cuyahoga County.
-One issue found — the stated purpose is *"providing contractor services and
-wholesaling consumer products,"* which does not cover software. See
-[01-structure-and-formation.md](./01-structure-and-formation.md).
+
+⚠️ **The structure recommendation has changed.** The original plan — register a
+trade name under the existing LLC — was correct for a clean, general-purpose
+entity. It isn't the right answer for this one: GivenTake Goods LLC performed
+**contractor work**, held an **Ohio vendor's licence**, and has been dormant
+since. Ohio's construction statute of repose (ORC § 2305.131) keeps
+defect claims live for up to ten years after substantial completion, and no
+technology E&O policy answers for those.
+
+**Now recommended: form a new Ohio LLC for the software business** ($99, and no
+trade-name filing needed), and clean up the legacy entity separately. See
+[01-structure-and-formation.md](./01-structure-and-formation.md) for the
+reasoning and [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md) for
+the sweep.
+
+**Consequence for the website:** `LEGAL_ENTITY` in `src/lib/seo.ts` currently
+says "GivenTake Goods LLC" and is rendered on the Terms and Privacy pages. It
+must be updated to the new entity name once formed — the site should not name an
+entity that isn't the one contracting.

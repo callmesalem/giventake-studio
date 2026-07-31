@@ -12,9 +12,18 @@ export const BASE_URL = "https://dev-on-demand-hub.lovable.app";
 export const OG_IMAGE_URL = `${BASE_URL}${ogImageAsset.url}`;
 export const SITE_NAME = "GivenTake Goods Devs";
 
-/** Legal entity behind the trade name, used in the legal pages and JSON-LD. */
-export const LEGAL_ENTITY = "GivenTake Goods LLC";
-export const LEGAL_ENTITY_LONG = `${SITE_NAME} is a trade name of ${LEGAL_ENTITY}, an Ohio limited liability company`;
+/**
+ * Legal entity that actually contracts, used in the legal pages and JSON-LD.
+ *
+ * TODO(before launch): confirm once the entity is formed with the Ohio SOS.
+ * This is NOT GivenTake Goods LLC (SOS doc 202225804070) — that entity performed
+ * contractor work and carries a construction-defect tail under ORC 2305.131, so
+ * the studio is being set up in a separate LLC. See
+ * docs/business/01-structure-and-formation.md. The site must never name an
+ * entity other than the one that signs the client agreements.
+ */
+export const LEGAL_ENTITY = "GivenTake Goods Devs LLC";
+export const LEGAL_ENTITY_LONG = `${SITE_NAME} is operated by ${LEGAL_ENTITY}, an Ohio limited liability company`;
 
 /**
  * TODO(before launch): replace with the registered business address.
