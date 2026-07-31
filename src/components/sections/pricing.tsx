@@ -85,11 +85,11 @@ export function Pricing() {
             Work with us the way that fits.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Every project is scoped on a call. You'll get a fixed number, a clear timeline, and a written statement of what's included before we start.
+            Budgets start at $500 for small builds. Every project is scoped on a call. You'll get a fixed number, a clear timeline, and a written statement of what's included before we start.
           </p>
         </Reveal>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {tiers.map((t, i) => (
             <Reveal key={t.name} delay={i * 80}>
               <article
