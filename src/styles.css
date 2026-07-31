@@ -158,20 +158,82 @@
     font-feature-settings: "cv11", "ss01";
   }
 
-  /* Page canvas: a fine drafting grid over a warm paper base, with two soft
+  /* Page canvas: a two-tier drafting grid over a warm paper base, with two soft
      brand-tinted washes anchored to the viewport so the page reads as one
-     continuous surface rather than a flat fill. */
+     continuous surface rather than a flat fill. Grid size scales with the
+     viewport and the lines are masked toward the centre so text always sits on
+     a near-clean surface. */
+  :root {
+    --grid-unit: 40px;
+    --grid-line: color-mix(in oklab, var(--ink) 4.5%, transparent);
+    --grid-line-major: color-mix(in oklab, var(--ink) 7%, transparent);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    background-image:
-      linear-gradient(to right, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px);
-    background-size:
-      64px 64px,
-      64px 64px;
-    background-position: 0 0;
   }
+
+  /* Grid layer. Separate from body so it can be masked without touching the
+     page background colour. */
+  body > * {
+    position: relative;
+  }
+
+  body::marker {
+    content: "";
+  }
+
+  .page-grid {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, var(--grid-line-major) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line-major) 1px, transparent 1px),
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size:
+      calc(var(--grid-unit) * 4) calc(var(--grid-unit) * 4),
+      calc(var(--grid-unit) * 4) calc(var(--grid-unit) * 4),
+      var(--grid-unit) var(--grid-unit),
+      var(--grid-unit) var(--grid-unit);
+    background-position: 0 0;
+    -webkit-mask-image: radial-gradient(
+      120% 90% at 50% 0%,
+      #000 0%,
+      color-mix(in oklab, #000 55%, transparent) 55%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      120% 90% at 50% 0%,
+      #000 0%,
+      color-mix(in oklab, #000 55%, transparent) 55%,
+      transparent 100%
+    );
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --grid-unit: 48px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    :root {
+      --grid-unit: 56px;
+    }
+  }
+
+  /* Hi-dpi screens render 1px lines thinner and darker, so ease off. */
+  @media (min-resolution: 2dppx) {
+    :root {
+      --grid-line: color-mix(in oklab, var(--ink) 3.5%, transparent);
+      --grid-line-major: color-mix(in oklab, var(--ink) 5.5%, transparent);
+    }
+  }
+
 
   /* Ambient brand wash. Fixed to the viewport, sits under all content. */
   body::after {
