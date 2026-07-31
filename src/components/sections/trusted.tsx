@@ -15,7 +15,7 @@ const facts = [
 
 export function TrustedPartner() {
   return (
-    <section className="border-b border-hairline bg-paper">
+    <section className="border-b border-hairline bg-paper/60 backdrop-blur-[2px]">
       <div className="mx-auto max-w-7xl px-6 py-14">
         <Reveal>
           <p className="text-center text-[12px] font-medium uppercase tracking-[0.18em] text-muted-ink">

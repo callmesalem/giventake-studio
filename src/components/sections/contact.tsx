@@ -57,7 +57,7 @@ export function ContactCTA() {
   }
 
   return (
-    <section id="contact" className="border-b border-hairline bg-paper">
+    <section id="contact" className="border-b border-hairline bg-paper/60 backdrop-blur-[2px]">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 py-24 md:py-28 lg:grid-cols-[1fr_1.15fr]">
         <Reveal>
           <div>

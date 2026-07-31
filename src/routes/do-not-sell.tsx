@@ -25,7 +25,7 @@ function DoNotSellPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
+    <div className="min-h-screen text-foreground antialiased">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-20">
         <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-ink">
