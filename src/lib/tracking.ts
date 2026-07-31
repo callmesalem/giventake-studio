@@ -127,9 +127,7 @@ function loadTikTokPixel() {
   const id = import.meta.env.VITE_TIKTOK_PIXEL_ID as string | undefined;
   if (!id || loaded.tiktok) return;
 
-  // Standard TikTok Pixel bootstrap (vendor code). Disable lint rules that
-  // would otherwise force us to rewrite the third-party snippet.
-  /* eslint-disable @typescript-eslint/no-explicit-any, prefer-rest-params */
+  // Standard TikTok Pixel bootstrap (vendor code), rewritten to satisfy project lint rules.
   (function (w: AnyRecord, d: Document, t: string) {
     w.TiktokAnalyticsObject = t;
     const ttq = (w[t] = w[t] || []);
