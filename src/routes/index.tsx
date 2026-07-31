@@ -4,6 +4,10 @@ import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Hero } from "@/components/sections/hero";
 import { TrustedPartner } from "@/components/sections/trusted";
 import { faqs } from "@/lib/faq-data";
+import ogImageAsset from "@/assets/giventake-og.png.asset.json";
+
+const BASE_URL = "https://dev-on-demand-hub.lovable.app";
+const ogImageUrl = `${BASE_URL}${ogImageAsset.url}`;
 
 /* Only the header, hero and the row directly under it ship in the critical
    bundle. Everything below the fold is a separate chunk: the server still
@@ -33,23 +37,36 @@ function Placeholder({ h }: { h: number }) {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GivenTake Goods Devs | AI-Native Development Team for Hire" },
+      { title: "GivenTake Goods Devs | Your On-Demand Development Team" },
       {
         name: "description",
         content:
-          "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders. One developer, AI-assisted delivery.",
+          "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools — built with human review.",
       },
-      { property: "og:title", content: "GivenTake Goods Devs | AI-Native Development Team for Hire" },
+      { property: "og:title", content: "GivenTake Goods Devs | Your On-Demand Development Team" },
       {
         property: "og:description",
         content:
-          "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders. One developer, AI-assisted delivery.",
+          "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools — built with human review.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://dev-on-demand-hub.lovable.app/" },
+      { property: "og:url", content: `${BASE_URL}/` },
+      { property: "og:site_name", content: "GivenTake Goods Devs" },
+      { property: "og:image", content: ogImageUrl },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "GivenTake Goods Devs — Your On-Demand Development Team" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "GivenTake Goods Devs | Your On-Demand Development Team" },
+      {
+        name: "twitter:description",
+        content:
+          "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools — built with human review.",
+      },
+      { name: "twitter:image", content: ogImageUrl },
+      { name: "twitter:image:alt", content: "GivenTake Goods Devs — Your On-Demand Development Team" },
     ],
-    links: [{ rel: "canonical", href: "https://dev-on-demand-hub.lovable.app/" }],
+    links: [{ rel: "canonical", href: `${BASE_URL}/` }],
     scripts: [
       {
         type: "application/ld+json",
