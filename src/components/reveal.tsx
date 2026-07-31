@@ -14,10 +14,41 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-function useIsClient() {
-  const [client, setClient] = useState(false);
-  useEffect(() => setClient(true), []);
-  return client;
+function useIsInViewportOnce(
+  ref: React.RefObject<HTMLElement | null>,
+  { threshold, rootMargin }: { threshold: number; rootMargin: string }
+) {
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    // Content is rendered visible by default. If the element is already
+    // in the viewport on hydration, we keep it visible (no flash). If it is
+    // below the fold, we hide it so the reveal animation can play on scroll.
+    const rect = el.getBoundingClientRect();
+    const inViewport = rect.top < window.innerHeight && rect.bottom > 0;
+    if (inViewport) {
+      setRevealed(true);
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setRevealed(true);
+          io.disconnect();
+        }
+      },
+      { threshold, rootMargin }
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref, threshold, rootMargin]);
+
+  return revealed;
 }
 
 type RevealProps = {
@@ -34,38 +65,18 @@ export function Reveal({
   threshold = DEFAULT_THRESHOLD,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
   const reduced = usePrefersReducedMotion();
-  const client = useIsClient();
+  const revealed = useIsInViewportOnce(ref, {
+    threshold,
+    rootMargin: "0px 0px -40px 0px",
+  });
 
-  useEffect(() => {
-    if (reduced) {
-      setVisible(true);
-      return;
-    }
-    const el = ref.current;
-    if (!el) return;
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          io.disconnect();
-        }
-      },
-      { threshold, rootMargin: "0px 0px -40px 0px" }
-    );
-
-    io.observe(el);
-    return () => io.disconnect();
-  }, [reduced, threshold]);
-
-  const isHidden = client && !visible && !reduced;
+  const visible = reduced || revealed;
 
   return (
     <div
       ref={ref}
-      className={`reveal ${isHidden ? "reveal-hidden" : "reveal-visible"} ${className}`}
+      className={`reveal ${visible ? "reveal-visible" : "reveal-hidden"} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
