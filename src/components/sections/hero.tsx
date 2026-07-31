@@ -35,7 +35,7 @@ export function Hero() {
           </p>
 
 
-          <div className="mt-10 flex flex-wrap items-center gap-3">
+          <div className="mt-10 flex flex-wrap items-center gap-3 rise-in">
             <a
               href="#contact"
               className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90"
@@ -53,7 +53,7 @@ export function Hero() {
           </div>
 
           {/* honest status line — no fabricated social proof */}
-          <div className="mt-12 flex items-start gap-3 border-t border-hairline pt-6">
+          <div className="mt-12 flex items-start gap-3 border-t border-hairline pt-6 rise-in">
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-muted-ink">
               New studio, taking on our first commissions of 2026. AI-assisted delivery means faster prototypes and fewer handoffs. Founder-led, so you talk directly to whoever is building your product.
