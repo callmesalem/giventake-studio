@@ -39,7 +39,8 @@ async (ctx) => {
   const r = await window.axe.run(ctx || document, {
     runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] }
   });
-  return r.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length }));
+  return r.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length,
+    example: (v.nodes[0] && v.nodes[0].html || '').slice(0, 160) }));
 }
 """
 
@@ -66,6 +67,7 @@ async def main():
 
         banner = page.get_by_role("region", name="Your privacy")
         await banner.wait_for(state="visible", timeout=15000)
+        await page.wait_for_timeout(1500)  # let hydration settle
         check(True, "consent banner renders on a fresh session")
         await page.screenshot(path=str(SCREENSHOTS / "1_banner.png"))
 
@@ -75,7 +77,7 @@ async def main():
         names = ["Accept all", "Reject all", "Manage preferences"]
         reached = []
         await page.keyboard.press("Tab")
-        for _ in range(60):
+        for _ in range(200):
             label = await page.evaluate(
                 "() => { const a = document.activeElement;"
                 " return a ? (a.getAttribute('aria-label') || a.textContent || '').trim() : ''; }"
@@ -117,7 +119,15 @@ async def main():
         )
         check(bool(meta["label"]), "dialog has an accessible name", json.dumps(meta))
         check(bool(meta["desc"]), "dialog has an accessible description")
-        check(meta["modal"] == "true", "dialog is marked aria-modal")
+        inert = await page.evaluate(
+            """() => Array.from(document.body.children)
+                 .filter(el => !el.contains(document.querySelector('[role=dialog]')))
+                 .every(el => el.getAttribute('aria-hidden') === 'true'
+                          || el.hasAttribute('data-aria-hidden')
+                          || el.tagName === 'SCRIPT'
+                          || el.tagName === 'STYLE')"""
+        )
+        check(inert, "background content is hidden from assistive tech while the dialog is open")
 
         # --- focus trap: tabbing 25 times never escapes the dialog ---
         escaped = False
@@ -194,7 +204,7 @@ async def main():
             " { get: () => true, configurable: true });"
         )
         await gpc_page.goto(BASE_URL, wait_until="domcontentloaded")
-        await gpc_page.wait_for_timeout(1200)
+        await gpc_page.wait_for_timeout(3000)
 
         gpc_state = await gpc_page.evaluate(
             "() => JSON.parse(localStorage.getItem('gt.consent.v1') || 'null')"

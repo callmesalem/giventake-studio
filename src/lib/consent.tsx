@@ -238,8 +238,9 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     const el = triggerRef.current;
     triggerRef.current = null;
     if (!el) return;
-    // Wait for the dialog to unmount before moving focus back.
+    // Wait for the dialog to unmount (and Radix to settle) before moving focus back.
     requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
       if (el.isConnected) {
         el.focus({ preventScroll: true });
       } else {
@@ -250,6 +251,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
         );
         fallback?.focus({ preventScroll: true });
       }
+      });
     });
   }, []);
 
