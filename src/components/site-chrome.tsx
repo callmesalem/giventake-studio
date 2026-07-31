@@ -1,5 +1,6 @@
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { LogoMark } from "@/components/marks";
+import { LogoMark, IconMenu, IconClose } from "@/components/marks";
 import { useConsent } from "@/lib/consent";
 import { offers } from "@/lib/offers";
 
@@ -32,6 +33,90 @@ const nav = [
   { label: "Pricing", href: "/#pricing" },
 ];
 
+/** Links shown only in the mobile panel, where there's room for more. */
+const navMobileExtra = [
+  { label: "How we use AI", href: "/how-we-use-ai" },
+  { label: "Articles", href: "/articles" },
+  { label: "FAQ", href: "/#faq" },
+];
+
+/**
+ * Mobile navigation.
+ *
+ * Until this existed the header was `hidden md:flex`, so below 768px there was
+ * no navigation at all — on a phone the site's twelve pages were reachable only
+ * from the footer.
+ *
+ * Built as a disclosure rather than a modal dialog: it's a menu, not a task that
+ * needs interrupting for. That keeps the semantics simple and honest —
+ * aria-expanded on the trigger, aria-controls pointing at the panel, Escape to
+ * close with focus returned to the trigger, and closing on navigation. No focus
+ * trap, because the panel doesn't claim the whole screen.
+ */
+function MobileNav() {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  return (
+    <div className="md:hidden">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={open ? "Close menu" : "Open menu"}
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-hairline bg-white text-ink transition hover:border-ink"
+      >
+        {open ? <IconClose className="h-5 w-5" /> : <IconMenu className="h-5 w-5" />}
+      </button>
+
+      {open && (
+        <div
+          id={panelId}
+          className="absolute inset-x-0 top-16 border-b border-hairline bg-paper shadow-lift"
+        >
+          <nav aria-label="Main" className="mx-auto max-w-7xl px-6 py-4">
+            <ul className="divide-y divide-hairline">
+              {[...nav, ...navMobileExtra].map((n) => (
+                <li key={n.label}>
+                  <a
+                    href={n.href}
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-[48px] items-center text-[16px] font-medium text-ink"
+                  >
+                    {n.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="/#contact"
+              onClick={() => setOpen(false)}
+              className="mt-4 flex min-h-[48px] items-center justify-center rounded-full bg-ink px-6 text-[14px] font-medium text-white"
+            >
+              Book a call
+            </a>
+          </nav>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SiteHeader() {
   return (
     <header
@@ -49,7 +134,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
           {nav.map((n) => (
             <a
               key={n.label}
@@ -68,12 +153,16 @@ export function SiteHeader() {
           >
             Book a call
           </a>
+          {/* Stays visible at every width — it's the primary CTA, and hiding it
+              behind the menu on phones would cost conversions on the majority
+              of traffic. "Book a call" is the one that collapses. */}
           <a
             href="/#contact"
             className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-white transition hover:opacity-90"
           >
             Start a project
           </a>
+          <MobileNav />
         </div>
       </div>
     </header>

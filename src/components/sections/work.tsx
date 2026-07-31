@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/reveal";
 import { IconArrowRight } from "@/components/marks";
 import { CaseStudies } from "@/components/sections/case-studies";
@@ -12,6 +13,7 @@ const commissions = [
     body: "Leads come in, get summarized, tagged, and routed to the right person by a custom AI agent. Your team acts on real signal, not a raw inbox.",
     tags: ["AI Agents", "LLM Workflows", "Email"],
     preview: "intake",
+    slug: "ai-lead-intake",
   },
   {
     title: "A booking system for a service business",
@@ -19,6 +21,7 @@ const commissions = [
     body: "Customers book, pay, and reschedule themselves. Built with AI-assisted development, so you stop running the schedule out of your inbox.",
     tags: ["Scheduling", "Payments", "Client Portal"],
     preview: "calendar",
+    slug: "booking-and-payments",
   },
   {
     title: "An internal dashboard replacing spreadsheets",
@@ -26,6 +29,7 @@ const commissions = [
     body: "One place to see jobs, invoices, and status, instead of five shared sheets nobody trusts. Built fast with AI agents and reviewed by a human.",
     tags: ["Dashboards", "Postgres", "Auth"],
     preview: "dashboard",
+    slug: "internal-dashboard",
   },
   {
     title: "A rebuilt marketing site",
@@ -33,6 +37,7 @@ const commissions = [
     body: "A site that reflects what your business actually does now, with AI-assisted content and code, plus a CMS your team can update.",
     tags: ["Next.js", "CMS", "SEO"],
     preview: "site",
+    slug: "marketing-site",
   },
 ];
 
@@ -159,13 +164,17 @@ export function Work() {
                       </span>
                     ))}
                   </div>
-                  <a
-                    href="#contact"
+                  {/* Links to the matching offer page rather than jumping
+                      straight to the contact form — a visitor who wants this
+                      thing should see its price and exclusions first. */}
+                  <Link
+                    to="/services/$slug"
+                    params={{ slug: p.slug }}
                     className="btn-icon-nudge mt-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-violet transition group-hover:gap-2.5"
                   >
-                    Commission this
+                    See what this costs
                     <IconArrowRight className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </div>
               </article>
             </Reveal>
