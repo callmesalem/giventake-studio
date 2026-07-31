@@ -78,6 +78,7 @@ function CookiesPage() {
         <div className="mt-6">
           <button
             type="button"
+            data-consent-trigger="cookies-page"
             onClick={openPreferences}
             className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-white hover:opacity-90"
           >

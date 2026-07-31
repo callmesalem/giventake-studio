@@ -131,6 +131,7 @@ export function ConsentBanner() {
               </button>
               <button
                 type="button"
+                data-consent-trigger="banner"
                 onClick={openPreferences}
                 className={`min-h-11 rounded-full px-4 py-2 text-[13px] font-medium text-muted-ink hover:text-ink ${focusRing}`}
               >

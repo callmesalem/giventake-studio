@@ -168,6 +168,9 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   // The exact element that opened the preferences dialog, so focus can be
   // returned to it verbatim on close (banner button, footer link, or CTA).
   const triggerRef = useRef<HTMLElement | null>(null);
+  // Stable key for triggers that unmount while the dialog is open (the banner
+  // hides itself), so focus can be restored to the re-rendered instance.
+  const triggerKeyRef = useRef<string | null>(null);
   const stateRef = useRef<ConsentState>(DEFAULT_STATE);
   stateRef.current = state;
 
@@ -236,21 +239,26 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
 
   const restoreFocus = useCallback(() => {
     const el = triggerRef.current;
+    const key = triggerKeyRef.current;
     triggerRef.current = null;
-    if (!el) return;
+    triggerKeyRef.current = null;
+    if (!el && !key) return;
     // Wait for the dialog to unmount (and Radix to settle) before moving focus back.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-      if (el.isConnected) {
+      if (el && el.isConnected) {
         el.focus({ preventScroll: true });
-      } else {
-        // Trigger disappeared (e.g. banner dismissed): fall back to the
-        // persistent cookie-settings control so focus never lands on <body>.
-        const fallback = document.querySelector<HTMLElement>(
-          '[data-consent-trigger="persistent"]',
-        );
-        fallback?.focus({ preventScroll: true });
+        return;
       }
+      // The trigger unmounted or re-rendered: find the same control by key,
+      // then fall back to the persistent cookie-settings button so focus
+      // never lands on <body>.
+      const byKey = key
+        ? document.querySelector<HTMLElement>(`[data-consent-trigger="${key}"]`)
+        : null;
+      const fallback =
+        byKey ?? document.querySelector<HTMLElement>('[data-consent-trigger="persistent"]');
+      fallback?.focus({ preventScroll: true });
       });
     });
   }, []);
@@ -281,7 +289,9 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
 
   const openPreferences = useCallback(() => {
     const active = typeof document !== "undefined" ? document.activeElement : null;
-    triggerRef.current = active instanceof HTMLElement ? active : null;
+    const el = active instanceof HTMLElement ? active : null;
+    triggerRef.current = el;
+    triggerKeyRef.current = el?.getAttribute("data-consent-trigger") ?? null;
     setPreferencesOpen(true);
   }, []);
 
