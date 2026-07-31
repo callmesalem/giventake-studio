@@ -3,6 +3,22 @@ import { IconArrowRight } from "@/components/marks";
 
 const tiers = [
   {
+    name: "Essentials",
+    price: "$500 – $2.5K",
+    tagline: "Small builds, fixes, and single-page sites.",
+    features: [
+      "One-page site, landing page, or small fix",
+      "AI-assisted build with human review",
+      "1 revision round included",
+      "Mobile responsive and accessible",
+      "Source code + deployment handoff",
+      "Live in about one week",
+      "14 days of tweaks after launch",
+    ],
+    cta: "Start small",
+  },
+  {
+
     name: "Starter",
     price: "From $2,500",
     tagline: "Landing pages and simple builds.",
@@ -69,11 +85,11 @@ export function Pricing() {
             Work with us the way that fits.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Every project is scoped on a call. You'll get a fixed number, a clear timeline, and a written statement of what's included before we start.
+            Budgets start at $500 for small builds. Every project is scoped on a call. You'll get a fixed number, a clear timeline, and a written statement of what's included before we start.
           </p>
         </Reveal>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {tiers.map((t, i) => (
             <Reveal key={t.name} delay={i * 80}>
               <article
