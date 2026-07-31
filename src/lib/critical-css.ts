@@ -13,7 +13,7 @@ export const criticalCss = `
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--crit-paper);color:var(--crit-ink);font-family:"Inter Tight","Inter Tight Fallback",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-[data-crit] a{color:inherit;text-decoration:none}
+[data-crit] a:not([class]){color:inherit;text-decoration:none}
 [data-crit="header"]{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--crit-hairline);background:color-mix(in srgb,var(--crit-paper) 80%,transparent);backdrop-filter:blur(20px)}
 [data-crit="header-inner"]{display:flex;height:64px;max-width:80rem;margin:0 auto;padding:0 24px;align-items:center;justify-content:space-between}
 [data-crit="hero"]{position:relative;overflow:hidden;border-bottom:1px solid var(--crit-hairline)}
