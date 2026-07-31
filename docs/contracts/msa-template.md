@@ -317,8 +317,11 @@ payable.
 
 15.1 **Governing law and venue.** This Agreement is governed by the laws of the
 State of Ohio, without regard to conflict-of-laws principles. The exclusive venue
-for any dispute is the state and federal courts located in `[COUNTY]` County,
+for any dispute is the state and federal courts located in **Cuyahoga** County,
 Ohio, and each Party consents to personal jurisdiction there.
+
+> Cuyahoga is the county of the entity's address of record (Parma). Confirm it is
+> also where you operate from before this is final.
 
 15.2 **Dispute resolution — [REVIEW].** Before filing suit, the Parties will
 attempt good-faith resolution through their designated representatives for
@@ -375,6 +378,13 @@ signature.
 ### Placeholders to fill before use
 
 `[DATE]` · `[BUSINESS ADDRESS]` · `[CLIENT LEGAL NAME]` · `[STATE]` ·
-`[ENTITY TYPE]` · `[CLIENT ADDRESS]` · `[COUNTY]` · deposit % · payment days ·
-interest rate · notice periods · liability cap period · survival periods ·
-signatory name and title
+`[ENTITY TYPE]` · `[CLIENT ADDRESS]` · deposit % · payment days · interest rate ·
+notice periods · liability cap period · survival periods · signatory name and
+title
+
+**Confirmed and pre-filled:** entity name (GivenTake Goods LLC, Ohio LLC, SOS doc
+ID 202225804070), governing state (Ohio), venue county (Cuyahoga).
+
+**Do not use the statutory agent's residential address** as `[BUSINESS ADDRESS]`
+— use a commercial agent or virtual office address. See
+[`../business/01-structure-and-formation.md`](../business/01-structure-and-formation.md).

@@ -33,3 +33,9 @@ not as a settled fact.
 
 Everything here is a draft pending your review. Items needing input from you are
 marked **TODO(you)**; items needing a professional are marked **VERIFY**.
+
+**Entity confirmed** from the filed Articles of Organization: GIVENTAKE GOODS
+LLC, Ohio SOS doc 202225804070, filed 9/15/2022, Parma / Cuyahoga County.
+One issue found — the stated purpose is *"providing contractor services and
+wholesaling consumer products,"* which does not cover software. See
+[01-structure-and-formation.md](./01-structure-and-formation.md).

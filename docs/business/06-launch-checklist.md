@@ -17,8 +17,9 @@ that need to be true before anyone reads them.
 - [x] **Set Ohio governing law and venue** in Terms _(done)_
 - [x] **Identify the legal entity** in Terms and Privacy _(done)_
 - [ ] **TODO(you): business address** — replace `BUSINESS_ADDRESS` in
-      `src/lib/seo.ts`. A registered-agent or virtual-office address is fine. The
-      site currently renders a visible placeholder
+      `src/lib/seo.ts`. The site currently renders a visible placeholder.
+      **Do not use the statutory agent's residential apartment address** from the
+      Articles; get a commercial agent or virtual office address first
 - [ ] **TODO(you): confirm you control `giventake.dev`** and that `hello@`,
       `privacy@`, and `legal@` all deliver. Three published contact addresses
       that bounce is worse than one that works
@@ -35,11 +36,26 @@ that need to be true before anyone reads them.
 
 These block contracting. Signing without them is the expensive kind of mistake.
 
+- [x] **Articles of Organization reviewed** — GivenTake Goods LLC, Ohio SOS doc
+      202225804070, filed 9/15/2022, Parma / Cuyahoga County
+- [ ] **TODO(you): confirm the LLC is in good standing** with the Ohio SOS
+      _Blocks: every other filing. An entity not in good standing cannot file_
+- [ ] **TODO(you): does the LLC hold any contractor licence or registration?**
+      _If yes, the trade-name recommendation needs revisiting_
+      → [01-structure-and-formation.md](./01-structure-and-formation.md)
+- [ ] **File Certificate of Amendment, Form 543A ($50)** — broaden the purpose
+      clause from "contractor services and wholesaling consumer products" to a
+      general-purpose clause
+      _Do this **before** the insurance application. A carrier comparing a tech
+      E&O application against articles describing contracting and wholesaling has
+      an opening to dispute coverage later_
+- [ ] **Appoint a commercial statutory agent** — the current agent address is a
+      residential apartment, and it is not an address to publish on the website
 - [ ] **File Ohio Form 534A** trade name registration ($39)
       → [01-structure-and-formation.md](./01-structure-and-formation.md)
       _Blocks: contracting under the name "GivenTake Goods Devs"_
-- [ ] **TODO(you): upload LLC documents** for review — articles, standing,
-      operating agreement, existing trade names
+- [ ] **TODO(you): does an operating agreement exist?** The Articles don't
+      identify members, so absent one, nothing documents who owns the company
 - [ ] **Confirm/amend the operating agreement purpose clause**; record a member
       resolution adding the software line of business
 - [ ] **Bind Tech E&O + cyber insurance**, $1M/$1M
@@ -67,7 +83,10 @@ These block getting paid correctly.
       _before_ collecting any tax
 - [ ] **Set up invoicing with separated line items** (exempt development vs.
       taxable services), matching the SOW structure
-- [ ] **Confirm the operating city** and its municipal net profit tax obligation
+- [ ] **Confirm Parma's municipal net profit tax rate** with a primary source
+      (city tax department / RITA / CCA) — third-party rate tables disagree, and
+      Parma's rate is among Ohio's higher ones. Confirm too that Parma is where
+      you actually work from
 - [ ] **Cancel any stale CAT account** if one exists
 - [ ] **Set up the tax reserve** — 25–30% of every payment moved on receipt
 - [ ] **Separate the books** by line of business (sub-account or accounting class)
