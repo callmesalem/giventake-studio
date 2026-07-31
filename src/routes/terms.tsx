@@ -1,17 +1,13 @@
+import { pageHead } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
 export const Route = createFileRoute("/terms")({
-  head: () => ({
-    meta: [
-      { title: "Terms of Service · GivenTake Goods Devs" },
-      {
-        name: "description",
-        content:
-          "The terms that govern your use of the GivenTake Goods Devs website and any services provided.",
-      },
-      { name: "robots", content: "index,follow" },
-    ],
+  head: () => pageHead({
+    path: "/terms",
+    title: "Terms of Service · GivenTake Goods Devs",
+    description:
+      "The terms that govern your use of the GivenTake Goods Devs website and any services provided.",
   }),
   component: TermsPage,
 });

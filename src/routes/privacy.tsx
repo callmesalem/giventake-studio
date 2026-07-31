@@ -1,17 +1,13 @@
+import { pageHead } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({
-    meta: [
-      { title: "Privacy Policy · GivenTake Goods Devs" },
-      {
-        name: "description",
-        content:
-          "How GivenTake Goods Devs collects, uses, and protects your data. GDPR, CCPA, and ePrivacy compliant.",
-      },
-      { name: "robots", content: "index,follow" },
-    ],
+  head: () => pageHead({
+    path: "/privacy",
+    title: "Privacy Policy · GivenTake Goods Devs",
+    description:
+      "How GivenTake Goods Devs collects, uses, and protects your data. GDPR, CCPA, and ePrivacy compliant.",
   }),
   component: PrivacyPage,
 });
