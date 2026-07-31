@@ -144,7 +144,17 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){var s=function(){var l=document.querySelectorAll('link[data-main-css]');for(var i=0;i<l.length;i++){l[i].media='all'}};if(window.requestAnimationFrame){requestAnimationFrame(function(){requestAnimationFrame(s)})}else{s()}})();",
+          }}
+        />
+        <noscript>
+          <link rel="stylesheet" href={appCss} />
+        </noscript>
       </head>
       <body>
         {children}
@@ -153,6 +163,7 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
+
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
