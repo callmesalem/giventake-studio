@@ -594,3 +594,70 @@
   }
 }
 
+
+/* ------------------------------------------------------------------
+   Ambient background drift.
+
+   Two very slow, GPU-cheap loops: the drafting grid pans by exactly one
+   major cell (so the pattern never visibly "jumps" on loop), and the brand
+   wash breathes and slides a few pixels. Both are paused until
+   :root[data-motion="on"] is set after first paint, so they never gate LCP,
+   and both are switched off entirely under prefers-reduced-motion.
+   ------------------------------------------------------------------ */
+@keyframes grid-drift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      calc(var(--grid-unit) * 4) calc(var(--grid-unit) * -4),
+      calc(var(--grid-unit) * 4) calc(var(--grid-unit) * -4),
+      calc(var(--grid-unit) * 4) calc(var(--grid-unit) * -4),
+      calc(var(--grid-unit) * 4) calc(var(--grid-unit) * -4);
+  }
+}
+
+@keyframes wash-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: translate3d(-1.5%, 1%, 0) scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.92;
+  }
+}
+
+html::before {
+  animation: grid-drift 120s linear infinite;
+  animation-play-state: paused;
+}
+
+body::after {
+  will-change: transform, opacity;
+  animation: wash-drift 44s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+:root[data-motion="on"]::before,
+:root[data-motion="on"] body::after {
+  animation-play-state: running;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html::before,
+  body::after {
+    animation: none;
+    transform: none;
+    opacity: 1;
+    will-change: auto;
+  }
+}
