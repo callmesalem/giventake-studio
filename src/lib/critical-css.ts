@@ -21,6 +21,17 @@ body{margin:0;background:var(--crit-paper);color:var(--crit-ink);font-family:"In
 [data-crit="hero-left"]{display:flex;flex-direction:column;justify-content:center}
 [data-crit="hero-title"]{margin:0;font-size:44px;font-weight:500;line-height:.98;letter-spacing:-.035em;color:var(--crit-ink)}
 [data-crit="hero-lede"]{margin:32px 0 0;max-width:36rem;font-size:17px;line-height:1.55;color:var(--crit-muted)}
+/* Everything else above the fold gets its final box now, so promoting the main
+   stylesheet is a paint-only change and never reflows the hero. */
+[data-crit="hero-badge"]{display:inline-flex;width:fit-content;align-items:center;gap:8px;margin:0 0 24px;padding:6px 12px;border:1px solid var(--crit-hairline);border-radius:9999px;background:#fff;font-size:12px;font-weight:500;line-height:1.4;color:var(--crit-muted)}
+[data-crit="hero-cta"]{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:40px}
+[data-crit="hero-cta-primary"],[data-crit="hero-cta-secondary"]{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;font-size:14px;font-weight:500;line-height:1.4}
+[data-crit="hero-cta-primary"]{padding:14px 24px;background:var(--crit-ink);color:#fff}
+[data-crit="hero-cta-secondary"]{padding:14px 20px;border:1px solid var(--crit-hairline);background:#fff;color:var(--crit-ink)}
+[data-crit="hero-cta"] svg{width:16px;height:16px}
+[data-crit="hero-note"]{display:flex;align-items:flex-start;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--crit-hairline)}
+[data-crit="hero-note"] span{margin-top:6px;flex:0 0 auto;width:8px;height:8px;border-radius:9999px}
+[data-crit="hero-note"] p{margin:0;font-size:13px;line-height:1.55;color:var(--crit-muted)}
 @media(min-width:640px){[data-crit="hero-title"]{font-size:56px}}
 @media(min-width:768px){[data-crit="hero-grid"]{padding:96px 24px 128px}[data-crit="hero-title"]{font-size:72px}}
 /* Reserve the brand signature's intrinsic box so promoting the main stylesheet
