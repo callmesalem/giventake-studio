@@ -3,6 +3,22 @@ import { IconArrowRight } from "@/components/marks";
 
 const tiers = [
   {
+    name: "Essentials",
+    price: "$500 – $2.5K",
+    tagline: "Small builds, fixes, and single-page sites.",
+    features: [
+      "One-page site, landing page, or small fix",
+      "AI-assisted build with human review",
+      "1 revision round included",
+      "Mobile responsive and accessible",
+      "Source code + deployment handoff",
+      "Live in about one week",
+      "14 days of tweaks after launch",
+    ],
+    cta: "Start small",
+  },
+  {
+
     name: "Starter",
     price: "From $2,500",
     tagline: "Landing pages and simple builds.",
