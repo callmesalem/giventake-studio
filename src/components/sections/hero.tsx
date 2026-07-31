@@ -1,5 +1,7 @@
 import { IconArrowRight, IconPlay } from "@/components/marks";
 import { BrandSignature } from "@/components/brand-signature";
+import { PointerGlow } from "@/components/pointer-glow";
+
 
 export function Hero() {
   return (
