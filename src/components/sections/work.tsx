@@ -1,4 +1,5 @@
 import { IconArrowRight } from "@/components/marks";
+import { CaseStudies } from "@/components/sections/case-studies";
 
 const commissions = [
   {
@@ -157,6 +158,8 @@ export function Work() {
             </article>
           ))}
         </div>
+
+        <CaseStudies />
       </div>
     </section>
   );

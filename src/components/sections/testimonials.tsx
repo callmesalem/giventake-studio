@@ -1,7 +1,6 @@
 /**
  * Founder note — replaces fake testimonials.
- * Honest positioning as a new studio; placeholders clearly marked so
- * the owner can drop in real name/bio/photo before launch.
+ * Honest positioning as a new studio. No fabricated case studies or quotes.
  */
 
 export function Testimonials() {
@@ -15,27 +14,7 @@ export function Testimonials() {
           </h2>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-[1fr_1.6fr]">
-          {/* Photo + identity card */}
-          <figure className="rounded-2xl border border-hairline bg-white p-6 shadow-soft">
-            <div
-              className="aspect-[4/5] w-full rounded-xl border border-hairline bg-secondary"
-              role="img"
-              aria-label="Founder photo placeholder"
-            >
-              <div className="flex h-full items-center justify-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-ink">
-                Founder photo
-              </div>
-            </div>
-            <figcaption className="mt-5">
-              <div className="text-[15px] font-semibold text-ink">[Your name]</div>
-              <div className="mt-1 text-[13px] leading-relaxed text-muted-ink">
-                [One-line bio: e.g. &ldquo;X years building software, now doing it AI-native and fast.&rdquo;]
-              </div>
-            </figcaption>
-          </figure>
-
-          {/* Note */}
+        <div className="max-w-3xl">
           <div className="rounded-2xl border border-hairline bg-white p-8 shadow-soft md:p-10">
             <div className="space-y-5 text-[16px] leading-[1.65] text-ink">
               <p>
