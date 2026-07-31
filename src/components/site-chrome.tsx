@@ -35,12 +35,13 @@ export function SiteHeader() {
             <a
               key={n.label}
               href={n.href}
-              className="text-sm font-medium text-muted-ink transition hover:text-ink"
+              className="nav-link text-sm font-medium text-muted-ink transition hover:text-ink"
             >
               {n.label}
             </a>
           ))}
         </nav>
+
 
         <div className="flex items-center gap-2">
           <a
