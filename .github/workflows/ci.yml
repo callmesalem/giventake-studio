@@ -1,0 +1,84 @@
+name: CI
+
+# Runs on pull requests and on pushes to the Lovable-connected branch.
+# AGENTS.md notes that commits pushed to that branch sync back into the Lovable
+# editor, so keeping it in a working state matters more than usual — this is the
+# gate that catches a broken build before it gets there.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Deliberately not --frozen-lockfile. Tighten this once a run has proved
+      # the lockfile resolves cleanly on CI infrastructure.
+      - name: Install
+        run: bun install
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bunx tsc --noEmit
+
+      - name: Build
+        run: bun run build
+
+  # The consent accessibility suite (20 axe-core + keyboard checks) needs a dev
+  # server on :8080 and Playwright. Separate job so a flake here never blocks a
+  # copy change, and continue-on-error until it has proved stable on CI.
+  a11y:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: bun install
+
+      - name: Install test dependencies
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Start dev server
+        run: bun run dev &
+
+      - name: Wait for server
+        run: npx --yes wait-on http://localhost:8080 --timeout 120000
+
+      - name: Consent accessibility suite
+        run: bun run test:a11y
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a11y-screenshots
+          path: tests/a11y/screenshots/
+          retention-days: 7
