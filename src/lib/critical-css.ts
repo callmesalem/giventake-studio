@@ -44,6 +44,7 @@ body{margin:0;background:var(--crit-paper);color:var(--crit-ink);font-family:"In
 [data-crit="signature-svg"]{display:block;width:100%;height:auto;aspect-ratio:520/560}
 [data-crit="signature-layer"]{position:absolute;inset:0;margin:0;padding:0;list-style:none;pointer-events:none}
 [data-crit="signature-layer"] a{position:absolute}
+[data-crit="signature-caption"]{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:0 4px;font-size:11px;line-height:1.4;color:var(--crit-muted)}
 @media(min-width:1024px){[data-crit="hero-grid"]{grid-template-columns:1.15fr 1fr;gap:64px}[data-crit="hero-title"]{font-size:80px}[data-crit="hero-right"]{justify-content:flex-end}}
 /* Entrance + ambient motion declared up front: the first painted frame already
    has the final rules, so promoting the main stylesheet never re-triggers or
