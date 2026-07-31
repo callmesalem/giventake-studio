@@ -14,7 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { criticalCss } from "../lib/critical-css";
 
 import { ConsentProvider } from "../lib/consent";
-import { ConsentBanner } from "../components/consent-banner";
+import { DeferredConsentBanner } from "../components/deferred-consent-banner";
 
 function NotFoundComponent() {
   return (
@@ -181,7 +181,7 @@ function RootComponent() {
       <ConsentProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        <ConsentBanner />
+        <DeferredConsentBanner />
       </ConsentProvider>
     </QueryClientProvider>
   );
