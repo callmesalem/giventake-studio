@@ -49,6 +49,9 @@ const tiers = [
     ],
     cta: "Request a quote",
     featured: true,
+    // Factual descriptor only. Do not use popularity or social-proof badges
+    // ("Most picked", "Most popular") until there is real sales data behind them.
+    badge: "Best for custom builds",
   },
   {
     name: "Dedicated",
@@ -100,9 +103,9 @@ export function Pricing() {
                     : "border-hairline bg-white shadow-soft"
                 }`}
               >
-                {t.featured && (
+                {t.badge && (
                   <div className="absolute -top-3 left-7 rounded-full bg-violet px-3 py-1 text-[11px] font-medium text-white">
-                    Most picked
+                    {t.badge}
                   </div>
                 )}
                 <h3

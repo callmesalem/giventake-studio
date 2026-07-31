@@ -1,4 +1,4 @@
-import { pageHead } from "@/lib/seo";
+import { pageHead, SITE_NAME, LEGAL_ENTITY, LEGAL_ENTITY_LONG, BUSINESS_ADDRESS } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
@@ -34,11 +34,18 @@ function PrivacyPage() {
         <div className="prose-content mt-10 space-y-8 text-[15px] leading-relaxed text-ink">
           <Section title="1. Who we are">
             <p>
-              GivenTake Goods Devs ("we", "us") is a small development studio operating this
-              website. We are the data controller for any personal information you submit through
-              this site. You can reach us at{" "}
+              {LEGAL_ENTITY_LONG}. {SITE_NAME} ("we", "us") is a small development studio operating
+              this website, and {LEGAL_ENTITY} is the data controller for any personal information
+              you submit through this site.
+            </p>
+            <p className="mt-3">
+              Registered address: {BUSINESS_ADDRESS}. General contact:{" "}
               <a href="mailto:hello@giventake.dev" className="underline">
                 hello@giventake.dev
+              </a>
+              . Privacy contact:{" "}
+              <a href="mailto:privacy@giventake.dev" className="underline">
+                privacy@giventake.dev
               </a>
               .
             </p>
@@ -80,7 +87,8 @@ function PrivacyPage() {
               <li>To meet legal obligations (tax records, contract records).</li>
             </ul>
             <p className="mt-3">
-              We do not sell your personal information. We do not use your data to train AI models.
+              We do not sell your personal information, and we do not submit it to AI systems for
+              model training. See section 9 for how AI tools are used in our delivery work.
             </p>
           </Section>
 
@@ -146,7 +154,23 @@ function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="9. Security">
+          <Section title="9. AI tools and your data">
+            <p>
+              We build software using AI coding agents. That is a delivery method, not a use of your
+              personal data: information you submit through this website is not entered into AI
+              tools and is not used to train any model.
+            </p>
+            <p className="mt-3">
+              For paid engagements, AI tools may process material a client gives us to do the work.
+              Where that happens we use business or enterprise tiers configured so that inputs are
+              not retained for training, we obtain the client's written consent to AI-assisted
+              delivery before starting, and we put a data processing agreement in place where the
+              material includes personal data. Clients can request the current list of AI tools we
+              use and their data-handling terms at any time.
+            </p>
+          </Section>
+
+          <Section title="10. Security">
             <p>
               We use TLS in transit, restrict access to submitted data, and review our providers
               annually. No system is perfectly secure; we will notify you and the relevant authority
@@ -154,7 +178,7 @@ function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="10. Changes">
+          <Section title="11. Changes">
             <p>
               We may update this policy. Material changes are announced on this page and the "last
               updated" date is revised. Continued use of the site after changes means acceptance of

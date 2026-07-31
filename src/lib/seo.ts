@@ -1,8 +1,31 @@
 import ogImageAsset from "@/assets/giventake-og.png.asset.json";
 
+/**
+ * Single source of truth for the production origin. Canonical links, Open Graph
+ * URLs, the sitemap and the JSON-LD graph all derive from this — change it here
+ * and nowhere else when the custom domain goes live.
+ *
+ * `public/robots.txt` is a static file and cannot import this; update its
+ * Sitemap: line by hand at the same time.
+ */
 export const BASE_URL = "https://dev-on-demand-hub.lovable.app";
 export const OG_IMAGE_URL = `${BASE_URL}${ogImageAsset.url}`;
 export const SITE_NAME = "GivenTake Goods Devs";
+
+/** Legal entity behind the trade name, used in the legal pages and JSON-LD. */
+export const LEGAL_ENTITY = "GivenTake Goods LLC";
+export const LEGAL_ENTITY_LONG = `${SITE_NAME} is a trade name of ${LEGAL_ENTITY}, an Ohio limited liability company`;
+
+/**
+ * TODO(before launch): replace with the registered business address.
+ * A registered-agent or virtual-office address is fine — the point is that the
+ * legal pages identify a real, servable address for the entity. Do not publish
+ * the site with this placeholder still in place.
+ */
+export const BUSINESS_ADDRESS = "[registered business address, Ohio]";
+
+/** Governing law / venue for the website terms. */
+export const GOVERNING_STATE = "the State of Ohio";
 
 type PageHeadInput = {
   /** Route path beginning with a slash, e.g. "/privacy". */

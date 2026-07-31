@@ -15,6 +15,7 @@ import { criticalCss } from "../lib/critical-css";
 
 import { ConsentProvider } from "../lib/consent";
 import { DeferredConsentBanner } from "../components/deferred-consent-banner";
+import { BASE_URL, SITE_NAME, LEGAL_ENTITY } from "../lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -109,19 +110,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@graph": [
             {
               "@type": "Organization",
-              "@id": "https://dev-on-demand-hub.lovable.app/#organization",
-              name: "GivenTake Goods Devs",
-              url: "https://dev-on-demand-hub.lovable.app/",
+              "@id": `${BASE_URL}/#organization`,
+              name: SITE_NAME,
+              legalName: LEGAL_ENTITY,
+              url: `${BASE_URL}/`,
               slogan: "Your On-Demand Development Team",
               description:
                 "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders.",
             },
             {
               "@type": "WebSite",
-              "@id": "https://dev-on-demand-hub.lovable.app/#website",
-              name: "GivenTake Goods Devs",
-              url: "https://dev-on-demand-hub.lovable.app/",
-              publisher: { "@id": "https://dev-on-demand-hub.lovable.app/#organization" },
+              "@id": `${BASE_URL}/#website`,
+              name: SITE_NAME,
+              url: `${BASE_URL}/`,
+              publisher: { "@id": `${BASE_URL}/#organization` },
             },
           ],
         }),

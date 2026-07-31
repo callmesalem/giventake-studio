@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
-
-const BASE_URL = "https://dev-on-demand-hub.lovable.app";
+import { BASE_URL } from "@/lib/seo";
 
 interface SitemapEntry {
   path: string;
