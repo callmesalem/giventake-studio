@@ -67,3 +67,31 @@ output for anything that fails.
 | 1 | Swipe through banner | All three buttons reachable, each ≥ 44×44 pt | |
 | 2 | Open preferences | Focus moves into the sheet; swiping does not escape it | |
 | 3 | Two-finger scrub (VO) / back gesture | Dialog closes and focus returns to the trigger | |
+
+## Mobile navigation — not yet automated
+
+`MobileNav` in `src/components/site-chrome.tsx` is the header menu shown below
+768px. It is a **disclosure, not a modal**: no focus trap, because the panel does
+not claim the whole screen and the page behind it stays legitimately reachable.
+Do not "fix" the missing focus trap without changing the pattern to a dialog
+first — a trap without a modal overlay is worse than neither.
+
+The automated suite (`consent_a11y.py`) does not cover it yet. Add it there when
+convenient; until then, run this by hand at a 375px viewport.
+
+| # | Step | Expected | Result |
+|---|------|----------|--------|
+| 1 | Load any page at 375px wide | Menu button visible; "Start a project" still visible | |
+| 2 | Inspect the trigger | `aria-expanded="false"`, `aria-controls` points at the panel id, has an accessible name | |
+| 3 | `Tab` to the trigger and press `Enter` | Panel opens, `aria-expanded` flips to `true` | |
+| 4 | `Tab` through the panel | Every link reachable in DOM order, each row ≥ 48px tall | |
+| 5 | Press `Escape` | Panel closes **and focus returns to the trigger** | |
+| 6 | Open, then activate any link | Panel closes on navigation, does not persist across pages | |
+| 7 | Screen reader, panel open | Announced as expanded; nav landmark labelled "Main" | |
+| 8 | Rotor / landmark list at 375px | Exactly **one** navigation landmark named "Main" | |
+
+On row 8: both navs are in the DOM and both are labelled "Main", but each is
+hidden at the other's breakpoint with `display: none` (Tailwind `hidden` /
+`md:hidden`), which removes it from the accessibility tree. So only one should
+ever be exposed. Worth confirming once rather than assuming — if two are
+announced, render one conditionally instead of hiding with CSS.
