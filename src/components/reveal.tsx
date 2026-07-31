@@ -24,7 +24,6 @@ type RevealProps = {
   children: React.ReactNode;
   className?: string;
   delay?: number;
-  as?: "div" | "section" | "article" | "ul" | "li";
   threshold?: number;
 };
 
@@ -32,10 +31,9 @@ export function Reveal({
   children,
   className = "",
   delay = 0,
-  as: Tag = "div",
   threshold = DEFAULT_THRESHOLD,
 }: RevealProps) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const reduced = usePrefersReducedMotion();
   const client = useIsClient();
@@ -65,12 +63,12 @@ export function Reveal({
   const isHidden = client && !visible && !reduced;
 
   return (
-    <Tag
-      ref={ref as React.Ref<HTMLDivElement>}
+    <div
+      ref={ref}
       className={`reveal ${isHidden ? "reveal-hidden" : "reveal-visible"} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
-    </Tag>
+    </div>
   );
 }
