@@ -96,9 +96,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/226b1f7b-7a97-4f06-b92a-6d2bf819247d" },
     ],
     links: [
+      // Fetch the main sheet at high priority even though it is applied
+      // non-blocking below (media="print" alone gets a low fetch priority).
+      { rel: "preload", as: "style", href: appCss },
       // Loaded non-blocking: the inlined critical CSS paints the header and
       // hero, then this sheet is promoted to `all` right after first paint.
       { rel: "stylesheet", href: appCss, media: "print", "data-main-css": "" },
+
+
 
       {
         rel: "preload",
