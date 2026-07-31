@@ -110,6 +110,12 @@
   --ring: var(--violet);
   --brand: var(--violet);
   --brand-foreground: #ffffff;
+
+  /* hero background glow */
+  --hero-glow-1: #4f46e5;
+  --hero-glow-2: #6366f1;
+  --hero-glow-3: #c9a24c;
+  --hero-glow-opacity: 0.07;
 }
 
 .dark {
@@ -132,6 +138,12 @@
   --ring: #6366f1;
   --brand: #6366f1;
   --brand-foreground: #ffffff;
+
+  /* hero background glow */
+  --hero-glow-1: #6366f1;
+  --hero-glow-2: #818cf8;
+  --hero-glow-3: #d4a857;
+  --hero-glow-opacity: 0.10;
 }
 
 @layer base {
@@ -356,6 +368,81 @@
   .ambient-blob,
   .blob-a,
   .blob-b {
+    animation: none;
+  }
+}
+
+/* Hero aurora — layered, slow-moving gradient mesh that sits behind the hero
+   content. All motion is transform-only, so it composes cheaply on the GPU and
+   never runs until :root[data-motion="on"] is set after first paint. */
+@keyframes aurora-drift {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  25% { transform: translate(20px, -30px) rotate(2deg) scale(1.03); }
+  50% { transform: translate(-10px, 20px) rotate(-1deg) scale(1.05); }
+  75% { transform: translate(15px, 10px) rotate(1deg) scale(1.02); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+@keyframes aurora-drift-alt {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33% { transform: translate(-30px, 20px) rotate(-2deg) scale(1.04); }
+  66% { transform: translate(20px, -15px) rotate(2deg) scale(0.98); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+@keyframes aurora-breathe {
+  0%, 100% { opacity: var(--hero-glow-opacity); }
+  50% { opacity: calc(var(--hero-glow-opacity) * 1.4); }
+}
+
+@utility hero-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, color-mix(in oklab, var(--hero-glow-1) 55%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 70% at 80% 20%, color-mix(in oklab, var(--hero-glow-2) 45%, transparent) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 70% 80%, color-mix(in oklab, var(--hero-glow-3) 35%, transparent) 0%, transparent 50%);
+  opacity: var(--hero-glow-opacity);
+  animation: aurora-drift 28s ease-in-out infinite, aurora-breathe 12s ease-in-out infinite;
+  animation-play-state: paused;
+  :root[data-motion="on"] & { animation-play-state: running; }
+  will-change: transform, opacity;
+}
+
+.hero-aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+}
+
+@utility aurora-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: var(--hero-glow-opacity);
+  animation: aurora-drift-alt 24s ease-in-out infinite;
+  animation-play-state: paused;
+  :root[data-motion="on"] & { animation-play-state: running; }
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-aurora::before,
+  .hero-aurora::after,
+  .aurora-orb {
     animation: none;
   }
 }
