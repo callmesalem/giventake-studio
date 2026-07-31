@@ -78,12 +78,12 @@ function Index() {
         <Suspense fallback={<Placeholder h={520} />}>
           <WhoWeHelp />
           <Services />
-          <section id="how"><HowItWorks /></section>
+          <HowItWorks />
           <QualityGuardrails />
           <Work />
           <Testimonials />
           <Pricing />
-          <section id="faq"><FAQ /></section>
+          <FAQ />
           <ContactCTA />
         </Suspense>
       </main>
