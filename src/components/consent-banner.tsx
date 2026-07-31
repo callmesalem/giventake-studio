@@ -156,6 +156,7 @@ export function ConsentBanner() {
       {decided && !preferencesOpen && (
         <button
           type="button"
+          data-consent-trigger="persistent"
           onClick={openPreferences}
           aria-label="Manage cookie preferences"
           className={`fixed bottom-4 left-4 z-40 inline-flex min-h-9 items-center rounded-full border border-hairline bg-white/90 px-3 py-1.5 text-[11px] font-medium text-muted-ink shadow-soft backdrop-blur hover:text-ink ${focusRing}`}
@@ -163,6 +164,7 @@ export function ConsentBanner() {
           Cookie settings
         </button>
       )}
+
     </>
   );
 }
