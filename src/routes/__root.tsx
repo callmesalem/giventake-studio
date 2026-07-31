@@ -79,6 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "google-site-verification", content: "Px8gSZ1_p2Xkq7OUjUN6imyaIuCAMrOWU08OR2FvvrI" },
       { title: "GivenTake Goods Devs: Your On-Demand Development Team" },
       { name: "description", content: "We build websites, apps, AI tools, automations, and business systems for small businesses, founders, and growing companies. No coding, no hiring." },
       { name: "author", content: "Lovable" },
