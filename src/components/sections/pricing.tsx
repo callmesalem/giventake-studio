@@ -7,8 +7,11 @@ const tiers = [
     tagline: "Landing pages and simple builds.",
     features: [
       "Marketing site or landing page",
-      "AI-assisted content and code",
-      "CMS your team can actually use",
+      "AI-assisted build with human review",
+      "2 revision rounds included",
+      "CMS your team can edit",
+      "Automated tests for critical paths",
+      "Source code + deployment handoff",
       "Live in two to three weeks",
       "30 days of tweaks after launch",
     ],
@@ -19,9 +22,13 @@ const tiers = [
     price: "Custom quote",
     tagline: "Custom apps, automations, and internal tools.",
     features: [
-      "Web app or internal tool built to spec",
-      "AI agents and automation where they earn their keep",
-      "Weekly demos and a shared roadmap",
+      "Web app, internal tool, or automation",
+      "AI agents and agentic workflows where they fit",
+      "Scope defined in writing before we start",
+      "Unlimited revisions within signed scope",
+      "Automated tests + manual QA",
+      "Weekly demos and shared roadmap",
+      "Source code, docs, and deployment handoff",
       "60 days of support after launch",
     ],
     cta: "Request a quote",
@@ -32,13 +39,23 @@ const tiers = [
     price: "Monthly retainer",
     tagline: "An AI-native team, without hiring one.",
     features: [
-      "Senior developer billed by the month",
+      "Monthly senior developer retainer",
       "Continuous shipping against your roadmap",
-      "Shared Slack, weekly reviews",
+      "AI-assisted delivery with human review",
+      "Shared Slack and weekly reviews",
+      "Scope adjusts monthly as priorities change",
       "Pause or cancel with 30 days' notice",
     ],
     cta: "Book consultation",
   },
+];
+
+const included = [
+  "AI-generated code is reviewed by a human before it ships",
+  "Automated tests run on every critical path",
+  "You receive source code, documentation, and a handoff walkthrough",
+  "Timeline and scope are fixed in writing before work starts",
+  "Revisions are built into the plan, not billed as surprises",
 ];
 
 export function Pricing() {
@@ -51,7 +68,7 @@ export function Pricing() {
             Work with us the way that fits.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Every project gets scoped on a call. You'll have a fixed number and a timeline in writing before we start.
+            Every project is scoped on a call. You'll get a fixed number, a clear timeline, and a written statement of what's included before we start.
           </p>
         </div>
 
@@ -126,6 +143,24 @@ export function Pricing() {
               </a>
             </article>
           ))}
+        </div>
+
+        {/* transparent expectations block */}
+        <div className="mt-14 rounded-2xl border border-hairline bg-white p-7 shadow-soft">
+          <h3 className="text-[18px] font-semibold text-ink">
+            What's included with every project
+          </h3>
+          <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
+            Agentic delivery means AI coding agents do the bulk of the construction, and I verify the work. Here's what that means for you in practical terms.
+          </p>
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {included.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
