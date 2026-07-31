@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { BASE_URL } from "@/lib/seo";
 import { offers } from "@/lib/offers";
+import { articles } from "@/lib/articles";
 
 interface SitemapEntry {
   path: string;
@@ -15,14 +16,26 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
-          // Offer pages are the primary organic search targets, so they rank
-          // above the legal pages here. Derived from the same source as the
-          // routes themselves, so a new offer is listed automatically.
+          { path: "/services", changefreq: "monthly", priority: "0.9" },
+          // Offer and article pages are the primary organic search targets, so
+          // they rank above the legal pages here. Both derive from the same
+          // source as the routes themselves, so new entries are listed
+          // automatically.
           ...offers.map(
             (o): SitemapEntry => ({
               path: `/services/${o.slug}`,
               changefreq: "monthly",
               priority: "0.8",
+            }),
+          ),
+          { path: "/process", changefreq: "monthly", priority: "0.8" },
+          { path: "/how-we-use-ai", changefreq: "monthly", priority: "0.7" },
+          { path: "/articles", changefreq: "weekly", priority: "0.7" },
+          ...articles.map(
+            (a): SitemapEntry => ({
+              path: `/articles/${a.slug}`,
+              changefreq: "yearly",
+              priority: "0.6",
             }),
           ),
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
