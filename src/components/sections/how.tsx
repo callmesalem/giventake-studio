@@ -6,8 +6,8 @@ const steps = [
   },
   {
     n: "2",
-    title: "We design and build",
-    body: "You see progress every week. Real screens, real data, real code. If something isn't landing, we catch it early instead of at the end.",
+    title: "We design and build with AI",
+    body: "I use AI coding agents and modern frameworks to move fast. You see progress every week. Real screens, real data, real code. If something isn't landing, we catch it early.",
   },
   {
     n: "3",
