@@ -164,9 +164,15 @@
      viewport and the lines are masked toward the centre so text always sits on
      a near-clean surface. */
   :root {
-    --grid-unit: 40px;
-    --grid-line: color-mix(in oklab, var(--ink) 4.5%, transparent);
-    --grid-line-major: color-mix(in oklab, var(--ink) 7%, transparent);
+    --grid-unit: 44px;
+    --grid-line: color-mix(in oklab, var(--ink) 6%, transparent);
+    --grid-line-major: color-mix(in oklab, var(--ink) 10%, transparent);
+    --grid-fade: linear-gradient(
+      to bottom,
+      #000 0%,
+      color-mix(in oklab, #000 70%, transparent) 45%,
+      color-mix(in oklab, #000 32%, transparent) 100%
+    );
   }
 
   body {
@@ -178,7 +184,6 @@
      the page background colour. */
   html::before {
     content: "";
-
     position: fixed;
     inset: 0;
     z-index: -2;
@@ -194,39 +199,30 @@
       var(--grid-unit) var(--grid-unit),
       var(--grid-unit) var(--grid-unit);
     background-position: 0 0;
-    -webkit-mask-image: radial-gradient(
-      120% 90% at 50% 0%,
-      #000 0%,
-      color-mix(in oklab, #000 55%, transparent) 55%,
-      transparent 100%
-    );
-    mask-image: radial-gradient(
-      120% 90% at 50% 0%,
-      #000 0%,
-      color-mix(in oklab, #000 55%, transparent) 55%,
-      transparent 100%
-    );
+    -webkit-mask-image: var(--grid-fade);
+    mask-image: var(--grid-fade);
   }
 
   @media (min-width: 768px) {
     :root {
-      --grid-unit: 48px;
+      --grid-unit: 52px;
     }
   }
 
   @media (min-width: 1280px) {
     :root {
-      --grid-unit: 56px;
+      --grid-unit: 60px;
     }
   }
 
-  /* Hi-dpi screens render 1px lines thinner and darker, so ease off. */
+  /* Hi-dpi screens draw hairlines crisper and darker, so ease the contrast off. */
   @media (min-resolution: 2dppx) {
     :root {
-      --grid-line: color-mix(in oklab, var(--ink) 3.5%, transparent);
-      --grid-line-major: color-mix(in oklab, var(--ink) 5.5%, transparent);
+      --grid-line: color-mix(in oklab, var(--ink) 4.5%, transparent);
+      --grid-line-major: color-mix(in oklab, var(--ink) 8%, transparent);
     }
   }
+
 
 
   /* Ambient brand wash. Fixed to the viewport, sits under all content. */
