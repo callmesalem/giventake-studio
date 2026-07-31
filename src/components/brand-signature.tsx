@@ -207,7 +207,14 @@ export function BrandSignature() {
 
           {/* Ampersand loom */}
           <g transform="translate(260 280)" filter="url(#soft)">
-            <circle r="52" fill="none" stroke="currentColor" className="text-foreground" strokeOpacity="0.14" strokeWidth="1" />
+            <circle
+              r="52"
+              fill="none"
+              stroke="currentColor"
+              className="text-foreground"
+              strokeOpacity="0.14"
+              strokeWidth="1"
+            />
             <circle
               r="42"
               className="fill-card text-foreground"
@@ -242,8 +249,24 @@ export function BrandSignature() {
             })}
           </g>
 
-          <line x1="104" y1="60" x2="104" y2="500" stroke="currentColor" className="text-foreground" strokeOpacity="0.09" />
-          <line x1="416" y1="60" x2="416" y2="500" stroke="currentColor" className="text-foreground" strokeOpacity="0.09" />
+          <line
+            x1="104"
+            y1="60"
+            x2="104"
+            y2="500"
+            stroke="currentColor"
+            className="text-foreground"
+            strokeOpacity="0.09"
+          />
+          <line
+            x1="416"
+            y1="60"
+            x2="416"
+            y2="500"
+            stroke="currentColor"
+            className="text-foreground"
+            strokeOpacity="0.09"
+          />
 
           <text
             x="260"
@@ -312,7 +335,12 @@ export function BrandSignature() {
                   }}
                 >
                   {row.take}
-                  <span aria-hidden="true" className="ml-1 inline-block transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+                  <span
+                    aria-hidden="true"
+                    className="ml-1 inline-block transition-transform duration-300 group-hover:translate-x-0.5"
+                  >
+                    →
+                  </span>
                 </a>
 
                 {/* Row hitbox for the middle band — improves mobile tap area */}

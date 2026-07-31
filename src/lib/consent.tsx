@@ -174,15 +174,18 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   const stateRef = useRef<ConsentState>(DEFAULT_STATE);
   stateRef.current = state;
 
-  const record = useCallback((next: ConsentState, source: ConsentSource, prev: ConsentState | null) => {
-    appendAudit({
-      at: new Date().toISOString(),
-      source,
-      state: next,
-      changed: diff(prev, next),
-      gpc: detectGpc(),
-    });
-  }, []);
+  const record = useCallback(
+    (next: ConsentState, source: ConsentSource, prev: ConsentState | null) => {
+      appendAudit({
+        at: new Date().toISOString(),
+        source,
+        state: next,
+        changed: diff(prev, next),
+        gpc: detectGpc(),
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     const signal = detectGpc();
@@ -246,19 +249,19 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     // Wait for the dialog to unmount (and Radix to settle) before moving focus back.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-      if (el && el.isConnected) {
-        el.focus({ preventScroll: true });
-        return;
-      }
-      // The trigger unmounted or re-rendered: find the same control by key,
-      // then fall back to the persistent cookie-settings button so focus
-      // never lands on <body>.
-      const byKey = key
-        ? document.querySelector<HTMLElement>(`[data-consent-trigger="${key}"]`)
-        : null;
-      const fallback =
-        byKey ?? document.querySelector<HTMLElement>('[data-consent-trigger="persistent"]');
-      fallback?.focus({ preventScroll: true });
+        if (el && el.isConnected) {
+          el.focus({ preventScroll: true });
+          return;
+        }
+        // The trigger unmounted or re-rendered: find the same control by key,
+        // then fall back to the persistent cookie-settings button so focus
+        // never lands on <body>.
+        const byKey = key
+          ? document.querySelector<HTMLElement>(`[data-consent-trigger="${key}"]`)
+          : null;
+        const fallback =
+          byKey ?? document.querySelector<HTMLElement>('[data-consent-trigger="persistent"]');
+        fallback?.focus({ preventScroll: true });
       });
     });
   }, []);

@@ -16,7 +16,7 @@ function usePrefersReducedMotion() {
 
 function useIsInViewportOnce(
   ref: React.RefObject<HTMLElement | null>,
-  { threshold, rootMargin }: { threshold: number; rootMargin: string }
+  { threshold, rootMargin }: { threshold: number; rootMargin: string },
 ) {
   const [revealed, setRevealed] = useState(false);
 
@@ -41,7 +41,7 @@ function useIsInViewportOnce(
           io.disconnect();
         }
       },
-      { threshold, rootMargin }
+      { threshold, rootMargin },
     );
 
     io.observe(el);

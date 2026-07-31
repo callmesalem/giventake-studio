@@ -95,8 +95,8 @@ export function ConsentBanner() {
               </h2>
               <p id={descId} className="mt-2 text-[14px] leading-relaxed text-ink">
                 We use strictly necessary cookies to run the site. With your permission, we also use
-                analytics and marketing cookies to measure how the site is used and to improve our ads.
-                You can change or withdraw consent at any time from the footer.
+                analytics and marketing cookies to measure how the site is used and to improve our
+                ads. You can change or withdraw consent at any time from the footer.
               </p>
               <p className="mt-2 text-[12px] text-muted-ink">
                 Read our{" "}
@@ -165,7 +165,6 @@ export function ConsentBanner() {
           Cookie settings
         </button>
       )}
-
     </>
   );
 }
@@ -199,7 +198,6 @@ function PreferencesDialog({
         onCloseAutoFocus={(e) => e.preventDefault()}
         className="max-w-lg rounded-2xl border border-hairline bg-white p-6 shadow-lift sm:rounded-2xl"
       >
-
         <DialogHeader className="text-left">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-ink">
             Preferences
@@ -213,10 +211,7 @@ function PreferencesDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ul
-          role="list"
-          className="mt-5 divide-y divide-hairline rounded-xl border border-hairline"
-        >
+        <ul role="list" className="mt-5 divide-y divide-hairline rounded-xl border border-hairline">
           {CATEGORIES.map((c) => (
             <CategoryRow
               key={c.key}

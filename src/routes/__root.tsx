@@ -92,8 +92,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // hero, then this sheet is promoted to `all` right after first paint.
       { rel: "stylesheet", href: appCss, media: "print", "data-main-css": "" },
 
-
-
       {
         rel: "preload",
         as: "font",
@@ -160,7 +158,6 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
-
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();

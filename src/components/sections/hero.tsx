@@ -13,7 +13,6 @@ export function Hero() {
       </div>
 
       <PointerGlow className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 pt-16 pb-24 md:pt-24 md:pb-32 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-
         {/* LEFT */}
         <div data-crit="hero-left" className="relative z-10 flex flex-col justify-center">
           <div
@@ -40,7 +39,9 @@ export function Hero() {
             data-crit="hero-lede"
             className="mt-8 max-w-xl text-[17px] leading-[1.55] text-muted-ink md:text-[18px]"
           >
-            I'm a solo developer who builds with AI coding agents and modern tools. You get the speed of a small team without the overhead of hiring one. Tell me what you need. A few weeks later, you're using it.
+            I'm a solo developer who builds with AI coding agents and modern tools. You get the
+            speed of a small team without the overhead of hiring one. Tell me what you need. A few
+            weeks later, you're using it.
           </p>
 
           <div data-crit="hero-cta" className="mt-10 flex flex-wrap items-center gap-3 rise-in">
@@ -69,13 +70,18 @@ export function Hero() {
           >
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-muted-ink">
-              New studio, taking on our first commissions of 2026. AI-assisted delivery means faster prototypes and fewer handoffs. Founder-led, so you talk directly to whoever is building your product.
+              New studio, taking on our first commissions of 2026. AI-assisted delivery means faster
+              prototypes and fewer handoffs. Founder-led, so you talk directly to whoever is
+              building your product.
             </p>
           </div>
         </div>
 
         {/* RIGHT — brand signature: The Exchange */}
-        <div data-crit="hero-right" className="relative z-10 flex items-center justify-center lg:justify-end">
+        <div
+          data-crit="hero-right"
+          className="relative z-10 flex items-center justify-center lg:justify-end"
+        >
           <div data-crit="hero-signature" className="w-full max-w-[520px]">
             <BrandSignature />
           </div>

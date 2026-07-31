@@ -3,12 +3,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
 export const Route = createFileRoute("/terms")({
-  head: () => pageHead({
-    path: "/terms",
-    title: "Terms of Service · GivenTake Goods Devs",
-    description:
-      "The terms that govern your use of the GivenTake Goods Devs website and any services provided.",
-  }),
+  head: () =>
+    pageHead({
+      path: "/terms",
+      title: "Terms of Service · GivenTake Goods Devs",
+      description:
+        "The terms that govern your use of the GivenTake Goods Devs website and any services provided.",
+    }),
   component: TermsPage,
 });
 
@@ -22,7 +23,12 @@ function TermsPage() {
           Terms of Service
         </h1>
         <p className="mt-3 text-[13px] text-muted-ink">
-          Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+          Last updated:{" "}
+          {new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
         </p>
 
         <div className="mt-10 space-y-8 text-[15px] leading-relaxed text-ink">

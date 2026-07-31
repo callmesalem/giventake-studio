@@ -20,7 +20,9 @@ const schema = z.object({
   description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
   budget: z.string().min(1, "Select a budget"),
   timeline: z.string().min(1, "Select a timeline"),
-  consent: z.string().refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
+  consent: z
+    .string()
+    .refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
 });
 
 const CONTACT_EMAIL = "hello@giventake.dev";
@@ -66,7 +68,8 @@ export function ContactCTA() {
               Let's build something great.
             </h2>
             <p className="mt-6 max-w-md text-[17px] leading-relaxed text-muted-ink">
-              Send us a few lines about what you're working on. You'll hear back within one business day, usually the same afternoon.
+              Send us a few lines about what you're working on. You'll hear back within one business
+              day, usually the same afternoon.
             </p>
 
             <ul className="mt-10 space-y-4">
@@ -78,7 +81,13 @@ export function ContactCTA() {
                 <li key={i} className="flex items-start gap-3">
                   <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-violet-soft text-violet">
                     <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none">
-                      <path d="M4 10l4 4 8-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M4 10l4 4 8-9"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </div>
                   <span className="text-[15px] text-ink">{i}</span>
@@ -106,14 +115,21 @@ export function ContactCTA() {
               <div className="flex flex-col items-start py-10">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-soft text-violet">
                   <svg viewBox="0 0 20 20" className="h-6 w-6" fill="none">
-                    <path d="M4 10l4 4 8-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M4 10l4 4 8-9"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
                 <h3 className="mt-6 text-[24px] font-semibold tracking-tight text-ink">
                   Almost there.
                 </h3>
                 <p className="mt-2 max-w-sm text-[15px] text-muted-ink">
-                  Your mail client should have opened with the brief pre-filled. Hit send and we&rsquo;ll reply within one business day. If nothing opened, email us directly at{" "}
+                  Your mail client should have opened with the brief pre-filled. Hit send and
+                  we&rsquo;ll reply within one business day. If nothing opened, email us directly at{" "}
                   <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-ink underline">
                     {CONTACT_EMAIL}
                   </a>
@@ -124,14 +140,32 @@ export function ContactCTA() {
               <form onSubmit={onSubmit} className="space-y-5" noValidate>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Name">
-                    <Input name="name" required maxLength={100} placeholder="Jane Doe" className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0" />
+                    <Input
+                      name="name"
+                      required
+                      maxLength={100}
+                      placeholder="Jane Doe"
+                      className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
+                    />
                   </Field>
                   <Field label="Email">
-                    <Input name="email" type="email" required maxLength={255} placeholder="jane@company.com" className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0" />
+                    <Input
+                      name="email"
+                      type="email"
+                      required
+                      maxLength={255}
+                      placeholder="jane@company.com"
+                      className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
+                    />
                   </Field>
                 </div>
                 <Field label="Company">
-                  <Input name="company" maxLength={120} placeholder="Company Inc." className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0" />
+                  <Input
+                    name="company"
+                    maxLength={120}
+                    placeholder="Company Inc."
+                    className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
+                  />
                 </Field>
                 <Field label="Project description">
                   <Textarea
@@ -146,7 +180,10 @@ export function ContactCTA() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Budget">
                     <Select name="budget" required>
-                      <SelectTrigger aria-label="Budget" className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
+                      <SelectTrigger
+                        aria-label="Budget"
+                        className="h-11 rounded-xl border-hairline bg-paper focus:ring-0"
+                      >
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -160,7 +197,10 @@ export function ContactCTA() {
                   </Field>
                   <Field label="Timeline">
                     <Select name="timeline" required>
-                      <SelectTrigger aria-label="Timeline" className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
+                      <SelectTrigger
+                        aria-label="Timeline"
+                        className="h-11 rounded-xl border-hairline bg-paper focus:ring-0"
+                      >
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -188,7 +228,10 @@ export function ContactCTA() {
                     and agree that GivenTake Goods Devs may use the details I've submitted to reply
                     to my enquiry and prepare a proposal. My data is not sold, not used to train AI
                     models, and I can request deletion any time at{" "}
-                    <a href="mailto:privacy@giventake.dev" className="font-medium text-ink underline">
+                    <a
+                      href="mailto:privacy@giventake.dev"
+                      className="font-medium text-ink underline"
+                    >
                       privacy@giventake.dev
                     </a>
                     .
@@ -196,9 +239,9 @@ export function ContactCTA() {
                 </label>
 
                 <p className="text-[11.5px] leading-relaxed text-muted-ink">
-                  Submitting this form opens your email client with the brief pre-filled — the message
-                  is sent from your inbox, not stored on our servers. Please don't include sensitive
-                  personal, financial, or health information.
+                  Submitting this form opens your email client with the brief pre-filled — the
+                  message is sent from your inbox, not stored on our servers. Please don't include
+                  sensitive personal, financial, or health information.
                 </p>
 
                 <button
@@ -220,9 +263,7 @@ export function ContactCTA() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-[13px] font-medium text-ink">
-        {label}
-      </label>
+      <label className="text-[13px] font-medium text-ink">{label}</label>
       {children}
     </div>
   );

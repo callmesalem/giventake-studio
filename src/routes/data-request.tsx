@@ -32,18 +32,23 @@ const schema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
   residency: z.string().trim().max(80).optional(),
   requestType: z.string().min(1, "Select the type of request"),
-  details: z.string().trim().min(10, "Add a short description so we can find your records").max(1500),
+  details: z
+    .string()
+    .trim()
+    .min(10, "Add a short description so we can find your records")
+    .max(1500),
   identity: z.string().trim().max(500).optional(),
   consent: z.string().refine((v) => v === "on", { message: "Please confirm the declaration" }),
 });
 
 export const Route = createFileRoute("/data-request")({
-  head: () => pageHead({
-    path: "/data-request",
-    title: "Data Rights Request · GivenTake Goods Devs",
-    description:
-      "Request access, correction, deletion, or portability of your personal data held by GivenTake Goods Devs under GDPR and CCPA.",
-  }),
+  head: () =>
+    pageHead({
+      path: "/data-request",
+      title: "Data Rights Request · GivenTake Goods Devs",
+      description:
+        "Request access, correction, deletion, or portability of your personal data held by GivenTake Goods Devs under GDPR and CCPA.",
+    }),
   component: DataRequestPage,
 });
 
@@ -60,7 +65,8 @@ function DataRequestPage() {
       return;
     }
     const label =
-      REQUEST_TYPES.find((r) => r.value === parsed.data.requestType)?.label ?? parsed.data.requestType;
+      REQUEST_TYPES.find((r) => r.value === parsed.data.requestType)?.label ??
+      parsed.data.requestType;
     const subject = `Data rights request · ${label.split(" — ")[0]} · ${parsed.data.name}`;
     const body = [
       `Name: ${parsed.data.name}`,
@@ -156,7 +162,10 @@ function DataRequestPage() {
                 </Field>
               </div>
 
-              <Field label="Residency (optional)" hint="Helps us apply the right law (GDPR, UK GDPR, CCPA, etc.)">
+              <Field
+                label="Residency (optional)"
+                hint="Helps us apply the right law (GDPR, UK GDPR, CCPA, etc.)"
+              >
                 <Input
                   name="residency"
                   maxLength={80}

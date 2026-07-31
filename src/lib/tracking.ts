@@ -24,7 +24,13 @@ declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
-    fbq?: ((...args: unknown[]) => void) & { callMethod?: unknown; queue?: unknown[]; loaded?: boolean; version?: string; push?: unknown };
+    fbq?: ((...args: unknown[]) => void) & {
+      callMethod?: unknown;
+      queue?: unknown[];
+      loaded?: boolean;
+      version?: string;
+      push?: unknown;
+    };
     _fbq?: unknown;
     ttq?: any;
     _linkedin_data_partner_ids?: string[];
@@ -116,7 +122,21 @@ function loadTikTokPixel() {
   (function (w: any, d, t) {
     w.TiktokAnalyticsObject = t;
     const ttq = (w[t] = w[t] || []);
-    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
+    ttq.methods = [
+      "page",
+      "track",
+      "identify",
+      "instances",
+      "debug",
+      "on",
+      "off",
+      "once",
+      "ready",
+      "alias",
+      "group",
+      "enableCookie",
+      "disableCookie",
+    ];
     ttq.setAndDefer = function (t: any, e: any) {
       t[e] = function () {
         t.push([e].concat(Array.prototype.slice.call(arguments, 0)));

@@ -1,11 +1,5 @@
 import { Reveal } from "@/components/reveal";
-import {
-  IconPlan,
-  IconCode,
-  IconTest,
-  IconReview,
-  IconDeploy,
-} from "@/components/marks";
+import { IconPlan, IconCode, IconTest, IconReview, IconDeploy } from "@/components/marks";
 
 const workflow = [
   {
@@ -65,7 +59,8 @@ export function HowItWorks() {
             Agentic speed with human checkpoints.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            AI coding agents do the heavy lifting. I stay in the loop at every step that matters, so you get speed without giving up judgment.
+            AI coding agents do the heavy lifting. I stay in the loop at every step that matters, so
+            you get speed without giving up judgment.
           </p>
         </Reveal>
 
@@ -103,8 +98,7 @@ export function HowItWorks() {
 
                   <div className="mt-5 border-t border-hairline pt-4">
                     <p className="text-[13px] leading-[1.5] text-ink">
-                      <span className="font-semibold text-violet">Checkpoint:</span>{" "}
-                      {w.checkpoint}
+                      <span className="font-semibold text-violet">Checkpoint:</span> {w.checkpoint}
                     </p>
                   </div>
                 </article>
@@ -115,8 +109,8 @@ export function HowItWorks() {
 
         <Reveal delay={100} className="mt-10">
           <p className="text-[14px] leading-relaxed text-muted-ink">
-            The goal is simple: move faster than a traditional team, but keep every important decision
-            in human hands. The AI helps me code; I own the result.
+            The goal is simple: move faster than a traditional team, but keep every important
+            decision in human hands. The AI helps me code; I own the result.
           </p>
         </Reveal>
       </div>

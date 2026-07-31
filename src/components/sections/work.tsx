@@ -53,14 +53,21 @@ function Preview({ kind }: { kind: string }) {
       <div className="flex h-full flex-col justify-end gap-3">
         <div className="grid grid-cols-3 gap-2">
           {["24", "12", "$18k"].map((v) => (
-            <div key={v} className="rounded-lg bg-white/80 px-2 py-1.5 text-center text-[13px] font-semibold text-ink">
+            <div
+              key={v}
+              className="rounded-lg bg-white/80 px-2 py-1.5 text-center text-[13px] font-semibold text-ink"
+            >
               {v}
             </div>
           ))}
         </div>
         <div className="flex h-16 items-end gap-1">
           {[40, 60, 45, 72, 55, 82, 68, 90, 74, 88].map((h, i) => (
-            <div key={i} className={`flex-1 rounded-t ${i === 9 ? "bg-ink" : "bg-white/70"}`} style={{ height: `${h}%` }} />
+            <div
+              key={i}
+              className={`flex-1 rounded-t ${i === 9 ? "bg-ink" : "bg-white/70"}`}
+              style={{ height: `${h}%` }}
+            />
           ))}
         </div>
       </div>
@@ -75,7 +82,9 @@ function Preview({ kind }: { kind: string }) {
           { n: "C", t: "New enquiry · Retainer", c: "bg-amber-50 text-amber-700" },
         ].map((r) => (
           <div key={r.n} className="flex items-center gap-2 rounded-lg bg-white/80 px-2 py-2">
-            <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-semibold ${r.c}`}>
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-semibold ${r.c}`}
+            >
               {r.n}
             </div>
             <span className="truncate text-[12px] font-medium text-ink">{r.t}</span>
@@ -115,7 +124,8 @@ export function Work() {
             Built with AI agents, reviewed by a human.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            These are the kinds of projects we ship. AI handles the repetitive parts; I handle architecture, review, and delivery.
+            These are the kinds of projects we ship. AI handles the repetitive parts; I handle
+            architecture, review, and delivery.
           </p>
         </Reveal>
 
@@ -123,7 +133,9 @@ export function Work() {
           {commissions.map((p, i) => (
             <Reveal key={p.title} delay={i * 80}>
               <article className="card-lift group flex h-full flex-col overflow-hidden rounded-2xl border border-hairline bg-white">
-                <div className={`relative h-56 overflow-hidden border-b border-hairline p-6 ${bgTint[p.preview]}`}>
+                <div
+                  className={`relative h-56 overflow-hidden border-b border-hairline p-6 ${bgTint[p.preview]}`}
+                >
                   <div className="absolute left-5 top-5 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-ink backdrop-blur">
                     {p.kind}
                   </div>
@@ -132,9 +144,7 @@ export function Work() {
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col p-6">
-                  <h3 className="text-[20px] font-semibold tracking-tight text-ink">
-                    {p.title}
-                  </h3>
+                  <h3 className="text-[20px] font-semibold tracking-tight text-ink">{p.title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-muted-ink">{p.body}</p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     {p.tags.map((t) => (
