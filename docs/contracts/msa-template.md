@@ -12,9 +12,14 @@
 This Master Services Agreement (the "**Agreement**") is entered into as of
 `[DATE]` (the "**Effective Date**") by and between:
 
-**GivenTake Goods LLC**, an Ohio limited liability company doing business as
-**GivenTake Goods Devs**, with its principal place of business at
-`[BUSINESS ADDRESS]` ("**Developer**"); and
+**`[GivenTake Goods Devs LLC]`**, an Ohio limited liability company, with its
+principal place of business at `[BUSINESS ADDRESS]` ("**Developer**"); and
+
+> ⚠️ **Not GivenTake Goods LLC.** That entity (Ohio SOS doc 202225804070)
+> performed contractor work and carries a construction-defect tail under
+> ORC § 2305.131. The studio contracts through a separate new LLC — confirm the
+> exact registered name once formed. See
+> [`../business/01-structure-and-formation.md`](../business/01-structure-and-formation.md).
 
 `[CLIENT LEGAL NAME]`, a `[STATE] [ENTITY TYPE]`, with its principal place of
 business at `[CLIENT ADDRESS]` ("**Client**").
@@ -366,7 +371,7 @@ signature.
 
 **AGREED:**
 
-| **GivenTake Goods LLC**<br>d/b/a GivenTake Goods Devs | **`[CLIENT LEGAL NAME]`**           |
+| **`[GivenTake Goods Devs LLC]`** | **`[CLIENT LEGAL NAME]`**           |
 | ----------------------------------------------------- | ----------------------------------- |
 | Signature: **********\_\_**********                   | Signature: **********\_\_********** |
 | Name: `[NAME]`                                        | Name: `[NAME]`                      |
@@ -382,8 +387,10 @@ signature.
 notice periods · liability cap period · survival periods · signatory name and
 title
 
-**Confirmed and pre-filled:** entity name (GivenTake Goods LLC, Ohio LLC, SOS doc
-ID 202225804070), governing state (Ohio), venue county (Cuyahoga).
+**Confirmed:** governing state (Ohio), venue county (Cuyahoga).
+
+**Pending entity formation:** the Developer name. Fill it with the new LLC's exact
+registered name once Form 610 is filed — **not** GivenTake Goods LLC.
 
 **Do not use the statutory agent's residential address** as `[BUSINESS ADDRESS]`
 — use a commercial agent or virtual office address. See

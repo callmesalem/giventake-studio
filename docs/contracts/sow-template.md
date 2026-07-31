@@ -15,7 +15,7 @@
 **STATEMENT OF WORK #`[NUMBER]`**
 
 Issued under the Master Services Agreement dated `[MSA DATE]` between
-**GivenTake Goods LLC** d/b/a **GivenTake Goods Devs** ("Developer") and
+**`[GivenTake Goods Devs LLC]`** ("Developer") and
 `[CLIENT LEGAL NAME]` ("Client").
 
 The MSA is incorporated by reference. Capitalised terms not defined here have the
@@ -193,7 +193,7 @@ required before work begins]`
 
 **AGREED:**
 
-| **GivenTake Goods LLC**<br>d/b/a GivenTake Goods Devs | **`[CLIENT LEGAL NAME]`**               |
+| **`[GivenTake Goods Devs LLC]`** | **`[CLIENT LEGAL NAME]`**               |
 | ----------------------------------------------------- | --------------------------------------- |
 | Signature: ****\*\*****\_\_****\*\*****               | Signature: ****\*\*****\_\_****\*\***** |
 | Name: `[NAME]`                                        | Name: `[NAME]`                          |
