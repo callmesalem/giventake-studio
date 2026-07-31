@@ -29,7 +29,8 @@
 /* Metric-adjusted fallback so swap causes no visible layout shift. */
 @font-face {
   font-family: "Inter Tight Fallback";
-  src: local("Arial");
+  src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans"),
+    local("Roboto"), local("DejaVu Sans");
   size-adjust: 97%;
   ascent-override: 96%;
   descent-override: 24%;
