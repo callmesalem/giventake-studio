@@ -72,9 +72,9 @@
   --color-muted-ink: var(--muted-ink);
   --color-violet: var(--violet);
   --color-violet-soft: var(--violet-soft);
-  --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Inter Tight", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Inter Tight", "Inter Tight Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Tight", "Inter Tight Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inter Tight", "Inter Tight Fallback", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :root {
