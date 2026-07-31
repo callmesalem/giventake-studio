@@ -131,6 +131,7 @@ export function ConsentBanner() {
               </button>
               <button
                 type="button"
+                data-consent-trigger="banner"
                 onClick={openPreferences}
                 className={`min-h-11 rounded-full px-4 py-2 text-[13px] font-medium text-muted-ink hover:text-ink ${focusRing}`}
               >
@@ -156,6 +157,7 @@ export function ConsentBanner() {
       {decided && !preferencesOpen && (
         <button
           type="button"
+          data-consent-trigger="persistent"
           onClick={openPreferences}
           aria-label="Manage cookie preferences"
           className={`fixed bottom-4 left-4 z-40 inline-flex min-h-9 items-center rounded-full border border-hairline bg-white/90 px-3 py-1.5 text-[11px] font-medium text-muted-ink shadow-soft backdrop-blur hover:text-ink ${focusRing}`}
@@ -163,6 +165,7 @@ export function ConsentBanner() {
           Cookie settings
         </button>
       )}
+
     </>
   );
 }
@@ -192,7 +195,11 @@ function PreferencesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-white p-6 shadow-lift sm:rounded-2xl">
+      <DialogContent
+        onCloseAutoFocus={(e) => e.preventDefault()}
+        className="max-w-lg rounded-2xl border border-hairline bg-white p-6 shadow-lift sm:rounded-2xl"
+      >
+
         <DialogHeader className="text-left">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-ink">
             Preferences

@@ -5,7 +5,7 @@ import { useConsent } from "@/lib/consent";
 function CookieSettingsLink() {
   const { openPreferences } = useConsent();
   return (
-    <button type="button" onClick={openPreferences} className="hover:text-ink">
+    <button type="button" data-consent-trigger="footer" onClick={openPreferences} className="hover:text-ink">
       Cookie settings
     </button>
   );
