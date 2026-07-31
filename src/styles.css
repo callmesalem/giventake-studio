@@ -258,7 +258,139 @@
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+
+/* Scroll-triggered reveal. Content is visible without JS; the hidden state is
+   only applied once the client hydrates so no-JS users are unaffected. */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(16px);
 }
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-hidden,
+  .reveal-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Hover lift for cards and panels */
+@utility card-lift {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@utility card-lift {
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px -16px rgba(10, 10, 10, 0.12);
+  }
+}
+
+@utility btn-icon-nudge {
+  & svg {
+    transition: transform 0.2s ease-out;
+  }
+  &:hover svg,
+  &:focus-visible svg {
+    transform: translateX(2px);
+  }
+}
+
+@utility nav-link {
+  position: relative;
+}
+@utility nav-link {
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -2px;
+    width: 100%;
+    height: 1.5px;
+    background-color: currentColor;
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: center;
+    transition: transform 0.2s ease-out;
+  }
+  &:hover::after,
+  &:focus-visible::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+}
+
+/* Ambient gradient blobs — slow, non-blocking, transform-only motion. */
+@keyframes blob-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.97); }
+}
+@keyframes blob-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-25px, 35px) scale(0.98); }
+  66% { transform: translate(20px, -25px) scale(1.04); }
+}
+
+@utility ambient-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation-play-state: paused;
+  :root[data-motion="on"] & { animation-play-state: running; }
+}
+
+@utility blob-a {
+  animation: blob-a 18s ease-in-out infinite;
+}
+@utility blob-b {
+  animation: blob-b 22s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blob,
+  .blob-a,
+  .blob-b {
+    animation: none;
+  }
+}
+
+/* Pointer-driven glow for the hero / signature area. */
+.pointer-glow-wrap {
+  position: relative;
+}
+.pointer-glow-orb {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.pointer-glow-orb::before {
+  content: "";
+  position: absolute;
+  left: var(--glow-x, 50%);
+  top: var(--glow-y, 50%);
+  width: 520px;
+  height: 520px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, color-mix(in oklab, var(--violet) 22%, transparent) 0%, transparent 65%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+:root[data-motion="on"] .pointer-glow-wrap:hover .pointer-glow-orb::before {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pointer-glow-orb::before {
+    display: none;
+  }
+}
+
 @utility rise-in {
   animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   will-change: opacity, transform;
