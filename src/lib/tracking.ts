@@ -100,29 +100,23 @@ function loadMetaPixel() {
   const id = import.meta.env.VITE_META_PIXEL_ID as string | undefined;
   if (!id || loaded.meta) return;
 
-  // Standard Meta Pixel bootstrap (vendor code). Disable lint rules that
-  // would otherwise force us to rewrite the third-party snippet.
-  /* eslint-disable @typescript-eslint/no-explicit-any, prefer-rest-params, @typescript-eslint/no-unused-expressions */
+  // Standard Meta Pixel bootstrap (vendor code), rewritten to satisfy project lint rules.
   (function (f: AnyRecord, b: Document, e: string, v: string) {
-    let n: AnyRecord;
-    let t: HTMLScriptElement;
-    let s: HTMLScriptElement;
     if (f.fbq) return;
-    n = f.fbq = function (...args: unknown[]) {
-      n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args);
-    };
+    const n: AnyRecord = (f.fbq = function (...args: unknown[]) {
+      n.callMethod ? n.callMethod(...args) : n.queue.push(args);
+    });
     if (!f._fbq) f._fbq = n;
     n.push = n;
     n.loaded = true;
     n.version = "2.0";
     n.queue = [];
-    t = b.createElement(e) as HTMLScriptElement;
+    const t = b.createElement(e) as HTMLScriptElement;
     t.async = true;
     t.src = v;
-    s = b.getElementsByTagName(e)[0] as HTMLScriptElement;
+    const s = b.getElementsByTagName(e)[0] as HTMLScriptElement;
     s.parentNode!.insertBefore(t, s);
   })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
-  /* eslint-enable @typescript-eslint/no-explicit-any, prefer-rest-params, @typescript-eslint/no-unused-expressions */
 
   window.fbq?.("init", id);
   window.fbq?.("track", "PageView");
