@@ -120,13 +120,19 @@ async def main():
         check(bool(meta["label"]), "dialog has an accessible name", json.dumps(meta))
         check(bool(meta["desc"]), "dialog has an accessible description")
         inert = await page.evaluate(
-            """() => Array.from(document.body.children)
-                 .filter(el => !el.contains(document.querySelector('[role=dialog]')))
-                 .every(el => el.getAttribute('aria-hidden') === 'true'
-                          || el.hasAttribute('data-aria-hidden')
-                          || el.tagName === 'SCRIPT'
-                          || el.tagName === 'STYLE')"""
+            """() => {
+                 const d = document.querySelector('[role=dialog]');
+                 const offenders = Array.from(document.body.children)
+                   .filter(el => !el.contains(d)
+                             && !['SCRIPT','STYLE','TEMPLATE','LINK'].includes(el.tagName)
+                             && el.getAttribute('aria-hidden') !== 'true'
+                             && !el.hasAttribute('data-aria-hidden')
+                             && !el.hasAttribute('inert'))
+                   .map(el => el.tagName + '.' + el.className);
+                 return offenders;
+               }"""
         )
+        inert = not inert
         check(inert, "background content is hidden from assistive tech while the dialog is open")
 
         # --- focus trap: tabbing 25 times never escapes the dialog ---

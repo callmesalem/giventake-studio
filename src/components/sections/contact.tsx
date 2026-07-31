@@ -145,7 +145,7 @@ export function ContactCTA() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Budget">
                   <Select name="budget" required>
-                    <SelectTrigger className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
+                    <SelectTrigger aria-label="Budget" className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
@@ -159,7 +159,7 @@ export function ContactCTA() {
                 </Field>
                 <Field label="Timeline">
                   <Select name="timeline" required>
-                    <SelectTrigger className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
+                    <SelectTrigger aria-label="Timeline" className="h-11 rounded-xl border-hairline bg-paper focus:ring-0">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
