@@ -110,6 +110,12 @@
   --ring: var(--violet);
   --brand: var(--violet);
   --brand-foreground: #ffffff;
+
+  /* hero background glow */
+  --hero-glow-1: #4f46e5;
+  --hero-glow-2: #6366f1;
+  --hero-glow-3: #c9a24c;
+  --hero-glow-opacity: 0.07;
 }
 
 .dark {
