@@ -114,13 +114,22 @@ excess is 0.26%.
 ## 3. Ohio municipal income tax — the one people forget
 
 Ohio is unusual: **cities levy income tax on business net profits**, separately
-from state and federal. Rates are typically 1%–3% depending on the municipality.
-This catches people who budgeted for federal and state and then discover a third
-filing.
+from state and federal. This catches people who budgeted for federal and state
+and then discover a third filing.
 
-- [ ] **TODO(you):** confirm the city where the business operates (for a
-      home-based business, generally where you work)
-- [ ] Determine that city's net profit tax rate and filing requirements
+**This one is material for you.** The Articles put GivenTake Goods LLC in
+**Parma, Cuyahoga County**, and Parma's municipal income tax rate is among the
+higher ones in Ohio — sources indicate somewhere in the **2.5%–3%** range, and
+they do not agree. That is a real cost on net profit, and it is not optional.
+
+- [ ] **VERIFY:** confirm Parma's current rate and business net-profit filing
+      requirements directly with the City of Parma tax department or whichever
+      agency administers it (RITA, CCA, or the city itself). Do not rely on
+      third-party rate tables — they conflict, which is exactly why this needs a
+      primary source
+- [ ] **TODO(you):** confirm Parma is where you actually operate from. Municipal
+      tax follows where the work is performed, which for a home-based business is
+      generally where you sit — not necessarily the statutory agent's address
 - [ ] Consider **opting into the state-administered municipal net profit tax**
       through the Ohio Department of Taxation — it consolidates municipal filing
       through one system, which is worth it the moment you owe tax to more than
