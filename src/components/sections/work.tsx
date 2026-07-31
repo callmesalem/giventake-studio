@@ -158,6 +158,8 @@ export function Work() {
             </article>
           ))}
         </div>
+
+        <CaseStudies />
       </div>
     </section>
   );
