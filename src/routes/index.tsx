@@ -45,6 +45,7 @@ function Index() {
         <WhoWeHelp />
         <Services />
         <section id="how"><HowItWorks /></section>
+        <QualityGuardrails />
         <Work />
         <Testimonials />
         <Pricing />
