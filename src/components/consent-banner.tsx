@@ -194,7 +194,11 @@ function PreferencesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-white p-6 shadow-lift sm:rounded-2xl">
+      <DialogContent
+        onCloseAutoFocus={(e) => e.preventDefault()}
+        className="max-w-lg rounded-2xl border border-hairline bg-white p-6 shadow-lift sm:rounded-2xl"
+      >
+
         <DialogHeader className="text-left">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-ink">
             Preferences
