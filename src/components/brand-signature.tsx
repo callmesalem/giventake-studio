@@ -334,6 +334,7 @@ export function BrandSignature() {
 
       <div
         aria-hidden="true"
+        data-crit="signature-caption"
         className="mt-4 flex items-center justify-between px-1 text-[11px] text-muted-foreground"
       >
         <span className="font-mono uppercase tracking-[0.18em]">Give &amp; take, on repeat</span>
