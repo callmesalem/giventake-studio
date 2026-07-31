@@ -156,7 +156,7 @@ function loadTikTokPixel() {
     ];
     ttq.setAndDefer = function (target: AnyRecord, method: string) {
       target[method] = function (...args: unknown[]) {
-        target.push([method].concat(args));
+        target.push([method, ...args]);
       };
     };
     for (let i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
