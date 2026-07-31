@@ -170,7 +170,7 @@ export function Pricing() {
               What's included with every project
             </h3>
             <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-              Agentic delivery means AI coding agents do the bulk of the construction, and I verify
+              Agentic delivery means AI coding agents do the bulk of the construction, and we verify
               the work. Here's what that means for you in practical terms.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

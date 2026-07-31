@@ -7,7 +7,7 @@ const workflow = [
     title: "Plan",
     label: "Human-led",
     labelStyle: "bg-ink text-white",
-    body: "We start with your business, your users, and the problem. I write a short scope doc and a plan. No code is written until you sign off.",
+    body: "We start with your business, your users, and the problem. We write a short scope doc and a plan. No code is written until you sign off.",
     checkpoint: "You approve the scope before we start building.",
     Icon: IconPlan,
   },
@@ -16,8 +16,8 @@ const workflow = [
     title: "Code",
     label: "AI agents",
     labelStyle: "bg-violet text-white",
-    body: "AI coding agents generate the first pass: components, APIs, and migrations. I steer them, fix errors, and keep the architecture coherent.",
-    checkpoint: "I review every generated file before it moves on.",
+    body: "AI coding agents generate the first pass: components, APIs, and migrations. We steer them, fix errors, and keep the architecture coherent.",
+    checkpoint: "Every generated file is read by a human before it moves on.",
     Icon: IconCode,
   },
   {
@@ -25,7 +25,7 @@ const workflow = [
     title: "Test",
     label: "AI + human",
     labelStyle: "bg-violet-soft text-violet",
-    body: "Automated tests run alongside the code. I add edge cases, check the critical paths, and make sure the feature actually works.",
+    body: "Automated tests run alongside the code. We add edge cases, check the critical paths, and make sure the feature actually works.",
     checkpoint: "Tests must pass before we move to review.",
     Icon: IconTest,
   },
@@ -34,8 +34,8 @@ const workflow = [
     title: "Review",
     label: "Human checkpoint",
     labelStyle: "bg-ink text-white",
-    body: "This is the gate. I read the code, tighten the UX, and run security checks. AI moves fast; I decide what is ready to ship.",
-    checkpoint: "Nothing ships without my manual review.",
+    body: "This is the gate. We read the code, tighten the UX, and run security checks. AI moves fast; a human decides what is ready to ship.",
+    checkpoint: "Nothing ships without manual human review.",
     Icon: IconReview,
   },
   {
@@ -43,7 +43,7 @@ const workflow = [
     title: "Deploy",
     label: "Human-approved",
     labelStyle: "bg-ink text-white",
-    body: "We push to a staging environment so you can use it. Once you sign off, it goes live. I handle hosting, domains, and monitoring.",
+    body: "We push to a staging environment so you can use it. Once you sign off, it goes live. We handle hosting, domains, and monitoring.",
     checkpoint: "You sign off before the final launch.",
     Icon: IconDeploy,
   },
@@ -59,8 +59,8 @@ export function HowItWorks() {
             Agentic speed with human checkpoints.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            AI coding agents do the heavy lifting. I stay in the loop at every step that matters, so
-            you get speed without giving up judgment.
+            AI coding agents do the heavy lifting. We stay in the loop at every step that matters,
+            so you get speed without giving up judgment.
           </p>
         </Reveal>
 
@@ -110,7 +110,7 @@ export function HowItWorks() {
         <Reveal delay={100} className="mt-10">
           <p className="text-[14px] leading-relaxed text-muted-ink">
             The goal is simple: move faster than a traditional team, but keep every important
-            decision in human hands. The AI helps me code; I own the result.
+            decision in human hands. The AI helps us code; we own the result.
           </p>
         </Reveal>
       </div>
