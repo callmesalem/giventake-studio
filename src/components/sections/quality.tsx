@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/reveal";
 import {
   IconBot,
   IconTest,
@@ -32,29 +33,28 @@ export function QualityGuardrails() {
   return (
     <section id="guardrails" className="border-b border-hairline bg-secondary/50">
       <div className="mx-auto max-w-7xl px-6 py-24 md:py-28">
-        <div className="mb-14 max-w-2xl">
+        <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Quality & Guardrails</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
             AI speeds up the work. These guardrails keep it reliable.
           </h2>
-        </div>
+        </Reveal>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {guardrails.map((g) => (
-            <article
-              key={g.title}
-              className="group rounded-2xl border border-hairline bg-white p-6 transition hover:shadow-soft"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-ink transition group-hover:bg-violet-soft group-hover:text-violet">
-                <g.Icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-5 text-[18px] font-semibold tracking-tight text-ink">
-                {g.title}
-              </h3>
-              <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-                {g.body}
-              </p>
-            </article>
+          {guardrails.map((g, i) => (
+            <Reveal key={g.title} delay={i * 70}>
+              <article className="card-lift group h-full rounded-2xl border border-hairline bg-white p-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-ink transition group-hover:bg-violet-soft group-hover:text-violet">
+                  <g.Icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-5 text-[18px] font-semibold tracking-tight text-ink">
+                  {g.title}
+                </h3>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
+                  {g.body}
+                </p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>
