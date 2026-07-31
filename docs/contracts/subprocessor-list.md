@@ -41,15 +41,20 @@ and shorter to maintain.
 
 | Provider                                         | Purpose                             | Trigger                         | Status                  |
 | ------------------------------------------------ | ----------------------------------- | ------------------------------- | ----------------------- |
-| `[Form backend — Resend / Formspree / Supabase]` | Contact and DSAR form submissions   | Replacing the `mailto:` handoff | **Not yet implemented** |
+| **Resend** (transactional email)                  | Contact and DSAR form submissions   | `RESEND_API_KEY` set            | **Code shipped — inactive until configured** |
 | `[Email provider]`                               | Business email for `@giventake.dev` | Domain setup                    | `[status]`              |
 | `[Invoicing / payments]`                         | Client invoicing                    | First invoice                   | `[status]`              |
 | `[Bookkeeping]`                                  | Accounting records                  | Books setup                     | `[status]`              |
 
-> **Important:** the contact and DSAR forms currently use a `mailto:` handoff, so
-> no third party processes submissions today — which is why none is listed. The
-> moment a form backend is added, it becomes a processor and **must** be added
-> here _and_ to the privacy policy before it goes live.
+> **Important:** the form intake code is shipped but **dormant until
+> `RESEND_API_KEY` and `INTAKE_FROM_EMAIL` are set** — with them unset, the
+> forms fall back to opening the visitor's own mail client and no third party
+> processes anything.
+>
+> **Before setting those variables in production:** sign Resend's DPA, move the
+> row above into the disclosed table, and confirm the privacy policy §5 wording
+> matches. The policy already refers to an "email delivery provider", so the
+> disclosure is in place — but the DPA and this list are not automatic.
 
 ---
 

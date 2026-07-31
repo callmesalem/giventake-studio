@@ -5,7 +5,10 @@
     "jsx": "react-jsx",
     "module": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    // "node" is needed for server-side code (src/lib/intake.ts reads
+    // process.env for the mail provider credentials). @types/node is already a
+    // devDependency.
+    "types": ["vite/client", "node"],
 
     /* Bundler mode */
     "moduleResolution": "Bundler",
