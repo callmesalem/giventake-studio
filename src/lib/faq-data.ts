@@ -1,5 +1,9 @@
 // Plain data, no components: the homepage route imports this for FAQPage JSON-LD
 // without pulling the accordion (and Radix) into the critical bundle.
+//
+// These answers are also emitted as structured data, so they are public factual
+// claims. The studio is new: do not write answers that imply an existing client
+// base ("most clients do X", "we do this often") until that is actually true.
 export const faqs = [
   {
     q: "How long does a project take?",
@@ -23,15 +27,15 @@ export const faqs = [
   },
   {
     q: "Can you build from just an idea?",
-    a: "Yeah, that's how most of our projects start. You bring the context of your business and what you're trying to solve. We handle turning it into scope, screens, and code. You don't need a spec doc or wireframes.",
+    a: "Yes, and that's the way I prefer to start. You bring the context of your business and what you're trying to solve. I handle turning it into scope, screens, and code. You don't need a spec doc or wireframes.",
   },
   {
     q: "Do I need technical knowledge?",
-    a: "No. Honestly, some of my favorite clients have never opened a code editor. My job is to translate what you know about your business into the software, and to show you progress every week in a way that makes sense.",
+    a: "No. You don't need to have ever opened a code editor. My job is to translate what you know about your business into the software, and to show you progress every week in a way that makes sense.",
   },
   {
     q: "Can you improve existing software?",
-    a: "Yes, and we do it often. Sometimes it's picking up a project a previous developer left half-finished. Sometimes it's adding features to something that's working but showing its age. We'll take a look and tell you honestly whether it's worth fixing or worth rebuilding.",
+    a: "Yes. That might mean picking up a project a previous developer left half-finished, or adding features to something that works but is showing its age. I'll take a look and tell you honestly whether it's worth fixing or worth rebuilding.",
   },
   {
     q: "What technologies do you use?",
@@ -39,6 +43,6 @@ export const faqs = [
   },
   {
     q: "Do you offer ongoing support?",
-    a: "Yes. Most clients keep us on a monthly retainer after launch, so we can keep shipping features, fix things, and adjust as they learn more from users. You can pause or cancel with 30 days' notice.",
+    a: "Yes. Every project includes a support window after launch, and you can move onto a monthly retainer if you want features shipped continuously rather than in one-off projects. Retainers can be paused or cancelled with 30 days' notice.",
   },
 ];

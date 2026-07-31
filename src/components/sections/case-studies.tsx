@@ -4,60 +4,72 @@ import intakeAsset from "@/assets/case-intake.png.asset.json";
 import bookingAsset from "@/assets/case-booking.png.asset.json";
 import dashboardAsset from "@/assets/case-dashboard.png.asset.json";
 
-const studies = [
+/**
+ * Illustrative builds — NOT client case studies.
+ *
+ * The studio is new and has no delivered client work to publish yet. Everything
+ * in this section is an example of what we build and how we'd approach it, and
+ * it is labelled as such on every card. Do not add client names, outcome
+ * metrics, or past-tense delivery claims here until there is a real engagement
+ * behind them with written permission to publish.
+ */
+const builds = [
   {
-    client: "Consultancy",
+    kind: "Example build",
     title: "From raw inbox to routed leads",
-    before:
-      "40+ raw enquiry emails a week. Someone had to read every one, guess the intent, and forward it manually. Response time was usually one to two days, and good leads went cold.",
-    after:
-      "An AI agent reads and tags each enquiry, routes high-intent leads to the right Slack channel, and files the rest. The team now replies to serious prospects in under two hours.",
-    metrics: [
-      { label: "First response", before: "1–2 days", after: "<2 hours" },
-      { label: "Leads auto-routed", before: "0%", after: "89%" },
-      { label: "Manual sorting", before: "~6 hrs/week", after: "~30 min/week" },
+    problem:
+      "Enquiries arrive as unstructured email. Someone has to read every one, guess the intent, and forward it by hand. Response times slip into days and good leads go cold.",
+    system:
+      "An AI agent reads and tags each enquiry, routes high-intent leads to the right Slack channel, and files the rest. The team sees a structured summary instead of a raw inbox.",
+    capabilities: [
+      "Parses email and web-form submissions",
+      "Classifies intent and urgency",
+      "Routes to the right channel or owner",
+      "Posts a structured summary, not a forward",
     ],
-    agentic:
-      "I built a custom AI agent that parses email and form submissions, classifies intent, and posts structured summaries to the right channel. I wrote the routing logic, review the edge cases, and own the prompts.",
+    approach:
+      "We'd build a custom agent to parse submissions, classify intent, and post structured summaries. The routing logic, the prompts, and the edge cases stay in human hands — that part is not delegated to the model.",
     tags: ["AI agent", "Email parsing", "Slack"],
     image: intakeAsset.url,
-    alt: "AI lead intake router dashboard showing enquiries categorized by intent and routed to Slack channels.",
+    alt: "Concept render of an AI lead intake router, showing enquiries grouped by intent and routed to Slack channels.",
   },
   {
-    client: "Service business",
+    kind: "Example build",
     title: "Booking and payment without the back-and-forth",
-    before:
-      "Customers booked by phone or DM. The owner sent availability by hand, chased deposits, and manually updated a paper diary. No-shows cost real money.",
-    after:
-      "Customers pick a slot, pay, and reschedule themselves. The owner sees everything in one place and gets paid before the appointment starts.",
-    metrics: [
-      { label: "Bookings handled", before: "All manual", after: "Self-service" },
-      { label: "No-shows", before: "~18%", after: "~4%" },
-      { label: "Admin time", before: "~10 hrs/week", after: "~2 hrs/week" },
+    problem:
+      "Customers book by phone or DM. Availability goes out by hand, deposits get chased, and the diary lives on paper. No-shows cost real money and nobody can see the schedule at a glance.",
+    system:
+      "Customers pick a slot, pay, and reschedule themselves. The owner sees everything in one place and collects payment before the appointment starts.",
+    capabilities: [
+      "Self-service slot booking and rescheduling",
+      "Deposit or full payment at time of booking",
+      "Automated reminders and cancellation rules",
+      "One shared view of the schedule",
     ],
-    agentic:
-      "The UI, booking logic, and Stripe integration were built with AI-assisted coding. I reviewed every API route, added cancellation guardrails, and tested the payment flow end to end before launch.",
+    approach:
+      "The UI, booking logic, and payment integration would be built with AI-assisted coding. We review every API route by hand, add cancellation guardrails, and test the payment flow end to end before anything goes live.",
     tags: ["Scheduling", "Payments", "Client portal"],
     image: bookingAsset.url,
-    alt: "Self-service booking system showing a weekly calendar with appointment slots and Stripe payment checkout.",
+    alt: "Concept render of a self-service booking system, showing a weekly calendar of appointment slots and a payment checkout step.",
   },
   {
-    client: "Trades company",
+    kind: "Example build",
     title: "One dashboard replacing five spreadsheets",
-    before:
-      "Job status, invoices, and client notes lived across five shared spreadsheets. Nobody trusted the numbers, and the owner spent Friday evenings reconciling by hand.",
-    after:
-      "A single dashboard shows jobs, invoices, status, and weekly revenue in real time. The owner knows the state of the business in ten seconds.",
-    metrics: [
-      { label: "Data sources", before: "5 spreadsheets", after: "1 dashboard" },
-      { label: "Weekly reconciliation", before: "~3 hrs", after: "~15 min" },
-      { label: "Invoicing lag", before: "~5 days", after: "Same day" },
+    problem:
+      "Job status, invoices, and client notes live across several shared spreadsheets. Nobody trusts the numbers, and reconciling them by hand eats an evening a week.",
+    system:
+      "A single dashboard shows jobs, invoices, status, and revenue in real time, reading from one source of truth instead of five.",
+    capabilities: [
+      "One data model behind every view",
+      "Live job, invoice, and status tracking",
+      "Role-based access for staff and owner",
+      "Calculated fields verified against source data",
     ],
-    agentic:
-      "I generated the data model, dashboard components, and chart logic with AI agents, then tightened the schema, wrote the auth rules, and verified every calculated field against the real business numbers.",
+    approach:
+      "We'd generate the data model, dashboard components, and chart logic with AI agents, then tighten the schema, write the auth rules by hand, and verify every calculated field against the real numbers before handover.",
     tags: ["Dashboard", "Postgres", "Auth"],
     image: dashboardAsset.url,
-    alt: "Internal business dashboard showing active jobs, invoiced revenue, pending reviews, and a weekly revenue bar chart.",
+    alt: "Concept render of an internal business dashboard, showing active jobs, invoiced revenue, pending reviews, and a weekly revenue bar chart.",
   },
 ];
 
@@ -66,19 +78,20 @@ export function CaseStudies() {
     <div className="mt-20">
       <div className="mb-10 max-w-2xl">
         <Reveal>
-          <p className="text-[13px] font-medium text-violet">Case studies</p>
+          <p className="text-[13px] font-medium text-violet">Example builds</p>
           <h3 className="mt-3 font-display text-3xl font-medium tracking-[-0.03em] text-ink md:text-4xl">
-            Agentic workflows, real outcomes.
+            What we build, honestly labelled.
           </h3>
           <p className="mt-4 text-[17px] leading-relaxed text-muted-ink">
-            These are not mockups. Each block shows the actual workflow output, the before/after
-            result, and the part I kept in human hands.
+            These are illustrative builds, not client case studies. We&rsquo;re a new studio, so
+            rather than dress up example work as delivered projects, here is the kind of system we
+            build, the problem it solves, and exactly which parts stay in human hands.
           </p>
         </Reveal>
       </div>
 
       <div className="space-y-10">
-        {studies.map((s, i) => (
+        {builds.map((s, i) => (
           <Reveal key={s.title} delay={i * 100}>
             <article className="card-lift overflow-hidden rounded-2xl border border-hairline bg-white shadow-soft">
               <div className="grid lg:grid-cols-[1.1fr_1.4fr]">
@@ -86,10 +99,9 @@ export function CaseStudies() {
                 <div className="flex flex-col justify-between border-b border-hairline p-8 lg:border-b-0 lg:border-r">
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-[12px] font-semibold uppercase tracking-wider text-violet">
-                        {s.client}
+                      <span className="rounded-full border border-violet/25 bg-violet-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-violet">
+                        {s.kind}
                       </span>
-                      <span className="h-1 w-1 rounded-full bg-hairline" />
                       <div className="flex flex-wrap gap-2">
                         {s.tags.map((t) => (
                           <span
@@ -109,32 +121,35 @@ export function CaseStudies() {
                     <div className="mt-6 grid gap-5">
                       <div className="rounded-xl border border-hairline bg-paper p-4">
                         <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-ink">
-                          Before
+                          The problem
                         </p>
-                        <p className="mt-1.5 text-[15px] leading-relaxed text-ink">{s.before}</p>
+                        <p className="mt-1.5 text-[15px] leading-relaxed text-ink">{s.problem}</p>
                       </div>
                       <div className="rounded-xl border border-hairline bg-violet-soft p-4">
                         <p className="text-[12px] font-semibold uppercase tracking-wider text-violet">
-                          After
+                          The system
                         </p>
-                        <p className="mt-1.5 text-[15px] leading-relaxed text-ink">{s.after}</p>
+                        <p className="mt-1.5 text-[15px] leading-relaxed text-ink">{s.system}</p>
                       </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-3 gap-3">
-                      {s.metrics.map((m) => (
-                        <div key={m.label} className="text-center">
-                          <p className="text-[11px] font-medium text-muted-ink">{m.label}</p>
-                          <p className="mt-1 text-[12px] text-muted-ink line-through">{m.before}</p>
-                          <p className="text-[16px] font-semibold text-ink">{m.after}</p>
-                        </div>
+                    <ul className="mt-6 grid gap-2.5 sm:grid-cols-2">
+                      {s.capabilities.map((c) => (
+                        <li
+                          key={c}
+                          className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
+                          <span>{c}</span>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
 
                   <div className="mt-8">
                     <p className="text-[14px] leading-relaxed text-muted-ink">
-                      <span className="font-semibold text-ink">Agentic delivery:</span> {s.agentic}
+                      <span className="font-semibold text-ink">How we&rsquo;d build it:</span>{" "}
+                      {s.approach}
                     </p>
                     <a
                       href="#contact"
@@ -146,17 +161,17 @@ export function CaseStudies() {
                   </div>
                 </div>
 
-                {/* screenshot side */}
+                {/* concept render side */}
                 <div className="bg-secondary/50 p-6 lg:p-8">
                   <div className="mb-4 flex items-center justify-between">
                     <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-ink">
-                      Workflow output
+                      Concept render
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-2.5 py-1 text-[11px] font-medium text-ink">
                       <span className="relative flex h-2 w-2">
                         <span className="absolute inline-flex h-full w-full rounded-full bg-violet pulse-dot" />
                       </span>
-                      AI + human review
+                      Illustrative, not a client screenshot
                     </span>
                   </div>
                   <div className="overflow-hidden rounded-xl border border-hairline bg-white shadow-soft">

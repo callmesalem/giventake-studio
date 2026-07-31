@@ -187,6 +187,7 @@ export function ContactCTA() {
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="500-2.5k">$500 to $2.5k</SelectItem>
                         <SelectItem value="2.5-10k">$2.5k to $10k</SelectItem>
                         <SelectItem value="10-25k">$10k to $25k</SelectItem>
                         <SelectItem value="25-75k">$25k to $75k</SelectItem>

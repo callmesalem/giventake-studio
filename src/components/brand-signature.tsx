@@ -240,7 +240,6 @@ export function BrandSignature() {
                   y1={(Math.sin(a) * 46).toFixed(3)}
                   x2={(Math.cos(a) * 50).toFixed(3)}
                   y2={(Math.sin(a) * 50).toFixed(3)}
-
                   stroke="currentColor"
                   className="text-foreground"
                   strokeOpacity="0.4"

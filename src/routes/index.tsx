@@ -4,10 +4,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Hero } from "@/components/sections/hero";
 import { TrustedPartner } from "@/components/sections/trusted";
 import { faqs } from "@/lib/faq-data";
-import ogImageAsset from "@/assets/giventake-og.png.asset.json";
-
-const BASE_URL = "https://dev-on-demand-hub.lovable.app";
-const ogImageUrl = `${BASE_URL}${ogImageAsset.url}`;
+import { BASE_URL, OG_IMAGE_URL as ogImageUrl } from "@/lib/seo";
 
 /* Only the header, hero and the row directly under it ship in the critical
    bundle. Everything below the fold is a separate chunk: the server still

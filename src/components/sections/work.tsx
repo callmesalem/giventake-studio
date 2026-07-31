@@ -2,32 +2,35 @@ import { Reveal } from "@/components/reveal";
 import { IconArrowRight } from "@/components/marks";
 import { CaseStudies } from "@/components/sections/case-studies";
 
+// Commissionable project types, not delivered client work. Keep these written as
+// "what this is" and "what you'd get" — no past-tense delivery claims, no named
+// clients, and no outcome numbers until there's a real engagement behind them.
 const commissions = [
   {
     title: "An agentic intake and routing system",
     kind: "AI application",
-    body: "Leads come in, get summarized, tagged, and routed to the right person by a custom AI agent. The team acts on real signal, not raw inbox.",
+    body: "Leads come in, get summarized, tagged, and routed to the right person by a custom AI agent. Your team acts on real signal, not a raw inbox.",
     tags: ["AI Agents", "LLM Workflows", "Email"],
     preview: "intake",
   },
   {
     title: "A booking system for a service business",
     kind: "Client software",
-    body: "Customers book, pay, and reschedule themselves. Shipped with AI-assisted development, so the owner stopped living in their inbox in weeks, not months.",
+    body: "Customers book, pay, and reschedule themselves. Built with AI-assisted development, so you stop running the schedule out of your inbox.",
     tags: ["Scheduling", "Payments", "Client Portal"],
     preview: "calendar",
   },
   {
     title: "An internal dashboard replacing spreadsheets",
     kind: "Internal tools",
-    body: "One place to see jobs, invoices, and status, instead of five shared Google Sheets nobody trusts. Built fast with AI agents and reviewed by a human.",
+    body: "One place to see jobs, invoices, and status, instead of five shared sheets nobody trusts. Built fast with AI agents and reviewed by a human.",
     tags: ["Dashboards", "Postgres", "Auth"],
     preview: "dashboard",
   },
   {
     title: "A rebuilt marketing site",
     kind: "Website",
-    body: "A site that reflects what the business actually does now, with AI-assisted content and code, plus a CMS the team can update.",
+    body: "A site that reflects what your business actually does now, with AI-assisted content and code, plus a CMS your team can update.",
     tags: ["Next.js", "CMS", "SEO"],
     preview: "site",
   },
@@ -124,8 +127,8 @@ export function Work() {
             Built with AI agents, reviewed by a human.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            These are the kinds of projects we ship. AI handles the repetitive parts; I handle
-            architecture, review, and delivery.
+            These are the kinds of projects the studio takes on. AI handles the repetitive parts; I
+            handle architecture, review, and delivery.
           </p>
         </Reveal>
 
