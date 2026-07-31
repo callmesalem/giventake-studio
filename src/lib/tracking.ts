@@ -104,7 +104,11 @@ function loadMetaPixel() {
   (function (f: AnyRecord, b: Document, e: string, v: string) {
     if (f.fbq) return;
     const n: AnyRecord = (f.fbq = function (...args: unknown[]) {
-      n.callMethod ? n.callMethod(...args) : n.queue.push(args);
+      if (n.callMethod) {
+        n.callMethod(...args);
+      } else {
+        n.queue.push(args);
+      }
     });
     if (!f._fbq) f._fbq = n;
     n.push = n;
