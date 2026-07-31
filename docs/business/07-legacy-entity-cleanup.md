@@ -1,176 +1,143 @@
-# 07 — Legacy entity cleanup: GivenTake Goods LLC
+# 07 — Legacy entity: GivenTake Goods LLC
 
-**This is separate from the software business and has to happen regardless of it.**
+**Status:** no longer trading. No contractor work, no vendor's licence held.
 
-GivenTake Goods LLC performed contractor work, held an Ohio vendor's licence, and
-has been dormant since. A dormant business with an open tax account is not
-inactive from the state's point of view — it is delinquent. Obligations kept
-accruing while nothing was happening, and the notices have been going to a
-residential address.
-
-Do this sweep **before** applying for insurance or a new vendor's licence under
-the new entity. Ohio Department of Taxation delinquency attached to a related
-entity with the same member is exactly the kind of thing that surfaces during
-underwriting and licensing.
+That makes this list much shorter than it would otherwise be. What remains is a
+handful of confirmations and one item that isn't going away for another decade.
 
 ---
 
-## 1. Vendor's licence — start here ⚠️
+## The one thing that doesn't close
 
-**Highest-value item on this list, and the one most likely to have real money
-attached.**
+**The construction liability tail runs to roughly 2032–2035.**
 
-Ohio requires a sales tax return **for every filing period, even when sales are
-zero**. A vendor's licence that stopped filing does not go quiet — it goes
-delinquent, and the Department of Taxation can issue estimated assessments
-against the account for the missing periods. Those assessments are legally
-enforceable amounts based on the Department's estimate, not your actual (zero)
-sales, and they can become liens if ignored.
+Ohio's statute of repose (**ORC § 2305.131**) allows claims arising from a
+defective or unsafe condition of an improvement to real property for **ten years
+after substantial completion**, and it reaches **both tort and contract** claims.
+If a defect is discovered in years eight through ten, the claimant gets a further
+two years from discovery.
 
-Penalties run to **$50 or 10% of unpaid tax per period, whichever is greater**,
-plus interest, plus a late-remittance penalty of up to 50% of overdue tax.
-Multiply by the number of missed periods since the business went quiet.
+**The clock runs from when each job was completed, not from when the business
+stopped.** Winding down the contracting work does not shorten it. This is the
+entire reason the software studio goes in a separate entity — see
+[01-structure-and-formation.md](./01-structure-and-formation.md).
+
+Nothing to *do* here beyond §3 below. Just don't let this entity end up holding
+the software business's assets.
+
+---
+
+## 1. Confirm how the vendor's licence ended
+
+**Cancelled properly, or just abandoned?** These look the same from the outside
+and are very different underneath.
+
+- **Cancelled** — final return filed, licence formally closed. Nothing further.
+- **Abandoned or revoked for inactivity** — the account may still show unfiled
+  periods, and Ohio can issue *estimated* assessments for them: enforceable
+  amounts based on the Department's estimate rather than your actual (zero)
+  sales. Penalties run to $50 or 10% of unpaid tax per period, plus interest.
 
 ### Actions
 
-- [ ] **Find the licence.** Check the Ohio Business Gateway under the LLC's EIN,
-      and the Cuyahoga County Fiscal Officer's vendor licence records
-- [ ] **Pull the account status** — filed periods, missing periods, assessments,
-      balance
-- [ ] **File the missing zero returns.** In most cases this resolves estimated
-      assessments, because the assessment was a placeholder for a return you
-      hadn't filed. Penalties may survive; the assessment usually doesn't
-- [ ] **Request penalty abatement** where returns were zero and no tax was ever
-      actually due. First-time and reasonable-cause abatement are commonly
-      granted — ask, don't assume you owe it
-- [ ] **File a final return and cancel the licence** if the contracting and
-      wholesaling business isn't resuming. A cancelled licence stops the clock;
-      an open one keeps generating obligations forever
-- [ ] **VERIFY (CPA):** worth an hour of professional time. Someone who handles
-      Ohio sales tax will know the abatement route and can often deal with the
-      Department directly
+- [ ] Look up the account on the **Ohio Business Gateway** under the LLC's EIN,
+      and check **Cuyahoga County Fiscal Officer** vendor licence records
+- [ ] Confirm the status: cancelled, revoked, or open
+- [ ] **If periods are unfiled:** file the missing zero returns. This usually
+      clears estimated assessments, because the assessment was a placeholder for
+      a return you hadn't filed
+- [ ] **Request penalty abatement** for periods with no actual tax due.
+      First-time and reasonable-cause abatement are commonly granted for exactly
+      this situation — ask rather than assume you owe it
+- [ ] File a final return and formally cancel if it's still open
 
-**Do not skip this because the business made no sales.** Zero sales is the reason
-the returns were never filed, and it is also the reason the penalties are
-abatable. But only if you engage with it.
+This is maybe an hour, and worth a CPA's time if anything looks open.
 
----
+## 2. Confirm the other tax accounts are closed
 
-## 2. Municipal net profit tax
+- [ ] **Municipal net profit tax** (Parma / RITA / CCA). Many Ohio municipalities
+      require a return even in a zero-income year. Check for a registered account
+      and unfiled years; close it if the business isn't resuming
+- [ ] **CAT account**, if one was opened in 2022. The exclusion is now $6M so no
+      tax is owed and no filing is required — but an open account with no filings
+      can still generate delinquency notices for a tax you don't owe. File a
+      final return and cancel
+- [ ] **Income tax returns for the years the LLC actually traded.** Contractor
+      work means real income; unfiled returns are a bigger problem than
+      late-filed ones. **VERIFY (CPA)** if anything is missing — voluntary
+      disclosure beats being found
 
-Parma (or whichever municipality the business operated in) generally requires a
-net profit return from a registered business, and many Ohio municipalities
-require one **even in a zero-income year**.
+## 3. Old contractor GL insurance — worth real effort
 
-- [ ] Determine who administers it — the city directly, RITA, or CCA
-- [ ] Check for a registered account and unfiled years
-- [ ] File any missing returns, request abatement on zero years
-- [ ] Close the account if the business isn't resuming
+This is the item that could materially shrink the tail, so don't skip it.
 
----
+- [ ] **Find the old policy** — carrier, number, period, limits
+- [ ] **Occurrence-based or claims-made?** This is the whole question:
+      - **Occurrence-based** — generally still responds to claims arising from
+        work performed during its period, even though it lapsed years ago. That
+        is genuinely good news
+      - **Claims-made** — responds only while in force. Lapsed with no tail
+        purchased means the exposure is uninsured
+- [ ] If there was **no GL at all**, the tail is uninsured. Doesn't change the
+      plan, but you should know
+- [ ] **VERIFY (broker):** ask whether a standalone tail or completed-operations
+      extension can still be bought for the prior work
 
-## 3. Commercial Activity Tax account
+## 4. Entity status
 
-If a CAT account was opened in 2022, it may still be open. The exclusion is now
-$6M, so no tax is owed and no filing is required — but an **open account with no
-filings** can still generate delinquency notices for a tax you don't owe.
-
-- [ ] Check whether a CAT account exists
-- [ ] If so, file a final return and cancel it
-
----
-
-## 4. Federal and state income tax
-
-- [ ] **TODO(you): were Schedule C (or partnership) returns filed** for the years
-      the LLC actually traded? Contractor work means real income, and unfiled
-      returns are a bigger problem than late-filed ones
-- [ ] Ohio IT filings for those years
-- [ ] **VERIFY (CPA)** if anything is missing. Voluntary disclosure is
-      dramatically better than being found
-
----
-
-## 5. Entity status
-
-- [ ] **Confirm GivenTake Goods LLC is still active** with the Ohio SOS. Ohio
-      requires no annual report, so dormancy alone doesn't kill it — but failure
-      to maintain a statutory agent does: the SOS gives notice and cancels the
-      articles if it isn't cured within 30 days
+- [ ] **Confirm GivenTake Goods LLC is still active** with the Ohio SOS. Dormancy
+      alone doesn't kill an Ohio LLC — there's no annual report to miss — but
+      failure to maintain a statutory agent does: the SOS gives notice and
+      cancels the articles if it isn't cured within 30 days
 - [ ] If cancelled, **reinstate with Form 525-A ($25)**. You want this entity
-      alive and properly maintained — see §7 below
-- [ ] Confirm the statutory agent designation and address are current
+      alive — see §5
+- [ ] Keep the statutory agent designation and address current
 
 ---
 
-## 6. Old contractor insurance — check before you assume
+## 5. Do not dissolve it
 
-**This is worth real effort.** If the contracting work carried general liability
-at the time:
+The instinct with a wound-down business is to dissolve and be done. **Don't, and
+talk to an attorney before you do.**
 
-- [ ] **Find the old policy.** Carrier, policy number, period, limits
-- [ ] **Was it occurrence-based or claims-made?** This is the whole question:
-      - **Occurrence-based** — the policy generally still responds to claims for
-        work performed during its period, even years after it lapsed. That is
-        genuinely good news and materially reduces the construction tail risk
-      - **Claims-made** — it only responds while in force. If it lapsed with no
-        tail purchased, the exposure is uninsured
-- [ ] If there was **no GL at all**, the construction tail is uninsured. That
-      doesn't change the plan, but you should know it
-- [ ] **VERIFY (broker):** ask whether a standalone tail or a completed-operations
-      extension can still be purchased for the prior work. Sometimes it can;
-      sometimes the window has closed
-
----
-
-## 7. Do not dissolve this entity casually
-
-The instinct is to wind it up and be done. **Talk to an attorney first.**
-
-- **Dissolution does not extinguish claims.** Ohio has a wind-up process, and
-  claims can still be asserted — including against assets distributed to members.
-  Dissolving does not make the ORC § 2305.131 construction tail disappear
+- **Dissolution does not extinguish the construction tail.** Ohio has a wind-up
+  process and claims can still be asserted, including against assets distributed
+  to members. Dissolving does not make ORC § 2305.131 go away
 - **A live, properly maintained entity is a better defendant than a dissolved
-  one.** If a construction claim arrives in 2029, you want it to hit a real
-  entity with its own history, not to give a claimant an argument that assets
-  were stripped and the members should answer personally
-- **Keeping it costs almost nothing.** No Ohio annual report, no franchise tax,
-  no minimum tax. A statutory agent and a dormant bank account is the whole
-  carrying cost
-- If it genuinely never traded much and there is no meaningful tail, dissolution
-  may be fine — but that is an attorney's call with the facts in front of them,
-  not a default
+  one.** If a claim arrives in 2029, you want it to hit a real entity — not to
+  hand a claimant the argument that assets were stripped and the member should
+  answer personally
+- **Keeping it costs almost nothing.** Ohio has no annual report, no franchise
+  tax, no minimum tax. A statutory agent is the whole carrying cost
 
-**VERIFY (attorney):** whether to keep GivenTake Goods LLC alive, and if so,
-what maintenance keeps the liability shield credible for an entity with no
-operations.
+**VERIFY (attorney):** whether to keep it alive and what minimal maintenance
+keeps the liability shield credible for an entity with no operations.
 
 ---
 
-## 8. Keep the two entities genuinely separate
+## 6. Keep the two entities separate
 
-Once the new LLC exists, the isolation only holds if you actually maintain it:
+Once the new LLC exists, the isolation only holds if you maintain it:
 
 - [ ] Separate bank accounts — the existing account stays with the old entity
 - [ ] Separate books
 - [ ] Never pay one entity's expenses from the other's account. If funding is
       needed, document it as a loan or capital contribution
 - [ ] Client-facing documents name the correct entity
-- [ ] Don't let the old entity's EIN appear on anything for the software business
+- [ ] The old entity's EIN never appears on anything for the software business
 
-A claimant against the contracting entity who can show the two were run as one
-pot of money has a real argument that they should be treated as one. That
-argument is what the $99 was spent to prevent.
+A claimant who can show the two were run as one pot of money has a real argument
+they should be treated as one — which would undo the whole point of the new
+entity.
 
 ---
 
-## Priority order
+## Priority
 
-| # | Item | Why now |
-|---|---|---|
-| 1 | Vendor's licence status and missing returns | Accruing penalties; blocks a clean new licence application |
-| 2 | Confirm entity is still active | Determines whether anything else is even fileable |
-| 3 | Old GL policy — occurrence or claims-made | Determines whether the construction tail is insured |
-| 4 | Municipal and CAT accounts | Delinquency notices |
-| 5 | Income tax returns for trading years | Bigger problem the longer it sits |
-| 6 | Attorney call on keep-vs-dissolve | Not urgent, but don't dissolve before it |
+| #   | Item                                       | Why                                                              |
+| --- | ------------------------------------------ | ---------------------------------------------------------------- |
+| 1   | Vendor's licence — cancelled or abandoned? | Only item with money potentially attached                        |
+| 2   | Old GL policy — occurrence or claims-made? | Determines whether the tail is insured                           |
+| 3   | Entity still active with the SOS           | Determines whether anything is fileable                          |
+| 4   | Municipal / CAT / income tax accounts      | Delinquency notices for taxes you don't owe                      |
+| 5   | Attorney call on keep-vs-dissolve          | Not urgent — but don't dissolve before having it                 |

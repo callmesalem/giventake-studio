@@ -56,9 +56,12 @@ These block contracting. Signing without them is the expensive kind of mistake.
 - [ ] **Draft an operating agreement** for the new entity. Ohio doesn't require
       one and the Articles don't name members, so it's the only document
       establishing ownership
-- [ ] **Start the legacy entity sweep** → [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md)
-      _The vendor's licence item can be running in parallel — it has money
-      attached and blocks a clean new vendor's licence application_
+- [ ] **Legacy entity confirmations** → [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md)
+      _Short list now that the old entity has stopped trading and holds no
+      vendor's licence. Two worth doing early: confirm the licence was formally
+      cancelled rather than abandoned, and find out whether the old contracting
+      GL was occurrence-based — that determines whether the construction tail is
+      insured_
 - [ ] **Update `LEGAL_ENTITY` in `src/lib/seo.ts`** to the new entity name once
       formed. The Terms and Privacy pages render it
 - [ ] **Bind Tech E&O + cyber insurance**, $1M/$1M — **in the new entity's name**

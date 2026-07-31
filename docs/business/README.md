@@ -38,19 +38,23 @@ marked **TODO(you)**; items needing a professional are marked **VERIFY**.
 **Entity confirmed** from the filed Articles of Organization: GIVENTAKE GOODS
 LLC, Ohio SOS doc 202225804070, filed 9/15/2022, Parma / Cuyahoga County.
 
-⚠️ **The structure recommendation has changed.** The original plan — register a
-trade name under the existing LLC — was correct for a clean, general-purpose
-entity. It isn't the right answer for this one: GivenTake Goods LLC performed
-**contractor work**, held an **Ohio vendor's licence**, and has been dormant
-since. Ohio's construction statute of repose (ORC § 2305.131) keeps
-defect claims live for up to ten years after substantial completion, and no
-technology E&O policy answers for those.
+✅ **Structure decided: form a new Ohio LLC for the software business** ($99, no
+trade-name filing needed). Do not run the studio through GivenTake Goods LLC.
 
-**Now recommended: form a new Ohio LLC for the software business** ($99, and no
-trade-name filing needed), and clean up the legacy entity separately. See
-[01-structure-and-formation.md](./01-structure-and-formation.md) for the
-reasoning and [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md) for
-the sweep.
+The original plan — a trade name under the existing entity — was correct for a
+clean, general-purpose LLC. It isn't the right answer for this one. GivenTake
+Goods LLC performed **contractor work**, and Ohio's construction statute of
+repose (ORC § 2305.131) keeps defect claims live for up to ten years after
+substantial completion of each job. **That clock runs from when the work was
+finished, not from when the business stopped trading** — so winding the
+contracting down does not shorten it, and no technology E&O policy answers for
+those claims.
+
+That entity is no longer trading and no longer holds a vendor's licence, so the
+legacy cleanup is short — see
+[07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md). Reasoning for the
+structure decision is in
+[01-structure-and-formation.md](./01-structure-and-formation.md).
 
 **Consequence for the website:** `LEGAL_ENTITY` in `src/lib/seo.ts` currently
 says "GivenTake Goods LLC" and is rendered on the Terms and Privacy pages. It
