@@ -10,7 +10,7 @@ import { QualityGuardrails } from "@/components/sections/quality";
 import { Work } from "@/components/sections/work";
 import { Testimonials } from "@/components/sections/testimonials";
 import { Pricing } from "@/components/sections/pricing";
-import { FAQ } from "@/components/sections/faq";
+import { FAQ, faqs } from "@/components/sections/faq";
 import { ContactCTA } from "@/components/sections/contact";
 
 export const Route = createFileRoute("/")({
@@ -29,7 +29,23 @@ export const Route = createFileRoute("/")({
           "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders. One developer, AI-assisted delivery.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://dev-on-demand-hub.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://dev-on-demand-hub.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
     ],
   }),
   component: Index,

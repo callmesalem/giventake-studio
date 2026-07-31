@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const faqs = [
+export const faqs = [
   { q: "How long does a project take?", a: "Depends on what you're building. A landing page is usually two to three weeks. A real web app or internal tool is closer to six to twelve weeks. Because I build with AI coding agents, the early parts move fast, and we still review everything before it ships. After our first call I can give you a tighter number for your specific project." },
   { q: "Do you use AI to write the code?", a: "Yes. I use AI coding agents to handle scaffolding, tests, and repetitive work, then review, refine, and ship everything myself. You still get one person responsible for the outcome. The AI makes me faster; it doesn't replace the thinking." },
   { q: "What does 'vibe coding' mean here?", a: "It means I describe what the software should do in plain language, and AI coding agents generate the code, tests, and migrations. Then I read it, run it, fix what's wrong, and tune it until it works. It's not random experimentation on your dime; it's a deliberate way to move fast without skipping the human review." },

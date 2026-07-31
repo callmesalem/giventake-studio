@@ -102,6 +102,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://dev-on-demand-hub.lovable.app/#organization",
+              name: "GivenTake Goods Devs",
+              url: "https://dev-on-demand-hub.lovable.app/",
+              slogan: "Your On-Demand Development Team",
+              description:
+                "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders.",
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://dev-on-demand-hub.lovable.app/#website",
+              name: "GivenTake Goods Devs",
+              url: "https://dev-on-demand-hub.lovable.app/",
+              publisher: { "@id": "https://dev-on-demand-hub.lovable.app/#organization" },
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
