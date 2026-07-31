@@ -1,19 +1,15 @@
+import { pageHead } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { useConsent } from "@/lib/consent";
 
 export const Route = createFileRoute("/do-not-sell")({
-  head: () => ({
-    meta: [
-      { title: "Do Not Sell or Share My Personal Information · GivenTake Goods Devs" },
-      {
-        name: "description",
-        content:
-          "Exercise your CCPA and CPRA right to opt out of the sale or sharing of your personal information by GivenTake Goods Devs.",
-      },
-      { name: "robots", content: "index,follow" },
-    ],
+  head: () => pageHead({
+    path: "/do-not-sell",
+    title: "Do Not Sell or Share My Personal Information · GivenTake Goods Devs",
+    description:
+      "Exercise your CCPA and CPRA right to opt out of the sale or sharing of your personal information by GivenTake Goods Devs.",
   }),
   component: DoNotSellPage,
 });

@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
@@ -37,16 +38,11 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/data-request")({
-  head: () => ({
-    meta: [
-      { title: "Data Rights Request · GivenTake Goods Devs" },
-      {
-        name: "description",
-        content:
-          "Request access, correction, deletion, or portability of your personal data held by GivenTake Goods Devs under GDPR and CCPA.",
-      },
-      { name: "robots", content: "index,follow" },
-    ],
+  head: () => pageHead({
+    path: "/data-request",
+    title: "Data Rights Request · GivenTake Goods Devs",
+    description:
+      "Request access, correction, deletion, or portability of your personal data held by GivenTake Goods Devs under GDPR and CCPA.",
   }),
   component: DataRequestPage,
 });
