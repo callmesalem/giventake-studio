@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { BASE_URL } from "@/lib/seo";
+import { offers } from "@/lib/offers";
 
 interface SitemapEntry {
   path: string;
@@ -14,6 +15,16 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
+          // Offer pages are the primary organic search targets, so they rank
+          // above the legal pages here. Derived from the same source as the
+          // routes themselves, so a new offer is listed automatically.
+          ...offers.map(
+            (o): SitemapEntry => ({
+              path: `/services/${o.slug}`,
+              changefreq: "monthly",
+              priority: "0.8",
+            }),
+          ),
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
           { path: "/terms", changefreq: "yearly", priority: "0.3" },
           { path: "/cookies", changefreq: "yearly", priority: "0.3" },
