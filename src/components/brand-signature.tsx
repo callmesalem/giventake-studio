@@ -135,6 +135,7 @@ export function BrandSignature() {
         </div>
 
         <svg
+          data-crit="signature-svg"
           viewBox="0 0 520 560"
           className="block h-auto w-full"
           preserveAspectRatio="xMidYMid meet"
