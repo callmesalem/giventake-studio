@@ -12,8 +12,12 @@ business. Written for **Ohio**.
 | [05-pricing-and-positioning.md](./05-pricing-and-positioning.md)   | Pricing strategy, positioning, go-to-market                                        |
 | [06-launch-checklist.md](./06-launch-checklist.md)                 | Sequenced checklist with blocking dependencies                                     |
 | [07-legacy-entity-cleanup.md](./07-legacy-entity-cleanup.md)       | Cleaning up GivenTake Goods LLC — vendor's licence, tax accounts, construction tail |
+| [08-marketing-and-client-acquisition.md](./08-marketing-and-client-acquisition.md) | Channel plan for a faceless generalist studio on no budget; why ads come later |
+| [09-client-process.md](./09-client-process.md)                     | The 11-stage pipeline every client runs through, with gates and artifacts           |
+| [10-discovery-questions.md](./10-discovery-questions.md)           | Discovery question bank — core set plus business-type and project-type modules      |
 
 Contract templates live in [`../contracts/`](../contracts/).
+Fill-in working documents live in [`../templates/`](../templates/).
 
 ## Read this first
 
