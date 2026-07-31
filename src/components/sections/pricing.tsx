@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/reveal";
 import { IconArrowRight } from "@/components/marks";
 
 const tiers = [
@@ -62,7 +63,7 @@ export function Pricing() {
   return (
     <section id="pricing" className="border-b border-hairline bg-secondary/50">
       <div className="mx-auto max-w-7xl px-6 py-24 md:py-28">
-        <div className="mb-14 max-w-2xl">
+        <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Pricing</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
             Work with us the way that fits.
@@ -70,98 +71,97 @@ export function Pricing() {
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
             Every project is scoped on a call. You'll get a fixed number, a clear timeline, and a written statement of what's included before we start.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {tiers.map((t) => (
-            <article
-              key={t.name}
-              className={`relative flex flex-col rounded-2xl border p-7 ${
-                t.featured
-                  ? "border-ink bg-ink text-white shadow-lift"
-                  : "border-hairline bg-white shadow-soft"
-              }`}
-            >
-              {t.featured && (
-                <div className="absolute -top-3 left-7 rounded-full bg-violet px-3 py-1 text-[11px] font-medium text-white">
-                  Most picked
-                </div>
-              )}
-              <h3
-                className={`text-[22px] font-semibold tracking-tight ${
-                  t.featured ? "text-white" : "text-ink"
+          {tiers.map((t, i) => (
+            <Reveal key={t.name} delay={i * 80}>
+              <article
+                className={`card-lift relative flex h-full flex-col rounded-2xl border p-7 ${
+                  t.featured
+                    ? "border-ink bg-ink text-white shadow-lift"
+                    : "border-hairline bg-white shadow-soft"
                 }`}
               >
-                {t.name}
-              </h3>
-              <p
-                className={`mt-1.5 text-[14px] ${
-                  t.featured ? "text-white/70" : "text-muted-ink"
-                }`}
-              >
-                {t.tagline}
-              </p>
-              <div
-                className={`mt-6 border-t pt-5 ${
-                  t.featured ? "border-white/15" : "border-hairline"
-                }`}
-              >
-                <p
-                  className={`text-[28px] font-semibold tracking-tight ${
+                {t.featured && (
+                  <div className="absolute -top-3 left-7 rounded-full bg-violet px-3 py-1 text-[11px] font-medium text-white">
+                    Most picked
+                  </div>
+                )}
+                <h3
+                  className={`text-[22px] font-semibold tracking-tight ${
                     t.featured ? "text-white" : "text-ink"
                   }`}
                 >
-                  {t.price}
+                  {t.name}
+                </h3>
+                <p
+                  className={`mt-1.5 text-[14px] ${
+                    t.featured ? "text-white/70" : "text-muted-ink"
+                  }`}
+                >
+                  {t.tagline}
                 </p>
-              </div>
-              <ul
-                className={`mt-6 flex-1 space-y-3 ${
-                  t.featured ? "text-white/85" : "text-ink/85"
-                }`}
-              >
-                {t.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[14px] leading-snug">
-                    <span
-                      className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                        t.featured ? "bg-violet" : "bg-violet"
-                      }`}
-                    />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="#contact"
-                className={`mt-8 inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-3 text-[13px] font-medium transition ${
-                  t.featured
-                    ? "bg-white text-ink hover:bg-white/90"
-                    : "bg-ink text-white hover:opacity-90"
-                }`}
-              >
-                {t.cta}
-                <IconArrowRight className="h-4 w-4" />
-              </a>
-            </article>
+                <div
+                  className={`mt-6 border-t pt-5 ${
+                    t.featured ? "border-white/15" : "border-hairline"
+                  }`}
+                >
+                  <p
+                    className={`text-[28px] font-semibold tracking-tight ${
+                      t.featured ? "text-white" : "text-ink"
+                    }`}
+                  >
+                    {t.price}
+                  </p>
+                </div>
+                <ul
+                  className={`mt-6 flex-1 space-y-3 ${
+                    t.featured ? "text-white/85" : "text-ink/85"
+                  }`}
+                >
+                  {t.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-[14px] leading-snug">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href="#contact"
+                  className={`mt-8 inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-3 text-[13px] font-medium transition ${
+                    t.featured
+                      ? "bg-white text-ink hover:bg-white/90"
+                      : "bg-ink text-white hover:opacity-90"
+                  }`}
+                >
+                  {t.cta}
+                  <IconArrowRight className="h-4 w-4" />
+                </a>
+              </article>
+            </Reveal>
           ))}
         </div>
 
         {/* transparent expectations block */}
-        <div className="mt-14 rounded-2xl border border-hairline bg-white p-7 shadow-soft">
-          <h3 className="text-[18px] font-semibold text-ink">
-            What's included with every project
-          </h3>
-          <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-            Agentic delivery means AI coding agents do the bulk of the construction, and I verify the work. Here's what that means for you in practical terms.
-          </p>
-          <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {included.map((item) => (
-              <li key={item} className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Reveal delay={120}>
+          <div className="mt-14 rounded-2xl border border-hairline bg-white p-7 shadow-soft">
+            <h3 className="text-[18px] font-semibold text-ink">
+              What's included with every project
+            </h3>
+            <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
+              Agentic delivery means AI coding agents do the bulk of the construction, and I verify the work. Here's what that means for you in practical terms.
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {included.map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
