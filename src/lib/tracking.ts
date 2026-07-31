@@ -176,7 +176,6 @@ function loadTikTokPixel() {
     ttq.load(id);
     ttq.page();
   })(window, document, "ttq");
-  /* eslint-enable @typescript-eslint/no-explicit-any, prefer-rest-params */
 
   loaded.tiktok = true;
 }
