@@ -118,3 +118,14 @@ export function IconTrend({ className = "" }: { className?: string }) {
     </svg>
   );
 }
+
+export function IconBot({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="4" y="6" width="16" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="9" cy="11" r="1.3" fill="currentColor" />
+      <circle cx="15" cy="11" r="1.3" fill="currentColor" />
+      <path d="M12 18v3M8 21h8M12 6V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
