@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dev-on-demand-hub.lovable.app/sitemap.xml
