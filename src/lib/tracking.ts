@@ -20,6 +20,37 @@
 import type { ConsentState } from "./consent-core";
 
 type Loaded = Record<string, boolean>;
+
+type LeadEventName =
+  | "lead_form_submit_success"
+  | "lead_form_mailto_fallback"
+  | "lead_form_submit_error";
+
+type LeadEventProperties = {
+  budget?: string;
+  timeline?: string;
+  source?: string;
+  path?: string;
+};
+
+let currentConsent: ConsentState = {
+  necessary: true,
+  analytics: false,
+  marketing: false,
+  preferences: false,
+};
+
+function sanitizeLeadEventProperties(properties: LeadEventProperties) {
+  return {
+    budget: properties.budget,
+    timeline: properties.timeline,
+    source: properties.source,
+    path:
+      properties.path ??
+      (typeof window !== "undefined" ? window.location.pathname : undefined),
+  };
+}
+
 const loaded: Loaded = {};
 
 // Vendor pixel bootstrap types are intentionally loose: these objects are
@@ -236,6 +267,7 @@ function loadMicrosoftAds() {
 }
 
 function apply(state: ConsentState) {
+  currentConsent = state;
   updateConsentMode(state);
   if (state.analytics) loadGA4();
   if (state.marketing) {
@@ -248,6 +280,27 @@ function apply(state: ConsentState) {
 }
 
 let initialized = false;
+
+export function trackLeadEvent(name: LeadEventName, properties: LeadEventProperties) {
+  if (typeof window === "undefined") return;
+
+  const safeProperties = sanitizeLeadEventProperties(properties);
+
+  if (currentConsent.analytics) {
+    window.gtag?.("event", name, safeProperties);
+  }
+
+  if (currentConsent.marketing) {
+    window.fbq?.("trackCustom", name, safeProperties);
+    window.ttq?.track?.(name, safeProperties);
+    window.lintrk?.("track", safeProperties);
+    if (Array.isArray(window.uetq)) {
+      window.uetq.push("event", name, safeProperties);
+    } else {
+      window.uetq?.push?.("event", name, safeProperties);
+    }
+  }
+}
 
 export function initTracking(getState: () => ConsentState) {
   if (initialized || typeof window === "undefined") return;

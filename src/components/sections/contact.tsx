@@ -15,6 +15,7 @@ import { IconArrowRight } from "@/components/marks";
 import { contactSchema, CONTACT_SOURCE_OPTIONS } from "@/lib/intake-schema";
 import { readLeadAttribution, type LeadAttribution } from "@/lib/lead-attribution";
 import { submitContact } from "@/lib/intake";
+import { trackLeadEvent } from "@/lib/tracking";
 
 const schema = contactSchema.extend({
   consent: z
@@ -30,6 +31,15 @@ export function ContactCTA() {
   const [outcome, setOutcome] = useState<Outcome>("idle");
   const [submitting, setSubmitting] = useState(false);
   const [attribution] = useState<LeadAttribution>(() => readLeadAttribution());
+
+  function leadEventProps(d: z.infer<typeof schema>) {
+    return {
+      budget: d.budget,
+      timeline: d.timeline,
+      source: d.source,
+      path: typeof window !== "undefined" ? window.location.pathname : undefined,
+    };
+  }
 
   /** Fallback used when no mail provider is configured, or the send fails. */
   function handOffToMailClient(d: z.infer<typeof schema>) {
@@ -55,6 +65,7 @@ export function ContactCTA() {
       .filter(Boolean)
       .join("\n");
     window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    trackLeadEvent("lead_form_mailto_fallback", leadEventProps(d));
     setOutcome("mailto");
   }
 
@@ -73,16 +84,21 @@ export function ContactCTA() {
     try {
       const result = await submitContact({ data: payload });
       if (result.status === "sent") {
+        trackLeadEvent("lead_form_submit_success", leadEventProps(parsed.data));
         setOutcome("sent");
         form.reset();
         return;
       }
-      if (result.status === "error") toast.error(result.message);
+      if (result.status === "error") {
+        trackLeadEvent("lead_form_submit_error", leadEventProps(parsed.data));
+        toast.error(result.message);
+      }
       handOffToMailClient(parsed.data);
       form.reset();
     } catch {
       // Network failure or the server function is unavailable — never drop the
       // enquiry, hand it to the mail client instead.
+      trackLeadEvent("lead_form_submit_error", leadEventProps(parsed.data));
       handOffToMailClient(parsed.data);
       form.reset();
     } finally {

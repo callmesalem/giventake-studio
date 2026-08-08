@@ -67,5 +67,39 @@ assert(
   tracking.includes("trackLeadEvent"),
   "tracking must expose trackLeadEvent",
 );
+assert(
+  tracking.includes("type LeadEventName") &&
+    tracking.includes('"lead_form_submit_success"') &&
+    tracking.includes('"lead_form_mailto_fallback"') &&
+    tracking.includes('"lead_form_submit_error"'),
+  "tracking must define lead event names",
+);
+assert(
+  tracking.includes("sanitizeLeadEventProperties"),
+  "tracking must sanitize lead event properties",
+);
+const propertiesBlock = tracking.match(/type LeadEventProperties = \{[\s\S]*?\};/)?.[0] ?? "";
+for (const forbidden of ["name?:", "email?:", "company?:", "description?:", "source_detail?:"]) {
+  assert(
+    !propertiesBlock.includes(forbidden),
+    `tracking event properties must not include personal field ${forbidden}`,
+  );
+}
+assert(
+  contactForm.includes("trackLeadEvent"),
+  "contact form must call trackLeadEvent after submit outcomes",
+);
+assert(
+  contactForm.includes("lead_form_submit_success"),
+  "contact form must track successful submissions",
+);
+assert(
+  contactForm.includes("lead_form_mailto_fallback"),
+  "contact form must track mailto fallback",
+);
+assert(
+  contactForm.includes("lead_form_submit_error"),
+  "contact form must track submit errors",
+);
 
 console.log("Customer #1 pipeline invariants passed.");
