@@ -3,6 +3,21 @@ import { IconArrowRight } from "@/components/marks";
 
 const tiers = [
   {
+    name: "Essentials",
+    price: "$500 - $2.5K",
+    tagline: "Small builds, fixes, and single-page sites.",
+    features: [
+      "One-page site, landing page, or small fix",
+      "AI-assisted build with human review",
+      "1 revision round included",
+      "Mobile responsive and accessible",
+      "Source code + deployment handoff",
+      "Live in about one week when scope is clear",
+      "14 days of tweaks after launch",
+    ],
+    cta: "Start small",
+  },
+  {
     name: "Discovery sprint",
     price: "$750 – $1,500",
     tagline: "Not sure what you need built yet? Start here.",
@@ -86,14 +101,15 @@ export function Pricing() {
             Work with us the way that fits.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Projects start at $2,500. Every one is scoped on a call before a number is quoted, and
-            you'll get a fixed price, a clear timeline, and a written statement of what's included
-            before any work starts. If the problem isn't defined yet, a discovery sprint defines it
-            and the fee comes off the build.
+            Essentials work starts at $500 for tightly scoped fixes and small builds; most custom
+            builds start at $2,500. Every engagement is scoped on a call before a number is quoted,
+            and you'll get a fixed price, a clear timeline, and a written statement of what's
+            included before any work starts. If the problem isn't defined yet, a discovery sprint
+            defines it and the fee comes off the build.
           </p>
         </Reveal>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {tiers.map((t, i) => (
             <Reveal key={t.name} delay={i * 80}>
               <article

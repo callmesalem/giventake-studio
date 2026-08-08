@@ -230,6 +230,7 @@ export function ContactCTA() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="discovery">Discovery sprint first</SelectItem>
+                        <SelectItem value="500-2.5k">$500 to $2.5k</SelectItem>
                         <SelectItem value="2.5-10k">$2.5k to $10k</SelectItem>
                         <SelectItem value="10-25k">$10k to $25k</SelectItem>
                         <SelectItem value="25-75k">$25k to $75k</SelectItem>
@@ -287,8 +288,8 @@ export function ContactCTA() {
                     Privacy Policy
                   </a>{" "}
                   for how long we keep it. If your browser can&rsquo;t reach us, it will open your
-                  mail client with the brief pre-filled instead. Please don&rsquo;t include
-                  sensitive personal, financial, or health information.
+                  mail client with the brief pre-filled instead. Do not include regulated,
+                  financial, health, credential, or sensitive personal data in this form.
                 </p>
 
                 <button

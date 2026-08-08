@@ -197,6 +197,7 @@ export function SiteFooter() {
       items: [
         { label: "Contact", href: "/#contact" },
         { label: "Privacy", href: "/privacy" },
+        { label: "Compliance", href: "/compliance" },
         { label: "Terms", href: "/terms" },
         { label: "Cookies", href: "/cookies" },
         { label: "Data request", href: "/data-request" },
@@ -258,6 +259,9 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-muted-ink">
             <a href="/privacy" className="hover:text-ink">
               Privacy
+            </a>
+            <a href="/compliance" className="hover:text-ink">
+              Compliance
             </a>
             <a href="/terms" className="hover:text-ink">
               Terms

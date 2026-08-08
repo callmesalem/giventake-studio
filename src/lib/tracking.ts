@@ -7,9 +7,11 @@
  *
  * Providers wired up (all legal, consent-gated, first-party-cookieless-friendly):
  *   - Google Analytics 4     (analytics)   — VITE_GA_MEASUREMENT_ID
+ *   - Google Ads             (marketing)   — VITE_GOOGLE_ADS_ID
  *   - Meta / Facebook Pixel  (marketing)   — VITE_META_PIXEL_ID
  *   - TikTok Pixel           (marketing)   — VITE_TIKTOK_PIXEL_ID
  *   - LinkedIn Insight Tag   (marketing)   — VITE_LINKEDIN_PARTNER_ID
+ *   - Microsoft Ads UET      (marketing)   — VITE_MICROSOFT_UET_TAG_ID
  *
  * If an env var is not set, that provider is silently skipped.
  * All providers honor Google's Consent Mode v2 signal.
@@ -41,6 +43,7 @@ declare global {
     TiktokAnalyticsObject?: string;
     _linkedin_data_partner_ids?: string[];
     lintrk?: (...args: unknown[]) => void;
+    uetq?: unknown[] | { push: (...args: unknown[]) => void };
   }
 }
 
@@ -94,6 +97,15 @@ function loadGA4() {
   injectScript(`https://www.googletagmanager.com/gtag/js?id=${id}`, "ga4-script");
   window.gtag?.("config", id, { anonymize_ip: true });
   loaded.ga4 = true;
+}
+
+function loadGoogleAds() {
+  const id = import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined;
+  if (!id || loaded.googleAds) return;
+  ensureGtagBootstrap();
+  injectScript(`https://www.googletagmanager.com/gtag/js?id=${id}`, "google-ads-script");
+  window.gtag?.("config", id, { allow_ad_personalization_signals: true });
+  loaded.googleAds = true;
 }
 
 function loadMetaPixel() {
@@ -193,13 +205,45 @@ function loadLinkedInInsight() {
   loaded.linkedin = true;
 }
 
+function loadMicrosoftAds() {
+  const id = import.meta.env.VITE_MICROSOFT_UET_TAG_ID as string | undefined;
+  if (!id || loaded.microsoftAds) return;
+
+  // Standard Microsoft UET bootstrap, kept behind marketing consent.
+  (function (w: AnyRecord, d: Document, t: string, src: string, queueName: string) {
+    if (w[queueName]?.push && w.UET) {
+      w[queueName].push("pageLoad");
+      return;
+    }
+
+    w[queueName] = w[queueName] || [];
+    const boot = function () {
+      const options: AnyRecord = { ti: id, enableAutoSpaTracking: true };
+      options.q = w[queueName];
+      w[queueName] = new w.UET(options);
+      w[queueName].push("pageLoad");
+    };
+
+    const script = d.createElement(t) as HTMLScriptElement;
+    script.async = true;
+    script.src = src;
+    script.addEventListener("load", boot, { once: true });
+    const first = d.getElementsByTagName(t)[0] as HTMLScriptElement;
+    first.parentNode!.insertBefore(script, first);
+  })(window, document, "script", "https://bat.bing.com/bat.js", "uetq");
+
+  loaded.microsoftAds = true;
+}
+
 function apply(state: ConsentState) {
   updateConsentMode(state);
   if (state.analytics) loadGA4();
   if (state.marketing) {
+    loadGoogleAds();
     loadMetaPixel();
     loadTikTokPixel();
     loadLinkedInInsight();
+    loadMicrosoftAds();
   }
 }
 
