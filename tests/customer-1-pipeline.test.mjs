@@ -102,4 +102,26 @@ assert(
   "contact form must track submit errors",
 );
 
+assert(
+  existsSync(join(root, "src/lib/qualification-brief.ts")),
+  "qualification brief helper must exist",
+);
+const qualificationBrief = read("src/lib/qualification-brief.ts");
+for (const token of [
+  "createQualificationBrief",
+  "offerMatch",
+  "budget",
+  "timeline",
+  "source",
+  "missingInformation",
+  "regulated",
+  "recommendedNextAction",
+]) {
+  assert(qualificationBrief.includes(token), `qualification brief must include ${token}`);
+}
+assert(
+  qualificationBrief.includes("ContactInput"),
+  "qualification brief must consume ContactInput",
+);
+
 console.log("Customer #1 pipeline invariants passed.");
