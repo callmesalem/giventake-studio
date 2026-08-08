@@ -18,6 +18,10 @@ it**, and does not restate it.
 **INPUTS** — Name, email, company (optional), description, budget, timeline, source.
 Missing name or email → escalate; do not guess.
 
+Lead source from the website form is required for every new enquiry. If a lead arrives
+by email without a source, ask "How did you hear about GivenTake?" during the first
+human reply and backfill the tracker.
+
 **STEPS**
 1. Write a `leads` row: source, captured_at, status `new`, full submission body.
 2. Deduplicate against `clients` and `leads` on email domain. If matched, link and tag
