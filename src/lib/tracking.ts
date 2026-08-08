@@ -22,9 +22,7 @@ import type { ConsentState } from "./consent-core";
 type Loaded = Record<string, boolean>;
 
 type LeadEventName =
-  | "lead_form_submit_success"
-  | "lead_form_mailto_fallback"
-  | "lead_form_submit_error";
+  "lead_form_submit_success" | "lead_form_mailto_fallback" | "lead_form_submit_error";
 
 type LeadEventProperties = {
   budget?: string;
@@ -45,9 +43,7 @@ function sanitizeLeadEventProperties(properties: LeadEventProperties) {
     budget: properties.budget,
     timeline: properties.timeline,
     source: properties.source,
-    path:
-      properties.path ??
-      (typeof window !== "undefined" ? window.location.pathname : undefined),
+    path: properties.path ?? (typeof window !== "undefined" ? window.location.pathname : undefined),
   };
 }
 

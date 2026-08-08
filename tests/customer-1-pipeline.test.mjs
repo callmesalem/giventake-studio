@@ -29,20 +29,14 @@ for (const key of [
   assert(intakeSchema.includes(key), `contact schema must validate ${key}`);
 }
 
-assert(
-  existsSync(join(root, "src/lib/lead-attribution.ts")),
-  "lead attribution helper must exist",
-);
+assert(existsSync(join(root, "src/lib/lead-attribution.ts")), "lead attribution helper must exist");
 const attribution = read("src/lib/lead-attribution.ts");
 assert(attribution.includes("ATTRIBUTION_KEYS"), "attribution helper must list keys");
 assert(attribution.includes("readLeadAttribution"), "attribution helper must export reader");
 assert(attribution.includes("URLSearchParams"), "attribution helper must read UTM query params");
 assert(attribution.includes("document.referrer"), "attribution helper must capture referrer");
 
-assert(
-  contactForm.includes('name="source"'),
-  "contact form must include a visible source field",
-);
+assert(contactForm.includes('name="source"'), "contact form must include a visible source field");
 assert(
   contactForm.includes('name="source_detail"'),
   "contact form must include source detail field",
@@ -63,10 +57,7 @@ assert(
   "contact form must ask how the lead heard about GivenTake",
 );
 
-assert(
-  tracking.includes("trackLeadEvent"),
-  "tracking must expose trackLeadEvent",
-);
+assert(tracking.includes("trackLeadEvent"), "tracking must expose trackLeadEvent");
 assert(
   tracking.includes("type LeadEventName") &&
     tracking.includes('"lead_form_submit_success"') &&
@@ -97,10 +88,7 @@ assert(
   contactForm.includes("lead_form_mailto_fallback"),
   "contact form must track mailto fallback",
 );
-assert(
-  contactForm.includes("lead_form_submit_error"),
-  "contact form must track submit errors",
-);
+assert(contactForm.includes("lead_form_submit_error"), "contact form must track submit errors");
 
 assert(
   existsSync(join(root, "src/lib/qualification-brief.ts")),
