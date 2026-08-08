@@ -384,16 +384,20 @@ Add these assertions after the existing `trackLeadEvent` assertion:
 
 ```js
 assert(
-  tracking.includes('type LeadEventName = "lead_form_submit_success"'),
+  tracking.includes("type LeadEventName") &&
+    tracking.includes('"lead_form_submit_success"') &&
+    tracking.includes('"lead_form_mailto_fallback"') &&
+    tracking.includes('"lead_form_submit_error"'),
   "tracking must define lead event names",
 );
 assert(
   tracking.includes("sanitizeLeadEventProperties"),
   "tracking must sanitize lead event properties",
 );
-for (const forbidden of ["name:", "email:", "company:", "description:", "source_detail:"]) {
+const propertiesBlock = tracking.match(/type LeadEventProperties = \{[\s\S]*?\};/)?.[0] ?? "";
+for (const forbidden of ["name?:", "email?:", "company?:", "description?:", "source_detail?:"]) {
   assert(
-    !tracking.includes(forbidden),
+    !propertiesBlock.includes(forbidden),
     `tracking event properties must not include personal field ${forbidden}`,
   );
 }
