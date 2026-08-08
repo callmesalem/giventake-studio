@@ -124,4 +124,65 @@ assert(
   "qualification brief must consume ContactInput",
 );
 
+for (const path of [
+  "docs/templates/warm-outreach-list.csv",
+  "docs/templates/referral-partner-list.csv",
+  "docs/templates/customer-1-weekly-report.md",
+]) {
+  assert(existsSync(join(root, path)), `${path} must exist`);
+}
+
+const warmList = read("docs/templates/warm-outreach-list.csv");
+const partnerList = read("docs/templates/referral-partner-list.csv");
+const report = read("docs/templates/customer-1-weekly-report.md");
+
+for (const header of [
+  "name",
+  "company",
+  "relationship_context",
+  "channel",
+  "segment",
+  "last_contacted",
+  "follow_up_date",
+  "status",
+  "referral_outcome",
+  "notes",
+]) {
+  assert(warmList.startsWith("name,"), "warm list must start with CSV headers");
+  assert(warmList.includes(header), `warm list must include ${header}`);
+}
+
+for (const header of [
+  "name",
+  "company",
+  "partner_type",
+  "channel",
+  "last_contacted",
+  "follow_up_date",
+  "status",
+  "referrals_received",
+  "outcome_reported_back",
+  "notes",
+]) {
+  assert(partnerList.startsWith("name,"), "partner list must start with CSV headers");
+  assert(partnerList.includes(header), `partner list must include ${header}`);
+}
+
+for (const heading of [
+  "Warm Outreach",
+  "Referral Partners",
+  "Lead Sources",
+  "Conversations Booked",
+  "Proposals",
+  "Follow-Ups Due",
+  "Time Spent",
+  "Next Week",
+]) {
+  assert(report.includes(heading), `weekly report must include ${heading}`);
+}
+assert(
+  report.includes("Humans sent every prospect-facing message"),
+  "weekly report must include human-send guardrail",
+);
+
 console.log("Customer #1 pipeline invariants passed.");
