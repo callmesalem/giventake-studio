@@ -12,7 +12,8 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { IconArrowRight } from "@/components/marks";
-import { contactSchema } from "@/lib/intake-schema";
+import { contactSchema, CONTACT_SOURCE_OPTIONS } from "@/lib/intake-schema";
+import { readLeadAttribution, type LeadAttribution } from "@/lib/lead-attribution";
 import { submitContact } from "@/lib/intake";
 
 const schema = contactSchema.extend({
@@ -28,6 +29,7 @@ type Outcome = "idle" | "sent" | "mailto";
 export function ContactCTA() {
   const [outcome, setOutcome] = useState<Outcome>("idle");
   const [submitting, setSubmitting] = useState(false);
+  const [attribution] = useState<LeadAttribution>(() => readLeadAttribution());
 
   /** Fallback used when no mail provider is configured, or the send fails. */
   function handOffToMailClient(d: z.infer<typeof schema>) {
@@ -38,6 +40,14 @@ export function ContactCTA() {
       d.company ? `Company: ${d.company}` : null,
       `Budget: ${d.budget}`,
       `Timeline: ${d.timeline}`,
+      `Source: ${d.source}`,
+      d.source_detail ? `Source detail: ${d.source_detail}` : null,
+      d.utm_source ? `UTM source: ${d.utm_source}` : null,
+      d.utm_medium ? `UTM medium: ${d.utm_medium}` : null,
+      d.utm_campaign ? `UTM campaign: ${d.utm_campaign}` : null,
+      d.utm_content ? `UTM content: ${d.utm_content}` : null,
+      d.utm_term ? `UTM term: ${d.utm_term}` : null,
+      d.referrer ? `Referrer: ${d.referrer}` : null,
       "",
       "Project:",
       d.description,
@@ -219,6 +229,33 @@ export function ContactCTA() {
                     className="rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
                   />
                 </Field>
+                <div className="grid gap-4 sm:grid-cols-[1fr_1fr]">
+                  <Field label="How did you hear about us?">
+                    <Select name="source" required>
+                      <SelectTrigger
+                        aria-label="How did you hear about us?"
+                        className="h-11 rounded-xl border-hairline bg-paper focus:ring-0"
+                      >
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CONTACT_SOURCE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Source detail">
+                    <Input
+                      name="source_detail"
+                      maxLength={160}
+                      placeholder="Name, partner, or short context"
+                      className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
+                    />
+                  </Field>
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Budget">
                     <Select name="budget" required>
@@ -291,6 +328,13 @@ export function ContactCTA() {
                   mail client with the brief pre-filled instead. Do not include regulated,
                   financial, health, credential, or sensitive personal data in this form.
                 </p>
+
+                <input type="hidden" name="utm_source" value={attribution.utm_source ?? ""} />
+                <input type="hidden" name="utm_medium" value={attribution.utm_medium ?? ""} />
+                <input type="hidden" name="utm_campaign" value={attribution.utm_campaign ?? ""} />
+                <input type="hidden" name="utm_content" value={attribution.utm_content ?? ""} />
+                <input type="hidden" name="utm_term" value={attribution.utm_term ?? ""} />
+                <input type="hidden" name="referrer" value={attribution.referrer ?? ""} />
 
                 <button
                   type="submit"

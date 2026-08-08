@@ -47,6 +47,17 @@ assert(
   contactForm.includes('name="source_detail"'),
   "contact form must include source detail field",
 );
+for (const key of [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "referrer",
+]) {
+  assert(contactForm.includes(`name="${key}"`), `contact form must submit ${key}`);
+}
+assert(contactForm.includes("readLeadAttribution"), "contact form must read attribution");
 assert(
   contactForm.includes("How did you hear about us?"),
   "contact form must ask how the lead heard about GivenTake",
