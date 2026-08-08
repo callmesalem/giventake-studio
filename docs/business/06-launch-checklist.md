@@ -134,6 +134,8 @@ Not blocking, but each one prevents a predictable first-year problem.
       measured numbers
 - [ ] **Measure baselines before starting anything**, so results are publishable later
 - [ ] **First three conversations from the existing network**, not cold outreach
+- [ ] Use `docs/templates/warm-outreach-list.csv` to build the first 80 to 100 warm-network names.
+- [ ] Use `docs/templates/customer-1-weekly-report.md` every Monday until Customer #1 is won.
 - [ ] **Add a publicity/reference clause** to the MSA so you can publish results
 - [ ] **Get testimonials at delivery**, when the client is happiest
 - [ ] **Diary a rate increase** after the third client
