@@ -15,20 +15,120 @@ export type QualificationBrief = {
 };
 
 const regulatedPattern =
-  /\b(health|medical|hipaa|financial|investment|securities|bank|credential|password|government|ssn|social security|tax|legal)\b/i;
+  /\b(health(?:care)?|medical|hipaa|financial|investment|securities|bank(?:ing)?|credentials?|passwords?|government|ssn|social security|tax|legal)\b/i;
+
+const OFFER_MATCH_RULES = [
+  {
+    slug: "internal-dashboard",
+    terms: [
+      ["dashboard", 4],
+      ["spreadsheet", 3],
+      ["spreadsheets", 3],
+      ["invoice", 3],
+      ["invoices", 3],
+      ["job status", 3],
+      ["status tracking", 2],
+      ["internal reporting", 2],
+    ],
+  },
+  {
+    slug: "ai-lead-intake",
+    terms: [
+      ["lead intake", 4],
+      ["lead routing", 4],
+      ["route leads", 3],
+      ["routing", 3],
+      ["enquiry", 2],
+      ["enquiries", 2],
+      ["inquiry", 2],
+      ["inquiries", 2],
+      ["classify", 2],
+      ["classification", 2],
+      ["form submission", 2],
+    ],
+  },
+  {
+    slug: "booking-and-payments",
+    terms: [
+      ["booking", 4],
+      ["appointment scheduling", 4],
+      ["appointments", 3],
+      ["scheduling", 3],
+      ["reschedule", 3],
+      ["deposit", 2],
+      ["deposits", 2],
+      ["no show", 2],
+    ],
+  },
+  {
+    slug: "marketing-site",
+    terms: [
+      ["marketing website", 4],
+      ["marketing site", 4],
+      ["website", 3],
+      ["cms", 3],
+      ["content management", 3],
+      ["landing page", 3],
+      ["seo", 2],
+    ],
+  },
+  {
+    slug: "business-automation",
+    terms: [
+      ["process automation", 4],
+      ["workflow automation", 4],
+      ["automate", 3],
+      ["automation", 3],
+      ["data entry", 3],
+      ["document assembly", 3],
+      ["manual process", 3],
+      ["repetitive", 2],
+    ],
+  },
+  {
+    slug: "mvp-development",
+    terms: [
+      ["mvp", 4],
+      ["minimum viable product", 4],
+      ["prototype", 3],
+      ["validate idea", 3],
+      ["product idea", 3],
+      ["real users", 2],
+    ],
+  },
+] as const;
+
+const OFFER_MATCH_THRESHOLD = 2;
+
+function includesTerm(description: string, term: string) {
+  return ` ${description} `.includes(` ${term} `);
+}
 
 function matchOffer(description: string) {
-  const normalized = description.toLowerCase();
-  const offer = offers.find((candidate) => {
-    const haystack =
-      `${candidate.title} ${candidate.tagline} ${candidate.problem.join(" ")} ${candidate.outcome}`.toLowerCase();
-    return haystack
-      .split(/\W+/)
-      .filter((word) => word.length > 5)
-      .some((word) => normalized.includes(word));
-  });
+  const normalized = description
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  let bestSlug: string | undefined;
+  let bestScore = 0;
+  let tied = false;
 
-  return offer?.title ?? "Uncertain";
+  for (const rule of OFFER_MATCH_RULES) {
+    const score = rule.terms.reduce(
+      (total, [term, weight]) => total + (includesTerm(normalized, term) ? weight : 0),
+      0,
+    );
+    if (score > bestScore) {
+      bestSlug = rule.slug;
+      bestScore = score;
+      tied = false;
+    } else if (score === bestScore && score >= OFFER_MATCH_THRESHOLD) {
+      tied = true;
+    }
+  }
+
+  if (!bestSlug || bestScore < OFFER_MATCH_THRESHOLD || tied) return "Uncertain";
+  return offers.find((offer) => offer.slug === bestSlug)?.title ?? "Uncertain";
 }
 
 export function createQualificationBrief(input: ContactInput): QualificationBrief {

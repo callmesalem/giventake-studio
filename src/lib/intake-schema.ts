@@ -1,25 +1,21 @@
 import { z } from "zod";
+import {
+  CONTACT_BUDGET_VALUES,
+  CONTACT_SOURCE_VALUES,
+  CONTACT_TIMELINE_VALUES,
+} from "./contact-options";
+
+export {
+  CONTACT_BUDGET_OPTIONS,
+  CONTACT_SOURCE_OPTIONS,
+  CONTACT_TIMELINE_OPTIONS,
+} from "./contact-options";
 
 /**
  * Shared between the browser form and the server function so both validate
  * identically. The client check is for UX; the server check is the one that
  * matters, because a server function is a public HTTP endpoint.
  */
-
-export const CONTACT_SOURCE_OPTIONS = [
-  { value: "warm_network", label: "Someone I know / warm referral" },
-  { value: "referral_partner", label: "Referral partner" },
-  { value: "google_search", label: "Google or search" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "direct", label: "Typed the website directly" },
-  { value: "article_or_content", label: "Article or content" },
-  { value: "other", label: "Other" },
-] as const;
-
-const contactSourceValues = CONTACT_SOURCE_OPTIONS.map((option) => option.value) as [
-  (typeof CONTACT_SOURCE_OPTIONS)[number]["value"],
-  ...(typeof CONTACT_SOURCE_OPTIONS)[number]["value"][],
-];
 
 const optionalAttribution = z.string().trim().max(200).optional();
 
@@ -28,9 +24,9 @@ export const contactSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
   company: z.string().trim().max(120).optional(),
   description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
-  budget: z.string().trim().min(1, "Select a budget").max(60),
-  timeline: z.string().trim().min(1, "Select a timeline").max(60),
-  source: z.enum(contactSourceValues, { required_error: "Select how you heard about us" }),
+  budget: z.enum(CONTACT_BUDGET_VALUES, { required_error: "Select a budget" }),
+  timeline: z.enum(CONTACT_TIMELINE_VALUES, { required_error: "Select a timeline" }),
+  source: z.enum(CONTACT_SOURCE_VALUES, { required_error: "Select how you heard about us" }),
   source_detail: z.string().trim().max(160).optional(),
   utm_source: optionalAttribution,
   utm_medium: optionalAttribution,
