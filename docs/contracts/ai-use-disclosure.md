@@ -1,6 +1,6 @@
 # How we use AI to build your software
 
-**GivenTake Goods Devs** — provided with every proposal and referenced in the
+**GivenTake Devs** — provided with every proposal and referenced in the
 Master Services Agreement.
 
 > [!NOTE]
@@ -165,7 +165,7 @@ at the end.
 
 ## Questions?
 
-`hello@giventake.dev`
+`hello@giventakedevs.com`
 
 We'd rather answer an awkward question now than have it surface after you've
 signed.

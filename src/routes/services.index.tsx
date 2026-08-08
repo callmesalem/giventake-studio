@@ -9,7 +9,7 @@ export const Route = createFileRoute("/services/")({
   head: () =>
     pageHead({
       path: "/services",
-      title: "Services & Pricing · GivenTake Goods Devs",
+      title: "Services & Pricing · GivenTake Devs",
       description:
         "Fixed-price software development: internal dashboards, AI automation, booking systems, marketing sites, and MVPs. Real prices, real timelines, explicit exclusions.",
     }),

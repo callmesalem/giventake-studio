@@ -21,7 +21,7 @@ const schema = contactSchema.extend({
     .refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
 });
 
-const CONTACT_EMAIL = "hello@giventake.dev";
+const CONTACT_EMAIL = "hello@giventakedevs.com";
 
 type Outcome = "idle" | "sent" | "mailto";
 
@@ -122,10 +122,10 @@ export function ContactCTA() {
                 Prefer email?
               </p>
               <a
-                href="mailto:hello@giventake.dev"
+                href="mailto:hello@giventakedevs.com"
                 className="mt-1 block text-[16px] font-semibold text-ink hover:text-violet"
               >
-                hello@giventake.dev
+                hello@giventakedevs.com
               </a>
             </div>
           </div>
@@ -268,14 +268,14 @@ export function ContactCTA() {
                     <a href="/privacy" className="font-medium text-ink underline">
                       Privacy Policy
                     </a>{" "}
-                    and agree that GivenTake Goods Devs may use the details I've submitted to reply
-                    to my enquiry and prepare a proposal. My data is not sold, not used to train AI
+                    and agree that GivenTake Devs may use the details I've submitted to reply to my
+                    enquiry and prepare a proposal. My data is not sold, not used to train AI
                     models, and I can request deletion any time at{" "}
                     <a
-                      href="mailto:privacy@giventake.dev"
+                      href="mailto:privacy@giventakedevs.com"
                       className="font-medium text-ink underline"
                     >
-                      privacy@giventake.dev
+                      privacy@giventakedevs.com
                     </a>
                     .
                   </span>

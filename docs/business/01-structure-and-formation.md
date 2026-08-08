@@ -2,7 +2,7 @@
 
 **Jurisdiction:** Ohio
 **Existing entity:** GivenTake Goods LLC (EIN and bank account already in place)
-**Trade name to register:** GivenTake Goods Devs
+**Trade name to register:** GivenTake Devs
 
 ---
 
@@ -188,7 +188,7 @@ Run the numbers now:
 
 Effectively identical. And the new-LLC path is *simpler*: no purpose amendment
 because you write the purpose correctly on day one, and no DBA layer because
-`GivenTake Goods Devs LLC` is both the legal name and the brand.
+`GivenTake Devs LLC` is both the legal name and the brand.
 
 The remaining costs of a second entity are a new EIN (free, same day online) and
 a new bank account (an afternoon). The existing bank account being open was the
@@ -207,7 +207,7 @@ Being straight about the trade-off:
 
 ### Naming
 
-`GivenTake Goods Devs LLC` may not be **distinguishable** from `GIVENTAKE GOODS
+`GivenTake Devs LLC` may not be **distinguishable** from `GIVENTAKE GOODS
 LLC` on the Ohio SOS records — entity designators (LLC, Ltd., Co.) do not create
 distinguishability, and an added word sometimes does not either.
 
@@ -232,7 +232,7 @@ long-tail liability an E&O policy will not answer for.
 
 ### 1. Form a new Ohio LLC — **Form 610, $99**
 
-- **Name:** `GivenTake Goods Devs LLC` (check distinguishability first; Form 590
+- **Name:** `GivenTake Devs LLC` (check distinguishability first; Form 590
   consent from the existing entity if needed — see "Naming" above)
 - **Purpose:** write a **general-purpose clause** — "any lawful purpose for which
   a limited liability company may be organized under Chapter 1706 of the Ohio
@@ -348,7 +348,7 @@ significant — Parma's rate is among the higher ones in Ohio.
 
 ## Summary of costs
 
-**New entity — GivenTake Goods Devs LLC:**
+**New entity — GivenTake Devs LLC:**
 
 | Item                              | Cost                  | Recurring |
 | --------------------------------- | --------------------- | --------- |

@@ -1,4 +1,4 @@
-# GivenTake Goods Devs — documentation
+# GivenTake Devs — documentation
 
 Everything needed to run this business, other than the code. Four sections, each with
 its own index.

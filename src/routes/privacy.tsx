@@ -6,9 +6,9 @@ export const Route = createFileRoute("/privacy")({
   head: () =>
     pageHead({
       path: "/privacy",
-      title: "Privacy Policy · GivenTake Goods Devs",
+      title: "Privacy Policy · GivenTake Devs",
       description:
-        "How GivenTake Goods Devs collects, uses, and protects your data. GDPR, CCPA, and ePrivacy compliant.",
+        "How GivenTake Devs collects, uses, and protects your data. GDPR, CCPA, and ePrivacy compliant.",
     }),
   component: PrivacyPage,
 });
@@ -40,12 +40,12 @@ function PrivacyPage() {
             </p>
             <p className="mt-3">
               Registered address: {BUSINESS_ADDRESS}. General contact:{" "}
-              <a href="mailto:hello@giventake.dev" className="underline">
-                hello@giventake.dev
+              <a href="mailto:hello@giventakedevs.com" className="underline">
+                hello@giventakedevs.com
               </a>
               . Privacy contact:{" "}
-              <a href="mailto:privacy@giventake.dev" className="underline">
-                privacy@giventake.dev
+              <a href="mailto:privacy@giventakedevs.com" className="underline">
+                privacy@giventakedevs.com
               </a>
               .
             </p>
@@ -143,8 +143,8 @@ function PrivacyPage() {
               export your data, to object to or restrict processing, and to withdraw consent at any
               time. California residents additionally have the right to opt out of "sharing" for
               cross-context behavioral advertising. To exercise any of these, email{" "}
-              <a href="mailto:privacy@giventake.dev" className="underline">
-                privacy@giventake.dev
+              <a href="mailto:privacy@giventakedevs.com" className="underline">
+                privacy@giventakedevs.com
               </a>
               . We respond within 30 days. You can also lodge a complaint with your local data
               protection authority.

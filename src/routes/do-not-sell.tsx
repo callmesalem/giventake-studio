@@ -2,15 +2,15 @@ import { pageHead } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
-import { useConsent } from "@/lib/consent";
+import { useConsent } from "@/lib/use-consent";
 
 export const Route = createFileRoute("/do-not-sell")({
   head: () =>
     pageHead({
       path: "/do-not-sell",
-      title: "Do Not Sell or Share My Personal Information · GivenTake Goods Devs",
+      title: "Do Not Sell or Share My Personal Information · GivenTake Devs",
       description:
-        "Exercise your CCPA and CPRA right to opt out of the sale or sharing of your personal information by GivenTake Goods Devs.",
+        "Exercise your CCPA and CPRA right to opt out of the sale or sharing of your personal information by GivenTake Devs.",
     }),
   component: DoNotSellPage,
 });
@@ -44,11 +44,11 @@ function DoNotSellPage() {
             advertising.
           </p>
           <p>
-            GivenTake Goods Devs does not sell personal information for money. However, when you
-            allow marketing cookies, information about your visit (device, IP address, pages viewed)
-            is shared with advertising partners (Meta, TikTok, LinkedIn, Google) so we can measure
-            ad performance and reach similar audiences. Under CPRA, that qualifies as "sharing" and
-            you have the right to turn it off.
+            GivenTake Devs does not sell personal information for money. However, when you allow
+            marketing cookies, information about your visit (device, IP address, pages viewed) is
+            shared with advertising partners (Meta, TikTok, LinkedIn, Google) so we can measure ad
+            performance and reach similar audiences. Under CPRA, that qualifies as "sharing" and you
+            have the right to turn it off.
           </p>
         </div>
 
@@ -113,8 +113,8 @@ function DoNotSellPage() {
               You may designate an authorized agent to submit an opt-out request on your behalf. We
               may require reasonable proof that the agent is authorized to act for you. Send agent
               requests to{" "}
-              <a href="mailto:privacy@giventake.dev" className="underline">
-                privacy@giventake.dev
+              <a href="mailto:privacy@giventakedevs.com" className="underline">
+                privacy@giventakedevs.com
               </a>
               .
             </p>
@@ -135,8 +135,8 @@ function DoNotSellPage() {
             <p className="mt-2 text-muted-ink">
               To access, correct, delete, or export your data, or to limit the use of sensitive
               personal information, email{" "}
-              <a href="mailto:privacy@giventake.dev" className="underline">
-                privacy@giventake.dev
+              <a href="mailto:privacy@giventakedevs.com" className="underline">
+                privacy@giventakedevs.com
               </a>
               . We respond within 45 days as required by CCPA.
             </p>

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/how-we-use-ai")({
   head: () =>
     pageHead({
       path: "/how-we-use-ai",
-      title: "How We Use AI to Build Your Software · GivenTake Goods Devs",
+      title: "How We Use AI to Build Your Software · GivenTake Devs",
       description:
         "Exactly how AI coding agents are used in our delivery, what a human reviews, what we warrant, and the two limitations most studios won't tell you about.",
     }),

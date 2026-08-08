@@ -1,15 +1,15 @@
 import { pageHead } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
-import { useConsent } from "@/lib/consent";
+import { useConsent } from "@/lib/use-consent";
 
 export const Route = createFileRoute("/cookies")({
   head: () =>
     pageHead({
       path: "/cookies",
-      title: "Cookie Policy · GivenTake Goods Devs",
+      title: "Cookie Policy · GivenTake Devs",
       description:
-        "Every cookie and tracker used by GivenTake Goods Devs, its purpose, its lifetime, and how to opt out.",
+        "Every cookie and tracker used by GivenTake Devs, its purpose, its lifetime, and how to opt out.",
     }),
   component: CookiesPage,
 });
@@ -18,7 +18,7 @@ const ROWS = [
   {
     category: "Necessary",
     name: "gt.consent.v1",
-    provider: "GivenTake Goods Devs",
+    provider: "GivenTake Devs",
     purpose: "Remembers your cookie consent choices.",
     duration: "6 months",
   },

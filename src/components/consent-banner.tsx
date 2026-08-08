@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
-import { useConsent, type ConsentCategory } from "@/lib/consent";
+import type { ConsentCategory } from "@/lib/consent-core";
+import { useConsent } from "@/lib/use-consent";
 import { initTracking } from "@/lib/tracking";
 import {
   Dialog,

@@ -15,7 +15,7 @@
  * All providers honor Google's Consent Mode v2 signal.
  */
 
-import type { ConsentState } from "./consent";
+import type { ConsentState } from "./consent-core";
 
 type Loaded = Record<string, boolean>;
 const loaded: Loaded = {};

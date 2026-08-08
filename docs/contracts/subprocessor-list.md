@@ -42,7 +42,7 @@ and shorter to maintain.
 | Provider                                         | Purpose                             | Trigger                         | Status                  |
 | ------------------------------------------------ | ----------------------------------- | ------------------------------- | ----------------------- |
 | **Resend** (transactional email)                  | Contact and DSAR form submissions   | `RESEND_API_KEY` set            | **Code shipped — inactive until configured** |
-| `[Email provider]`                               | Business email for `@giventake.dev` | Domain setup                    | `[status]`              |
+| `[Email provider]`                               | Business email for `@giventakedevs.com` | Domain setup                    | `[status]`              |
 | `[Invoicing / payments]`                         | Client invoicing                    | First invoice                   | `[status]`              |
 | `[Bookkeeping]`                                  | Accounting records                  | Books setup                     | `[status]`              |
 

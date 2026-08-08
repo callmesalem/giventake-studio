@@ -126,7 +126,7 @@ mean "do the best you can and mention it later."
 
 ```
 —
-This message was sent automatically by GivenTake Goods Devs.
+This message was sent automatically by GivenTake Devs.
 Reply and a person will read it.
 ```
 

@@ -4,7 +4,7 @@ Every template ends with the charter §5 footer, verbatim:
 
 ```
 —
-This message was sent automatically by GivenTake Goods Devs.
+This message was sent automatically by GivenTake Devs.
 Reply and a person will read it.
 ```
 
@@ -27,8 +27,8 @@ no personal signature. Substitutions are `{{field}}` from the `leads` record.
 > You'll hear back within one business day. If it turns out we're not the right
 > people for this, we'll say so and point you somewhere better.
 >
-> In the meantime, if it's useful: our full process is at giventake.dev/process, and
-> how we actually use AI to build things is at giventake.dev/how-we-use-ai. Both are
+> In the meantime, if it's useful: our full process is at giventakedevs.com/process, and
+> how we actually use AI to build things is at giventakedevs.com/how-we-use-ai. Both are
 > longer and more specific than most studios put in public.
 
 ---
