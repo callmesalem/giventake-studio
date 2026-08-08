@@ -8,9 +8,9 @@ import ogImageAsset from "@/assets/giventake-og.png.asset.json";
  * `public/robots.txt` is a static file and cannot import this; update its
  * Sitemap: line by hand at the same time.
  */
-export const BASE_URL = "https://dev-on-demand-hub.lovable.app";
+export const BASE_URL = "https://giventakedevs.com";
 export const OG_IMAGE_URL = `${BASE_URL}${ogImageAsset.url}`;
-export const SITE_NAME = "GivenTake Goods Devs";
+export const SITE_NAME = "GivenTake Devs";
 
 /**
  * Legal entity that actually contracts, used in the legal pages and JSON-LD.
@@ -22,7 +22,7 @@ export const SITE_NAME = "GivenTake Goods Devs";
  * docs/business/01-structure-and-formation.md. The site must never name an
  * entity other than the one that signs the client agreements.
  */
-export const LEGAL_ENTITY = "GivenTake Goods Devs LLC";
+export const LEGAL_ENTITY = "GivenTake Devs LLC";
 export const LEGAL_ENTITY_LONG = `${SITE_NAME} is operated by ${LEGAL_ENTITY}, an Ohio limited liability company`;
 
 /**

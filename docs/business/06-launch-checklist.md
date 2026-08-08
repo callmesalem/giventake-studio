@@ -20,7 +20,7 @@ that need to be true before anyone reads them.
       `src/lib/seo.ts`. The site currently renders a visible placeholder.
       **Do not use the statutory agent's residential apartment address** from the
       Articles; get a commercial agent or virtual office address first
-- [ ] **TODO(you): confirm you control `giventake.dev`** and that `hello@`,
+- [ ] **TODO(you): confirm you control `giventakedevs.com`** and that `hello@`,
       `privacy@`, and `legal@` all deliver. Three published contact addresses
       that bounce is worse than one that works
 - [ ] **Decide the production domain** and update `BASE_URL` in `src/lib/seo.ts`
@@ -42,7 +42,7 @@ These block contracting. Signing without them is the expensive kind of mistake.
       through GivenTake Goods LLC. That entity performed contractor work and
       carries a construction-defect tail to roughly 2032–2035 under ORC 2305.131
       → [01-structure-and-formation.md](./01-structure-and-formation.md)
-- [ ] **Check name availability** for `GivenTake Goods Devs LLC` on the Ohio SOS
+- [ ] **Check name availability** for `GivenTake Devs LLC` on the Ohio SOS
       search. If not distinguishable from the existing entity, file **Form 590**
       consent alongside — you control both, so it's a formality
 - [ ] **Form the new LLC — Form 610, $99**, with a **general-purpose clause**
@@ -96,7 +96,7 @@ These block getting paid correctly.
 - [ ] **Cancel any stale CAT account** if one exists
 - [ ] **Set up the tax reserve** — 25–30% of every payment moved on receipt
 - [ ] **Separate the books** by line of business (sub-account or accounting class)
-- [ ] Add the trade name to the bank account so cheques to "GivenTake Goods Devs"
+- [ ] Add the trade name to the bank account so cheques to "GivenTake Devs"
       deposit
 
 ---

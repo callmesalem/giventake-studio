@@ -18,7 +18,7 @@ import { IconArrowRight } from "@/components/marks";
 import { dsarSchema } from "@/lib/intake-schema";
 import { submitDsar } from "@/lib/intake";
 
-const PRIVACY_EMAIL = "privacy@giventake.dev";
+const PRIVACY_EMAIL = "privacy@giventakedevs.com";
 
 const REQUEST_TYPES = [
   { value: "access", label: "Access — send me a copy of my data" },
@@ -37,9 +37,9 @@ export const Route = createFileRoute("/data-request")({
   head: () =>
     pageHead({
       path: "/data-request",
-      title: "Data Rights Request · GivenTake Goods Devs",
+      title: "Data Rights Request · GivenTake Devs",
       description:
-        "Request access, correction, deletion, or portability of your personal data held by GivenTake Goods Devs under GDPR and CCPA.",
+        "Request access, correction, deletion, or portability of your personal data held by GivenTake Devs under GDPR and CCPA.",
     }),
   component: DataRequestPage,
 });
@@ -264,8 +264,8 @@ function DataRequestPage() {
                 />
                 <span className="text-[12.5px] leading-relaxed text-muted-ink">
                   I confirm the information above is accurate and that I am the data subject, or an
-                  authorized agent acting on their behalf. I understand GivenTake Goods Devs will
-                  use these details to verify and fulfill the request, and for no other purpose.
+                  authorized agent acting on their behalf. I understand GivenTake Devs will use
+                  these details to verify and fulfill the request, and for no other purpose.
                 </span>
               </label>
 

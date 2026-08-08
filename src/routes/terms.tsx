@@ -13,9 +13,9 @@ export const Route = createFileRoute("/terms")({
   head: () =>
     pageHead({
       path: "/terms",
-      title: "Terms of Service · GivenTake Goods Devs",
+      title: "Terms of Service · GivenTake Devs",
       description:
-        "The terms that govern your use of the GivenTake Goods Devs website and any services provided.",
+        "The terms that govern your use of the GivenTake Devs website and any services provided.",
     }),
   component: TermsPage,
 });
@@ -158,8 +158,8 @@ function TermsPage() {
           <Section title="13. Contact">
             <p>
               Questions about these terms:{" "}
-              <a href="mailto:legal@giventake.dev" className="underline">
-                legal@giventake.dev
+              <a href="mailto:legal@giventakedevs.com" className="underline">
+                legal@giventakedevs.com
               </a>
               .
             </p>

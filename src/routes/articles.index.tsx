@@ -8,7 +8,7 @@ export const Route = createFileRoute("/articles/")({
   head: () =>
     pageHead({
       path: "/articles",
-      title: "Articles · Straight Answers About Custom Software · GivenTake Goods Devs",
+      title: "Articles · Straight Answers About Custom Software · GivenTake Devs",
       description:
         "Practical writing for people deciding whether to commission custom software: what it costs, whether to buy or build, and what to expect from a developer.",
     }),

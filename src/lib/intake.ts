@@ -24,15 +24,15 @@ import {
  *
  * Configure with (see docs/business/06-launch-checklist.md):
  *   RESEND_API_KEY   - provider key. Absent => unconfigured => mailto fallback.
- *   INTAKE_TO_EMAIL  - destination. Defaults to hello@giventake.dev.
+ *   INTAKE_TO_EMAIL  - destination. Defaults to hello@giventakedevs.com.
  *   INTAKE_FROM_EMAIL- verified sender on your domain.
  *
  * Adding a provider makes it a processor: add it to the privacy policy and to
  * docs/contracts/subprocessor-list.md BEFORE it goes live.
  */
 
-const FALLBACK_TO = "hello@giventake.dev";
-const PRIVACY_TO = "privacy@giventake.dev";
+const FALLBACK_TO = "hello@giventakedevs.com";
+const PRIVACY_TO = "privacy@giventakedevs.com";
 
 function env(key: string): string | undefined {
   const value = process.env[key];

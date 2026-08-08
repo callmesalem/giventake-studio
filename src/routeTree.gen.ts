@@ -9,43 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
-import { Route as DataRequestRouteImport } from './routes/data-request'
-import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
-import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
-import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
-import { Route as ProcessRouteImport } from './routes/process'
+import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as DataRequestRouteImport } from './routes/data-request'
+import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
 import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProcessRouteImport } from './routes/process'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
+import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DoNotSellRoute = DoNotSellRouteImport.update({
-  id: '/do-not-sell',
-  path: '/do-not-sell',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DataRequestRoute = DataRequestRouteImport.update({
-  id: '/data-request',
-  path: '/data-request',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiesRoute = CookiesRouteImport.update({
@@ -53,14 +33,14 @@ const CookiesRoute = CookiesRouteImport.update({
   path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const DataRequestRoute = DataRequestRouteImport.update({
+  id: '/data-request',
+  path: '/data-request',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ServicesIndexRoute = ServicesIndexRouteImport.update({
-  id: '/services/',
-  path: '/services/',
+const DoNotSellRoute = DoNotSellRouteImport.update({
+  id: '/do-not-sell',
+  path: '/do-not-sell',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowWeUseAiRoute = HowWeUseAiRouteImport.update({
@@ -68,9 +48,24 @@ const HowWeUseAiRoute = HowWeUseAiRouteImport.update({
   path: '/how-we-use-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProcessRoute = ProcessRouteImport.update({
   id: '/process',
   path: '/process',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
@@ -81,6 +76,11 @@ const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
 const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
   id: '/articles/$slug',
   path: '/articles/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
@@ -94,10 +94,14 @@ export interface FileRoutesByFullPath {
   '/cookies': typeof CookiesRoute
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
+  '/how-we-use-ai': typeof HowWeUseAiRoute
   '/privacy': typeof PrivacyRoute
+  '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/articles/': typeof ArticlesIndexRoute
   '/services/': typeof ServicesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -105,11 +109,15 @@ export interface FileRoutesByTo {
   '/cookies': typeof CookiesRoute
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
+  '/how-we-use-ai': typeof HowWeUseAiRoute
   '/privacy': typeof PrivacyRoute
+  '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
-  '/services/': typeof ServicesIndexRoute
+  '/articles': typeof ArticlesIndexRoute
+  '/services': typeof ServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,10 +125,14 @@ export interface FileRoutesById {
   '/cookies': typeof CookiesRoute
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
+  '/how-we-use-ai': typeof HowWeUseAiRoute
   '/privacy': typeof PrivacyRoute
+  '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/articles/': typeof ArticlesIndexRoute
   '/services/': typeof ServicesIndexRoute
 }
 export interface FileRouteTypes {
@@ -130,14 +142,14 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/data-request'
     | '/do-not-sell'
+    | '/how-we-use-ai'
     | '/privacy'
+    | '/process'
     | '/sitemap.xml'
     | '/terms'
-    | '/services/$slug'
     | '/articles/$slug'
+    | '/services/$slug'
     | '/articles/'
-    | '/process'
-    | '/how-we-use-ai'
     | '/services/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -145,29 +157,29 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/data-request'
     | '/do-not-sell'
+    | '/how-we-use-ai'
     | '/privacy'
+    | '/process'
     | '/sitemap.xml'
     | '/terms'
-    | '/services/$slug'
     | '/articles/$slug'
-    | '/articles/'
-    | '/process'
-    | '/how-we-use-ai'
-    | '/services/'
+    | '/services/$slug'
+    | '/articles'
+    | '/services'
   id:
     | '__root__'
     | '/'
     | '/cookies'
     | '/data-request'
     | '/do-not-sell'
+    | '/how-we-use-ai'
     | '/privacy'
+    | '/process'
     | '/sitemap.xml'
     | '/terms'
-    | '/services/$slug'
     | '/articles/$slug'
+    | '/services/$slug'
     | '/articles/'
-    | '/process'
-    | '/how-we-use-ai'
     | '/services/'
   fileRoutesById: FileRoutesById
 }
@@ -176,20 +188,45 @@ export interface RootRouteChildren {
   CookiesRoute: typeof CookiesRoute
   DataRequestRoute: typeof DataRequestRoute
   DoNotSellRoute: typeof DoNotSellRoute
+  HowWeUseAiRoute: typeof HowWeUseAiRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProcessRoute: typeof ProcessRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
+  ArticlesIndexRoute: typeof ArticlesIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/services/': {
-      id: '/services/'
-      path: '/services/'
-      fullPath: '/services/'
-      preLoaderRoute: typeof ServicesIndexRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-request': {
+      id: '/data-request'
+      path: '/data-request'
+      fullPath: '/data-request'
+      preLoaderRoute: typeof DataRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/do-not-sell': {
+      id: '/do-not-sell'
+      path: '/do-not-sell'
+      fullPath: '/do-not-sell'
+      preLoaderRoute: typeof DoNotSellRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-we-use-ai': {
@@ -199,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowWeUseAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/process': {
       id: '/process'
       path: '/process'
@@ -206,9 +250,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/articles/': {
       id: '/articles/'
-      path: '/articles/'
+      path: '/articles'
       fullPath: '/articles/'
       preLoaderRoute: typeof ArticlesIndexRouteImport
       parentRoute: typeof rootRouteImport
@@ -220,60 +278,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArticlesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/': {
+      id: '/services/'
+      path: '/services'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services/$slug': {
       id: '/services/$slug'
       path: '/services/$slug'
       fullPath: '/services/$slug'
       preLoaderRoute: typeof ServicesSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/do-not-sell': {
-      id: '/do-not-sell'
-      path: '/do-not-sell'
-      fullPath: '/do-not-sell'
-      preLoaderRoute: typeof DoNotSellRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/data-request': {
-      id: '/data-request'
-      path: '/data-request'
-      fullPath: '/data-request'
-      preLoaderRoute: typeof DataRequestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookies': {
-      id: '/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof CookiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -284,12 +300,26 @@ const rootRouteChildren: RootRouteChildren = {
   CookiesRoute: CookiesRoute,
   DataRequestRoute: DataRequestRoute,
   DoNotSellRoute: DoNotSellRoute,
+  HowWeUseAiRoute: HowWeUseAiRoute,
   PrivacyRoute: PrivacyRoute,
+  ProcessRoute: ProcessRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,
+  ArticlesIndexRoute: ArticlesIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { LogoMark, IconMenu, IconClose } from "@/components/marks";
-import { useConsent } from "@/lib/consent";
+import { useConsent } from "@/lib/use-consent";
 import { offers } from "@/lib/offers";
 
 /**
@@ -253,7 +253,7 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col gap-3 border-t border-hairline pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[12px] text-muted-ink">
-            © {new Date().getFullYear()} GivenTake Goods Devs. All rights reserved.
+            © {new Date().getFullYear()} GivenTake Devs. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-muted-ink">
             <a href="/privacy" className="hover:text-ink">

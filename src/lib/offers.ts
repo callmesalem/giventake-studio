@@ -41,7 +41,7 @@ export const offers: Offer[] = [
     slug: "internal-dashboard",
     title: "Replace your spreadsheets with one dashboard",
     tagline: "Job status, invoices, and numbers in one place instead of five files.",
-    metaTitle: "Internal Dashboard Development | Replace Spreadsheets · GivenTake Goods Devs",
+    metaTitle: "Internal Dashboard Development | Replace Spreadsheets · GivenTake Devs",
     metaDescription:
       "Custom internal dashboards that replace shared spreadsheets with one source of truth. Fixed price from $6,000, live in about four weeks.",
     priceFrom: "From $6,000",
@@ -84,7 +84,7 @@ export const offers: Offer[] = [
     slug: "ai-lead-intake",
     title: "AI lead intake and routing",
     tagline: "Enquiries read, classified, and routed before anyone opens the inbox.",
-    metaTitle: "AI Lead Intake & Routing Automation | GivenTake Goods Devs",
+    metaTitle: "AI Lead Intake & Routing Automation | GivenTake Devs",
     metaDescription:
       "A custom AI agent that reads incoming enquiries, classifies intent, and routes them to the right person. Fixed price from $4,500, live in about three weeks.",
     priceFrom: "From $4,500",
@@ -126,7 +126,7 @@ export const offers: Offer[] = [
     slug: "booking-and-payments",
     title: "Booking and payments for service businesses",
     tagline: "Customers book, pay, and reschedule themselves.",
-    metaTitle: "Booking & Payment System Development | GivenTake Goods Devs",
+    metaTitle: "Booking & Payment System Development | GivenTake Devs",
     metaDescription:
       "Custom self-service booking with deposits, reminders, and rescheduling for service businesses. Fixed price from $5,000, live in three to four weeks.",
     priceFrom: "From $5,000",
@@ -169,7 +169,7 @@ export const offers: Offer[] = [
     slug: "marketing-site",
     title: "A marketing site your team can actually update",
     tagline: "A site that reflects what the business does now, with a CMS behind it.",
-    metaTitle: "Marketing Website Development with CMS | GivenTake Goods Devs",
+    metaTitle: "Marketing Website Development with CMS | GivenTake Devs",
     metaDescription:
       "Fast, accessible marketing sites with a CMS your team can edit without a developer. Fixed price from $2,500, live in two to three weeks.",
     priceFrom: "From $2,500",
@@ -212,7 +212,7 @@ export const offers: Offer[] = [
     slug: "business-automation",
     title: "Automate the process eating your week",
     tagline: "The repetitive thing someone does by hand every day, done by software.",
-    metaTitle: "Business Process Automation Development | GivenTake Goods Devs",
+    metaTitle: "Business Process Automation Development | GivenTake Devs",
     metaDescription:
       "Custom automation for the repetitive manual processes running your business — data re-entry, document assembly, status chasing. Fixed price from $4,000.",
     priceFrom: "From $4,000",
@@ -253,7 +253,7 @@ export const offers: Offer[] = [
     slug: "mvp-development",
     title: "Get an MVP in front of real users",
     tagline: "The smallest thing that tests whether people actually want it.",
-    metaTitle: "MVP Development for Founders | GivenTake Goods Devs",
+    metaTitle: "MVP Development for Founders | GivenTake Devs",
     metaDescription:
       "MVP development for founders with paying-customer intent — the smallest build that tests the riskiest assumption. Scoped and quoted after discovery.",
     priceFrom: "Custom quote",

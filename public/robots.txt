@@ -3,4 +3,4 @@ Allow: /
 
 # Static file — cannot import BASE_URL from src/lib/seo.ts.
 # Update this line whenever the production origin changes there.
-Sitemap: https://dev-on-demand-hub.lovable.app/sitemap.xml
+Sitemap: https://giventakedevs.com/sitemap.xml

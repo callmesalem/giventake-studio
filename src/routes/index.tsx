@@ -34,13 +34,13 @@ function Placeholder({ h }: { h: number }) {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GivenTake Goods Devs | Your On-Demand Development Team" },
+      { title: "GivenTake Devs | Your On-Demand Development Team" },
       {
         name: "description",
         content:
           "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools — built with human review.",
       },
-      { property: "og:title", content: "GivenTake Goods Devs | Your On-Demand Development Team" },
+      { property: "og:title", content: "GivenTake Devs | Your On-Demand Development Team" },
       {
         property: "og:description",
         content:
@@ -48,16 +48,16 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${BASE_URL}/` },
-      { property: "og:site_name", content: "GivenTake Goods Devs" },
+      { property: "og:site_name", content: "GivenTake Devs" },
       { property: "og:image", content: ogImageUrl },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       {
         property: "og:image:alt",
-        content: "GivenTake Goods Devs — Your On-Demand Development Team",
+        content: "GivenTake Devs — Your On-Demand Development Team",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "GivenTake Goods Devs | Your On-Demand Development Team" },
+      { name: "twitter:title", content: "GivenTake Devs | Your On-Demand Development Team" },
       {
         name: "twitter:description",
         content:
@@ -66,7 +66,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: ogImageUrl },
       {
         name: "twitter:image:alt",
-        content: "GivenTake Goods Devs — Your On-Demand Development Team",
+        content: "GivenTake Devs — Your On-Demand Development Team",
       },
     ],
     links: [{ rel: "canonical", href: `${BASE_URL}/` }],

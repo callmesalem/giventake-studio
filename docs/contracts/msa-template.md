@@ -12,7 +12,7 @@
 This Master Services Agreement (the "**Agreement**") is entered into as of
 `[DATE]` (the "**Effective Date**") by and between:
 
-**`[GivenTake Goods Devs LLC]`**, an Ohio limited liability company, with its
+**`[GivenTake Devs LLC]`**, an Ohio limited liability company, with its
 principal place of business at `[BUSINESS ADDRESS]` ("**Developer**"); and
 
 > ⚠️ **Not GivenTake Goods LLC.** That entity (Ohio SOS doc 202225804070)
@@ -371,7 +371,7 @@ signature.
 
 **AGREED:**
 
-| **`[GivenTake Goods Devs LLC]`** | **`[CLIENT LEGAL NAME]`**           |
+| **`[GivenTake Devs LLC]`** | **`[CLIENT LEGAL NAME]`**           |
 | ----------------------------------------------------- | ----------------------------------- |
 | Signature: **********\_\_**********                   | Signature: **********\_\_********** |
 | Name: `[NAME]`                                        | Name: `[NAME]`                      |

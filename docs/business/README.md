@@ -1,4 +1,4 @@
-# GivenTake Goods Devs — business and compliance
+# GivenTake Devs — business and compliance
 
 Working documents for standing up the development studio as a real, compliant
 business. Written for **Ohio**.
