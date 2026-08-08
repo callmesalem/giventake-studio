@@ -8,7 +8,7 @@ export const Route = createFileRoute("/privacy")({
       path: "/privacy",
       title: "Privacy Policy · GivenTake Devs",
       description:
-        "How GivenTake Devs collects, uses, and protects your data. GDPR, CCPA, and ePrivacy compliant.",
+        "How GivenTake Devs collects, uses, and protects your data with GDPR, CCPA/CPRA, and ePrivacy-oriented controls.",
     }),
   component: PrivacyPage,
 });
@@ -37,6 +37,11 @@ function PrivacyPage() {
               {LEGAL_ENTITY_LONG}. {SITE_NAME} ("we", "us") is a small development studio operating
               this website, and {LEGAL_ENTITY} is the data controller for any personal information
               you submit through this site.
+            </p>
+            <p className="mt-3">
+              This policy describes GDPR, CCPA/CPRA, and ePrivacy-oriented practices for this
+              website. It is not legal advice and does not replace project-specific compliance
+              review for regulated work.
             </p>
             <p className="mt-3">
               Registered address: {BUSINESS_ADDRESS}. General contact:{" "}
@@ -119,7 +124,10 @@ function PrivacyPage() {
                 marketing lists.
               </li>
               <li>Google Analytics 4 (aggregate site analytics, IP anonymized).</li>
-              <li>Meta, TikTok, and LinkedIn pixels (ad measurement, marketing cookies only).</li>
+              <li>
+                Google Ads, Meta, TikTok, LinkedIn, and Microsoft Advertising pixels (ad
+                measurement, marketing cookies only, and only when configured).
+              </li>
               <li>Cloudflare (hosting, security, DDoS protection).</li>
             </ul>
             <p className="mt-3">
@@ -146,8 +154,9 @@ function PrivacyPage() {
               <a href="mailto:privacy@giventakedevs.com" className="underline">
                 privacy@giventakedevs.com
               </a>
-              . We respond within 30 days. You can also lodge a complaint with your local data
-              protection authority.
+              . We respond within the legally required period, generally 30 days for GDPR/UK GDPR
+              requests and 45 days for CCPA/CPRA requests. You can also lodge a complaint with your
+              local data protection authority.
             </p>
           </Section>
 
@@ -177,8 +186,8 @@ function PrivacyPage() {
           <Section title="10. Security">
             <p>
               We use TLS in transit, restrict access to submitted data, and review our providers
-              annually. No system is perfectly secure; we will notify you and the relevant authority
-              of any breach affecting your data within 72 hours as required by law.
+              annually. No system is perfectly secure; where required by law, we will notify you and
+              the relevant authority of a breach affecting your data.
             </p>
           </Section>
 

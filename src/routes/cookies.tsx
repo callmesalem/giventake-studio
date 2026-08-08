@@ -31,6 +31,13 @@ const ROWS = [
   },
   {
     category: "Marketing",
+    name: "_gcl_*",
+    provider: "Google Ads",
+    purpose: "Ad conversion measurement and remarketing when configured.",
+    duration: "Up to 90 days",
+  },
+  {
+    category: "Marketing",
     name: "_fbp, fr",
     provider: "Meta Pixel",
     purpose: "Ad measurement and retargeting on Facebook and Instagram.",
@@ -49,6 +56,13 @@ const ROWS = [
     provider: "LinkedIn Insight",
     purpose: "Ad measurement on LinkedIn.",
     duration: "Up to 12 months",
+  },
+  {
+    category: "Marketing",
+    name: "_uetmsclkid, _uetsid, _uetvid",
+    provider: "Microsoft Advertising",
+    purpose: "Ad conversion measurement and remarketing when configured.",
+    duration: "Up to 13 months",
   },
 ];
 
@@ -73,8 +87,9 @@ function CookiesPage() {
 
         <p className="mt-8 text-[15px] leading-relaxed text-muted-ink">
           We use a small number of cookies and similar technologies (local storage, pixel tags) to
-          run the site and, with your consent, to measure how it's used. Below is every category and
-          every technology in use.
+          run the site and, with your consent, to measure how it's used. Consent Mode v2 is denied
+          by default for analytics and advertising storage until you opt in. Below is every category
+          and every technology this site can use when configured.
         </p>
 
         <div className="mt-6">

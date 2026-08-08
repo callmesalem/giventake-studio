@@ -123,6 +123,12 @@ function TermsPage() {
               including merchantability, fitness for a particular purpose, and non-infringement. We
               do not guarantee uninterrupted or error-free operation.
             </p>
+            <p className="mt-3">
+              Nothing on this website is securities, investment, legal, tax, accounting, privacy,
+              security, or regulatory advice. If your business is regulated or your project touches
+              SEC, FTC, financial, health, employment, consumer-credit, children&apos;s data, or
+              other regulated obligations, you are responsible for qualified professional review.
+            </p>
           </Section>
 
           <Section title="10. Limitation of liability">
