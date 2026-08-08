@@ -1,11 +1,7 @@
 import type { ContactInput } from "@/lib/intake-schema";
 import { offers } from "@/lib/offers";
 
-export type QualificationFlag =
-  | "regulated"
-  | "below_minimum"
-  | "urgent"
-  | "uncertain_offer";
+export type QualificationFlag = "regulated" | "below_minimum" | "urgent" | "uncertain_offer";
 
 export type QualificationBrief = {
   summary: string;
@@ -24,7 +20,8 @@ const regulatedPattern =
 function matchOffer(description: string) {
   const normalized = description.toLowerCase();
   const offer = offers.find((candidate) => {
-    const haystack = `${candidate.title} ${candidate.tagline} ${candidate.problem.join(" ")} ${candidate.outcome}`.toLowerCase();
+    const haystack =
+      `${candidate.title} ${candidate.tagline} ${candidate.problem.join(" ")} ${candidate.outcome}`.toLowerCase();
     return haystack
       .split(/\W+/)
       .filter((word) => word.length > 5)
@@ -44,7 +41,10 @@ export function createQualificationBrief(input: ContactInput): QualificationBrie
   if (input.timeline === "asap") flags.push("urgent");
   if (regulatedPattern.test(input.description)) flags.push("regulated");
   if (!input.company) missingInformation.push("Company");
-  if (!input.source_detail && (input.source === "warm_network" || input.source === "referral_partner")) {
+  if (
+    !input.source_detail &&
+    (input.source === "warm_network" || input.source === "referral_partner")
+  ) {
     missingInformation.push("Referral name or source detail");
   }
 
