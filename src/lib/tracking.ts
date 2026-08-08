@@ -18,6 +18,7 @@
  */
 
 import type { ConsentState } from "./consent-core";
+import { isContactBudget, isContactSource, isContactTimeline } from "./contact-options";
 
 type Loaded = Record<string, boolean>;
 
@@ -28,7 +29,6 @@ type LeadEventProperties = {
   budget?: string;
   timeline?: string;
   source?: string;
-  path?: string;
 };
 
 let currentConsent: ConsentState = {
@@ -39,12 +39,28 @@ let currentConsent: ConsentState = {
 };
 
 function sanitizeLeadEventProperties(properties: LeadEventProperties) {
-  return {
-    budget: properties.budget,
-    timeline: properties.timeline,
-    source: properties.source,
-    path: properties.path ?? (typeof window !== "undefined" ? window.location.pathname : undefined),
-  };
+  const safeProperties: LeadEventProperties = {};
+  if (isContactBudget(properties.budget)) safeProperties.budget = properties.budget;
+  if (isContactTimeline(properties.timeline)) safeProperties.timeline = properties.timeline;
+  if (isContactSource(properties.source)) safeProperties.source = properties.source;
+  return safeProperties;
+}
+
+function googleAdsLeadDestination() {
+  const id = import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined;
+  const label = import.meta.env.VITE_GOOGLE_ADS_LEAD_CONVERSION_LABEL as string | undefined;
+  if (!id || !/^AW-\d+$/.test(id) || !label || !/^[A-Za-z0-9_-]+$/.test(label)) return;
+  return `${id}/${label}`;
+}
+
+function linkedInLeadConversionId() {
+  const partnerId = import.meta.env.VITE_LINKEDIN_PARTNER_ID as string | undefined;
+  const conversionId = import.meta.env.VITE_LINKEDIN_LEAD_CONVERSION_ID as string | undefined;
+  if (!partnerId || !/^\d+$/.test(partnerId) || !conversionId || !/^[1-9]\d*$/.test(conversionId)) {
+    return;
+  }
+  const numericId = Number(conversionId);
+  return Number.isSafeInteger(numericId) ? numericId : undefined;
 }
 
 const loaded: Loaded = {};
@@ -289,11 +305,21 @@ export function trackLeadEvent(name: LeadEventName, properties: LeadEventPropert
   if (currentConsent.marketing) {
     window.fbq?.("trackCustom", name, safeProperties);
     window.ttq?.track?.(name, safeProperties);
-    window.lintrk?.("track", safeProperties);
     if (Array.isArray(window.uetq)) {
       window.uetq.push("event", name, safeProperties);
     } else {
       window.uetq?.push?.("event", name, safeProperties);
+    }
+
+    if (name === "lead_form_submit_success") {
+      const googleAdsDestination = googleAdsLeadDestination();
+      if (googleAdsDestination) {
+        window.gtag?.("event", "conversion", { send_to: googleAdsDestination });
+      }
+      const linkedInConversionId = linkedInLeadConversionId();
+      if (linkedInConversionId) {
+        window.lintrk?.("track", { conversion_id: linkedInConversionId });
+      }
     }
   }
 }

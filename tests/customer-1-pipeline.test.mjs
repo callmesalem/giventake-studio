@@ -11,6 +11,7 @@ function assert(condition, message) {
 const intakeSchema = read("src/lib/intake-schema.ts");
 const contactForm = read("src/components/sections/contact.tsx");
 const tracking = read("src/lib/tracking.ts");
+const envExample = read(".env.example");
 
 assert(
   intakeSchema.includes("CONTACT_SOURCE_OPTIONS"),
@@ -69,6 +70,10 @@ assert(
   tracking.includes("sanitizeLeadEventProperties"),
   "tracking must sanitize lead event properties",
 );
+for (const key of ["VITE_GOOGLE_ADS_LEAD_CONVERSION_LABEL", "VITE_LINKEDIN_LEAD_CONVERSION_ID"]) {
+  assert(tracking.includes(key), `tracking must support ${key}`);
+  assert(envExample.includes(key), `.env.example must document ${key}`);
+}
 const propertiesBlock = tracking.match(/type LeadEventProperties = \{[\s\S]*?\};/)?.[0] ?? "";
 for (const forbidden of ["name?:", "email?:", "company?:", "description?:", "source_detail?:"]) {
   assert(

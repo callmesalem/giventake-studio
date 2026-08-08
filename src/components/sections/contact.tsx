@@ -12,7 +12,12 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { IconArrowRight } from "@/components/marks";
-import { contactSchema, CONTACT_SOURCE_OPTIONS } from "@/lib/intake-schema";
+import {
+  contactSchema,
+  CONTACT_BUDGET_OPTIONS,
+  CONTACT_SOURCE_OPTIONS,
+  CONTACT_TIMELINE_OPTIONS,
+} from "@/lib/intake-schema";
 import { readLeadAttribution, type LeadAttribution } from "@/lib/lead-attribution";
 import { submitContact } from "@/lib/intake";
 import { trackLeadEvent } from "@/lib/tracking";
@@ -37,7 +42,6 @@ export function ContactCTA() {
       budget: d.budget,
       timeline: d.timeline,
       source: d.source,
-      path: typeof window !== "undefined" ? window.location.pathname : undefined,
     };
   }
 
@@ -282,13 +286,11 @@ export function ContactCTA() {
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="discovery">Discovery sprint first</SelectItem>
-                        <SelectItem value="500-2.5k">$500 to $2.5k</SelectItem>
-                        <SelectItem value="2.5-10k">$2.5k to $10k</SelectItem>
-                        <SelectItem value="10-25k">$10k to $25k</SelectItem>
-                        <SelectItem value="25-75k">$25k to $75k</SelectItem>
-                        <SelectItem value="75k+">$75k+</SelectItem>
-                        <SelectItem value="retainer">Monthly retainer</SelectItem>
+                        {CONTACT_BUDGET_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </Field>
@@ -301,10 +303,11 @@ export function ContactCTA() {
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="asap">ASAP</SelectItem>
-                        <SelectItem value="1-3mo">1 to 3 months</SelectItem>
-                        <SelectItem value="3-6mo">3 to 6 months</SelectItem>
-                        <SelectItem value="exploring">Just exploring</SelectItem>
+                        {CONTACT_TIMELINE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </Field>

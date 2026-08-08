@@ -7,6 +7,7 @@ const root = process.cwd();
 const files = {
   pricing: read("src/components/sections/pricing.tsx"),
   contact: read("src/components/sections/contact.tsx"),
+  contactOptions: read("src/lib/contact-options.ts"),
   tracking: read("src/lib/tracking.ts"),
   cookies: read("src/routes/cookies.tsx"),
   privacy: read("src/routes/privacy.tsx"),
@@ -32,7 +33,8 @@ assert.ok(
 );
 
 assert.ok(
-  files.contact.includes('<SelectItem value="500-2.5k">$500 to $2.5k</SelectItem>') &&
+  files.contact.includes("CONTACT_BUDGET_OPTIONS.map") &&
+    files.contactOptions.includes('{ value: "500-2.5k", label: "$500 to $2.5k" }') &&
     compact(files.contact).includes(
       "Do not include regulated, financial, health, credential, or sensitive personal data",
     ),
