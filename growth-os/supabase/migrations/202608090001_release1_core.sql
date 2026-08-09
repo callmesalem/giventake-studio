@@ -524,6 +524,87 @@ create unique index consent_receipts_provider_import_idx
 on public.consent_receipts (tenant_id, sync_run_id)
 where receipt_type = 'provider_import';
 
+create function public.enforce_accepted_lead_receipt()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_lead uuid;
+  target_tenant uuid;
+begin
+  if tg_table_name = 'leads' then
+    target_lead := new.id;
+    target_tenant := new.tenant_id;
+  elsif tg_op = 'DELETE' then
+    target_lead := old.lead_id;
+    target_tenant := old.tenant_id;
+  else
+    target_lead := new.lead_id;
+    target_tenant := new.tenant_id;
+  end if;
+
+  if target_lead is not null
+    and exists (
+      select 1
+      from public.leads lead
+      where lead.id = target_lead
+        and lead.tenant_id = target_tenant
+    )
+    and (
+      select count(*)
+      from public.consent_receipts receipt
+      where receipt.lead_id = target_lead
+        and receipt.tenant_id = target_tenant
+        and receipt.receipt_type = 'website_lead'
+    ) <> 1 then
+    raise exception using
+      errcode = '23514',
+      message = 'accepted lead requires exactly one website_lead consent receipt';
+  end if;
+
+  if tg_table_name = 'consent_receipts' then
+    if tg_op = 'UPDATE'
+      and old.lead_id is not null
+      and (old.tenant_id, old.lead_id) is distinct from (new.tenant_id, new.lead_id)
+      and exists (
+        select 1
+        from public.leads lead
+        where lead.id = old.lead_id
+          and lead.tenant_id = old.tenant_id
+      )
+      and (
+        select count(*)
+        from public.consent_receipts receipt
+        where receipt.lead_id = old.lead_id
+          and receipt.tenant_id = old.tenant_id
+          and receipt.receipt_type = 'website_lead'
+      ) <> 1 then
+      raise exception using
+        errcode = '23514',
+        message = 'accepted lead requires exactly one website_lead consent receipt';
+    end if;
+  end if;
+
+  return null;
+end;
+$$;
+
+create constraint trigger accepted_lead_requires_receipt
+after insert or update on public.leads
+deferrable initially deferred
+for each row
+execute function public.enforce_accepted_lead_receipt();
+
+create constraint trigger accepted_lead_receipt_changes
+after insert or update or delete on public.consent_receipts
+deferrable initially deferred
+for each row
+execute function public.enforce_accepted_lead_receipt();
+
+revoke all on function public.enforce_accepted_lead_receipt() from public;
+
 create table public.privacy_requests (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,

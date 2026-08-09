@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(18);
+select plan(19);
 
 insert into auth.users (
   instance_id,
@@ -213,6 +213,54 @@ values
     '1-2-months',
     now()
   );
+
+insert into public.consent_receipts (
+  tenant_id,
+  lead_id,
+  receipt_type,
+  policy_version,
+  processing_basis,
+  categories,
+  source,
+  recorded_at
+)
+values
+  (
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'aaaaaaaa-0000-0000-0000-000000000004',
+    'website_lead',
+    'privacy-2026-08-09',
+    'contact_request',
+    '{"necessary":true,"analytics":false,"marketing":false,"preferences":false}',
+    'contact-form',
+    now()
+  ),
+  (
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    'bbbbbbbb-0000-0000-0000-000000000004',
+    'website_lead',
+    'privacy-2026-08-09',
+    'contact_request',
+    '{"necessary":true,"analytics":false,"marketing":false,"preferences":false}',
+    'contact-form',
+    now()
+  );
+
+select is(
+  (
+    select count(*)
+    from public.leads lead
+    where (
+      select count(*)
+      from public.consent_receipts receipt
+      where receipt.tenant_id = lead.tenant_id
+        and receipt.lead_id = lead.id
+        and receipt.receipt_type = 'website_lead'
+    ) <> 1
+  )::bigint,
+  0::bigint,
+  'every seeded accepted lead has exactly one website lead consent receipt'
+);
 
 insert into public.campaign_metrics_daily (
   tenant_id,

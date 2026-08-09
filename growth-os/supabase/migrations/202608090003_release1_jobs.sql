@@ -305,15 +305,18 @@ declare
   audit_count integer := 0;
   audit_cutoff timestamptz;
   attribution_touch_count integer := 0;
+  consent_receipt_count integer := 0;
   evidence_count integer := 0;
   evidence_cutoff timestamptz;
   has_more boolean;
+  ingest_idempotency_count integer := 0;
   lead_count integer := 0;
   lead_cutoff timestamptz;
   local_month_start timestamp;
   metric_count integer := 0;
   metric_cutoff date;
   privacy_count integer := 0;
+  revenue_outcome_count integer := 0;
   sync_payload_count integer := 0;
   tenant_record public.tenants%rowtype;
 begin
@@ -346,10 +349,22 @@ begin
   select count(*) into sync_payload_count from deleted;
 
   with candidates as (
-    select id
-    from public.attribution_evidence
-    where tenant_id = target_tenant and occurred_at < evidence_cutoff
-    order by occurred_at, id
+    select evidence.id
+    from public.attribution_evidence evidence
+    join public.leads lead
+      on lead.id = evidence.lead_id
+      and lead.tenant_id = evidence.tenant_id
+    where evidence.tenant_id = target_tenant
+      and (
+        evidence.occurred_at < evidence_cutoff
+        or lead.last_activity_at < lead_cutoff
+      )
+    order by
+      case when lead.last_activity_at < lead_cutoff then 0 else 1 end,
+      lead.last_activity_at,
+      lead.id,
+      evidence.occurred_at,
+      evidence.id
     limit 500
     for update skip locked
   ), deleted as (
@@ -368,7 +383,7 @@ begin
       and lead.tenant_id = touch.tenant_id
     where touch.tenant_id = target_tenant
       and lead.last_activity_at < lead_cutoff
-    order by touch.created_at, touch.id
+    order by lead.last_activity_at, lead.id, touch.created_at, touch.id
     limit 500
     for update of touch skip locked
   ), deleted as (
@@ -378,6 +393,105 @@ begin
     returning touch.id
   )
   select count(*) into attribution_touch_count from deleted;
+
+  with candidates as (
+    select receipt.id
+    from public.consent_receipts receipt
+    join public.leads lead
+      on lead.id = receipt.lead_id
+      and lead.tenant_id = receipt.tenant_id
+    where receipt.tenant_id = target_tenant
+      and receipt.receipt_type = 'website_lead'
+      and lead.last_activity_at < lead_cutoff
+      and not exists (
+        select 1
+        from public.attribution_evidence evidence
+        where evidence.tenant_id = target_tenant
+          and evidence.lead_id = lead.id
+      )
+      and not exists (
+        select 1
+        from public.attribution_touches touch
+        where touch.tenant_id = target_tenant
+          and touch.lead_id = lead.id
+      )
+    order by lead.last_activity_at, lead.id, receipt.id
+    limit 500
+    for update of receipt skip locked
+  ), deleted as (
+    delete from public.consent_receipts receipt
+    using candidates c
+    where receipt.id = c.id
+    returning receipt.id
+  )
+  select count(*) into consent_receipt_count from deleted;
+
+  with candidates as (
+    select outcome.id
+    from public.revenue_outcomes outcome
+    join public.leads lead
+      on lead.id = outcome.lead_id
+      and lead.tenant_id = outcome.tenant_id
+    where outcome.tenant_id = target_tenant
+      and lead.last_activity_at < lead_cutoff
+      and not exists (
+        select 1
+        from public.attribution_evidence evidence
+        where evidence.tenant_id = target_tenant
+          and evidence.lead_id = lead.id
+      )
+      and not exists (
+        select 1
+        from public.attribution_touches touch
+        where touch.tenant_id = target_tenant
+          and touch.lead_id = lead.id
+      )
+    order by lead.last_activity_at, lead.id, outcome.id
+    limit 500
+    for update of outcome skip locked
+  ), deleted as (
+    delete from public.revenue_outcomes outcome
+    using candidates c
+    where outcome.id = c.id
+    returning outcome.id
+  )
+  select count(*) into revenue_outcome_count from deleted;
+
+  with candidates as (
+    select
+      idempotency.tenant_id,
+      idempotency.site_id,
+      idempotency.idempotency_key
+    from public.ingest_idempotency idempotency
+    join public.leads lead
+      on lead.id = idempotency.lead_id
+      and lead.tenant_id = idempotency.tenant_id
+    where idempotency.tenant_id = target_tenant
+      and lead.last_activity_at < lead_cutoff
+      and not exists (
+        select 1
+        from public.attribution_evidence evidence
+        where evidence.tenant_id = target_tenant
+          and evidence.lead_id = lead.id
+      )
+      and not exists (
+        select 1
+        from public.attribution_touches touch
+        where touch.tenant_id = target_tenant
+          and touch.lead_id = lead.id
+      )
+    order by lead.last_activity_at, lead.id, idempotency.idempotency_key
+    limit 500
+    for update of idempotency skip locked
+  ), deleted as (
+    delete from public.ingest_idempotency idempotency
+    using candidates c
+    where idempotency.tenant_id = c.tenant_id
+      and idempotency.site_id = c.site_id
+      and idempotency.idempotency_key = c.idempotency_key
+    returning idempotency.idempotency_key
+  )
+  select count(*) into ingest_idempotency_count from deleted;
 
   with candidates as (
     select lead.id
@@ -395,6 +509,24 @@ begin
         from public.attribution_touches touch
         where touch.tenant_id = target_tenant
           and touch.lead_id = lead.id
+      )
+      and not exists (
+        select 1
+        from public.consent_receipts receipt
+        where receipt.tenant_id = target_tenant
+          and receipt.lead_id = lead.id
+      )
+      and not exists (
+        select 1
+        from public.revenue_outcomes outcome
+        where outcome.tenant_id = target_tenant
+          and outcome.lead_id = lead.id
+      )
+      and not exists (
+        select 1
+        from public.ingest_idempotency idempotency
+        where idempotency.tenant_id = target_tenant
+          and idempotency.lead_id = lead.id
       )
     order by lead.last_activity_at, lead.id
     limit 500
@@ -460,8 +592,16 @@ begin
       where tenant_id = target_tenant and expires_at <= cleanup_at
     )
     or exists (
-      select 1 from public.attribution_evidence
-      where tenant_id = target_tenant and occurred_at < evidence_cutoff
+      select 1
+      from public.attribution_evidence evidence
+      join public.leads lead
+        on lead.id = evidence.lead_id
+        and lead.tenant_id = evidence.tenant_id
+      where evidence.tenant_id = target_tenant
+        and (
+          evidence.occurred_at < evidence_cutoff
+          or lead.last_activity_at < lead_cutoff
+        )
     )
     or exists (
       select 1 from public.leads
@@ -474,6 +614,34 @@ begin
         on lead.id = touch.lead_id
         and lead.tenant_id = touch.tenant_id
       where touch.tenant_id = target_tenant
+        and lead.last_activity_at < lead_cutoff
+    )
+    or exists (
+      select 1
+      from public.consent_receipts receipt
+      join public.leads lead
+        on lead.id = receipt.lead_id
+        and lead.tenant_id = receipt.tenant_id
+      where receipt.tenant_id = target_tenant
+        and receipt.receipt_type = 'website_lead'
+        and lead.last_activity_at < lead_cutoff
+    )
+    or exists (
+      select 1
+      from public.revenue_outcomes outcome
+      join public.leads lead
+        on lead.id = outcome.lead_id
+        and lead.tenant_id = outcome.tenant_id
+      where outcome.tenant_id = target_tenant
+        and lead.last_activity_at < lead_cutoff
+    )
+    or exists (
+      select 1
+      from public.ingest_idempotency idempotency
+      join public.leads lead
+        on lead.id = idempotency.lead_id
+        and lead.tenant_id = idempotency.tenant_id
+      where idempotency.tenant_id = target_tenant
         and lead.last_activity_at < lead_cutoff
     )
     or exists (
@@ -502,6 +670,9 @@ begin
       'sync_rows_deleted', sync_payload_count,
       'evidence_rows_deleted', evidence_count,
       'touch_rows_deleted', attribution_touch_count,
+      'consent_rows_deleted', consent_receipt_count,
+      'revenue_rows_deleted', revenue_outcome_count,
+      'idempotency_rows_deleted', ingest_idempotency_count,
       'lead_rows_deleted', lead_count,
       'metric_rows_deleted', metric_count,
       'audit_rows_deleted', audit_count,
@@ -515,6 +686,9 @@ begin
     'syncPayloadsDeleted', sync_payload_count,
     'attributionEvidenceDeleted', evidence_count,
     'attributionTouchesDeleted', attribution_touch_count,
+    'consentReceiptsDeleted', consent_receipt_count,
+    'revenueOutcomesDeleted', revenue_outcome_count,
+    'ingestIdempotencyDeleted', ingest_idempotency_count,
     'leadsDeleted', lead_count,
     'metricsDeleted', metric_count,
     'auditEventsDeleted', audit_count,
