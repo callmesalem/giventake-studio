@@ -14,6 +14,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 
 const SelectTenantRoute = SelectTenantRouteImport.update({
   id: '/select-tenant',
@@ -39,16 +41,30 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/admin/support',
+  path: '/admin/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/select-tenant': typeof SelectTenantRoute
+  '/settings': typeof AppSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/select-tenant': typeof SelectTenantRoute
+  '/settings': typeof AppSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AppIndexRoute
 }
@@ -57,19 +73,35 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/select-tenant': typeof SelectTenantRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/select-tenant' | '/auth/callback'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/select-tenant'
+    | '/settings'
+    | '/admin/support'
+    | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/select-tenant' | '/auth/callback' | '/'
+  to:
+    | '/login'
+    | '/select-tenant'
+    | '/settings'
+    | '/admin/support'
+    | '/auth/callback'
+    | '/'
   id:
     | '__root__'
     | '/_app'
     | '/login'
     | '/select-tenant'
+    | '/_app/settings'
+    | '/admin/support'
     | '/auth/callback'
     | '/_app/'
   fileRoutesById: FileRoutesById
@@ -78,6 +110,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   SelectTenantRoute: typeof SelectTenantRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
@@ -118,14 +151,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/admin/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -135,6 +184,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   SelectTenantRoute: SelectTenantRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport

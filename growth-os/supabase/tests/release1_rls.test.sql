@@ -430,7 +430,7 @@ select throws_ok(
   null,
   'audit events are immutable'
 );
-select lives_ok(
+select throws_ok(
   $$
     insert into public.brands (
       tenant_id,
@@ -450,7 +450,9 @@ select lives_ok(
       'Tenant A Growth Report'
     )
   $$,
-  'owner can insert tenant A brand'
+  '42501',
+  null,
+  'owner cannot bypass the audited brand mutation function'
 );
 select throws_ok(
   $$

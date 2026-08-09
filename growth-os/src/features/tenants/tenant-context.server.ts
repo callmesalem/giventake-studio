@@ -5,6 +5,7 @@ import { getAuthenticatedUser } from "@/features/auth/auth.server";
 import { createJobSupabase, createUserSupabase } from "@/lib/server/supabase.server";
 
 export const ACTIVE_TENANT_COOKIE = "gt_active_tenant";
+export const SUPPORT_SESSION_COOKIE = "gt_support_session";
 
 export type ClientOwnerContext = {
   userId: string;
@@ -43,6 +44,7 @@ type SupportSession = {
 type ResolveTenantInput = {
   userId: string | null;
   requestedTenantId: string | null;
+  requestedSupportSessionId?: string | null;
   memberships: Membership[];
   supportSessions?: SupportSession[];
 };
@@ -67,7 +69,13 @@ export async function resolveTenantContext(input: ResolveTenantInput): Promise<T
   const owners = new Map(input.memberships.map((membership) => [membership.tenantId, membership]));
   const support = new Map(
     (input.supportSessions ?? [])
-      .filter((session) => session.active && session.audited && !owners.has(session.tenantId))
+      .filter(
+        (session) =>
+          session.id === input.requestedSupportSessionId &&
+          session.active &&
+          session.audited &&
+          !owners.has(session.tenantId),
+      )
       .map((session) => [session.tenantId, session]),
   );
 
@@ -130,8 +138,9 @@ type DeniedAccessEvent = {
 type TenantContextAdapters = {
   getUserId: () => Promise<string | null>;
   getRequestedTenantId: () => string | null;
+  getRequestedSupportSessionId?: () => string | null;
   listMemberships: (userId: string) => Promise<Membership[]>;
-  listSupportSessions: (userId: string) => Promise<SupportSession[]>;
+  listSupportSessions: (userId: string, sessionId: string | null) => Promise<SupportSession[]>;
   recordDeniedAccess: (event: DeniedAccessEvent) => Promise<void>;
 };
 
@@ -141,9 +150,10 @@ export async function resolveTenantContextWithAdapters(
   const userId = await adapters.getUserId();
   if (!userId) throw new TenantContextError("UNAUTHENTICATED");
 
+  const requestedSupportSessionId = adapters.getRequestedSupportSessionId?.() ?? null;
   const [memberships, supportSessions] = await Promise.all([
     adapters.listMemberships(userId),
-    adapters.listSupportSessions(userId),
+    adapters.listSupportSessions(userId, requestedSupportSessionId),
   ]);
   const requestedTenantId = adapters.getRequestedTenantId();
 
@@ -151,6 +161,7 @@ export async function resolveTenantContextWithAdapters(
     return await resolveTenantContext({
       userId,
       requestedTenantId,
+      requestedSupportSessionId,
       memberships,
       supportSessions,
     });
@@ -195,12 +206,17 @@ async function loadMemberships(userId: string): Promise<Membership[]> {
   }));
 }
 
-async function loadSupportSessions(userId: string): Promise<SupportSession[]> {
+async function loadSupportSessions(
+  userId: string,
+  requestedSupportSessionId: string | null,
+): Promise<SupportSession[]> {
+  if (!requestedSupportSessionId) return [];
   const jobSupabase = createJobSupabase();
   const now = new Date().toISOString();
   const { data: sessions, error } = await jobSupabase
     .from("support_sessions")
     .select("id, tenant_id, expires_at, revoked_at")
+    .eq("id", requestedSupportSessionId)
     .eq("admin_user_id", userId)
     .is("revoked_at", null)
     .gt("expires_at", now);
@@ -278,6 +294,9 @@ function createTenantContextAdapters(): TenantContextAdapters {
     getRequestedTenantId() {
       return getCookie(ACTIVE_TENANT_COOKIE) ?? null;
     },
+    getRequestedSupportSessionId() {
+      return getCookie(SUPPORT_SESSION_COOKIE) ?? null;
+    },
     listMemberships: loadMemberships,
     listSupportSessions: loadSupportSessions,
     recordDeniedAccess: recordCrossTenantDenied,
@@ -313,7 +332,7 @@ export async function listAvailableTenantOptions(): Promise<TenantOption[]> {
 
   const [memberships, supportSessions] = await Promise.all([
     loadMemberships(user.id),
-    loadSupportSessions(user.id),
+    loadSupportSessions(user.id, getCookie(SUPPORT_SESSION_COOKIE) ?? null),
   ]);
   const accessByTenant = new Map<string, TenantOption["access"]>();
   for (const session of supportSessions) {

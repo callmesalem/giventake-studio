@@ -36,6 +36,7 @@ export const signOut = createServerFn({ method: "POST" }).handler(async () => {
     await signOutAuthenticatedUser();
   } finally {
     deleteCookie("gt_active_tenant", { path: "/" });
+    deleteCookie("gt_support_session", { path: "/" });
   }
   return { signedOut: true as const };
 });

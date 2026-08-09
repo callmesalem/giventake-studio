@@ -1285,7 +1285,19 @@ export type Database = {
         };
         Returns: boolean;
       };
+      brand_contrast_ratio: {
+        Args: { first_color: string; second_color: string };
+        Returns: number;
+      };
       can_access_tenant: { Args: { target_tenant: string }; Returns: boolean };
+      end_support_session: {
+        Args: {
+          event_request_id: string;
+          target_admin_user: string;
+          target_session: string;
+        };
+        Returns: string;
+      };
       has_active_support_session: {
         Args: { target_tenant: string };
         Returns: boolean;
@@ -1344,13 +1356,26 @@ export type Database = {
         };
         Returns: string;
       };
+      update_tenant_brand: {
+        Args: {
+          brand_accent_color: string;
+          brand_display_name: string;
+          brand_logo_url: string;
+          brand_on_primary_color: string;
+          brand_primary_color: string;
+          brand_report_name: string;
+          event_request_id: string;
+          target_tenant: string;
+        };
+        Returns: boolean;
+      };
       write_audit_event: {
         Args: {
           event_action: Database["public"]["Enums"]["audit_action"];
-          event_actor_user_id?: string;
+          event_actor_user_id?: string | null;
           event_metadata: Json;
           event_request_id: string;
-          event_target_id: string;
+          event_target_id: string | null;
           event_target_type: string;
           target_tenant: string;
         };

@@ -61,6 +61,7 @@ describe("resolveTenantContext", () => {
       resolveTenantContext({
         userId: USER_ID,
         requestedTenantId: TENANT_A,
+        requestedSupportSessionId: SUPPORT_SESSION_ID,
         memberships: [],
         supportSessions: [
           {
@@ -82,6 +83,7 @@ describe("resolveTenantContext", () => {
       resolveTenantContext({
         userId: USER_ID,
         requestedTenantId: TENANT_A,
+        requestedSupportSessionId: SUPPORT_SESSION_ID,
         memberships: [],
         supportSessions: [
           {
@@ -89,6 +91,25 @@ describe("resolveTenantContext", () => {
             tenantId: TENANT_A,
             active: true,
             audited: false,
+          },
+        ],
+      }),
+    ).rejects.toMatchObject({ code: "TENANT_FORBIDDEN" });
+  });
+
+  it("requires the active support-session cookie to match the audited session", async () => {
+    await expect(
+      resolveTenantContext({
+        userId: USER_ID,
+        requestedTenantId: TENANT_A,
+        requestedSupportSessionId: "33333333-3333-3333-3333-333333333333",
+        memberships: [],
+        supportSessions: [
+          {
+            id: SUPPORT_SESSION_ID,
+            tenantId: TENANT_A,
+            active: true,
+            audited: true,
           },
         ],
       }),
