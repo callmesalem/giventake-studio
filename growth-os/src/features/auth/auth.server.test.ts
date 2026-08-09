@@ -10,7 +10,9 @@ import {
 const USER_ID = "11111111-1111-1111-1111-111111111111";
 const ADMIN_ID = "22222222-2222-2222-2222-222222222222";
 const TENANT_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+const OTHER_TENANT_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
 const INVITATION_ID = "33333333-3333-3333-3333-333333333333";
+const OTHER_INVITATION_ID = "44444444-3333-3333-3333-333333333333";
 
 describe("magic-link authentication", () => {
   it("returns the same accepted result when Supabase rejects the request", async () => {
@@ -165,7 +167,7 @@ describe("invitation acceptance", () => {
             userMetadata: { pending_tenant_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" },
           },
         }),
-        findPendingInvitation: vi.fn().mockResolvedValue(null),
+        findPendingInvitations: vi.fn().mockResolvedValue([]),
         acceptInvitation,
         clearPendingInvitation,
       }),
@@ -194,12 +196,14 @@ describe("invitation acceptance", () => {
             userMetadata: {},
           },
         }),
-        findPendingInvitation: vi.fn().mockResolvedValue({
-          invitationId: INVITATION_ID,
-          tenantId: TENANT_ID,
-          userId: USER_ID,
-          email: "owner@example.com",
-        }),
+        findPendingInvitations: vi.fn().mockResolvedValue([
+          {
+            invitationId: INVITATION_ID,
+            tenantId: TENANT_ID,
+            userId: USER_ID,
+            email: "owner@example.com",
+          },
+        ]),
         acceptInvitation,
         clearPendingInvitation,
       }),
@@ -207,6 +211,66 @@ describe("invitation acceptance", () => {
 
     expect(acceptInvitation).toHaveBeenCalledOnce();
     expect(clearPendingInvitation).toHaveBeenCalledWith(USER_ID, { provider: "email" });
+  });
+
+  it("fails closed instead of choosing between concurrent tenant invitations", async () => {
+    const acceptInvitation = vi.fn();
+
+    await expect(
+      completeAuthCallbackWith("callback-code", {
+        exchangeCode: vi.fn().mockResolvedValue({
+          user: {
+            id: USER_ID,
+            email: "owner@example.com",
+            appMetadata: { provider: "email" },
+            userMetadata: {},
+          },
+        }),
+        findPendingInvitations: vi.fn().mockResolvedValue([
+          {
+            invitationId: INVITATION_ID,
+            tenantId: TENANT_ID,
+            userId: USER_ID,
+            email: "owner@example.com",
+          },
+          {
+            invitationId: OTHER_INVITATION_ID,
+            tenantId: OTHER_TENANT_ID,
+            userId: USER_ID,
+            email: "owner@example.com",
+          },
+        ]),
+        acceptInvitation,
+        clearPendingInvitation: vi.fn(),
+      }),
+    ).rejects.toMatchObject({ code: "INVITATION_INVALID" });
+
+    expect(acceptInvitation).not.toHaveBeenCalled();
+  });
+
+  it("fails closed on malformed server invitation metadata without using recovery", async () => {
+    const findPendingInvitations = vi.fn();
+
+    await expect(
+      completeAuthCallbackWith("callback-code", {
+        exchangeCode: vi.fn().mockResolvedValue({
+          user: {
+            id: USER_ID,
+            email: "owner@example.com",
+            appMetadata: {
+              provider: "email",
+              pending_invitation_id: INVITATION_ID,
+            },
+            userMetadata: { pending_tenant_id: TENANT_ID },
+          },
+        }),
+        findPendingInvitations,
+        acceptInvitation: vi.fn(),
+        clearPendingInvitation: vi.fn(),
+      }),
+    ).rejects.toMatchObject({ code: "INVITATION_INVALID" });
+
+    expect(findPendingInvitations).not.toHaveBeenCalled();
   });
 
   it("retries acceptance after metadata cleanup fails and preserves unrelated metadata", async () => {
@@ -226,9 +290,17 @@ describe("invitation acceptance", () => {
       .fn()
       .mockRejectedValueOnce(new Error("metadata unavailable"))
       .mockResolvedValueOnce(undefined);
+    const findPendingInvitations = vi.fn().mockResolvedValue([
+      {
+        invitationId: OTHER_INVITATION_ID,
+        tenantId: OTHER_TENANT_ID,
+        userId: USER_ID,
+        email: "owner@example.com",
+      },
+    ]);
     const dependencies = {
       exchangeCode: vi.fn().mockResolvedValue({ user }),
-      findPendingInvitation: vi.fn().mockResolvedValue(null),
+      findPendingInvitations,
       acceptInvitation,
       clearPendingInvitation,
     };
@@ -241,6 +313,13 @@ describe("invitation acceptance", () => {
     });
 
     expect(acceptInvitation).toHaveBeenCalledTimes(2);
+    expect(acceptInvitation).toHaveBeenLastCalledWith({
+      invitationId: INVITATION_ID,
+      tenantId: TENANT_ID,
+      userId: USER_ID,
+      email: "owner@example.com",
+    });
+    expect(findPendingInvitations).not.toHaveBeenCalled();
     expect(clearPendingInvitation).toHaveBeenCalledTimes(2);
     expect(clearPendingInvitation).toHaveBeenLastCalledWith(USER_ID, {
       provider: "email",

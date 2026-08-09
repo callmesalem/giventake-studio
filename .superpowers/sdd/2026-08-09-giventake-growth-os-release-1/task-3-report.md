@@ -185,3 +185,57 @@
 - A failed email delivery leaves a durable audited invitation that a retry can reuse. A failed app-metadata update after delivery remains recoverable because callback lookup uses the authenticated email and the transactional acceptance RPC verifies that email against `auth.users`.
 - Cross-tenant audit metadata remains sanitized. When neither the supplied tenant nor any authorized tenant can anchor the event, authorization returns an explicit auditable-failure code rather than claiming the denial was recorded.
 - External Supabase email delivery was not exercised live; ordering and recovery are verified through focused dependency tests, while the database state transitions are covered by pgTAP.
+
+## Fix Round 2
+
+### Scope And Resolution
+
+- Removed newest-invitation recovery. When server-controlled invitation app metadata is absent, callback recovery now loads at most two usable invitations for the authenticated email and accepts only when exactly one exists.
+- Two or more usable invitations fail closed before acceptance with the stable sanitized `INVITATION_INVALID` code. No tenant or invitation details are exposed by the error.
+- If either server-controlled pending metadata field is present, both invitation and tenant ids must form a valid UUID pair. Partial or malformed metadata fails closed and never falls back to email recovery. Editable user metadata remains ignored.
+- A valid app-metadata binding remains authoritative and bypasses recovery entirely, so a concurrent invitation for another tenant cannot redirect acceptance. The existing transactional/idempotent RPC keeps retries safe after metadata cleanup failure.
+
+### RED Evidence
+
+- Command: `npx --yes bun x vitest run src/features/auth/auth.server.test.ts`
+- Exit: `1`.
+- Result: `1` file ran, `3` tests failed and `9` passed. The failures showed that the callback still invoked the singular newest-invitation lookup for missing metadata, selected no stable ambiguity error, and attempted recovery for malformed server metadata.
+
+### GREEN And Verification Evidence
+
+- Focused auth GREEN:
+  - Command: `npx --yes bun x vitest run src/features/auth/auth.server.test.ts`
+  - Exit: `0`; `1` file and `12` tests passed.
+- Focused auth, tenant, and cookie suite:
+  - Command: `npx --yes bun x vitest run src/features/auth src/features/tenants src/lib/server/supabase.server.test.ts`
+  - Exit: `0`; `4` files and `27` tests passed.
+- Full Growth OS suite:
+  - Command: `npx --yes bun run test`
+  - Exit: `0`; `5` files and `28` tests passed.
+- Database pgTAP suite:
+  - Command: `npx --yes bun x supabase test db`
+  - Exit: `0`; all `3` files and `55` assertions passed.
+- Growth OS typecheck:
+  - Command: `npx --yes bun run typecheck`
+  - Exit: `0`; `tsc --noEmit` reported no errors.
+- Growth OS lint:
+  - Command: `npx --yes bun run lint`
+  - Exit: `0`; ESLint reported no errors or warnings.
+- Growth OS production build:
+  - Command: `npx --yes bun run build`
+  - Exit: `0`; client build transformed `195` modules and SSR build transformed `74` modules.
+- Leak scans found zero sensitive server symbols in `dist/client` and zero service-role symbols in client-safe source.
+- Audit metadata remains unchanged and limited to sanitized reason/channel/change codes; no email, token, tenant id, invitation id, secret, or callback value is added.
+- `git diff --check` exited `0`. The root build was not run because no root application file is affected.
+
+### Files Changed
+
+- `.superpowers/sdd/2026-08-09-giventake-growth-os-release-1/task-3-report.md`
+- `growth-os/src/features/auth/auth.server.test.ts`
+- `growth-os/src/features/auth/auth.server.ts`
+
+### Self-Review And Concerns
+
+- The approved invitation preparation/acceptance transactions, service-role-only RPC grants, secure session cookie behavior, support boundaries, and PostgreSQL RLS semantics are unchanged.
+- Recovery by email remains available only for the single-candidate case needed after app-metadata persistence failure. Ambiguity never uses row order or creation time and never calls invitation acceptance.
+- No new URL state is carried through Supabase, so this fix adds no redirect validation, callback identifier exposure, signing secret, or logging surface.

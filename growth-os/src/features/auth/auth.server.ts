@@ -1,6 +1,7 @@
 import "@tanstack/react-start/server-only";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { User } from "@supabase/supabase-js";
+import { z } from "zod";
 import { createJobSupabase, createUserSupabase } from "@/lib/server/supabase.server";
 import {
   authCallbackSchema,
@@ -111,7 +112,7 @@ export async function signOutAuthenticatedUser(): Promise<void> {
 
 type CallbackDependencies = {
   exchangeCode: (code: string) => Promise<{ user: CallbackUser | null }>;
-  findPendingInvitation: (user: CallbackUser) => Promise<PendingInvitation | null>;
+  findPendingInvitations: (user: CallbackUser) => Promise<PendingInvitation[]>;
   acceptInvitation: (invitation: PendingInvitation) => Promise<void>;
   clearPendingInvitation: (
     userId: string,
@@ -119,14 +120,22 @@ type CallbackDependencies = {
   ) => Promise<void>;
 };
 
+const pendingInvitationMetadataSchema = z.object({
+  pending_invitation_id: z.string().uuid(),
+  pending_tenant_id: z.string().uuid(),
+});
+
 function pendingInvitationFrom(user: CallbackUser): PendingInvitation | null {
-  const invitationId = user.appMetadata.pending_invitation_id;
-  const tenantId = user.appMetadata.pending_tenant_id;
-  if (typeof invitationId !== "string" || typeof tenantId !== "string") return null;
+  const hasInvitationId = Object.hasOwn(user.appMetadata, "pending_invitation_id");
+  const hasTenantId = Object.hasOwn(user.appMetadata, "pending_tenant_id");
+  if (!hasInvitationId && !hasTenantId) return null;
+
+  const parsed = pendingInvitationMetadataSchema.safeParse(user.appMetadata);
+  if (!parsed.success) throw new AuthBoundaryError("INVITATION_INVALID");
 
   return {
-    invitationId,
-    tenantId,
+    invitationId: parsed.data.pending_invitation_id,
+    tenantId: parsed.data.pending_tenant_id,
     userId: user.id,
     email: user.email.toLowerCase(),
   };
@@ -140,8 +149,12 @@ export async function completeAuthCallbackWith(
   const { user } = await dependencies.exchangeCode(parsed.code);
   if (!user) throw new AuthBoundaryError("AUTH_CALLBACK_INVALID");
 
-  const pendingInvitation =
-    pendingInvitationFrom(user) ?? (await dependencies.findPendingInvitation(user));
+  let pendingInvitation = pendingInvitationFrom(user);
+  if (!pendingInvitation) {
+    const candidates = await dependencies.findPendingInvitations(user);
+    if (candidates.length > 1) throw new AuthBoundaryError("INVITATION_INVALID");
+    pendingInvitation = candidates[0] ?? null;
+  }
   if (pendingInvitation) {
     await dependencies.acceptInvitation(pendingInvitation);
     const { pending_invitation_id, pending_tenant_id, ...remainingAppMetadata } = user.appMetadata;
@@ -171,7 +184,7 @@ export async function completeAuthCallback(code: string): Promise<{ authenticate
       if (error) throw new AuthBoundaryError("AUTH_CALLBACK_INVALID");
       return { user: callbackUserFrom(data.session?.user ?? null) };
     },
-    async findPendingInvitation(user) {
+    async findPendingInvitations(user) {
       const { data, error } = await jobSupabase
         .from("membership_invitations")
         .select("id, tenant_id")
@@ -179,17 +192,14 @@ export async function completeAuthCallback(code: string): Promise<{ authenticate
         .is("accepted_at", null)
         .is("superseded_at", null)
         .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw new AuthBoundaryError("INVITATION_INVALID");
-      if (!data) return null;
-      return {
-        invitationId: data.id,
-        tenantId: data.tenant_id,
+        .limit(2);
+      if (error || !data) throw new AuthBoundaryError("INVITATION_INVALID");
+      return data.map((invitation) => ({
+        invitationId: invitation.id,
+        tenantId: invitation.tenant_id,
         userId: user.id,
         email: user.email.toLowerCase(),
-      };
+      }));
     },
     async acceptInvitation(invitation) {
       const { data, error } = await jobSupabase.rpc("accept_membership_invitation", {
