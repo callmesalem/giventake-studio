@@ -53,7 +53,8 @@ export class TenantContextError extends Error {
       | "UNAUTHENTICATED"
       | "TENANT_FORBIDDEN"
       | "TENANT_SELECTION_REQUIRED"
-      | "SUPPORT_READ_ONLY",
+      | "SUPPORT_READ_ONLY"
+      | "SECURITY_AUDIT_FAILED",
   ) {
     super(code);
     this.name = "TenantContextError";
@@ -159,20 +160,24 @@ export async function resolveTenantContextWithAdapters(
       error instanceof TenantContextError &&
       error.code === "TENANT_FORBIDDEN"
     ) {
-      await adapters.recordDeniedAccess({
-        action: "cross_tenant_access_denied",
-        actorUserId: userId,
-        requestedTenantId,
-        authorizedTenantIds: [
-          ...new Set([
-            ...memberships.map((membership) => membership.tenantId),
-            ...supportSessions
-              .filter((session) => session.active && session.audited)
-              .map((session) => session.tenantId),
-          ]),
-        ],
-        metadata: { reason_code: "tenant_not_allowed" },
-      });
+      try {
+        await adapters.recordDeniedAccess({
+          action: "cross_tenant_access_denied",
+          actorUserId: userId,
+          requestedTenantId,
+          authorizedTenantIds: [
+            ...new Set([
+              ...memberships.map((membership) => membership.tenantId),
+              ...supportSessions
+                .filter((session) => session.active && session.audited)
+                .map((session) => session.tenantId),
+            ]),
+          ],
+          metadata: { reason_code: "tenant_not_allowed" },
+        });
+      } catch {
+        throw new TenantContextError("SECURITY_AUDIT_FAILED");
+      }
     }
     throw error;
   }
@@ -219,39 +224,50 @@ async function loadSupportSessions(userId: string): Promise<SupportSession[]> {
   }));
 }
 
+type DeniedAuditAdapters = {
+  findRequestedTenant: (tenantId: string) => Promise<string | null>;
+  writeAudit: (tenantId: string, event: DeniedAccessEvent) => Promise<void>;
+};
+
+export async function persistCrossTenantDenied(
+  event: DeniedAccessEvent,
+  adapters: DeniedAuditAdapters,
+): Promise<void> {
+  try {
+    const requestedTenant = await adapters.findRequestedTenant(event.requestedTenantId);
+    const auditTenantId = requestedTenant ?? event.authorizedTenantIds[0] ?? null;
+    if (!auditTenantId) throw new TenantContextError("SECURITY_AUDIT_FAILED");
+    await adapters.writeAudit(auditTenantId, event);
+  } catch {
+    throw new TenantContextError("SECURITY_AUDIT_FAILED");
+  }
+}
+
 async function recordCrossTenantDenied(event: DeniedAccessEvent): Promise<void> {
   const jobSupabase = createJobSupabase();
-  const { data: requestedTenant } = await jobSupabase
-    .from("tenants")
-    .select("id")
-    .eq("id", event.requestedTenantId)
-    .maybeSingle();
-  const auditTenantId = requestedTenant?.id ?? event.authorizedTenantIds[0] ?? null;
-
-  if (!auditTenantId) {
-    console.warn("security_event", {
-      action: event.action,
-      metadata: event.metadata,
-    });
-    return;
-  }
-
-  const { error } = await jobSupabase.rpc("write_audit_event", {
-    target_tenant: auditTenantId,
-    event_action: event.action,
-    event_target_type: "tenant_context",
-    event_target_id: auditTenantId,
-    event_request_id: randomUUID(),
-    event_metadata: event.metadata,
-    event_actor_user_id: event.actorUserId,
+  return persistCrossTenantDenied(event, {
+    async findRequestedTenant(tenantId) {
+      const { data, error } = await jobSupabase
+        .from("tenants")
+        .select("id")
+        .eq("id", tenantId)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.id ?? null;
+    },
+    async writeAudit(tenantId, deniedEvent) {
+      const { error } = await jobSupabase.rpc("write_audit_event", {
+        target_tenant: tenantId,
+        event_action: deniedEvent.action,
+        event_target_type: "tenant_context",
+        event_target_id: tenantId,
+        event_request_id: randomUUID(),
+        event_metadata: deniedEvent.metadata,
+        event_actor_user_id: deniedEvent.actorUserId,
+      });
+      if (error) throw error;
+    },
   });
-
-  if (error) {
-    console.warn("security_event", {
-      action: event.action,
-      metadata: event.metadata,
-    });
-  }
 }
 
 function createTenantContextAdapters(): TenantContextAdapters {

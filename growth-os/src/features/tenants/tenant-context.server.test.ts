@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   assertClientOwnerContext,
+  persistCrossTenantDenied,
   resolveTenantContext,
   resolveTenantContextWithAdapters,
 } from "./tenant-context.server";
@@ -129,5 +130,48 @@ describe("resolveTenantContextWithAdapters", () => {
       metadata: { reason_code: "tenant_not_allowed" },
     });
     expect(JSON.stringify(recordDeniedAccess.mock.calls[0]?.[0].metadata)).not.toContain(TENANT_B);
+  });
+
+  it("fails closed with a stable code when denial persistence fails", async () => {
+    await expect(
+      resolveTenantContextWithAdapters({
+        getUserId: vi.fn().mockResolvedValue(USER_ID),
+        getRequestedTenantId: vi.fn().mockReturnValue(TENANT_B),
+        listMemberships: vi.fn().mockResolvedValue([{ tenantId: TENANT_A, role: "client_owner" }]),
+        listSupportSessions: vi.fn().mockResolvedValue([]),
+        recordDeniedAccess: vi.fn().mockRejectedValue(new Error("database unavailable")),
+      }),
+    ).rejects.toMatchObject({ code: "SECURITY_AUDIT_FAILED" });
+  });
+});
+
+describe("persistCrossTenantDenied", () => {
+  const event = {
+    action: "cross_tenant_access_denied" as const,
+    actorUserId: USER_ID,
+    requestedTenantId: TENANT_B,
+    authorizedTenantIds: [] as string[],
+    metadata: { reason_code: "tenant_not_allowed" as const },
+  };
+
+  it("fails closed when there is no tenant that can anchor an audit event", async () => {
+    const writeAudit = vi.fn();
+
+    await expect(
+      persistCrossTenantDenied(event, {
+        findRequestedTenant: vi.fn().mockResolvedValue(null),
+        writeAudit,
+      }),
+    ).rejects.toMatchObject({ code: "SECURITY_AUDIT_FAILED" });
+    expect(writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when the audit RPC rejects the event", async () => {
+    await expect(
+      persistCrossTenantDenied(event, {
+        findRequestedTenant: vi.fn().mockResolvedValue(TENANT_B),
+        writeAudit: vi.fn().mockRejectedValue(new Error("rpc failed")),
+      }),
+    ).rejects.toMatchObject({ code: "SECURITY_AUDIT_FAILED" });
   });
 });

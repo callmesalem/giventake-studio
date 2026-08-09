@@ -71,12 +71,18 @@ describe("authenticated user", () => {
 });
 
 describe("invitation acceptance", () => {
-  it("stores pending tenant context in app metadata only", async () => {
-    const setAppMetadata = vi.fn().mockResolvedValue(undefined);
-    const createInvitation = vi.fn().mockResolvedValue({ id: INVITATION_ID });
-    const inviteUserByEmail = vi.fn().mockResolvedValue({
-      userId: USER_ID,
-      appMetadata: { provider: "email" },
+  it("persists an audited usable invitation before sending email", async () => {
+    const order: string[] = [];
+    const prepareInvitation = vi.fn().mockImplementation(async () => {
+      order.push("prepared");
+      return { id: INVITATION_ID };
+    });
+    const inviteUserByEmail = vi.fn().mockImplementation(async () => {
+      order.push("emailed");
+      return { userId: USER_ID, appMetadata: { provider: "email" } };
+    });
+    const setAppMetadata = vi.fn().mockImplementation(async () => {
+      order.push("metadata");
     });
 
     await expect(
@@ -86,14 +92,14 @@ describe("invitation acceptance", () => {
           actor: { id: ADMIN_ID, email: "admin@example.com" },
           isPlatformAdmin: vi.fn().mockResolvedValue(true),
           tenantExists: vi.fn().mockResolvedValue(true),
-          createInvitation,
+          prepareInvitation,
           inviteUserByEmail,
           setAppMetadata,
-          recordInvitation: vi.fn().mockResolvedValue(undefined),
         },
       ),
     ).resolves.toEqual({ invited: true });
 
+    expect(order).toEqual(["prepared", "emailed", "metadata"]);
     expect(inviteUserByEmail).toHaveBeenCalledWith("owner@example.com");
     expect(setAppMetadata).toHaveBeenCalledWith(USER_ID, {
       provider: "email",
@@ -101,6 +107,25 @@ describe("invitation acceptance", () => {
       pending_tenant_id: TENANT_ID,
     });
     expect(setAppMetadata.mock.calls[0]?.[1]).not.toHaveProperty("user_metadata");
+  });
+
+  it("does not send email when durable invitation preparation fails", async () => {
+    const inviteUserByEmail = vi.fn();
+
+    await expect(
+      inviteClientOwnerAccount(
+        { email: "owner@example.com", tenantId: TENANT_ID },
+        {
+          actor: { id: ADMIN_ID, email: "admin@example.com" },
+          isPlatformAdmin: vi.fn().mockResolvedValue(true),
+          tenantExists: vi.fn().mockResolvedValue(true),
+          prepareInvitation: vi.fn().mockRejectedValue(new Error("audit unavailable")),
+          inviteUserByEmail,
+          setAppMetadata: vi.fn(),
+        },
+      ),
+    ).rejects.toThrow("audit unavailable");
+    expect(inviteUserByEmail).not.toHaveBeenCalled();
   });
 
   it("rejects invitation creation by a non-platform administrator", async () => {
@@ -113,10 +138,9 @@ describe("invitation acceptance", () => {
           actor: { id: USER_ID, email: "owner@example.com" },
           isPlatformAdmin: vi.fn().mockResolvedValue(false),
           tenantExists: vi.fn(),
-          createInvitation: vi.fn(),
+          prepareInvitation: vi.fn(),
           inviteUserByEmail,
           setAppMetadata: vi.fn(),
-          recordInvitation: vi.fn(),
         },
       ),
     ).rejects.toMatchObject({ code: "PLATFORM_ADMIN_REQUIRED" });
@@ -141,6 +165,7 @@ describe("invitation acceptance", () => {
             userMetadata: { pending_tenant_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" },
           },
         }),
+        findPendingInvitation: vi.fn().mockResolvedValue(null),
         acceptInvitation,
         clearPendingInvitation,
       }),
@@ -153,5 +178,73 @@ describe("invitation acceptance", () => {
       email: "owner@example.com",
     });
     expect(clearPendingInvitation).toHaveBeenCalledWith(USER_ID, { provider: "email" });
+  });
+
+  it("recovers an emailed invitation when app metadata was not written", async () => {
+    const acceptInvitation = vi.fn().mockResolvedValue(undefined);
+    const clearPendingInvitation = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      completeAuthCallbackWith("callback-code", {
+        exchangeCode: vi.fn().mockResolvedValue({
+          user: {
+            id: USER_ID,
+            email: "owner@example.com",
+            appMetadata: { provider: "email" },
+            userMetadata: {},
+          },
+        }),
+        findPendingInvitation: vi.fn().mockResolvedValue({
+          invitationId: INVITATION_ID,
+          tenantId: TENANT_ID,
+          userId: USER_ID,
+          email: "owner@example.com",
+        }),
+        acceptInvitation,
+        clearPendingInvitation,
+      }),
+    ).resolves.toEqual({ authenticated: true });
+
+    expect(acceptInvitation).toHaveBeenCalledOnce();
+    expect(clearPendingInvitation).toHaveBeenCalledWith(USER_ID, { provider: "email" });
+  });
+
+  it("retries acceptance after metadata cleanup fails and preserves unrelated metadata", async () => {
+    const user = {
+      id: USER_ID,
+      email: "owner@example.com",
+      appMetadata: {
+        provider: "email",
+        feature_access: "retained",
+        pending_invitation_id: INVITATION_ID,
+        pending_tenant_id: TENANT_ID,
+      },
+      userMetadata: {},
+    };
+    const acceptInvitation = vi.fn().mockResolvedValue(undefined);
+    const clearPendingInvitation = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("metadata unavailable"))
+      .mockResolvedValueOnce(undefined);
+    const dependencies = {
+      exchangeCode: vi.fn().mockResolvedValue({ user }),
+      findPendingInvitation: vi.fn().mockResolvedValue(null),
+      acceptInvitation,
+      clearPendingInvitation,
+    };
+
+    await expect(completeAuthCallbackWith("first-code", dependencies)).rejects.toThrow(
+      "metadata unavailable",
+    );
+    await expect(completeAuthCallbackWith("retry-code", dependencies)).resolves.toEqual({
+      authenticated: true,
+    });
+
+    expect(acceptInvitation).toHaveBeenCalledTimes(2);
+    expect(clearPendingInvitation).toHaveBeenCalledTimes(2);
+    expect(clearPendingInvitation).toHaveBeenLastCalledWith(USER_ID, {
+      provider: "email",
+      feature_access: "retained",
+    });
   });
 });

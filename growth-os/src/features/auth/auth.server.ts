@@ -111,6 +111,7 @@ export async function signOutAuthenticatedUser(): Promise<void> {
 
 type CallbackDependencies = {
   exchangeCode: (code: string) => Promise<{ user: CallbackUser | null }>;
+  findPendingInvitation: (user: CallbackUser) => Promise<PendingInvitation | null>;
   acceptInvitation: (invitation: PendingInvitation) => Promise<void>;
   clearPendingInvitation: (
     userId: string,
@@ -139,7 +140,8 @@ export async function completeAuthCallbackWith(
   const { user } = await dependencies.exchangeCode(parsed.code);
   if (!user) throw new AuthBoundaryError("AUTH_CALLBACK_INVALID");
 
-  const pendingInvitation = pendingInvitationFrom(user);
+  const pendingInvitation =
+    pendingInvitationFrom(user) ?? (await dependencies.findPendingInvitation(user));
   if (pendingInvitation) {
     await dependencies.acceptInvitation(pendingInvitation);
     const { pending_invitation_id, pending_tenant_id, ...remainingAppMetadata } = user.appMetadata;
@@ -169,31 +171,35 @@ export async function completeAuthCallback(code: string): Promise<{ authenticate
       if (error) throw new AuthBoundaryError("AUTH_CALLBACK_INVALID");
       return { user: callbackUserFrom(data.session?.user ?? null) };
     },
-    async acceptInvitation(invitation) {
+    async findPendingInvitation(user) {
       const { data, error } = await jobSupabase
         .from("membership_invitations")
-        .select("id")
-        .eq("id", invitation.invitationId)
-        .eq("tenant_id", invitation.tenantId)
-        .eq("email", invitation.email)
+        .select("id, tenant_id")
+        .eq("email", user.email.toLowerCase())
         .is("accepted_at", null)
+        .is("superseded_at", null)
         .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
-
-      if (error || !data) throw new AuthBoundaryError("INVITATION_INVALID");
-
-      const { error: membershipError } = await jobSupabase.from("memberships").upsert({
-        tenant_id: invitation.tenantId,
-        user_id: invitation.userId,
-        role: "client_owner",
+      if (error) throw new AuthBoundaryError("INVITATION_INVALID");
+      if (!data) return null;
+      return {
+        invitationId: data.id,
+        tenantId: data.tenant_id,
+        userId: user.id,
+        email: user.email.toLowerCase(),
+      };
+    },
+    async acceptInvitation(invitation) {
+      const { data, error } = await jobSupabase.rpc("accept_membership_invitation", {
+        invitation_id: invitation.invitationId,
+        target_tenant: invitation.tenantId,
+        invited_user_id: invitation.userId,
+        invited_email: invitation.email,
+        event_request_id: randomUUID(),
       });
-      if (membershipError) throw new AuthBoundaryError("INVITATION_FAILED");
-
-      const { error: invitationError } = await jobSupabase
-        .from("membership_invitations")
-        .update({ accepted_at: new Date().toISOString() })
-        .eq("id", invitation.invitationId);
-      if (invitationError) throw new AuthBoundaryError("INVITATION_FAILED");
+      if (error || !data) throw new AuthBoundaryError("INVITATION_INVALID");
     },
     async clearPendingInvitation(userId, remainingAppMetadata) {
       const { error } = await jobSupabase.auth.admin.updateUserById(userId, {
@@ -208,7 +214,7 @@ type InvitationDependencies = {
   actor: AuthUser;
   isPlatformAdmin: (userId: string) => Promise<boolean>;
   tenantExists: (tenantId: string) => Promise<boolean>;
-  createInvitation: (input: {
+  prepareInvitation: (input: {
     tenantId: string;
     email: string;
     invitedBy: string;
@@ -218,11 +224,6 @@ type InvitationDependencies = {
     appMetadata?: Record<string, unknown>;
   }>;
   setAppMetadata: (userId: string, metadata: Record<string, unknown>) => Promise<void>;
-  recordInvitation: (input: {
-    tenantId: string;
-    invitationId: string;
-    actorUserId: string;
-  }) => Promise<void>;
 };
 
 export async function inviteClientOwnerAccount(
@@ -237,23 +238,17 @@ export async function inviteClientOwnerAccount(
     throw new AuthBoundaryError("TENANT_NOT_FOUND");
   }
 
-  const invited = await dependencies.inviteUserByEmail(parsed.email);
-  const invitation = await dependencies.createInvitation({
+  const invitation = await dependencies.prepareInvitation({
     tenantId: parsed.tenantId,
     email: parsed.email,
     invitedBy: dependencies.actor.id,
   });
+  const invited = await dependencies.inviteUserByEmail(parsed.email);
   await dependencies.setAppMetadata(invited.userId, {
     ...(invited.appMetadata ?? {}),
     pending_invitation_id: invitation.id,
     pending_tenant_id: parsed.tenantId,
   });
-  await dependencies.recordInvitation({
-    tenantId: parsed.tenantId,
-    invitationId: invitation.id,
-    actorUserId: dependencies.actor.id,
-  });
-
   return { invited: true };
 }
 
@@ -290,39 +285,23 @@ export async function inviteClientOwner(input: InviteClientOwnerInput): Promise<
       if (error || !data.user) throw new AuthBoundaryError("INVITATION_FAILED");
       return { userId: data.user.id, appMetadata: data.user.app_metadata };
     },
-    async createInvitation({ tenantId, email, invitedBy }) {
+    async prepareInvitation({ tenantId, email, invitedBy }) {
       const tokenHash = createHash("sha256").update(randomBytes(32)).digest("hex");
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await jobSupabase
-        .from("membership_invitations")
-        .insert({
-          tenant_id: tenantId,
-          email,
-          invited_by: invitedBy,
-          token_hash: tokenHash,
-          expires_at: expiresAt,
-          role: "client_owner",
-        })
-        .select("id")
-        .single();
-      if (error) throw new AuthBoundaryError("INVITATION_FAILED");
-      return data;
+      const { data, error } = await jobSupabase.rpc("prepare_membership_invitation", {
+        target_tenant: tenantId,
+        invitation_email: email,
+        inviter_user_id: invitedBy,
+        invitation_token_hash: tokenHash,
+        invitation_expires_at: expiresAt,
+        event_request_id: randomUUID(),
+      });
+      if (error || !data) throw new AuthBoundaryError("INVITATION_FAILED");
+      return { id: data };
     },
     async setAppMetadata(userId, metadata) {
       const { error } = await jobSupabase.auth.admin.updateUserById(userId, {
         app_metadata: metadata,
-      });
-      if (error) throw new AuthBoundaryError("INVITATION_FAILED");
-    },
-    async recordInvitation({ tenantId, invitationId, actorUserId }) {
-      const { error } = await jobSupabase.rpc("write_audit_event", {
-        target_tenant: tenantId,
-        event_action: "membership.invited",
-        event_target_type: "membership_invitation",
-        event_target_id: invitationId,
-        event_request_id: randomUUID(),
-        event_metadata: { channel: "magic_link" },
-        event_actor_user_id: actorUserId,
       });
       if (error) throw new AuthBoundaryError("INVITATION_FAILED");
     },

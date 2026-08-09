@@ -112,3 +112,76 @@
 - `@supabase/ssr` resolves to `0.5.2` while the workspace currently resolves `@supabase/supabase-js` to `2.112.2`. Their generic parameter positions differ, so `createUserSupabase` contains one localized compatibility cast back to `SupabaseClient<Database>`. Runtime APIs, typecheck, tests, and both production bundles pass.
 - Vite continues to emit the existing non-blocking `vite-tsconfig-paths` advisory during tests and builds. This task did not change build-tool configuration.
 - No live Supabase email delivery was attempted; external auth calls are covered through focused boundary adapters, while the real TanStack client and SSR bundles are validated by production build.
+
+## Fix Round 1
+
+### Scope And Resolution
+
+- Cross-tenant denial recording now fails closed with the stable sanitized `SECURITY_AUDIT_FAILED` code whenever no audit anchor exists or tenant lookup/audit persistence fails. The console-only fallback was removed.
+- Invitation preparation is now a service-role-only transactional RPC. It supersedes expired pending invitations, reuses a current usable invitation on retry, repairs a missing invitation audit, and commits durable invitation state plus sanitized audit data before email is sent.
+- Invitation acceptance is now a service-role-only transactional and idempotent RPC. Membership grant, invitation acceptance, accepted-user binding, and the sanitized membership audit commit together. A callback can retry after app-metadata cleanup failure without duplicating membership or audit state.
+- Callback recovery can locate a durable active invitation by the authenticated email when post-email app-metadata persistence failed. Successful retries remove only the two pending invitation keys and preserve unrelated server-controlled app metadata.
+- Supabase session cookies now explicitly set `secure: process.env.NODE_ENV === "production"` while retaining `httpOnly: true` and `sameSite: "lax"`.
+
+### RED Evidence
+
+- Focused TypeScript RED:
+  - Command: `npx --yes bun x vitest run src/features/auth src/features/tenants src/lib/server/supabase.server.test.ts`
+  - Exit: `1`.
+  - Result: `7` failed and `17` passed. Failures demonstrated email-before-state ordering, missing callback recovery, swallowed audit failures/no audit anchor behavior, and missing explicit production `Secure` cookies.
+- Initial database RED:
+  - Command: `npx --yes bun x supabase test db`
+  - Exit: `1`.
+  - Result: all `15` new auth transition assertions failed because `prepare_membership_invitation` did not exist; the existing retention and RLS files passed.
+- Retry audit-repair RED after the first RPC implementation:
+  - Command: `npx --yes bun x supabase test db`
+  - Exit: `1`.
+  - Result: `1` of `17` auth assertions failed: `retry repairs a missing invitation audit before email` had `0` events instead of `1`. The RPC was then changed so reused and newly inserted invitations share the same mandatory audit check before success.
+
+### GREEN And Verification Evidence
+
+- Focused auth, tenant, and cookie tests:
+  - Command: `npx --yes bun x vitest run src/features/auth src/features/tenants src/lib/server/supabase.server.test.ts`
+  - Exit: `0`; `4` files and `25` tests passed.
+- Database reset and pgTAP:
+  - Commands: `npx --yes bun x supabase db reset` and `npx --yes bun x supabase test db`
+  - Exit: `0`; all `3` files and `55` assertions passed.
+- Full Growth OS suite:
+  - Command: `npx --yes bun run test`
+  - Exit: `0`; `5` files and `26` tests passed.
+- Growth OS typecheck:
+  - Command: `npx --yes bun run typecheck`
+  - Exit: `0`; `tsc --noEmit` reported no errors.
+- Growth OS lint:
+  - Command: `npx --yes bun run lint`
+  - Exit: `0`; ESLint reported no errors or warnings.
+- Growth OS production build:
+  - Command: `npx --yes bun run build`
+  - Exit: `0`; client build transformed `195` modules and SSR build transformed `74` modules.
+- Client leak scans:
+  - `dist/client` had zero matches for `SUPABASE_SERVICE_ROLE_KEY`, `createJobSupabase`, `FIELD_ENCRYPTION_KEY`, `LOOKUP_HMAC_KEY`, or `OAUTH_STATE_SECRET`.
+  - Client-safe source had zero matches for `SUPABASE_SERVICE_ROLE_KEY` or `createJobSupabase`.
+- Audit metadata inspection found only `{ reason_code: "tenant_not_allowed" }`, `{ channel: "magic_link" }`, and `{ change_code: "invitation_accepted" }`. No email, token, credential, supplied tenant id, or payload is stored in audit metadata.
+- `git diff --check` exited `0` with no whitespace errors.
+- The root build was not run because this round changes only Growth OS source, tests, generated database types, and its Supabase migration; no root application file is affected.
+
+### Files Changed
+
+- `.superpowers/sdd/2026-08-09-giventake-growth-os-release-1/task-3-report.md`
+- `growth-os/src/features/auth/auth.server.test.ts`
+- `growth-os/src/features/auth/auth.server.ts`
+- `growth-os/src/features/tenants/tenant-context.server.test.ts`
+- `growth-os/src/features/tenants/tenant-context.server.ts`
+- `growth-os/src/lib/database.types.ts`
+- `growth-os/src/lib/server/supabase.server.test.ts`
+- `growth-os/src/lib/server/supabase.server.ts`
+- `growth-os/supabase/migrations/202608090004_task3_auth_transitions.sql`
+- `growth-os/supabase/tests/release1_auth.test.sql`
+
+### Self-Review And Concerns
+
+- Existing RLS policies and standard zero-row cross-tenant update behavior are unchanged. The new invitation RPCs are denied to `authenticated` and executable only by `service_role`.
+- Invitation tenant context remains exclusively in server-controlled app metadata and durable server-side invitation state. Editable user metadata is never read for authorization.
+- A failed email delivery leaves a durable audited invitation that a retry can reuse. A failed app-metadata update after delivery remains recoverable because callback lookup uses the authenticated email and the transactional acceptance RPC verifies that email against `auth.users`.
+- Cross-tenant audit metadata remains sanitized. When neither the supplied tenant nor any authorized tenant can anchor the event, authorization returns an explicit auditable-failure code rather than claiming the denial was recorded.
+- External Supabase email delivery was not exercised live; ordering and recovery are verified through focused dependency tests, while the database state transitions are covered by pgTAP.

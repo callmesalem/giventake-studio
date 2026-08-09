@@ -745,34 +745,40 @@ export type Database = {
       membership_invitations: {
         Row: {
           accepted_at: string | null;
+          accepted_user_id: string | null;
           created_at: string;
           email: string;
           expires_at: string;
           id: string;
           invited_by: string;
           role: Database["public"]["Enums"]["membership_role"];
+          superseded_at: string | null;
           tenant_id: string;
           token_hash: string;
         };
         Insert: {
           accepted_at?: string | null;
+          accepted_user_id?: string | null;
           created_at?: string;
           email: string;
           expires_at: string;
           id?: string;
           invited_by: string;
           role?: Database["public"]["Enums"]["membership_role"];
+          superseded_at?: string | null;
           tenant_id: string;
           token_hash: string;
         };
         Update: {
           accepted_at?: string | null;
+          accepted_user_id?: string | null;
           created_at?: string;
           email?: string;
           expires_at?: string;
           id?: string;
           invited_by?: string;
           role?: Database["public"]["Enums"]["membership_role"];
+          superseded_at?: string | null;
           tenant_id?: string;
           token_hash?: string;
         };
@@ -1269,6 +1275,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_membership_invitation: {
+        Args: {
+          event_request_id: string;
+          invitation_id: string;
+          invited_email: string;
+          invited_user_id: string;
+          target_tenant: string;
+        };
+        Returns: boolean;
+      };
       can_access_tenant: { Args: { target_tenant: string }; Returns: boolean };
       has_active_support_session: {
         Args: { target_tenant: string };
@@ -1282,6 +1298,17 @@ export type Database = {
       is_sanitized_audit_metadata: {
         Args: { input_value: Json };
         Returns: boolean;
+      };
+      prepare_membership_invitation: {
+        Args: {
+          event_request_id: string;
+          invitation_email: string;
+          invitation_expires_at: string;
+          invitation_token_hash: string;
+          inviter_user_id: string;
+          target_tenant: string;
+        };
+        Returns: string;
       };
       publish_metric_window: {
         Args: {
