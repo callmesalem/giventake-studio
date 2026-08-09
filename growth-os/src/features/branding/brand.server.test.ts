@@ -29,6 +29,24 @@ describe("brandInputSchema", () => {
     ).toThrow();
   });
 
+  it.each(["https://cdn.example.com/pilot.svg", "https://cdn.example.com:65535/pilot.svg"])(
+    "accepts SQL-supported HTTPS logo URL %s",
+    (logoUrl) => {
+      expect(brandInputSchema.parse({ ...validBrand, logoUrl }).logoUrl).toBe(logoUrl);
+    },
+  );
+
+  it.each([
+    "https://cdn.example.com:0/pilot.svg",
+    "https://cdn.example.com:65536/pilot.svg",
+    "https://cdn.example.com:99999/pilot.svg",
+    "https://cdn.example.com:/pilot.svg",
+    "https://cdn.example.com:-1/pilot.svg",
+    "https://cdn.example.com:invalid/pilot.svg",
+  ])("rejects unsupported explicit logo port in %s", (logoUrl) => {
+    expect(() => brandInputSchema.parse({ ...validBrand, logoUrl })).toThrow();
+  });
+
   it("rejects primary text contrast below 4.5 to 1", () => {
     expect(contrastRatio("#ffffff", "#777777")).toBeLessThan(4.5);
     expect(() =>

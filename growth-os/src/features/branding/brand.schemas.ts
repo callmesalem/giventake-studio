@@ -6,6 +6,32 @@ const hexColor = z
   .regex(/^#[0-9a-fA-F]{6}$/)
   .transform((value) => value.toLowerCase());
 
+const logoUrl = z
+  .string()
+  .trim()
+  .url()
+  .max(500)
+  .superRefine((value, context) => {
+    const parsedUrl = new URL(value);
+    if (parsedUrl.protocol !== "https:") {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: "Logo URL must use HTTPS" });
+      return;
+    }
+
+    const authority = /^https:\/\/([^/?#]*)/i.exec(value)?.[1] ?? "";
+    const portSeparator = authority.lastIndexOf(":");
+    if (portSeparator === -1) return;
+
+    const explicitPort = authority.slice(portSeparator + 1);
+    const portNumber = Number(explicitPort);
+    if (!/^\d+$/.test(explicitPort) || portNumber < 1 || portNumber > 65_535) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Logo URL port must be between 1 and 65535",
+      });
+    }
+  });
+
 function relativeLuminance(color: string): number {
   const channels = [1, 3, 5].map((offset) => Number.parseInt(color.slice(offset, offset + 2), 16));
   const [red, green, blue] = channels.map((channel) => {
@@ -26,12 +52,7 @@ export function contrastRatio(first: string, second: string): number {
 export const brandInputSchema = z
   .object({
     displayName: z.string().trim().min(1).max(120),
-    logoUrl: z
-      .string()
-      .trim()
-      .url()
-      .max(500)
-      .refine((value) => new URL(value).protocol === "https:", "Logo URL must use HTTPS"),
+    logoUrl,
     primaryColor: hexColor,
     accentColor: hexColor,
     onPrimaryColor: hexColor,

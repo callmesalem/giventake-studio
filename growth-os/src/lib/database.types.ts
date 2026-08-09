@@ -1312,6 +1312,10 @@ export type Database = {
         Args: { input_value: Json };
         Returns: boolean;
       };
+      is_valid_brand_logo_url: {
+        Args: { input_value: string };
+        Returns: boolean;
+      };
       prepare_membership_invitation: {
         Args: {
           event_request_id: string;

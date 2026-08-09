@@ -200,3 +200,73 @@
 - The support capability UUID exists only in server internals and the Secure HttpOnly cookie. Start/status payloads and production client chunks do not expose it.
 - Branding canonicalization occurs before mutation and before contrast evaluation. Failed validation or audit persistence cannot leave a changed brand row.
 - The existing Vite `vite-tsconfig-paths` advisory remains non-blocking and unchanged. No live hosted Supabase flow was used; authorization was verified with server-boundary tests and the local Postgres/PostgREST request-context behavior.
+
+## Fix Round 2
+
+### Port Policy And Changes
+
+- Explicit logo URL ports now follow one shared policy in TypeScript, the brand RPC, and the `brands` table constraint: omit the port or use an integer from `1` through `65535`. Explicit port `0` is rejected.
+- Added immutable `is_valid_brand_logo_url(text)` in migration 007. It preserves the existing trimmed HTTPS URL, DNS-host shape, length, and path checks, then range-checks any explicit port. The RPC calls it before mutation and raises `22023`; the table constraint uses the same validator.
+- Updated `brandInputSchema` to inspect the original URL authority after URL parsing. This rejects empty and zero ports that the platform URL parser normalizes away, while preserving no-port and `:65535` round trips.
+- Name/color canonicalization, contrast, owner-only tenant derivation, and transactional `brand.updated` behavior are unchanged. No audit, support, RLS, route, or layout implementation was modified.
+
+### RED Evidence
+
+- Application command: `pnpm exec vitest run src/features/branding/brand.server.test.ts`
+  - Exit `1`; 14 tests ran, 2 failed and 12 passed.
+  - The current parser accepted `https://cdn.example.com:0/pilot.svg` and normalized an empty explicit port instead of rejecting it.
+- Database command: `pnpm exec supabase test db supabase/tests/release1_task4_fix2.test.sql`
+  - Exit `1`; 5 of 13 assertions failed.
+  - The RPC accepted ports `65536`, `99999`, and `0`; the last invalid call changed the stored brand and raised the brand-audit count from the expected 2 to 5.
+
+### GREEN And Verification Evidence
+
+- Focused application boundary:
+  - Command: `pnpm exec vitest run src/features/branding/brand.server.test.ts`
+  - Exit `0`; 1 file and 14 tests passed.
+  - No-port and `:65535` URLs pass `brandInputSchema`; `:0`, `:65536`, `:99999`, empty, negative, and nonnumeric ports fail.
+- Focused direct-RPC pgTAP:
+  - Command: `pnpm exec supabase test db supabase/tests/release1_task4_fix2.test.sql`
+  - Exit `0`; 13 assertions passed.
+  - No-port and `:65535` URLs are returned/stored trimmed; every invalid port raises `22023`, leaves the valid brand unchanged, and writes no audit.
+- Clean database rebuild:
+  - Command: `pnpm exec supabase db reset`
+  - Exit `0`; recreated the local database and applied migrations 001 through 007.
+- Full application suite:
+  - Command: `pnpm run test`
+  - Exit `0`; 9 files and 67 tests passed.
+- Full database suite:
+  - Command: `pnpm run test:db`
+  - Exit `0`; 6 files and 115 pgTAP assertions passed.
+- Database lint:
+  - Command: `pnpm exec supabase db lint --level warning`
+  - Exit `0`; no schema errors found.
+- Typecheck:
+  - Command: `pnpm run typecheck`
+  - Exit `0`; no TypeScript errors.
+- Lint:
+  - Initial exit `1` contained only Prettier layout findings in the new table-driven test.
+  - After formatting, `pnpm run lint` exited `0` with no findings.
+- Production build:
+  - Command: `pnpm run build`
+  - Exit `0`; 1900 client and 87 SSR modules transformed.
+- Leak scans:
+  - Production client: 0 matches for service-role credentials/clients or support-session identifiers.
+  - Route/client-safe modules: 0 service-role client or key references.
+- `git diff --check`: exit `0`.
+
+### Files Changed In Fix Round 2
+
+- `growth-os/src/features/branding/brand.schemas.ts`
+- `growth-os/src/features/branding/brand.server.test.ts`
+- `growth-os/src/lib/database.types.ts`
+- `growth-os/supabase/migrations/202608090007_task4_fix2.sql`
+- `growth-os/supabase/tests/release1_task4_fix2.test.sql`
+- `.superpowers/sdd/2026-08-09-giventake-growth-os-release-1/task-4-report.md`
+
+### Self-Review And Concerns
+
+- SQL and TypeScript use the same no-port-or-`1–65535` rule, including explicit rejection of `:0` and empty ports.
+- The migration replaces only brand URL validation and the existing brand RPC body needed to call it. The fixed audit metadata, privacy workflow, exact-session support RLS, cookies, and service-role boundaries were not changed.
+- Both valid calls write one audit each; all failed port calls are proven transactionally inert.
+- The existing non-blocking Vite `vite-tsconfig-paths` advisory remains unchanged.
