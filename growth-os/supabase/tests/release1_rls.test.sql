@@ -549,11 +549,20 @@ select is(
 );
 
 reset role;
+create temp table rls_support_session as
 select public.start_support_session(
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   '33333333-3333-3333-3333-333333333333',
   'Investigating a client-reported dashboard discrepancy.',
   now() + interval '30 minutes'
+) as id;
+select set_config(
+  'request.headers',
+  jsonb_build_object(
+    'x-gt-support-session',
+    (select id from rls_support_session)
+  )::text,
+  true
 );
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);

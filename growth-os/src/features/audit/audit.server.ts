@@ -32,16 +32,33 @@ export const AUDIT_ACTIONS = [
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
 export type AuditAction = z.infer<typeof auditActionSchema>;
 
-const safeCode = z
-  .string()
-  .min(1)
-  .max(80)
-  .regex(/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/);
-const errorCode = z
-  .string()
-  .min(1)
-  .max(80)
-  .regex(/^[A-Z0-9]+(?:_[A-Z0-9]+)*$/);
+const auditStatusSchema = z.enum([
+  "active",
+  "suspended",
+  "closed",
+  "new",
+  "qualified",
+  "booked",
+  "won",
+  "lost",
+  "healthy",
+  "degraded",
+  "action_required",
+  "revoked",
+  "pending",
+  "running",
+  "succeeded",
+  "partial",
+  "failed",
+  "verified",
+  "restricted",
+  "processing",
+  "completed",
+  "enabled",
+  "paused",
+  "removed",
+  "unknown",
+]);
 const nonnegativeCount = z.number().int().nonnegative().safe();
 const uuid = z.string().uuid();
 const isoDate = z.string().date();
@@ -50,16 +67,26 @@ const nullable = <Schema extends z.ZodTypeAny>(schema: Schema) => schema.nullabl
 
 export const auditMetadataSchema = z
   .object({
-    channel: nullable(safeCode),
-    change_code: nullable(safeCode),
-    reason_code: nullable(safeCode),
-    status: nullable(safeCode),
-    previous_status: nullable(safeCode),
-    current_status: nullable(safeCode),
+    channel: nullable(z.enum(["magic_link"])),
+    change_code: nullable(z.enum(["invitation_accepted", "settings_saved"])),
+    reason_code: nullable(z.enum(["tenant_not_allowed"])),
+    status: nullable(auditStatusSchema),
+    previous_status: nullable(auditStatusSchema),
+    current_status: nullable(auditStatusSchema),
     provider: nullable(z.enum(["google_analytics", "google_ads", "meta_ads"])),
-    error_code: nullable(errorCode),
-    attribution_model: nullable(safeCode),
+    error_code: nullable(
+      z.enum([
+        "RATE_LIMITED",
+        "NETWORK",
+        "TOKEN_EXPIRED",
+        "TOKEN_REVOKED",
+        "INVALID_RESPONSE",
+        "INVALID_SCOPE",
+      ]),
+    ),
+    attribution_model: nullable(z.enum(["first_touch", "last_touch"])),
     confidence: nullable(z.enum(["high", "medium", "low"])),
+    request_type: nullable(z.enum(["access", "correction", "deletion", "export", "opt_out"])),
     expires_at: nullable(isoDateTime),
     occurred_at: nullable(isoDateTime),
     completed_at: nullable(isoDateTime),
@@ -86,6 +113,7 @@ export const auditMetadataSchema = z
     metric_rows_deleted: nullable(nonnegativeCount),
     audit_rows_deleted: nullable(nonnegativeCount),
     privacy_rows_deleted: nullable(nonnegativeCount),
+    matched_count: nullable(nonnegativeCount),
     has_more: nullable(z.boolean()),
   })
   .strict();

@@ -50,7 +50,7 @@ type StartSupportDependencies = {
 export async function startSupportSessionWith(
   input: SupportSessionInput,
   dependencies: StartSupportDependencies,
-): Promise<{ sessionId: string; expiresAt: string }> {
+): Promise<{ expiresAt: string }> {
   const parsed = supportSessionInputSchema.parse(input);
   const actor = await dependencies.getActor();
   if (!(await dependencies.isPlatformAdmin(actor.id))) {
@@ -75,12 +75,12 @@ export async function startSupportSessionWith(
   };
   dependencies.setCookie(ACTIVE_TENANT_COOKIE, parsed.tenantId, cookieOptions);
   dependencies.setCookie(SUPPORT_SESSION_COOKIE, session.sessionId, cookieOptions);
-  return session;
+  return { expiresAt: session.expiresAt };
 }
 
 export async function startSupportSession(
   input: SupportSessionInput,
-): Promise<{ sessionId: string; expiresAt: string }> {
+): Promise<{ expiresAt: string }> {
   const jobSupabase = createJobSupabase();
   return startSupportSessionWith(input, {
     getActor: requireAuthenticatedUser,
@@ -206,7 +206,6 @@ export async function getSupportAdminData(): Promise<{ tenants: SupportTenant[] 
 }
 
 export async function getSupportSessionStatus(): Promise<{
-  sessionId: string;
   expiresAt: string;
 } | null> {
   const context = await requireTenantContext();
@@ -220,5 +219,5 @@ export async function getSupportSessionStatus(): Promise<{
     .is("revoked_at", null)
     .single();
   if (error || !data) throw new SupportSessionError("SUPPORT_SESSION_INVALID");
-  return { sessionId: context.supportSessionId, expiresAt: data.expires_at };
+  return { expiresAt: data.expires_at };
 }

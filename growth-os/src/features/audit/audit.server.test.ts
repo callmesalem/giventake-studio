@@ -26,6 +26,10 @@ describe("audit schemas", () => {
     { email: "lead@example.com" },
     { arbitrary_key: "value" },
     { reason_code: { nested: true } },
+    { reason_code: "sk_live_encoded_secret" },
+    { change_code: "customer_email" },
+    { status: "private_notes" },
+    { request_type: "subject_email" },
   ])("rejects sensitive, personal, nested, or unsupported metadata %#", (metadata) => {
     expect(() => auditMetadataSchema.parse(metadata)).toThrow();
   });
@@ -36,6 +40,8 @@ describe("audit schemas", () => {
         reason_code: "tenant_not_allowed",
         expires_at: "2026-08-09T17:00:00.000Z",
         rows_processed: 12,
+        request_type: "deletion",
+        matched_count: 1,
         has_more: false,
         error_code: null,
       }),
@@ -43,6 +49,8 @@ describe("audit schemas", () => {
       reason_code: "tenant_not_allowed",
       expires_at: "2026-08-09T17:00:00.000Z",
       rows_processed: 12,
+      request_type: "deletion",
+      matched_count: 1,
       has_more: false,
       error_code: null,
     });

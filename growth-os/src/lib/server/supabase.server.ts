@@ -5,6 +5,8 @@ import { getRequestHeader, setCookie } from "@tanstack/react-start/server";
 import type { Database } from "../database.types";
 
 type CookiesToSet = Parameters<NonNullable<CookieMethodsServer["setAll"]>>[0];
+const SUPPORT_SESSION_COOKIE = "gt_support_session";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function createUserSupabase(): SupabaseClient<Database> {
   const url = process.env.SUPABASE_URL;
@@ -14,10 +16,20 @@ export function createUserSupabase(): SupabaseClient<Database> {
     throw new Error("Supabase user client is not configured");
   }
 
+  const requestCookies = parseCookieHeader(getRequestHeader("cookie") ?? "");
+  const supportSessionId = requestCookies.find(
+    (cookie) => cookie.name === SUPPORT_SESSION_COOKIE,
+  )?.value;
+  const supportHeaders =
+    supportSessionId && UUID_PATTERN.test(supportSessionId)
+      ? { global: { headers: { "x-gt-support-session": supportSessionId } } }
+      : {};
+
   const client = createServerClient<Database>(url, anonKey, {
+    ...supportHeaders,
     cookies: {
       getAll() {
-        return parseCookieHeader(getRequestHeader("cookie") ?? "");
+        return requestCookies;
       },
       setAll(values: CookiesToSet) {
         for (const { name, value, options } of values) {

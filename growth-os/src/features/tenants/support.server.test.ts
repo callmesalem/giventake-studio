@@ -82,7 +82,7 @@ describe("startSupportSessionWith", () => {
           now: () => NOW,
         },
       ),
-    ).resolves.toEqual({ sessionId: SESSION_ID, expiresAt });
+    ).resolves.toEqual({ expiresAt });
 
     expect(startSession).toHaveBeenCalledWith({
       tenantId: TENANT_ID,

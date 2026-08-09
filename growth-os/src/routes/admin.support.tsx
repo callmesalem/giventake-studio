@@ -12,7 +12,7 @@ type SupportSessionFormProps = {
     tenantId: string;
     reason: string;
     durationMinutes: number;
-  }) => Promise<{ sessionId: string; expiresAt: string }>;
+  }) => Promise<{ expiresAt: string }>;
   onStarted?: () => void;
 };
 

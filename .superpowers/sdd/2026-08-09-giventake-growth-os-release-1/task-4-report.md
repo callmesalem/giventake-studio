@@ -117,3 +117,86 @@
 
 - Vite continues to print the existing non-blocking `vite-tsconfig-paths` advisory during tests and builds. This task did not modify build-tool configuration.
 - No live external Supabase authentication or email flow was exercised. Route authorization, cookies, RLS, and transactional behavior were verified through focused boundary tests, generated production routes, a real local Supabase database, and pgTAP.
+
+## Fix Round 1
+
+### Changes
+
+- Replaced lexical audit code validation with mirrored finite per-key value allowlists in TypeScript and PostgreSQL. The inventory preserved every current caller value: `magic_link`, `invitation_accepted`, `settings_saved`, `tenant_not_allowed`, the database status domains, provider/confidence values, the two attribution models, and the six planned connector error codes. Unknown keys and unknown values fail closed.
+- Added the five exact privacy request types plus a nonnegative integer `matched_count`. The post-005 privacy regression proves `restrict_privacy_subject` updates the lead, creates the privacy request, and persists `privacy.restricted` in one successful transaction.
+- Added server-only propagation of the UUID from the Secure HttpOnly `gt_support_session` cookie to PostgREST as `x-gt-support-session`. RLS now requires that exact identifier, the authenticated allowlisted admin, matching tenant, active/unrevoked session, and a matching `support.started` audit row. Support session identifiers were removed from browser-visible start/status results.
+- Replaced the brand RPC at the database boundary. It trims all surrounding name whitespace, rejects whitespace-only names, trims the logo URL, lowercases colors, validates a structured HTTPS host/URL shape, applies contrast to canonical colors, stores and returns the same canonical JSON, and retains transactional `brand.updated` rollback.
+- Updated the older RLS support fixture to provide its exact start-audited session context. No Minor-finding work or root-app formatting cleanup was included.
+
+### RED Evidence
+
+- Command: `pnpm exec vitest run src/features/audit/audit.server.test.ts src/lib/server/supabase.server.test.ts src/features/tenants/support.server.test.ts`
+  - Exit `1`; 3 files ran, with 6 failed and 17 passed tests.
+  - Failures proved encoded values were accepted in `reason_code`, `change_code`, and `status`; privacy metadata was unsupported; the support cookie was not propagated to PostgREST; and the session UUID was returned to the browser-visible result.
+- Command: `pnpm exec supabase test db supabase/tests/release1_task4_fix1.test.sql`
+  - Exit `1`; pre-fix assertions failed for finite audit values, the privacy restriction/audit transaction, no/wrong/unaudited/expired/revoked support contexts, and canonical brand storage.
+- First post-implementation database run:
+  - Exit `1`; 25 of 28 assertions passed. The remaining failure showed PostgreSQL `btrim` did not trim tab whitespace; POSIX whitespace canonicalization fixed the report-name case and its two downstream state assertions.
+
+### GREEN Evidence
+
+- Focused Task 4 boundaries:
+  - Command: `pnpm exec vitest run src/features/audit/audit.server.test.ts src/features/branding/brand.server.test.ts src/features/branding/brand.routes.test.tsx src/features/tenants/support.server.test.ts src/features/tenants/tenant-context.server.test.ts src/lib/server/supabase.server.test.ts`
+  - Exit `0`; 6 files and 43 tests passed.
+- Focused Fix Round 1 pgTAP:
+  - Command: `pnpm exec supabase test db supabase/tests/release1_task4_fix1.test.sql`
+  - Exit `0`; 28 assertions passed.
+- Clean database rebuild:
+  - Command: `pnpm exec supabase db reset`
+  - Exit `0`; recreated the local database and applied migrations 001 through 006.
+- Full database suite:
+  - Command: `pnpm run test:db`
+  - Exit `0`; 5 files and 102 assertions passed.
+- Full Growth OS suite:
+  - Command: `pnpm run test`
+  - Exit `0`; 9 files and 59 tests passed.
+- Database lint:
+  - Command: `pnpm exec supabase db lint --level warning`
+  - Exit `0`; no schema errors found.
+- Typecheck:
+  - Command: `pnpm run typecheck`
+  - Exit `0`; no TypeScript errors.
+- Lint:
+  - Command: `pnpm run lint`
+  - Exit `0`; no ESLint findings.
+- Production build and route generation:
+  - Command: `pnpm run build`
+  - Exit `0`; 1900 client and 87 SSR modules transformed.
+  - `routeTree.gen.ts` and the production manifest contain `/admin/support` and authenticated child route `/_app/settings`.
+- Authorization verification:
+  - The focused suite proves the admin loader rejects non-admin tenant enumeration and the settings mutation stops when `requireClientOwnerContext` rejects support/read-only context.
+  - Source verification confirms `/admin/support` redirects unauthenticated users and delegates authorization to `getSupportAdminData`; `/settings` remains under `_app`, whose boundary requires authentication plus tenant selection, and its mutation derives the active owner tenant server-side.
+- Credential and session scans:
+  - `growth-os/dist/client`: 0 matches for `SUPABASE_SERVICE_ROLE_KEY`, `service_role`, `createJobSupabase`, `gt_support_session`, or `x-gt-support-session`.
+  - Route/client-safe modules: 0 service-role client or key references.
+  - Browser support/admin chunks: 0 `sessionId`, support-cookie, or support-header identifiers.
+- `git diff --check`: exit `0`.
+
+### Files Changed In Fix Round 1
+
+- `growth-os/src/features/audit/audit.server.ts`
+- `growth-os/src/features/audit/audit.server.test.ts`
+- `growth-os/src/features/tenants/support.server.ts`
+- `growth-os/src/features/tenants/support.server.test.ts`
+- `growth-os/src/lib/database.types.ts`
+- `growth-os/src/lib/server/supabase.server.ts`
+- `growth-os/src/lib/server/supabase.server.test.ts`
+- `growth-os/src/routes/_app.tsx`
+- `growth-os/src/routes/admin.support.tsx`
+- `growth-os/supabase/migrations/202608090006_task4_fix1.sql`
+- `growth-os/supabase/tests/release1_rls.test.sql`
+- `growth-os/supabase/tests/release1_task4_fix1.test.sql`
+- `.superpowers/sdd/2026-08-09-giventake-growth-os-release-1/task-4-report.md`
+
+### Self-Review And Concerns
+
+- The audit action enum was not altered. Business/audit transaction boundaries and Task 3 invitation, denial-audit, RLS, cookie, and server-only credential protections remain intact under the full suites.
+- Support RLS has no fallback to another session: the request context UUID is matched directly to the row and its immutable start proof. Owner access still uses `is_client_owner`, and every support write policy remains denied.
+- The support capability UUID exists only in server internals and the Secure HttpOnly cookie. Start/status payloads and production client chunks do not expose it.
+- Branding canonicalization occurs before mutation and before contrast evaluation. Failed validation or audit persistence cannot leave a changed brand row.
+- The existing Vite `vite-tsconfig-paths` advisory remains non-blocking and unchanged. No live hosted Supabase flow was used; authorization was verified with server-boundary tests and the local Postgres/PostgREST request-context behavior.

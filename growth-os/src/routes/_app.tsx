@@ -10,7 +10,7 @@ import { getRouteSession } from "@/features/tenants/tenant-context.functions";
 type AuthenticatedLayoutProps = {
   content?: ReactNode;
   brand?: BrandInput;
-  supportSession?: { sessionId: string; expiresAt: string } | null;
+  supportSession?: { expiresAt: string } | null;
   performSignOut?: () => Promise<{ signedOut: true }>;
   onSignedOut?: () => void;
   performEndSupport?: () => Promise<{ ended: true }>;

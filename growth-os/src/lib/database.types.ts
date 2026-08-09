@@ -1290,6 +1290,7 @@ export type Database = {
         Returns: number;
       };
       can_access_tenant: { Args: { target_tenant: string }; Returns: boolean };
+      current_support_session_id: { Args: never; Returns: string | null };
       end_support_session: {
         Args: {
           event_request_id: string;
@@ -1367,7 +1368,7 @@ export type Database = {
           event_request_id: string;
           target_tenant: string;
         };
-        Returns: boolean;
+        Returns: Json;
       };
       write_audit_event: {
         Args: {
