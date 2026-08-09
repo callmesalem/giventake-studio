@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_app/")({
   component: GrowthOsHome,
 });
 
@@ -8,9 +8,8 @@ function GrowthOsHome() {
   return (
     <main className="app-shell">
       <section className="workspace" aria-labelledby="page-title">
-        <p className="eyebrow">GivenTake</p>
-        <h1 id="page-title">Growth OS</h1>
-        <p className="summary">The secure workspace for lead, channel, and revenue operations.</p>
+        <h1 id="page-title">Overview</h1>
+        <p className="summary">No operational data is available.</p>
       </section>
     </main>
   );
