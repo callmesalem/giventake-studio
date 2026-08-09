@@ -8,7 +8,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "bun run dev",
+    command: "bun run dev -- --port 3000 --strictPort",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
   },
