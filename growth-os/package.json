@@ -10,6 +10,7 @@
     "test:watch": "vitest",
     "test:db": "supabase test db",
     "test:db:upgrade": "node supabase/tests/release1_task6_upgrade.mjs",
+    "test:db:task7-upgrade": "node supabase/tests/release1_task7_upgrade_concurrency.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "e2e": "playwright test"

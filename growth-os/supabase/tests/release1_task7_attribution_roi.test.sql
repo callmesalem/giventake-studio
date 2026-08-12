@@ -27,6 +27,15 @@ select has_function(
   array['uuid', 'date', 'date', 'text'],
   'overview calculations execute inside the tenant database boundary'
 );
+select has_table(
+  'public', 'attribution_recompute_jobs',
+  'accepted attribution evidence creates durable retry work'
+);
+select has_function(
+  'public', 'record_attribution_recompute_failure',
+  array['uuid', 'uuid', 'uuid'],
+  'recomputation failures are recorded through a controlled helper'
+);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -230,6 +239,14 @@ values
     '22222222-2222-2222-2222-222222222222', null
   );
 
+select is(
+  (select status from public.attribution_recompute_jobs
+   where tenant_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+     and lead_id = 'a2000000-0000-0000-0000-000000000001'),
+  'pending',
+  'accepted evidence durably queues recomputation before the immediate attempt'
+);
+
 set local role service_role;
 
 select is(
@@ -259,6 +276,13 @@ select is(
      and action = 'attribution.recomputed'),
   2,
   'each changed visible model is audited atomically'
+);
+select is(
+  (select status from public.attribution_recompute_jobs
+   where tenant_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+     and lead_id = 'a2000000-0000-0000-0000-000000000001'),
+  'succeeded',
+  'successful recomputation completes its durable retry work'
 );
 select ok(
   not exists (
@@ -319,6 +343,26 @@ select public.apply_attribution_recomputation(
   'a4000000-0000-0000-0000-000000000004',
   '{"source":null,"campaign_external_id":null,"confidence":"low","state":"unattributed","reason_codes":["direct_or_unknown"]}',
   'a6000000-0000-0000-0000-000000000005'
+);
+select ok(
+  public.record_attribution_recompute_failure(
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'a2000000-0000-0000-0000-000000000004',
+    'a6000000-0000-0000-0000-000000000099'
+  ),
+  'a failed immediate recomputation records durable retry state'
+);
+select results_eq(
+  $$ select status, sanitized_failure_code, last_request_id::text
+     from public.attribution_recompute_jobs
+     where tenant_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+       and lead_id = 'a2000000-0000-0000-0000-000000000004' $$,
+  $$ values (
+       'failed'::text,
+       'RECOMPUTE_FAILED'::text,
+       'a6000000-0000-0000-0000-000000000099'::text
+     ) $$,
+  'retry observability stores only canonical identifiers and a fixed failure code'
 );
 select public.apply_attribution_recomputation(
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -423,6 +467,60 @@ select is(
   ),
   null::jsonb,
   'cross-tenant overview is indistinguishable from unavailable'
+);
+
+reset role;
+insert into public.connections (
+  id, tenant_id, provider, credential_envelope_ciphertext, granted_scopes,
+  selected_external_account_id, selected_external_account_name, currency, timezone,
+  health, last_success_at
+) values (
+  'a5000000-0000-0000-0000-000000000002',
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'meta_ads', 'v1.fixture.credential.meta',
+  array['read'], 'account-meta-a', 'Meta Account A', 'EUR', 'America/New_York',
+  'healthy', '2026-08-09 11:00:00+00'
+);
+insert into public.campaign_metrics_daily (
+  tenant_id, connection_id, metric_date, currency, spend_minor, is_complete
+) values (
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  'a5000000-0000-0000-0000-000000000002', '2026-08-08', 'EUR', 50000, true
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true);
+select is(
+  public.get_growth_overview(
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '2026-08-08', '2026-08-08', 'first_touch'
+  ) #>> '{facts,spend_minor}',
+  null,
+  'mixed paid-provider currencies fail closed instead of returning partial spend'
+);
+select is(
+  public.get_growth_overview(
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '2026-08-08', '2026-08-08', 'first_touch'
+  ) #>> '{facts,confirmed_revenue_minor}',
+  '360000',
+  'mixed paid-provider currencies preserve confirmed revenue'
+);
+select is(
+  public.get_growth_overview(
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '2026-08-08', '2026-08-08', 'first_touch'
+  ) #>> '{facts,total_leads}',
+  '4',
+  'mixed paid-provider currencies preserve lead totals'
+);
+select is(
+  (
+    select item ->> 'state'
+    from jsonb_array_elements(public.get_growth_overview(
+      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '2026-08-08', '2026-08-08', 'first_touch'
+    ) -> 'freshness') item
+    where item ->> 'provider' = 'meta_ads'
+  ),
+  'stale',
+  'unsafe paid-provider currency coverage cannot appear fresh'
 );
 
 select is(
@@ -532,6 +630,62 @@ select throws_ok(
      ) $$,
   '22023', 'correction reason must be 10-500 characters',
   'manual correction requires a bounded reason'
+);
+
+reset role;
+select ok(
+  not has_table_privilege('service_role', 'public.attribution_touches', 'INSERT')
+    and not has_table_privilege('service_role', 'public.attribution_touches', 'UPDATE')
+    and not has_table_privilege('service_role', 'public.attribution_touches', 'DELETE'),
+  'service role has no direct attribution history write privileges'
+);
+select throws_ok(
+  $$ insert into public.attribution_touches (
+       tenant_id, lead_id, evidence_id, touch_type, normalized_source,
+       confidence, state, reason_codes, manual_actor, manual_reason,
+       original_computed_touch_id
+     ) values (
+       'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+       'a2000000-0000-0000-0000-000000000002',
+       'a4000000-0000-0000-0000-000000000003',
+       'manual', 'google_ads', 'high', 'attributed', array['manual_correction'],
+       '11111111-1111-1111-1111-111111111111', 'Detached correction reason.', null
+     ) $$,
+  '23514', null,
+  'manual history cannot exist without an original computed touch'
+);
+select throws_ok(
+  $$ insert into public.attribution_touches (
+       tenant_id, lead_id, evidence_id, touch_type, normalized_source,
+       confidence, state, reason_codes, manual_actor, manual_reason,
+       original_computed_touch_id
+     ) values (
+       'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+       'a2000000-0000-0000-0000-000000000002',
+       'a4000000-0000-0000-0000-000000000003',
+       'manual', 'google_ads', 'high', 'attributed', array['manual_correction'],
+       '11111111-1111-1111-1111-111111111111', 'Wrong lead correction reason.',
+       (select id from public.attribution_touches
+        where tenant_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+          and lead_id = 'a2000000-0000-0000-0000-000000000001'
+          and touch_type = 'first' order by created_at desc, id desc limit 1)
+     ) $$,
+  '23514', null,
+  'manual history must reference a computed touch for the same lead and model'
+);
+select throws_ok(
+  $$ update public.attribution_touches set normalized_source = 'forged'
+     where tenant_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+       and touch_type = 'first' $$,
+  '42501', null,
+  'the database boundary rejects attribution history updates even for the table owner'
+);
+select throws_ok(
+  $$ delete from public.attribution_touches
+     where tenant_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+       and touch_type = 'first' $$,
+  '42501', null,
+  'the database boundary rejects attribution history deletes even for the table owner'
 );
 
 select * from finish();

@@ -173,6 +173,34 @@ describe("ingestLeadWith", () => {
     },
   );
 
+  it.each(["accepted", "duplicate"] as const)(
+    "preserves the durable %s response when attribution recomputation fails",
+    async (status) => {
+      const recordRecomputeFailure = vi.fn().mockRejectedValue(new Error("report unavailable"));
+
+      await expect(
+        ingestLeadWith(
+          KEY_ID,
+          baseEvent,
+          { idempotencyKey: EVENT_ID, bodyDigest: "f".repeat(64), requestId: REQUEST_ID },
+          {
+            findSite: vi.fn().mockResolvedValue(site),
+            persistAtomic: vi.fn().mockResolvedValue({ status, lead_id: LEAD_ID }),
+            recompute: vi.fn().mockRejectedValue(new Error("lead@example.com raw provider error")),
+            recordRecomputeFailure,
+          },
+        ),
+      ).resolves.toEqual({ status, lead_id: LEAD_ID });
+
+      expect(recordRecomputeFailure).toHaveBeenCalledWith({
+        tenantId: TENANT_ID,
+        leadId: LEAD_ID,
+        requestId: REQUEST_ID,
+      });
+      expect(JSON.stringify(recordRecomputeFailure.mock.calls)).not.toContain("lead@example.com");
+    },
+  );
+
   it.each([
     ["unknown", null],
     ["disabled", { ...site, enabled: false }],

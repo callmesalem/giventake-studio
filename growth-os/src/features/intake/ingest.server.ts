@@ -91,6 +91,11 @@ type IngestLeadDependencies = {
   findSite: (siteKeyId: string) => Promise<IngestSite | null>;
   persistAtomic: (input: AtomicLeadInput) => Promise<LeadEventAck>;
   recompute?: (tenantId: string, leadId: string) => Promise<void>;
+  recordRecomputeFailure?: (input: {
+    tenantId: string;
+    leadId: string;
+    requestId: string;
+  }) => Promise<void>;
 };
 
 const ackSchema = z
@@ -178,7 +183,21 @@ export async function ingestLeadWith(
       recordedAt: event.consent.recorded_at,
     },
   });
-  await dependencies.recompute?.(site.tenantId, acknowledgment.lead_id);
+  if (dependencies.recompute) {
+    try {
+      await dependencies.recompute(site.tenantId, acknowledgment.lead_id);
+    } catch {
+      try {
+        await dependencies.recordRecomputeFailure?.({
+          tenantId: site.tenantId,
+          leadId: acknowledgment.lead_id,
+          requestId: context.requestId,
+        });
+      } catch {
+        // The durable queue remains pending when failure-state reporting is unavailable.
+      }
+    }
+  }
   return acknowledgment;
 }
 
@@ -257,6 +276,19 @@ async function persistAtomicLead(input: AtomicLeadInput): Promise<LeadEventAck> 
   return parsed.data;
 }
 
+async function recordAttributionRecomputeFailure(input: {
+  tenantId: string;
+  leadId: string;
+  requestId: string;
+}): Promise<void> {
+  const { error } = await createJobSupabase().rpc("record_attribution_recompute_failure", {
+    target_tenant: input.tenantId,
+    target_lead: input.leadId,
+    event_request_id: input.requestId,
+  });
+  if (error) throw error;
+}
+
 export async function ingestLead(
   siteKeyId: string,
   event: LeadEventV1,
@@ -270,6 +302,7 @@ export async function ingestLead(
     findSite: findIngestSite,
     persistAtomic: persistAtomicLead,
     recompute: recomputeLeadAttribution,
+    recordRecomputeFailure: recordAttributionRecomputeFailure,
   });
 }
 

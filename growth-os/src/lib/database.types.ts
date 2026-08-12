@@ -85,6 +85,50 @@ export type Database = {
           },
         ];
       };
+      attribution_recompute_jobs: {
+        Row: {
+          attempt_count: number;
+          created_at: string;
+          last_request_id: string | null;
+          lead_id: string;
+          next_retry_at: string | null;
+          sanitized_failure_code: string | null;
+          status: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          attempt_count?: number;
+          created_at?: string;
+          last_request_id?: string | null;
+          lead_id: string;
+          next_retry_at?: string | null;
+          sanitized_failure_code?: string | null;
+          status?: string;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          attempt_count?: number;
+          created_at?: string;
+          last_request_id?: string | null;
+          lead_id?: string;
+          next_retry_at?: string | null;
+          sanitized_failure_code?: string | null;
+          status?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attribution_recompute_jobs_tenant_lead_fkey";
+            columns: ["tenant_id", "lead_id"];
+            isOneToOne: true;
+            referencedRelation: "leads";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
       attribution_touches: {
         Row: {
           campaign_external_id: string | null;
@@ -1492,6 +1536,14 @@ export type Database = {
           target_tenant: string;
         };
         Returns: Json;
+      };
+      record_attribution_recompute_failure: {
+        Args: {
+          event_request_id: string;
+          target_lead: string;
+          target_tenant: string;
+        };
+        Returns: boolean;
       };
       reopen_lead: {
         Args: {
