@@ -154,9 +154,9 @@ select throws_ok(
     'aaaaaaaa-0000-0000-0000-000000000004', gen_random_uuid(),
     '{"status":"private_notes"}', '11111111-1111-1111-1111-111111111111'
   )$$,
-  '22023',
-  null,
-  'statuses use a finite value allowlist'
+  '42501',
+  'lifecycle audit actions require lifecycle transaction function',
+  'generic audit writes cannot reach lifecycle status metadata'
 );
 select throws_ok(
   $$select public.write_audit_event(

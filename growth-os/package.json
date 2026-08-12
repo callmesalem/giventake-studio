@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db": "supabase test db",
+    "test:db:upgrade": "node supabase/tests/release1_task6_upgrade.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "e2e": "playwright test"

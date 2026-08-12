@@ -180,6 +180,115 @@ No root application file changed.
 - The live smoke test covers server startup and the public login route only. Authenticated lead behavior is covered by component, server-boundary, pgTAP, typecheck, and production route-build verification rather than a seeded browser session.
 - Vite continues to emit the existing `vite-tsconfig-paths` advisory; it is unrelated to Task 6.
 
+## Fix Round 3
+
+Date: 2026-08-12
+
+### Result
+
+Addressed the remaining Important lifecycle-audit insertion boundary and replaced the synthetic upgrade fixture with a genuine historical migration replay:
+
+- Kept `public.write_audit_event` granted to `service_role` for required non-lifecycle server and application events, including retention and connector jobs.
+- Made the generic writer reject `lead.status_changed`, `lead.reopened`, and `revenue.recorded` unconditionally. Runtime roles cannot authorize those actions with GUCs, JWT metadata, actor values, or crafted metadata.
+- Added three fixed-action helpers in a revoked `private` schema. They are `SECURITY INVOKER`, compare `current_user` with the corresponding lifecycle RPC owner, accept typed finite fields instead of arbitrary JSON, and insert exactly one fixed lifecycle action.
+- Rebound status, reopen, and revenue RPCs to only their corresponding private helper. Their state update and audit insert remain in one transaction, so audit failure still rolls back lifecycle state.
+- Tightened lifecycle audit validation to exact per-action key sets, JSON scalar types, and finite values. Extra reason, note, amount, provider, or arbitrary keys fail even on a privileged direct insert.
+- Added a PID-scoped disposable database harness that replays migrations 001-009, historical pre-fix migration 010 from commit `232bcc8`, then current migrations 011-013. It inserts the real legacy row before 011, proves it survives the `NOT VALID` upgrade state, and verifies migration 012 performs the actual cleanup before migration 013 validates the exact contract.
+
+### RED Evidence
+
+Focused lifecycle command from `growth-os/`, before migration 013 existed:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task6_fix_round3.test.sql
+```
+
+After correcting a test-only role reset that initially stopped the run early, the authoritative RED ran all 34 assertions and failed 12. Failures proved the three private helpers were absent, service-role helper privileges were not bounded, exact metadata rejected neither allowlisted extras nor privileged extra-key inserts, and `service_role` successfully fabricated all three lifecycle actions through the generic writer.
+
+Disposable upgrade RED command:
+
+```powershell
+node supabase/tests/release1_task6_upgrade.mjs
+```
+
+Result: failed as expected because migration 013 did not exist. After migration 013 was added, the first harness execution exposed that the repository's migration 010 had been amended in Fix Round 1 and could no longer model deployed pre-fix traffic. The harness was corrected to replay the actual historical 010 from commit `232bcc8`; no production migration was weakened.
+
+### GREEN Evidence
+
+Focused lifecycle and upgrade commands:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' migration up
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task6_fix_round3.test.sql
+npx --yes bun run test:db:upgrade
+```
+
+Result: migration 013 applied; the final strengthened lifecycle suite passed 38 assertions. The disposable database applied historical migration 010 plus current 011-013, verified the real migration UPDATE removed reason, preserved allowed fields and immutable identity, validated the exact constraint, denied service audit update/delete, printed `Task 6 disposable upgrade path: PASS`, and dropped the database.
+
+Combined compatibility command:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task4_fix1.test.sql supabase/tests/release1_task5_intake.test.sql supabase/tests/release1_task6_lead_ledger.test.sql supabase/tests/release1_task6_fix_round1.test.sql supabase/tests/release1_task6_fix_round2.test.sql supabase/tests/release1_task6_fix_round3.test.sql
+npx --yes bun run test:db:upgrade
+```
+
+Result: 6 database files passed, 233 assertions, and the historical upgrade passed. The older Task 4 generic-lifecycle assertion was updated from metadata rejection to the stronger action-boundary rejection.
+
+Clean reset and complete database commands:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' db reset
+npx --yes bun run test:db
+npx --yes bun run test:db:upgrade
+```
+
+Result: all 13 current migrations applied from an empty database; all 11 pgTAP files passed, 324 assertions. The independent historical upgrade replay passed after the clean reset.
+
+Full Growth OS commands:
+
+```powershell
+npx --yes bun run test
+npx --yes bun run typecheck
+npx --yes bun run lint
+npx --yes bun run build
+```
+
+Result: 16 files and 160 tests passed; typecheck and lint passed; production client and SSR builds passed with 1,920 client modules and 103 SSR modules.
+
+Final hygiene command:
+
+```powershell
+git diff --check
+```
+
+Result: client bundle and client lead-source scans found no service/crypto keys, ciphertext/hash/storage fields, internal notes, or support-session internals. Lead logging and custom-GUC authorization scans found no matches. `routeTree.gen.ts` is unchanged, no disposable `growth_os_task6_upgrade_*` database remains, `growth-os/supabase/.branches` is absent, and no root application file changed.
+
+### Fix Round 3 Changed Files
+
+- `.superpowers/sdd/2026-08-09-giventake-growth-os-release-1/task-6-report.md`
+- `growth-os/package.json`
+- `growth-os/supabase/migrations/202608120013_task6_fix_round3.sql`
+- `growth-os/supabase/tests/release1_task4_fix1.test.sql`
+- `growth-os/supabase/tests/release1_task6_fix_round3.test.sql`
+- `growth-os/supabase/tests/release1_task6_upgrade.mjs`
+
+### Fix Round 3 Self-Review
+
+- Generic `write_audit_event` remains `SECURITY DEFINER` and executable by `service_role`, but rejects the three lifecycle enum values before performing any insert. Retention and connector generic writes are covered as successful service-role calls.
+- Private helpers expose no generic action or metadata parameter. Their schema usage and function execution are revoked from `public`, `anon`, `authenticated`, and `service_role`.
+- Private helpers are invoker-security functions, so a lifecycle RPC's unforgeable definer `current_user` is visible. Each helper also compares that role to its corresponding RPC owner; caller-settable session data is irrelevant.
+- Authenticated and anonymous callers cannot execute the generic writer or private helpers. Service role cannot execute private helpers and cannot fabricate lifecycle actions through the generic writer.
+- Lifecycle RPC definitions call only their corresponding private helper. pgTAP proves each legitimate operation emits exactly one matching event and no duplicates.
+- Exact metadata contracts require only the documented keys, correct JSON types, finite statuses/change codes, ISO-shaped date text, and nonnegative integer counts. The table constraint is validated on fresh and upgraded databases.
+- The upgrade harness creates only a database named `growth_os_task6_upgrade_<pid>` inside the configured local Supabase database container, guards the prefix, uses `ON_ERROR_STOP`, and drops it with force in `finally`. It never resets or mutates the normal developer database.
+- Existing ingestion, retention, auth, connector, support, invitation, branding, consent, RLS, revenue history, bigint transport, currency exponents, POST lookup, and application tests remain green.
+
+### Fix Round 3 Concerns And Maintenance
+
+- The historical upgrade test intentionally depends on ancestor commit `232bcc8`, the exact pre-fix Task 6 migration artifact. Repositories running this harness must retain that reachable commit and a running local Supabase database container.
+- The ISO 4217 current-list mismatch remains the separately deferred Minor and was not changed.
+- Vite continues to emit the existing `vite-tsconfig-paths` advisory; this round leaves it untouched.
+
 ## Fix Round 1
 
 Date: 2026-08-12
