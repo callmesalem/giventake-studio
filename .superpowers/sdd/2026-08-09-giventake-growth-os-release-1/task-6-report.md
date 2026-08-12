@@ -320,3 +320,99 @@ The running local application at `http://127.0.0.1:4174/login` returned HTTP 200
 - Concurrency is verified through lead-row `FOR UPDATE` checks, the partial unique current-outcome index, and transactional pgTAP flows. The local pgTAP harness does not run a separate multi-connection race.
 - The authenticated lead routes remain covered by server, component, route, and database tests rather than a seeded browser login. The live route smoke check covers the public login response.
 - Vite continues to emit the existing `vite-tsconfig-paths` advisory; this round does not broaden into that separate cleanup.
+
+## Fix Round 2
+
+Date: 2026-08-12
+
+### Result
+
+Addressed the two remaining Important findings with forward migration `202608120012_task6_fix_round2.sql`:
+
+- Extended the invoker lifecycle trigger to reject any authenticated direct update that changes either `status` or `preterminal_status`. Authorization remains the unforgeable `current_user` boundary established by the owner of the `SECURITY DEFINER` lifecycle RPC; custom GUCs are not read or set.
+- Preserved RLS behavior: a hidden cross-tenant update affects zero rows and does not fire the row trigger.
+- Added a deterministic lifecycle metadata sanitizer, revoked it from `public`, `anon`, `authenticated`, and `service_role`, and used it in the privileged migration to canonicalize existing status, reopen, and revenue audit metadata.
+- The cleanup removes legacy reopen reason and all noncanonical keys, preserves valid finite status/date/count values, supplies finite canonical change/count defaults for pre-fix rows, and leaves event identity, actor, target, request, and timestamp untouched.
+- Validated `audit_events_lead_operation_metadata_check` after cleanup. The cleanup transformation is idempotent in effect, and fresh installs apply all migrations cleanly.
+
+### RED Evidence
+
+Focused database command from `growth-os/`, before adding migration 012:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task6_fix_round2.test.sql
+```
+
+The initial harness run stopped after the first two expected failures because the intentionally absent sanitizer returned `NULL` into a test fixture `NOT NULL` column. The test-only fallback was corrected to retain unsanitized metadata when the function is absent, then the same command was rerun before production code changed.
+
+Authoritative RED result: 25 assertions ran; 12 failed as expected. Failures proved the trigger omitted `preterminal_status`, the sanitizer was absent, legacy reason remained, the strict constraint was unvalidated, same-tenant terminal/nonterminal and spoofed-GUC writes succeeded, and reopen restored the forged `new` value instead of the lifecycle-owned `qualified` value.
+
+### GREEN Evidence
+
+Focused round 2 command:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' migration up
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task6_fix_round2.test.sql
+```
+
+Result: migration 012 applied; 25 assertions passed. Coverage includes terminal and nonterminal preterminal forgery, combined status/preterminal writes, spoofed GUCs, legitimate status/reopen RPCs, cross-tenant zero-row behavior, reopen storage isolation, legacy reason cleanup, allowed-field preservation, event identity preservation, idempotence, constraint validation, revoked sanitizer execution, and authenticated/service audit update/delete denial.
+
+Combined focused Task 6 commands:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task6_lead_ledger.test.sql supabase/tests/release1_task6_fix_round1.test.sql supabase/tests/release1_task6_fix_round2.test.sql
+& '.\node_modules\.bin\vitest.exe' run src/features/leads --reporter=dot
+```
+
+Result: all 3 Task 6 database files passed, 95 assertions; all 4 lead application files passed, 62 tests.
+
+Clean reset and full pgTAP commands:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' db reset
+npx --yes bun run test:db
+```
+
+Result: all 12 migrations applied from an empty database; all 10 pgTAP files passed, 286 assertions.
+
+Full Growth OS commands:
+
+```powershell
+npx --yes bun run test
+npx --yes bun run typecheck
+npx --yes bun run lint
+npx --yes bun run build
+```
+
+Result: 16 files and 160 tests passed; typecheck and lint passed; production client and SSR builds passed with 1,920 client modules and 103 SSR modules.
+
+Final scans and hygiene:
+
+```powershell
+git diff --check
+```
+
+Result: client bundle and client lead-source scans found no service/crypto keys, ciphertext/hash/storage fields, internal note fields, or support-session internals. Lead logging and migration custom-GUC authorization scans found no matches. `routeTree.gen.ts` is unchanged, `growth-os/supabase/.branches` is absent, and no root application files changed.
+
+### Fix Round 2 Changed Files
+
+- `.superpowers/sdd/2026-08-09-giventake-growth-os-release-1/task-6-report.md`
+- `growth-os/supabase/migrations/202608120012_task6_fix_round2.sql`
+- `growth-os/supabase/tests/release1_task6_fix_round2.test.sql`
+
+### Fix Round 2 Self-Review
+
+- The trigger remains `SECURITY INVOKER`; authenticated clients cannot manufacture the lifecycle RPC owner's `current_user`, including with old or invented `set_config` names.
+- Both `change_lead_status` and `reopen_lead` continue to update `status` and `preterminal_status` transactionally under their common definer owner. No client storage field is accepted by either RPC.
+- RLS filters hidden tenant rows before the row trigger, preserving zero-row cross-tenant writes instead of revealing row existence.
+- The migration sanitizer is a pure immutable transform with no DML capability and no client-role execution grant. Only the migration performs the audit update.
+- Canonicalization emits only finite change/status/date/count fields. It cannot retain reason, note, amount, ciphertext, hashes, or arbitrary metadata.
+- The update changes only `metadata`; audit IDs, tenant, actor, action, target, request ID, and timestamps remain immutable. Existing authenticated and service roles still have no audit update/delete privilege.
+- Revenue history, bigint text transport, currency exponents, embedded tenant filters, support read-only behavior, POST exact lookup, Task 5 consent, and all prior suites remain unchanged and green.
+
+### Fix Round 2 Concerns And Maintenance
+
+- The sanitizer uses deterministic finite defaults only for malformed historical lifecycle fields; valid legacy status/date/count fields are preserved exactly. The known pre-fix reopen shape maps to `change_code = lead_reopened` and `superseded_count = 0`.
+- The ISO 4217 current-list mismatch remains the separately deferred Minor and was intentionally not changed in this round.
+- Vite continues to emit the existing `vite-tsconfig-paths` advisory; it is unrelated to Task 6.
