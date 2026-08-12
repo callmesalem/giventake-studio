@@ -98,10 +98,11 @@ const migrations = readdirSync(migrationDir)
   .filter((name) => /^\d+.*\.sql$/.test(name))
   .sort();
 const throughTask6 = migrations.filter((name) => name < "202608120014");
-const task7 = migrations.find((name) => name.startsWith("202608120014_"));
-const fixRound1 = migrations.find((name) => name.startsWith("202608120015_"));
+const task7Migrations = migrations.filter((name) => name >= "202608120014");
 
-if (!task7 || !fixRound1) throw new Error("expected Task 7 migrations 014 and 015");
+if (!task7Migrations.some((name) => name.startsWith("202608120016_"))) {
+  throw new Error("expected Task 7 migrations through 016");
+}
 if (!database.startsWith("growth_os_task7_upgrade_")) {
   throw new Error("refusing to use a non-test database name");
 }
@@ -209,8 +210,7 @@ try {
     `select id from public.attribution_evidence where lead_id = '${leadId}' order by occurred_at, id limit 1;`,
   );
 
-  applyMigration(task7);
-  applyMigration(fixRound1);
+  for (const migration of task7Migrations) applyMigration(migration);
 
   psql(
     database,
@@ -269,12 +269,20 @@ try {
   }).replaceAll("'", "''");
   const recompute = (requestId) => `
     set role service_role;
+    with claimed as (
+      select public.claim_attribution_recompute_job(
+        'f7aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '${leadId}', now()
+      ) as payload
+    )
     select public.apply_attribution_recomputation(
       'f7aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '${leadId}',
+      (payload ->> 'generation')::bigint,
+      (payload ->> 'claim_token')::uuid,
       '${evidenceId}', '${decision}'::jsonb,
       '${evidenceId}', '${decision}'::jsonb,
       '${requestId}'
-    );
+    )
+    from claimed where payload is not null;
   `;
 
   await Promise.all([

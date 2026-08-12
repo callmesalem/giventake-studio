@@ -7,6 +7,7 @@ const TENANT_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const SITE_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
 const LEAD_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 const REQUEST_ID = "dddddddd-dddd-dddd-dddd-dddddddddddd";
+const CLAIM_TOKEN = "d1000000-0000-0000-0000-000000000001";
 const EVENT_ID = "7e9f26af-2501-4d7c-bd8f-9a3c56bc8bd4";
 const KEY_ID = "site-key-test-1";
 const SECRET = "test-signing-secret-with-32-bytes-minimum";
@@ -186,7 +187,13 @@ describe("ingestLeadWith", () => {
           {
             findSite: vi.fn().mockResolvedValue(site),
             persistAtomic: vi.fn().mockResolvedValue({ status, lead_id: LEAD_ID }),
-            recompute: vi.fn().mockRejectedValue(new Error("lead@example.com raw provider error")),
+            recompute: vi.fn().mockRejectedValue(
+              Object.assign(new Error("lead@example.com raw provider error"), {
+                code: "ATTRIBUTION_RECOMPUTE_FAILED",
+                generation: "7",
+                claimToken: CLAIM_TOKEN,
+              }),
+            ),
             recordRecomputeFailure,
           },
         ),
@@ -195,6 +202,8 @@ describe("ingestLeadWith", () => {
       expect(recordRecomputeFailure).toHaveBeenCalledWith({
         tenantId: TENANT_ID,
         leadId: LEAD_ID,
+        generation: "7",
+        claimToken: CLAIM_TOKEN,
         requestId: REQUEST_ID,
       });
       expect(JSON.stringify(recordRecomputeFailure.mock.calls)).not.toContain("lead@example.com");

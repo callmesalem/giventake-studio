@@ -17,6 +17,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
+import { Route as ApiJobsAttributionRouteImport } from './routes/api.jobs.attribution'
 import { Route as AppLeadsLeadIdRouteImport } from './routes/_app.leads.$leadId'
 import { Route as ApiIngestV1LeadsRouteImport } from './routes/api.ingest.v1.leads'
 
@@ -59,6 +60,11 @@ const AppLeadsRoute = AppLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiJobsAttributionRoute = ApiJobsAttributionRouteImport.update({
+  id: '/api/jobs/attribution',
+  path: '/api/jobs/attribution',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppLeadsLeadIdRoute = AppLeadsLeadIdRouteImport.update({
   id: '/$leadId',
   path: '/$leadId',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/leads/$leadId': typeof AppLeadsLeadIdRoute
+  '/api/jobs/attribution': typeof ApiJobsAttributionRoute
   '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRoutesByTo {
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AppIndexRoute
   '/leads/$leadId': typeof AppLeadsLeadIdRoute
+  '/api/jobs/attribution': typeof ApiJobsAttributionRoute
   '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRoutesById {
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/_app/': typeof AppIndexRoute
   '/_app/leads/$leadId': typeof AppLeadsLeadIdRoute
+  '/api/jobs/attribution': typeof ApiJobsAttributionRoute
   '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRouteTypes {
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/auth/callback'
     | '/leads/$leadId'
+    | '/api/jobs/attribution'
     | '/api/ingest/v1/leads'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/'
     | '/leads/$leadId'
+    | '/api/jobs/attribution'
     | '/api/ingest/v1/leads'
   id:
     | '__root__'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/_app/'
     | '/_app/leads/$leadId'
+    | '/api/jobs/attribution'
     | '/api/ingest/v1/leads'
   fileRoutesById: FileRoutesById
 }
@@ -148,6 +160,7 @@ export interface RootRouteChildren {
   SelectTenantRoute: typeof SelectTenantRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ApiJobsAttributionRoute: typeof ApiJobsAttributionRoute
   ApiIngestV1LeadsRoute: typeof ApiIngestV1LeadsRoute
 }
 
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLeadsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/jobs/attribution': {
+      id: '/api/jobs/attribution'
+      path: '/api/jobs/attribution'
+      fullPath: '/api/jobs/attribution'
+      preLoaderRoute: typeof ApiJobsAttributionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/leads/$leadId': {
       id: '/_app/leads/$leadId'
       path: '/$leadId'
@@ -258,6 +278,7 @@ const rootRouteChildren: RootRouteChildren = {
   SelectTenantRoute: SelectTenantRoute,
   AdminSupportRoute: AdminSupportRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ApiJobsAttributionRoute: ApiJobsAttributionRoute,
   ApiIngestV1LeadsRoute: ApiIngestV1LeadsRoute,
 }
 export const routeTree = rootRouteImport

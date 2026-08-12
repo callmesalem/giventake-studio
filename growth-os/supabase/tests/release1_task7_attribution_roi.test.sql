@@ -247,10 +247,69 @@ select is(
   'accepted evidence durably queues recomputation before the immediate attempt'
 );
 
-set local role service_role;
+create function pg_temp.apply_claimed(
+  target_tenant uuid,
+  target_lead uuid,
+  first_evidence_id uuid,
+  first_decision jsonb,
+  last_evidence_id uuid,
+  last_decision jsonb,
+  event_request_id uuid
+)
+returns jsonb
+language plpgsql
+as $$
+declare
+  claim jsonb;
+begin
+  claim := public.claim_attribution_recompute_job(
+    target_tenant, target_lead, clock_timestamp() + interval '1 day'
+  );
+  if claim is null then
+    return jsonb_build_object('found', false, 'changed', false);
+  end if;
+  return public.apply_attribution_recomputation(
+    target_tenant,
+    target_lead,
+    (claim ->> 'generation')::bigint,
+    (claim ->> 'claim_token')::uuid,
+    first_evidence_id,
+    first_decision,
+    last_evidence_id,
+    last_decision,
+    event_request_id
+  );
+end;
+$$;
+
+create function pg_temp.fail_claimed(
+  target_tenant uuid,
+  target_lead uuid,
+  event_request_id uuid
+)
+returns jsonb
+language plpgsql
+as $$
+declare
+  claim jsonb;
+begin
+  claim := public.claim_attribution_recompute_job(
+    target_tenant, target_lead, clock_timestamp() + interval '1 day'
+  );
+  if claim is null then return jsonb_build_object('status', 'stale'); end if;
+  return public.record_attribution_recompute_failure(
+    target_tenant,
+    target_lead,
+    (claim ->> 'generation')::bigint,
+    (claim ->> 'claim_token')::uuid,
+    event_request_id,
+    clock_timestamp()
+  );
+end;
+$$;
 
 select is(
-  public.apply_attribution_recomputation(
+  pg_temp.apply_claimed(
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     'a2000000-0000-0000-0000-000000000001',
     'a4000000-0000-0000-0000-000000000001',
@@ -293,7 +352,7 @@ select ok(
   'recomputation audit metadata contains no contact or raw evidence values'
 );
 select is(
-  public.apply_attribution_recomputation(
+  pg_temp.apply_claimed(
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     'a2000000-0000-0000-0000-000000000001',
     'a4000000-0000-0000-0000-000000000001',
@@ -313,7 +372,7 @@ select is(
   'idempotent recomputation appends no duplicate history'
 );
 select is(
-  public.apply_attribution_recomputation(
+  pg_temp.apply_claimed(
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     'b2000000-0000-0000-0000-000000000001',
     'b4000000-0000-0000-0000-000000000001',
@@ -326,7 +385,7 @@ select is(
   'cross-tenant recomputation is indistinguishable from unknown'
 );
 
-select public.apply_attribution_recomputation(
+select pg_temp.apply_claimed(
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'a2000000-0000-0000-0000-000000000002',
   'a4000000-0000-0000-0000-000000000003',
@@ -335,7 +394,7 @@ select public.apply_attribution_recomputation(
   '{"source":"meta_ads","campaign_external_id":null,"confidence":"high","state":"attributed","reason_codes":["click_id:fbclid"]}',
   'a6000000-0000-0000-0000-000000000004'
 );
-select public.apply_attribution_recomputation(
+select pg_temp.apply_claimed(
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'a2000000-0000-0000-0000-000000000003',
   'a4000000-0000-0000-0000-000000000004',
@@ -344,12 +403,13 @@ select public.apply_attribution_recomputation(
   '{"source":null,"campaign_external_id":null,"confidence":"low","state":"unattributed","reason_codes":["direct_or_unknown"]}',
   'a6000000-0000-0000-0000-000000000005'
 );
-select ok(
-  public.record_attribution_recompute_failure(
+select is(
+  pg_temp.fail_claimed(
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     'a2000000-0000-0000-0000-000000000004',
     'a6000000-0000-0000-0000-000000000099'
-  ),
+  ) ->> 'status',
+  'failed',
   'a failed immediate recomputation records durable retry state'
 );
 select results_eq(
@@ -364,7 +424,7 @@ select results_eq(
      ) $$,
   'retry observability stores only canonical identifiers and a fixed failure code'
 );
-select public.apply_attribution_recomputation(
+select pg_temp.apply_claimed(
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'a2000000-0000-0000-0000-000000000004',
   'a4000000-0000-0000-0000-000000000005',

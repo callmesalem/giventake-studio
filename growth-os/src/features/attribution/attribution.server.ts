@@ -30,6 +30,85 @@ export class AttributionNotFoundError extends Error {
   }
 }
 
+export class AttributionRecomputeFailedError extends Error {
+  readonly code = "ATTRIBUTION_RECOMPUTE_FAILED";
+
+  constructor(
+    readonly generation: string,
+    readonly claimToken: string,
+    options?: ErrorOptions,
+  ) {
+    super("ATTRIBUTION_RECOMPUTE_FAILED", options);
+    this.name = "AttributionRecomputeFailedError";
+  }
+}
+
+const generation = z.string().regex(/^[1-9][0-9]*$/);
+const claimEvidenceSchema = z
+  .object({
+    id: uuid,
+    occurred_at: z.string().datetime({ offset: true }),
+    declared_source: z.string().max(80).nullable(),
+    click_ids: z.record(z.string(), z.string().nullable()),
+    utm_source: z.string().max(200).nullable(),
+    utm_campaign: z.string().max(200).nullable(),
+    referrer_domain: z.string().max(200).nullable(),
+  })
+  .strict();
+const attributionJobClaimSchema = z
+  .object({
+    tenant_id: uuid,
+    lead_id: uuid,
+    generation,
+    claim_token: uuid,
+    submitted_at: z.string().datetime({ offset: true }),
+    evidence: z.array(claimEvidenceSchema),
+  })
+  .strict();
+
+export type AttributionJobClaim = {
+  tenantId: string;
+  leadId: string;
+  generation: string;
+  claimToken: string;
+  submittedAt: string;
+  evidence: StoredAttributionEvidence[];
+};
+
+export function parseAttributionJobClaim(value: unknown): AttributionJobClaim {
+  const parsed = attributionJobClaimSchema.parse(value);
+  return {
+    tenantId: parsed.tenant_id,
+    leadId: parsed.lead_id,
+    generation: parsed.generation,
+    claimToken: parsed.claim_token,
+    submittedAt: parsed.submitted_at,
+    evidence: parsed.evidence.map((item) => ({
+      id: item.id,
+      occurredAt: item.occurred_at,
+      declaredSource: item.declared_source,
+      clickIds: item.click_ids as StoredAttributionEvidence["clickIds"],
+      utmSource: item.utm_source,
+      utmCampaign: item.utm_campaign,
+      referrerDomain: item.referrer_domain,
+    })),
+  };
+}
+
+export function isAttributionRecomputeFailedError(
+  value: unknown,
+): value is AttributionRecomputeFailedError {
+  if (value === null || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    record.code === "ATTRIBUTION_RECOMPUTE_FAILED" &&
+    typeof record.generation === "string" &&
+    generation.safeParse(record.generation).success &&
+    typeof record.claimToken === "string" &&
+    uuid.safeParse(record.claimToken).success
+  );
+}
+
 export function selectAttributionEvidence(
   evidence: StoredAttributionEvidence[],
   submittedAt: string,
@@ -49,37 +128,36 @@ export function selectAttributionEvidence(
 }
 
 type RecomputedTouch = { evidenceId: string; decision: AttributionDecision };
-type RecomputeTransaction = {
+export type RecomputeTransaction = {
   tenantId: string;
   leadId: string;
+  generation: string;
+  claimToken: string;
   requestId: string;
   first: RecomputedTouch;
   last: RecomputedTouch;
 };
 
+export type RecomputeResult = { completed: boolean; stale: boolean };
+
 type RecomputeDependencies = {
-  loadLead: (tenantId: string, leadId: string) => Promise<{ submittedAt: string } | null>;
-  loadEvidence: (tenantId: string, leadId: string) => Promise<StoredAttributionEvidence[]>;
-  applyRecomputation: (input: RecomputeTransaction) => Promise<{ changed: boolean }>;
+  claimSnapshot: (tenantId: string, leadId: string) => Promise<AttributionJobClaim | null>;
+  applyRecomputation: (input: RecomputeTransaction) => Promise<RecomputeResult>;
   requestId: () => string;
 };
 
-export async function recomputeLeadAttributionWith(
-  tenantId: string,
-  leadId: string,
-  dependencies: RecomputeDependencies,
-): Promise<void> {
-  const parsedTenantId = uuid.parse(tenantId);
-  const parsedLeadId = uuid.parse(leadId);
-  const lead = await dependencies.loadLead(parsedTenantId, parsedLeadId);
-  if (!lead) throw new AttributionNotFoundError();
-  const evidence = await dependencies.loadEvidence(parsedTenantId, parsedLeadId);
-  const selected = selectAttributionEvidence(evidence, lead.submittedAt);
+export function buildAttributionRecomputation(
+  claim: AttributionJobClaim,
+  requestId: string,
+): RecomputeTransaction {
+  const selected = selectAttributionEvidence(claim.evidence, claim.submittedAt);
   if (!selected.first || !selected.last) throw new AttributionNotFoundError();
-  await dependencies.applyRecomputation({
-    tenantId: parsedTenantId,
-    leadId: parsedLeadId,
-    requestId: dependencies.requestId(),
+  return {
+    tenantId: claim.tenantId,
+    leadId: claim.leadId,
+    generation: claim.generation,
+    claimToken: claim.claimToken,
+    requestId,
     first: {
       evidenceId: selected.first.id,
       decision: resolveAttribution(selected.first),
@@ -88,10 +166,28 @@ export async function recomputeLeadAttributionWith(
       evidenceId: selected.last.id,
       decision: resolveAttribution(selected.last),
     },
-  });
+  };
 }
 
-function decisionJson(decision: AttributionDecision): Json {
+export async function recomputeLeadAttributionWith(
+  tenantId: string,
+  leadId: string,
+  dependencies: RecomputeDependencies,
+): Promise<void> {
+  const parsedTenantId = uuid.parse(tenantId);
+  const parsedLeadId = uuid.parse(leadId);
+  const claim = await dependencies.claimSnapshot(parsedTenantId, parsedLeadId);
+  if (!claim) throw new AttributionNotFoundError();
+  try {
+    await dependencies.applyRecomputation(
+      buildAttributionRecomputation(claim, dependencies.requestId()),
+    );
+  } catch (cause) {
+    throw new AttributionRecomputeFailedError(claim.generation, claim.claimToken, { cause });
+  }
+}
+
+export function decisionJson(decision: AttributionDecision): Json {
   return {
     source: decision.source,
     campaign_external_id: decision.campaignExternalId,
@@ -101,59 +197,39 @@ function decisionJson(decision: AttributionDecision): Json {
   };
 }
 
+export async function applyAttributionRecomputation(
+  input: RecomputeTransaction,
+): Promise<RecomputeResult> {
+  const { data, error } = await createJobSupabase().rpc("apply_attribution_recomputation", {
+    target_tenant: input.tenantId,
+    target_lead: input.leadId,
+    processed_generation: input.generation,
+    job_claim_token: input.claimToken,
+    first_evidence_id: input.first.evidenceId,
+    first_decision: decisionJson(input.first.decision),
+    last_evidence_id: input.last.evidenceId,
+    last_decision: decisionJson(input.last.decision),
+    event_request_id: input.requestId,
+  });
+  if (error) throw error;
+  const result = asRecord(data);
+  return { completed: result?.completed === true, stale: result?.stale === true };
+}
+
 export async function recomputeLeadAttribution(tenantId: string, leadId: string): Promise<void> {
   const job = createJobSupabase();
   return recomputeLeadAttributionWith(tenantId, leadId, {
     requestId: randomUUID,
-    async loadLead(scopedTenantId, scopedLeadId) {
-      const { data, error } = await job
-        .from("leads")
-        .select("occurred_at")
-        .eq("tenant_id", scopedTenantId)
-        .eq("id", scopedLeadId)
-        .is("restricted_at", null)
-        .maybeSingle();
-      if (error) throw error;
-      return data ? { submittedAt: data.occurred_at } : null;
-    },
-    async loadEvidence(scopedTenantId, scopedLeadId) {
-      const { data, error } = await job
-        .from("attribution_evidence")
-        .select(
-          "id, occurred_at, declared_source, click_ids, utm_source, utm_campaign, referrer_domain",
-        )
-        .eq("tenant_id", scopedTenantId)
-        .eq("lead_id", scopedLeadId)
-        .order("occurred_at", { ascending: true })
-        .order("id", { ascending: true });
-      if (error) throw error;
-      return data.map((row) => ({
-        id: row.id,
-        occurredAt: row.occurred_at,
-        declaredSource: row.declared_source,
-        clickIds:
-          row.click_ids && !Array.isArray(row.click_ids) && typeof row.click_ids === "object"
-            ? (row.click_ids as StoredAttributionEvidence["clickIds"])
-            : {},
-        utmSource: row.utm_source,
-        utmCampaign: row.utm_campaign,
-        referrerDomain: row.referrer_domain,
-      }));
-    },
-    async applyRecomputation(input) {
-      const { data, error } = await job.rpc("apply_attribution_recomputation", {
-        target_tenant: input.tenantId,
-        target_lead: input.leadId,
-        first_evidence_id: input.first.evidenceId,
-        first_decision: decisionJson(input.first.decision),
-        last_evidence_id: input.last.evidenceId,
-        last_decision: decisionJson(input.last.decision),
-        event_request_id: input.requestId,
+    async claimSnapshot(scopedTenantId, scopedLeadId) {
+      const { data, error } = await job.rpc("claim_attribution_recompute_job", {
+        target_tenant: scopedTenantId,
+        target_lead: scopedLeadId,
+        claimed_at: new Date().toISOString(),
       });
       if (error) throw error;
-      const result = asRecord(data);
-      return { changed: result?.changed === true };
+      return data === null ? null : parseAttributionJobClaim(data);
     },
+    applyRecomputation: applyAttributionRecomputation,
   });
 }
 

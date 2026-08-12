@@ -6,7 +6,10 @@ import {
   type LeadEventV1,
 } from "@giventake/growth-os-contract";
 import { z } from "zod";
-import { recomputeLeadAttribution } from "@/features/attribution/attribution.server";
+import {
+  isAttributionRecomputeFailedError,
+  recomputeLeadAttribution,
+} from "@/features/attribution/attribution.server";
 import type { Json } from "@/lib/database.types";
 import { decryptField, encryptField, lookupHash } from "@/lib/server/crypto.server";
 import { createJobSupabase } from "@/lib/server/supabase.server";
@@ -94,6 +97,8 @@ type IngestLeadDependencies = {
   recordRecomputeFailure?: (input: {
     tenantId: string;
     leadId: string;
+    generation: string;
+    claimToken: string;
     requestId: string;
   }) => Promise<void>;
 };
@@ -186,11 +191,14 @@ export async function ingestLeadWith(
   if (dependencies.recompute) {
     try {
       await dependencies.recompute(site.tenantId, acknowledgment.lead_id);
-    } catch {
+    } catch (error) {
+      if (!isAttributionRecomputeFailedError(error)) return acknowledgment;
       try {
         await dependencies.recordRecomputeFailure?.({
           tenantId: site.tenantId,
           leadId: acknowledgment.lead_id,
+          generation: error.generation,
+          claimToken: error.claimToken,
           requestId: context.requestId,
         });
       } catch {
@@ -279,12 +287,17 @@ async function persistAtomicLead(input: AtomicLeadInput): Promise<LeadEventAck> 
 async function recordAttributionRecomputeFailure(input: {
   tenantId: string;
   leadId: string;
+  generation: string;
+  claimToken: string;
   requestId: string;
 }): Promise<void> {
   const { error } = await createJobSupabase().rpc("record_attribution_recompute_failure", {
     target_tenant: input.tenantId,
     target_lead: input.leadId,
+    processed_generation: input.generation,
+    job_claim_token: input.claimToken,
     event_request_id: input.requestId,
+    failed_at: new Date().toISOString(),
   });
   if (error) throw error;
 }

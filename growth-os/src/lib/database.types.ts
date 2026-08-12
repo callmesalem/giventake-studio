@@ -88,9 +88,13 @@ export type Database = {
       attribution_recompute_jobs: {
         Row: {
           attempt_count: number;
+          claim_token: string | null;
+          claimed_generation: string | null;
           created_at: string;
+          generation: string;
           last_request_id: string | null;
           lead_id: string;
+          lease_expires_at: string | null;
           next_retry_at: string | null;
           sanitized_failure_code: string | null;
           status: string;
@@ -99,9 +103,13 @@ export type Database = {
         };
         Insert: {
           attempt_count?: number;
+          claim_token?: string | null;
+          claimed_generation?: string | null;
           created_at?: string;
+          generation?: string;
           last_request_id?: string | null;
           lead_id: string;
+          lease_expires_at?: string | null;
           next_retry_at?: string | null;
           sanitized_failure_code?: string | null;
           status?: string;
@@ -110,9 +118,13 @@ export type Database = {
         };
         Update: {
           attempt_count?: number;
+          claim_token?: string | null;
+          claimed_generation?: string | null;
           created_at?: string;
+          generation?: string;
           last_request_id?: string | null;
           lead_id?: string;
+          lease_expires_at?: string | null;
           next_retry_at?: string | null;
           sanitized_failure_code?: string | null;
           status?: string;
@@ -1393,11 +1405,21 @@ export type Database = {
           event_request_id: string;
           first_decision: Json;
           first_evidence_id: string;
+          job_claim_token: string;
           last_decision: Json;
           last_evidence_id: string;
+          processed_generation: string;
           target_lead: string;
           target_tenant: string;
         };
+        Returns: Json;
+      };
+      claim_attribution_recompute_job: {
+        Args: { claimed_at?: string; target_lead: string; target_tenant: string };
+        Returns: Json;
+      };
+      claim_attribution_recompute_jobs: {
+        Args: { batch_size?: number; claimed_at?: string };
         Returns: Json;
       };
       change_lead_status: {
@@ -1540,10 +1562,13 @@ export type Database = {
       record_attribution_recompute_failure: {
         Args: {
           event_request_id: string;
+          failed_at?: string;
+          job_claim_token: string;
+          processed_generation: string;
           target_lead: string;
           target_tenant: string;
         };
-        Returns: boolean;
+        Returns: Json;
       };
       reopen_lead: {
         Args: {

@@ -11,6 +11,7 @@ const OTHER_TENANT_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
 const LEAD_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 const USER_ID = "11111111-1111-1111-1111-111111111111";
 const REQUEST_ID = "dddddddd-dddd-dddd-dddd-dddddddddddd";
+const CLAIM_TOKEN = "d1000000-0000-0000-0000-000000000001";
 const FIRST_EVIDENCE_ID = "e1000000-0000-0000-0000-000000000001";
 const LAST_EVIDENCE_ID = "e1000000-0000-0000-0000-000000000002";
 const ORIGINAL_TOUCH_ID = "f1000000-0000-0000-0000-000000000001";
@@ -71,8 +72,14 @@ describe("recomputeLeadAttributionWith", () => {
 
     await expect(
       recomputeLeadAttributionWith(TENANT_ID, LEAD_ID, {
-        loadLead: vi.fn().mockResolvedValue({ submittedAt: "2026-08-09T16:00:00.000Z" }),
-        loadEvidence: vi.fn().mockResolvedValue(evidence),
+        claimSnapshot: vi.fn().mockResolvedValue({
+          tenantId: TENANT_ID,
+          leadId: LEAD_ID,
+          generation: "7",
+          claimToken: CLAIM_TOKEN,
+          submittedAt: "2026-08-09T16:00:00.000Z",
+          evidence,
+        }),
         applyRecomputation,
         requestId: () => REQUEST_ID,
       }),
@@ -81,6 +88,8 @@ describe("recomputeLeadAttributionWith", () => {
     expect(applyRecomputation).toHaveBeenCalledWith({
       tenantId: TENANT_ID,
       leadId: LEAD_ID,
+      generation: "7",
+      claimToken: CLAIM_TOKEN,
       requestId: REQUEST_ID,
       first: {
         evidenceId: FIRST_EVIDENCE_ID,
@@ -107,19 +116,37 @@ describe("recomputeLeadAttributionWith", () => {
 
   it("fails closed for wrong-tenant and unknown leads before reading evidence", async () => {
     for (const tenantId of [TENANT_ID, OTHER_TENANT_ID]) {
-      const loadEvidence = vi.fn();
       const applyRecomputation = vi.fn();
       await expect(
         recomputeLeadAttributionWith(tenantId, LEAD_ID, {
-          loadLead: vi.fn().mockResolvedValue(null),
-          loadEvidence,
+          claimSnapshot: vi.fn().mockResolvedValue(null),
           applyRecomputation,
           requestId: () => REQUEST_ID,
         }),
       ).rejects.toEqual(new AttributionNotFoundError());
-      expect(loadEvidence).not.toHaveBeenCalled();
       expect(applyRecomputation).not.toHaveBeenCalled();
     }
+  });
+
+  it("carries only the exact generation and claim token when a claimed attempt fails", async () => {
+    await expect(
+      recomputeLeadAttributionWith(TENANT_ID, LEAD_ID, {
+        claimSnapshot: vi.fn().mockResolvedValue({
+          tenantId: TENANT_ID,
+          leadId: LEAD_ID,
+          generation: "7",
+          claimToken: CLAIM_TOKEN,
+          submittedAt: "2026-08-09T16:00:00.000Z",
+          evidence,
+        }),
+        applyRecomputation: vi.fn().mockRejectedValue(new Error("lead@example.com raw failure")),
+        requestId: () => REQUEST_ID,
+      }),
+    ).rejects.toMatchObject({
+      code: "ATTRIBUTION_RECOMPUTE_FAILED",
+      generation: "7",
+      claimToken: CLAIM_TOKEN,
+    });
   });
 });
 
