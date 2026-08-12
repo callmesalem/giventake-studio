@@ -504,7 +504,7 @@ select is(
   0::bigint,
   'owner cannot select tenant B campaign metrics'
 );
-select lives_ok(
+select throws_ok(
   $$
     insert into public.revenue_outcomes (
       tenant_id,
@@ -522,7 +522,9 @@ select lives_ok(
       '11111111-1111-1111-1111-111111111111'
     )
   $$,
-  'owner can insert tenant A revenue outcome'
+  '42501',
+  'revenue changes require transaction function',
+  'owner revenue writes must use the transactional RPC'
 );
 select is_empty(
   $$

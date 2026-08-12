@@ -43,8 +43,9 @@ describe("field encryption", () => {
   it("rejects a tampered authenticated envelope", () => {
     const envelope = encryptField("private notes", "lead");
     const [version, iv, ciphertext] = envelope.split(".");
-    const changed = ciphertext!.endsWith("A") ? "B" : "A";
-    const tampered = `${version}.${iv}.${ciphertext!.slice(0, -1)}${changed}`;
+    const tamperedBytes = Buffer.from(ciphertext!, "base64url");
+    tamperedBytes[0] = tamperedBytes[0]! ^ 1;
+    const tampered = `${version}.${iv}.${tamperedBytes.toString("base64url")}`;
 
     expect(() => decryptField(tampered, "lead")).toThrowError(
       expect.objectContaining({ code: "DECRYPTION_FAILED" }),

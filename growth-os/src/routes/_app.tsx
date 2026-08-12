@@ -79,6 +79,12 @@ export function AuthenticatedLayout({
           <div className="flex items-center gap-2">
             <a
               className="rounded px-3 py-2 text-sm font-semibold text-slate-700 no-underline hover:bg-slate-100"
+              href="/leads"
+            >
+              Leads
+            </a>
+            <a
+              className="rounded px-3 py-2 text-sm font-semibold text-slate-700 no-underline hover:bg-slate-100"
               href="/settings"
             >
               Settings

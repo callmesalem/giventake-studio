@@ -16,6 +16,8 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppLeadsRouteImport } from './routes/_app.leads'
+import { Route as AppLeadsLeadIdRouteImport } from './routes/_app.leads.$leadId'
 import { Route as ApiIngestV1LeadsRouteImport } from './routes/api.ingest.v1.leads'
 
 const SelectTenantRoute = SelectTenantRouteImport.update({
@@ -52,6 +54,16 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLeadsRoute = AppLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeadsLeadIdRoute = AppLeadsLeadIdRouteImport.update({
+  id: '/$leadId',
+  path: '/$leadId',
+  getParentRoute: () => AppLeadsRoute,
+} as any)
 const ApiIngestV1LeadsRoute = ApiIngestV1LeadsRouteImport.update({
   id: '/api/ingest/v1/leads',
   path: '/api/ingest/v1/leads',
@@ -62,18 +74,22 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/select-tenant': typeof SelectTenantRoute
+  '/leads': typeof AppLeadsRouteWithChildren
   '/settings': typeof AppSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/leads/$leadId': typeof AppLeadsLeadIdRoute
   '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/select-tenant': typeof SelectTenantRoute
+  '/leads': typeof AppLeadsRouteWithChildren
   '/settings': typeof AppSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AppIndexRoute
+  '/leads/$leadId': typeof AppLeadsLeadIdRoute
   '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRoutesById {
@@ -81,10 +97,12 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/select-tenant': typeof SelectTenantRoute
+  '/_app/leads': typeof AppLeadsRouteWithChildren
   '/_app/settings': typeof AppSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/leads/$leadId': typeof AppLeadsLeadIdRoute
   '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRouteTypes {
@@ -93,28 +111,34 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/select-tenant'
+    | '/leads'
     | '/settings'
     | '/admin/support'
     | '/auth/callback'
+    | '/leads/$leadId'
     | '/api/ingest/v1/leads'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/select-tenant'
+    | '/leads'
     | '/settings'
     | '/admin/support'
     | '/auth/callback'
     | '/'
+    | '/leads/$leadId'
     | '/api/ingest/v1/leads'
   id:
     | '__root__'
     | '/_app'
     | '/login'
     | '/select-tenant'
+    | '/_app/leads'
     | '/_app/settings'
     | '/admin/support'
     | '/auth/callback'
     | '/_app/'
+    | '/_app/leads/$leadId'
     | '/api/ingest/v1/leads'
   fileRoutesById: FileRoutesById
 }
@@ -178,6 +202,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/leads': {
+      id: '/_app/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AppLeadsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/leads/$leadId': {
+      id: '/_app/leads/$leadId'
+      path: '/$leadId'
+      fullPath: '/leads/$leadId'
+      preLoaderRoute: typeof AppLeadsLeadIdRouteImport
+      parentRoute: typeof AppLeadsRoute
+    }
     '/api/ingest/v1/leads': {
       id: '/api/ingest/v1/leads'
       path: '/api/ingest/v1/leads'
@@ -188,12 +226,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppLeadsRouteChildren {
+  AppLeadsLeadIdRoute: typeof AppLeadsLeadIdRoute
+}
+
+const AppLeadsRouteChildren: AppLeadsRouteChildren = {
+  AppLeadsLeadIdRoute: AppLeadsLeadIdRoute,
+}
+
+const AppLeadsRouteWithChildren = AppLeadsRoute._addFileChildren(
+  AppLeadsRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppLeadsRoute: typeof AppLeadsRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppLeadsRoute: AppLeadsRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }

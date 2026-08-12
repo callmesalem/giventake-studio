@@ -1318,6 +1318,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      change_lead_status: {
+        Args: {
+          event_request_id: string;
+          next_status: Database["public"]["Enums"]["lead_status"];
+          target_lead: string;
+          target_tenant: string;
+        };
+        Returns: Json;
+      };
       consume_site_ingest_rate_limit: {
         Args: {
           attempt_time: string;
@@ -1403,6 +1412,27 @@ export type Database = {
           window_start: string;
         };
         Returns: number;
+      };
+      record_lead_revenue: {
+        Args: {
+          event_request_id: string;
+          revenue_amount_minor: string;
+          revenue_confirmed_on: string;
+          revenue_currency: string;
+          revenue_note_ciphertext: string | null;
+          target_lead: string;
+          target_tenant: string;
+        };
+        Returns: Json;
+      };
+      reopen_lead: {
+        Args: {
+          event_request_id: string;
+          reopen_reason: string;
+          target_lead: string;
+          target_tenant: string;
+        };
+        Returns: Json;
       };
       restrict_privacy_subject: {
         Args: {
