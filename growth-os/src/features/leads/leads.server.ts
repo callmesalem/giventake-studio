@@ -55,10 +55,14 @@ type EncryptedLeadDetailRow = EncryptedLeadListRow & {
 };
 
 type StoredTouch = {
+  id?: string;
   touch_type: "unresolved" | "first" | "last" | "manual";
   normalized_source: string;
   confidence: AttributionConfidence;
   state: TouchState;
+  reason_codes?: string[];
+  original_computed_touch_id?: string | null;
+  manual_reason?: string | null;
   created_at: string;
 };
 
@@ -315,12 +319,41 @@ function categoryValue(categories: Json, key: string): unknown {
   return categories[key];
 }
 
-function mapTouch(touch: StoredTouch | undefined) {
-  if (!touch) return null;
+function basicTouch(touch: StoredTouch) {
   return {
     source: touch.state === "unattributed" ? null : touch.normalized_source,
     confidence: touch.confidence,
     state: touch.state,
+  };
+}
+
+function newestTouch(touches: StoredTouch[]) {
+  return [...touches].sort(
+    (left, right) =>
+      right.created_at.localeCompare(left.created_at) ||
+      (right.id ?? "").localeCompare(left.id ?? ""),
+  )[0];
+}
+
+function mapTouch(touches: StoredTouch[], touchType: "first" | "last") {
+  const original = newestTouch(touches.filter((touch) => touch.touch_type === touchType));
+  if (!original) return null;
+  const correction = original.id
+    ? newestTouch(
+        touches.filter(
+          (touch) =>
+            touch.touch_type === "manual" && touch.original_computed_touch_id === original.id,
+        ),
+      )
+    : undefined;
+  if (!correction) return basicTouch(original);
+  return {
+    ...basicTouch(correction),
+    original: basicTouch(original),
+    correction: {
+      ...basicTouch(correction),
+      reason: correction.manual_reason ?? "",
+    },
   };
 }
 
@@ -363,8 +396,6 @@ export async function getLeadWith(
   const bundle = await dependencies.loadDetail(context.tenantId, leadId);
   if (!bundle) throw new LeadNotFoundError();
 
-  const firstTouch = bundle.touches.find((touch) => touch.touch_type === "first");
-  const lastTouch = bundle.touches.find((touch) => touch.touch_type === "last");
   const listItem = mapListItem(bundle.lead, dependencies.decrypt);
   const categories = bundle.consent.categories;
   return {
@@ -377,8 +408,8 @@ export async function getLeadWith(
     notes: dependencies.decrypt(bundle.lead.notes_ciphertext, "lead"),
     budgetRange: bundle.lead.budget_range,
     timelineRange: bundle.lead.timeline_range,
-    firstTouch: mapTouch(firstTouch),
-    lastTouch: mapTouch(lastTouch),
+    firstTouch: mapTouch(bundle.touches, "first"),
+    lastTouch: mapTouch(bundle.touches, "last"),
     consent: consentReceiptV1Schema.parse({
       policy_version: bundle.consent.policy_version,
       source: bundle.consent.source,
@@ -413,7 +444,9 @@ async function loadLeadDetail(tenantId: string, leadId: string): Promise<DetailB
     scopeTenantQuery(
       supabase
         .from("attribution_touches")
-        .select("touch_type, normalized_source, confidence, state, created_at"),
+        .select(
+          "id, touch_type, normalized_source, confidence, state, reason_codes, original_computed_touch_id, manual_reason, created_at",
+        ),
       tenantId,
     )
       .eq("lead_id", leadId)

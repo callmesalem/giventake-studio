@@ -6,6 +6,7 @@ import {
   type LeadEventV1,
 } from "@giventake/growth-os-contract";
 import { z } from "zod";
+import { recomputeLeadAttribution } from "@/features/attribution/attribution.server";
 import type { Json } from "@/lib/database.types";
 import { decryptField, encryptField, lookupHash } from "@/lib/server/crypto.server";
 import { createJobSupabase } from "@/lib/server/supabase.server";
@@ -89,6 +90,7 @@ type IngestLeadContext = {
 type IngestLeadDependencies = {
   findSite: (siteKeyId: string) => Promise<IngestSite | null>;
   persistAtomic: (input: AtomicLeadInput) => Promise<LeadEventAck>;
+  recompute?: (tenantId: string, leadId: string) => Promise<void>;
 };
 
 const ackSchema = z
@@ -131,7 +133,7 @@ export async function ingestLeadWith(
 
   const marketing = event.consent.marketing && !event.consent.gpc;
   const clickIds = marketing ? event.attribution.click_ids : {};
-  return dependencies.persistAtomic({
+  const acknowledgment = await dependencies.persistAtomic({
     tenantId: site.tenantId,
     siteId: site.id,
     eventId: event.event_id,
@@ -176,6 +178,8 @@ export async function ingestLeadWith(
       recordedAt: event.consent.recorded_at,
     },
   });
+  await dependencies.recompute?.(site.tenantId, acknowledgment.lead_id);
+  return acknowledgment;
 }
 
 async function findIngestSite(siteKeyId: string): Promise<IngestSite | null> {
@@ -265,6 +269,7 @@ export async function ingestLead(
   return ingestLeadWith(siteKeyId, event, context, {
     findSite: findIngestSite,
     persistAtomic: persistAtomicLead,
+    recompute: recomputeLeadAttribution,
   });
 }
 

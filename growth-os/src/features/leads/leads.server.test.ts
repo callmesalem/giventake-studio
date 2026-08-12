@@ -404,6 +404,76 @@ describe("lead server boundary", () => {
     expect(detail.confirmedRevenueMinor).toBe("9223372036854775807");
   });
 
+  it("displays a manual attribution overlay alongside its original computed result", async () => {
+    const originalTouchId = "f1000000-0000-0000-0000-000000000001";
+    const correctionTouchId = "f2000000-0000-0000-0000-000000000001";
+    const detail = await getLeadWith(
+      { leadId: LEAD_ID },
+      {
+        requireTenant: vi.fn().mockResolvedValue({ tenantId: TENANT_ID }),
+        loadDetail: vi.fn().mockResolvedValue({
+          lead: {
+            ...encryptedRow,
+            phone_ciphertext: null,
+            notes_ciphertext: "encrypted-notes",
+            budget_range: "5k-10k",
+            timeline_range: "1-2-months",
+          },
+          touches: [
+            {
+              id: originalTouchId,
+              touch_type: "first",
+              normalized_source: "referral",
+              confidence: "medium",
+              state: "ambiguous",
+              reason_codes: ["declared_source:referral", "click_id:gclid"],
+              original_computed_touch_id: null,
+              manual_reason: null,
+              created_at: "2026-08-09T16:00:00.000Z",
+            },
+            {
+              id: correctionTouchId,
+              touch_type: "manual",
+              normalized_source: "google_ads",
+              confidence: "high",
+              state: "attributed",
+              reason_codes: ["manual_correction"],
+              original_computed_touch_id: originalTouchId,
+              manual_reason: "Customer confirmed the paid Google source.",
+              created_at: "2026-08-10T16:00:00.000Z",
+            },
+          ],
+          consent: {
+            policy_version: consent.policy_version,
+            source: consent.source,
+            recorded_at: consent.recorded_at,
+            categories: consent,
+          },
+          audit: [],
+          revenue: null,
+        }),
+        decrypt: vi.fn((value: string) => value),
+      },
+    );
+
+    expect(detail.firstTouch).toEqual({
+      source: "google_ads",
+      confidence: "high",
+      state: "attributed",
+      original: {
+        source: "referral",
+        confidence: "medium",
+        state: "ambiguous",
+      },
+      correction: {
+        source: "google_ads",
+        confidence: "high",
+        state: "attributed",
+        reason: "Customer confirmed the paid Google source.",
+      },
+    });
+  });
+
   it("allows a won transition without inventing revenue", async () => {
     const updateStatus = vi.fn().mockResolvedValue({ status: "won" });
     await expect(

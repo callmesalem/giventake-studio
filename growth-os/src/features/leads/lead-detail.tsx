@@ -285,11 +285,23 @@ export function LeadDetailView({
             ).map(([label, touch]) => (
               <div className="border-l-2 border-slate-300 pl-3" key={label}>
                 <h3 className="m-0 text-sm font-bold text-slate-800">{label}</h3>
-                <p className="mb-0 mt-1 text-sm text-slate-700">
-                  {touch
-                    ? `${touch.source ?? "Unattributed"} / ${titleCase(touch.confidence)} / ${titleCase(touch.state)}`
-                    : "No resolved touch"}
-                </p>
+                {touch?.original && touch.correction ? (
+                  <div className="mt-1 grid gap-1 text-sm text-slate-700">
+                    <p className="m-0">
+                      {`Computed: ${touch.original.source ?? "Unattributed"} / ${titleCase(touch.original.confidence)} / ${titleCase(touch.original.state)}`}
+                    </p>
+                    <p className="m-0 font-semibold text-slate-900">
+                      {`Correction: ${touch.correction.source ?? "Unattributed"} / ${titleCase(touch.correction.confidence)} / ${titleCase(touch.correction.state)}`}
+                    </p>
+                    <p className="m-0 text-slate-600">{touch.correction.reason}</p>
+                  </div>
+                ) : (
+                  <p className="mb-0 mt-1 text-sm text-slate-700">
+                    {touch
+                      ? `${touch.source ?? "Unattributed"} / ${titleCase(touch.confidence)} / ${titleCase(touch.state)}`
+                      : "No resolved touch"}
+                  </p>
+                )}
               </div>
             ))}
           </div>

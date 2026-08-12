@@ -160,6 +160,32 @@ describe("lead detail", () => {
     expect(screen.getByText("Consent receipt")).toBeVisible();
   });
 
+  it("shows a manual attribution correction without hiding the computed result", () => {
+    render(
+      <LeadDetailView
+        lead={{
+          ...detail,
+          firstTouch: {
+            source: "google_ads",
+            confidence: "high",
+            state: "attributed",
+            original: { source: "referral", confidence: "medium", state: "ambiguous" },
+            correction: {
+              source: "google_ads",
+              confidence: "high",
+              state: "attributed",
+              reason: "Customer confirmed the paid Google source.",
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/Computed: referral \/ Medium \/ Ambiguous/)).toBeVisible();
+    expect(screen.getByText(/Correction: google_ads \/ High \/ Attributed/)).toBeVisible();
+    expect(screen.getByText("Customer confirmed the paid Google source.")).toBeVisible();
+  });
+
   it("submits decimal revenue as positive bigint minor units", async () => {
     const saveRevenue = vi.fn().mockResolvedValue({
       amountMinor: "350000",

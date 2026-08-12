@@ -423,11 +423,33 @@ export type LeadDetail = LeadListItem & {
     source: string | null;
     confidence: "high" | "medium" | "low";
     state: "attributed" | "ambiguous" | "unattributed";
+    original?: {
+      source: string | null;
+      confidence: "high" | "medium" | "low";
+      state: "attributed" | "ambiguous" | "unattributed";
+    };
+    correction?: {
+      source: string | null;
+      confidence: "high" | "medium" | "low";
+      state: "attributed" | "ambiguous" | "unattributed";
+      reason: string;
+    };
   } | null;
   lastTouch: {
     source: string | null;
     confidence: "high" | "medium" | "low";
     state: "attributed" | "ambiguous" | "unattributed";
+    original?: {
+      source: string | null;
+      confidence: "high" | "medium" | "low";
+      state: "attributed" | "ambiguous" | "unattributed";
+    };
+    correction?: {
+      source: string | null;
+      confidence: "high" | "medium" | "low";
+      state: "attributed" | "ambiguous" | "unattributed";
+      reason: string;
+    };
   } | null;
   consent: ConsentReceiptV1;
   audit: LeadAuditEvent[];

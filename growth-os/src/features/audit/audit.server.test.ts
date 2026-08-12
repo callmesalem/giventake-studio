@@ -55,6 +55,27 @@ describe("audit schemas", () => {
       error_code: null,
     });
   });
+
+  it("accepts canonical privacy-safe attribution change metadata", () => {
+    expect(
+      auditMetadataSchema.parse({
+        attribution_model: "first_touch",
+        old_source: "referral",
+        new_source: "google_ads",
+        old_confidence: "medium",
+        new_confidence: "high",
+        old_state: "ambiguous",
+        new_state: "attributed",
+        old_reason_codes: "declared_source:referral,click_id:gclid",
+        new_reason_codes: "manual_correction",
+      }),
+    ).toMatchObject({
+      old_source: "referral",
+      new_source: "google_ads",
+      old_state: "ambiguous",
+      new_state: "attributed",
+    });
+  });
 });
 
 describe("writeAuditEventWith", () => {

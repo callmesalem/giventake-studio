@@ -87,45 +87,54 @@ export type Database = {
       };
       attribution_touches: {
         Row: {
+          campaign_external_id: string | null;
           campaign_id: string | null;
           confidence: Database["public"]["Enums"]["attribution_confidence"];
           created_at: string;
           evidence_id: string | null;
           id: string;
+          is_manual: boolean | null;
           lead_id: string;
           manual_actor: string | null;
           manual_reason: string | null;
           normalized_source: string;
+          original_computed_touch_id: string | null;
           reason_codes: string[];
           state: string;
           tenant_id: string;
           touch_type: Database["public"]["Enums"]["attribution_touch_type"];
         };
         Insert: {
+          campaign_external_id?: string | null;
           campaign_id?: string | null;
           confidence: Database["public"]["Enums"]["attribution_confidence"];
           created_at?: string;
           evidence_id?: string | null;
           id?: string;
+          is_manual?: boolean | null;
           lead_id: string;
           manual_actor?: string | null;
           manual_reason?: string | null;
           normalized_source: string;
+          original_computed_touch_id?: string | null;
           reason_codes?: string[];
           state: string;
           tenant_id: string;
           touch_type: Database["public"]["Enums"]["attribution_touch_type"];
         };
         Update: {
+          campaign_external_id?: string | null;
           campaign_id?: string | null;
           confidence?: Database["public"]["Enums"]["attribution_confidence"];
           created_at?: string;
           evidence_id?: string | null;
           id?: string;
+          is_manual?: boolean | null;
           lead_id?: string;
           manual_actor?: string | null;
           manual_reason?: string | null;
           normalized_source?: string;
+          original_computed_touch_id?: string | null;
           reason_codes?: string[];
           state?: string;
           tenant_id?: string;
@@ -152,6 +161,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "leads";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attribution_touches_original_computed_fkey";
+            columns: ["tenant_id", "original_computed_touch_id"];
+            isOneToOne: false;
+            referencedRelation: "attribution_touches";
+            referencedColumns: ["tenant_id", "id"];
           },
           {
             foreignKeyName: "attribution_touches_tenant_campaign_fkey";
@@ -1328,6 +1344,18 @@ export type Database = {
         Args: { outcome: Database["public"]["Tables"]["revenue_outcomes"]["Row"] };
         Returns: string;
       };
+      apply_attribution_recomputation: {
+        Args: {
+          event_request_id: string;
+          first_decision: Json;
+          first_evidence_id: string;
+          last_decision: Json;
+          last_evidence_id: string;
+          target_lead: string;
+          target_tenant: string;
+        };
+        Returns: Json;
+      };
       change_lead_status: {
         Args: {
           event_request_id: string;
@@ -1344,6 +1372,19 @@ export type Database = {
           target_tenant: string;
         };
         Returns: boolean;
+      };
+      correct_attribution: {
+        Args: {
+          correction_campaign_external_id: string;
+          correction_confidence: Database["public"]["Enums"]["attribution_confidence"];
+          correction_reason: string;
+          correction_source: string;
+          event_request_id: string;
+          original_touch_id: string;
+          target_lead: string;
+          target_tenant: string;
+        };
+        Returns: Json;
       };
       accept_membership_invitation: {
         Args: {
@@ -1369,6 +1410,19 @@ export type Database = {
         };
         Returns: string;
       };
+      get_growth_overview: {
+        Args: {
+          attribution_model: string;
+          range_end: string;
+          range_start: string;
+          target_tenant: string;
+        };
+        Returns: Json;
+      };
+      get_lead_attribution: {
+        Args: { target_lead: string; target_tenant: string };
+        Returns: Json;
+      };
       has_active_support_session: {
         Args: { target_tenant: string };
         Returns: boolean;
@@ -1389,6 +1443,10 @@ export type Database = {
         Returns: Json;
       };
       is_allowlisted_click_ids: {
+        Args: { input_value: Json };
+        Returns: boolean;
+      };
+      is_attribution_decision: {
         Args: { input_value: Json };
         Returns: boolean;
       };

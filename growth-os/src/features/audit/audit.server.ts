@@ -63,6 +63,22 @@ const nonnegativeCount = z.number().int().nonnegative().safe();
 const uuid = z.string().uuid();
 const isoDate = z.string().date();
 const isoDateTime = z.string().datetime({ offset: true });
+const attributionSource = z
+  .string()
+  .min(1)
+  .max(80)
+  .regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/);
+const attributionConfidence = z.enum(["high", "medium", "low"]);
+const attributionState = z.enum(["attributed", "ambiguous", "unattributed"]);
+const attributionReason =
+  "(?:declared_source:(?:google_ads|meta_ads|referral|organic|direct|other)|" +
+  "click_id:(?:gclid|gbraid|wbraid|fbclid)|" +
+  "utm_source:(?:google_ads|meta_ads|referral|organic|direct|other)|" +
+  "utm_campaign|referrer_domain:(?:google|meta|other)|direct_or_unknown|manual_correction)";
+const attributionReasons = z
+  .string()
+  .max(500)
+  .regex(new RegExp(`^${attributionReason}(?:,${attributionReason})*$`));
 const nullable = <Schema extends z.ZodTypeAny>(schema: Schema) => schema.nullable().optional();
 export const auditMetadataSchema = z
   .object({
@@ -93,6 +109,14 @@ export const auditMetadataSchema = z
     ),
     attribution_model: nullable(z.enum(["first_touch", "last_touch"])),
     confidence: nullable(z.enum(["high", "medium", "low"])),
+    old_source: nullable(attributionSource),
+    new_source: nullable(attributionSource),
+    old_confidence: nullable(attributionConfidence),
+    new_confidence: nullable(attributionConfidence),
+    old_state: nullable(attributionState),
+    new_state: nullable(attributionState),
+    old_reason_codes: nullable(attributionReasons),
+    new_reason_codes: nullable(attributionReasons),
     request_type: nullable(z.enum(["access", "correction", "deletion", "export", "opt_out"])),
     expires_at: nullable(isoDateTime),
     occurred_at: nullable(isoDateTime),

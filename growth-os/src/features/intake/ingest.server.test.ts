@@ -152,6 +152,27 @@ describe("ingestLeadWith", () => {
     ).resolves.toEqual({ status: "duplicate", lead_id: LEAD_ID });
   });
 
+  it.each(["accepted", "duplicate"] as const)(
+    "recomputes deterministic attribution after an %s atomic write",
+    async (status) => {
+      const recompute = vi.fn().mockResolvedValue(undefined);
+
+      await ingestLeadWith(
+        KEY_ID,
+        baseEvent,
+        { idempotencyKey: EVENT_ID, bodyDigest: "e".repeat(64), requestId: REQUEST_ID },
+        {
+          findSite: vi.fn().mockResolvedValue(site),
+          persistAtomic: vi.fn().mockResolvedValue({ status, lead_id: LEAD_ID }),
+          recompute,
+        },
+      );
+
+      expect(recompute).toHaveBeenCalledOnce();
+      expect(recompute).toHaveBeenCalledWith(TENANT_ID, LEAD_ID);
+    },
+  );
+
   it.each([
     ["unknown", null],
     ["disabled", { ...site, enabled: false }],
