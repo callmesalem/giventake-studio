@@ -1,5 +1,6 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { LeadEventV1 } from "@giventake/growth-os-contract";
 import type { ContactInput } from "./intake-schema";
 import { buildGrowthOsLeadEvent, deliverLeadToGrowthOs } from "./growth-os-ingest";
 
@@ -119,5 +120,24 @@ describe("deliverLeadToGrowthOs", () => {
     expect(headers.get("X-GT-Idempotency-Key")).toBe(EVENT_ID);
     expect(headers.get("X-GT-Signature")).toBe(expected);
     expect(JSON.parse(body)).toEqual(event);
+  });
+
+  it("passes a bounded-operation abort signal to the Growth OS fetch adapter", async () => {
+    const secret = "website-signing-secret-at-least-32-bytes";
+    const controller = new AbortController();
+    process.env.GROWTH_OS_INGEST_URL = "https://app.giventakedevs.com/api/ingest/v1/leads";
+    process.env.GROWTH_OS_SITE_KEY_ID = "site-key-test-1";
+    process.env.GROWTH_OS_SITE_SIGNING_SECRET = secret;
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const event = buildGrowthOsLeadEvent(contact, { eventId: EVENT_ID, now: NOW });
+
+    await expect(
+      (deliverLeadToGrowthOs as (input: LeadEventV1, signal: AbortSignal) => Promise<string>)(
+        event,
+        controller.signal,
+      ),
+    ).resolves.toBe("accepted");
+    expect(fetchMock.mock.calls[0]![1].signal).toBe(controller.signal);
   });
 });

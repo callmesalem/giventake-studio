@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(25);
+select plan(76);
 
 insert into public.tenants (id, slug, display_name)
 values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'task5-a', 'Task 5 Tenant A');
@@ -44,13 +44,13 @@ select public.ingest_website_lead(
   '7e9f26af-2501-4d7c-bd8f-9a3c56bc8bd4',
   '2026-08-09T16:00:00.000Z',
   jsonb_build_object(
-    'name_ciphertext', 'v1.name',
-    'email_ciphertext', 'v1.email',
+    'name_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
+    'email_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
     'email_lookup_hash', repeat('1', 64),
     'phone_ciphertext', null,
     'phone_lookup_hash', null,
-    'company_ciphertext', 'v1.company',
-    'notes_ciphertext', 'v1.notes',
+    'company_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
+    'notes_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
     'budget_range', '5k-10k',
     'timeline_range', '1-2-months'
   ),
@@ -132,7 +132,17 @@ select public.ingest_website_lead(
   '2026-08-09T16:00:00.000Z',
   '{}'::jsonb,
   '{}'::jsonb,
-  '{}'::jsonb,
+  jsonb_build_object(
+    'policy_version', 'privacy-2026-08-08',
+    'source', 'contact-form',
+    'necessary', true,
+    'analytics', false,
+    'marketing', false,
+    'preferences', false,
+    'contact_requested', true,
+    'gpc', false,
+    'recorded_at', '2026-08-09T16:00:00.000Z'
+  ),
   'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
 ) as result;
 
@@ -154,7 +164,18 @@ select throws_ok(
       '7e9f26af-2501-4d7c-bd8f-9a3c56bc8bd4',
       repeat('f', 64),
       '7e9f26af-2501-4d7c-bd8f-9a3c56bc8bd4',
-      now(), '{}'::jsonb, '{}'::jsonb, '{}'::jsonb,
+      now(), '{}'::jsonb, '{}'::jsonb,
+      jsonb_build_object(
+        'policy_version', 'privacy-2026-08-08',
+        'source', 'contact-form',
+        'necessary', true,
+        'analytics', false,
+        'marketing', false,
+        'preferences', false,
+        'contact_requested', true,
+        'gpc', false,
+        'recorded_at', '2026-08-09T16:00:00.000Z'
+      ),
       'ffffffff-ffff-ffff-ffff-ffffffffffff'
     )
   $$,
@@ -174,10 +195,11 @@ select throws_ok(
       '99999999-9999-4999-8999-999999999999',
       '2026-08-09T16:01:00.000Z',
       jsonb_build_object(
-        'name_ciphertext', 'v1.name.2', 'email_ciphertext', 'v1.email.2',
+        'name_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
+        'email_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
         'email_lookup_hash', repeat('2', 64), 'phone_ciphertext', null,
         'phone_lookup_hash', null, 'company_ciphertext', null,
-        'notes_ciphertext', 'v1.notes.2', 'budget_range', '5k-10k',
+        'notes_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA', 'budget_range', '5k-10k',
         'timeline_range', '1-2-months'
       ),
       jsonb_build_object(
@@ -204,6 +226,143 @@ select is(
   (select count(*)::integer from public.leads where external_event_id = '99999999-9999-4999-8999-999999999999'),
   0,
   'failed audit leaves no partial lead'
+);
+
+create function pg_temp.task5_valid_encrypted_lead()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    'name_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
+    'email_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
+    'email_lookup_hash', repeat('3', 64),
+    'phone_ciphertext', null,
+    'phone_lookup_hash', null,
+    'company_ciphertext', null,
+    'notes_ciphertext', 'v1.AAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAA',
+    'budget_range', '5k-10k',
+    'timeline_range', '1-2-months'
+  );
+$$;
+
+create function pg_temp.task5_valid_attribution()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    'declared_source', 'direct', 'source_detail', null, 'utm_source', null,
+    'utm_medium', null, 'utm_campaign', null, 'utm_content', null,
+    'utm_term', null, 'referrer_domain', null, 'click_ids', '{}'::jsonb,
+    'landing_origin', 'https://task5-a.example.com', 'landing_path', '/contact',
+    'offer_id', 'project-brief'
+  );
+$$;
+
+create function pg_temp.task5_valid_consent()
+returns jsonb
+language sql
+immutable
+as $$
+  select jsonb_build_object(
+    'policy_version', 'privacy-2026-08-08', 'source', 'contact-form',
+    'necessary', true, 'analytics', false, 'marketing', false,
+    'preferences', false, 'contact_requested', true, 'gpc', false,
+    'recorded_at', '2026-08-09T16:03:00.000Z'
+  );
+$$;
+
+create function pg_temp.task5_consent_is_rejected(candidate jsonb)
+returns boolean
+language plpgsql
+as $$
+begin
+  perform public.ingest_website_lead(
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    gen_random_uuid(),
+    repeat('b', 64),
+    gen_random_uuid(),
+    '2026-08-09T16:03:00.000Z',
+    pg_temp.task5_valid_encrypted_lead(),
+    pg_temp.task5_valid_attribution(),
+    candidate,
+    gen_random_uuid()
+  );
+  return false;
+exception when sqlstate '22023' then
+  return true;
+end;
+$$;
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{necessary}', 'null'::jsonb)), 'necessary rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'necessary'), 'necessary rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{necessary}', '"true"'::jsonb)), 'necessary rejects a string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{necessary}', '1'::jsonb)), 'necessary rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{necessary}', '{}'::jsonb)), 'necessary rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{analytics}', 'null'::jsonb)), 'analytics rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'analytics'), 'analytics rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{analytics}', '"false"'::jsonb)), 'analytics rejects a string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{analytics}', '0'::jsonb)), 'analytics rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{analytics}', '{}'::jsonb)), 'analytics rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{marketing}', 'null'::jsonb)), 'marketing rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'marketing'), 'marketing rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{marketing}', '"false"'::jsonb)), 'marketing rejects a string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{marketing}', '0'::jsonb)), 'marketing rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{marketing}', '{}'::jsonb)), 'marketing rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{preferences}', 'null'::jsonb)), 'preferences rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'preferences'), 'preferences rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{preferences}', '"false"'::jsonb)), 'preferences rejects a string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{preferences}', '0'::jsonb)), 'preferences rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{preferences}', '{}'::jsonb)), 'preferences rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{contact_requested}', 'null'::jsonb)), 'contact_requested rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'contact_requested'), 'contact_requested rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{contact_requested}', '"true"'::jsonb)), 'contact_requested rejects a string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{contact_requested}', '1'::jsonb)), 'contact_requested rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{contact_requested}', '{}'::jsonb)), 'contact_requested rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{gpc}', 'null'::jsonb)), 'gpc rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'gpc'), 'gpc rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{gpc}', '"false"'::jsonb)), 'gpc rejects a string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{gpc}', '0'::jsonb)), 'gpc rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{gpc}', '{}'::jsonb)), 'gpc rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{policy_version}', 'null'::jsonb)), 'policy_version rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'policy_version'), 'policy_version rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{policy_version}', '""'::jsonb)), 'policy_version rejects an empty string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{policy_version}', '1'::jsonb)), 'policy_version rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{policy_version}', '{}'::jsonb)), 'policy_version rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{source}', 'null'::jsonb)), 'source rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'source'), 'source rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{source}', '"other"'::jsonb)), 'source rejects an unrecognized string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{source}', '1'::jsonb)), 'source rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{source}', '{}'::jsonb)), 'source rejects an object');
+
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{recorded_at}', 'null'::jsonb)), 'recorded_at rejects JSON null');
+select ok(pg_temp.task5_consent_is_rejected(pg_temp.task5_valid_consent() - 'recorded_at'), 'recorded_at rejects a missing key');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{recorded_at}', '"not-a-timestamp"'::jsonb)), 'recorded_at rejects an invalid string');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{recorded_at}', '1'::jsonb)), 'recorded_at rejects a number');
+select ok(pg_temp.task5_consent_is_rejected(jsonb_set(pg_temp.task5_valid_consent(), '{recorded_at}', '{}'::jsonb)), 'recorded_at rejects an object');
+
+select is((select count(*)::integer from public.leads), 1, 'invalid consent creates no lead');
+select is((select count(*)::integer from public.attribution_evidence), 1, 'invalid consent creates no evidence');
+select is((select count(*)::integer from public.consent_receipts), 1, 'invalid consent creates no receipt');
+select is((select count(*)::integer from public.ingest_idempotency), 1, 'invalid consent creates no idempotency reservation');
+select is((select count(*)::integer from public.audit_events), 1, 'invalid consent creates no audit event');
+select ok(
+  position(
+    'pg_advisory_xact_lock'
+    in pg_get_functiondef(
+      'public.ingest_website_lead_unvalidated(uuid,uuid,uuid,text,uuid,timestamptz,jsonb,jsonb,jsonb,uuid)'::regprocedure
+    )
+  ) > 0,
+  'duplicate and conflicting idempotency calls retain their transaction advisory lock'
 );
 
 select ok(

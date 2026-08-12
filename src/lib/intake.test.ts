@@ -49,6 +49,45 @@ describe("deliverContactWith", () => {
     expect(sendGrowthOs).toHaveBeenCalledOnce();
   });
 
+  it("starts email even when Growth OS event construction throws", async () => {
+    const sendEmail = vi.fn().mockResolvedValue({ status: "sent" });
+
+    await expect(
+      deliverContactWith(
+        contact,
+        dependencies({
+          buildEvent: vi.fn(() => {
+            throw new Error("invalid growth event");
+          }),
+          sendEmail,
+        }),
+      ),
+    ).resolves.toEqual({ status: "sent" });
+    expect(sendEmail).toHaveBeenCalledOnce();
+  });
+
+  it("returns a successful destination after the other destination exceeds its deadline", async () => {
+    vi.useFakeTimers();
+    const sendGrowthOs = vi.fn().mockImplementation(() => new Promise(() => undefined));
+    const deps = dependencies({
+      timeoutMs: 5,
+      sendEmail: vi.fn().mockResolvedValue({ status: "sent" }),
+      sendGrowthOs,
+    });
+    const result = deliverContactWith(contact, deps);
+    const outcome = Promise.race([
+      result,
+      new Promise((resolve) => setTimeout(() => resolve("hung"), 6)),
+    ]);
+
+    await vi.advanceTimersByTimeAsync(6);
+    await expect(outcome).resolves.toEqual({ status: "sent" });
+    expect(deps.logStatus).toHaveBeenCalledWith("growth_os", "timeout", REQUEST_ID);
+    expect(JSON.stringify(deps.logStatus.mock.calls)).not.toContain(contact.email);
+    expect(JSON.stringify(deps.logStatus.mock.calls)).not.toContain(contact.description);
+    vi.useRealTimers();
+  });
+
   it("returns sent when Growth OS accepts even if email fails", async () => {
     const sendEmail = vi
       .fn()

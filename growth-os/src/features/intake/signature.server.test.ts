@@ -5,19 +5,22 @@ import { verifyIngestSignature } from "./signature.server";
 const SECRET = "test-signing-secret-with-32-bytes-minimum";
 const IDEMPOTENCY_KEY = "7e9f26af-2501-4d7c-bd8f-9a3c56bc8bd4";
 const NOW = new Date("2026-08-09T16:00:00.000Z");
+const encoder = new TextEncoder();
 
-function sign(body: string, timestamp: string, idempotencyKey = IDEMPOTENCY_KEY) {
+function sign(body: Uint8Array, timestamp: string, idempotencyKey = IDEMPOTENCY_KEY) {
   return `sha256=${createHmac("sha256", SECRET)
-    .update(`${timestamp}\n${idempotencyKey}\n${body}`, "utf8")
+    .update(`${timestamp}\n${idempotencyKey}\n`, "utf8")
+    .update(body)
     .digest("hex")}`;
 }
 
 function validInput(body = "{}", timestamp = NOW.toISOString()) {
+  const bytes = encoder.encode(body);
   return {
-    body,
+    body: bytes,
     timestamp,
     idempotencyKey: IDEMPOTENCY_KEY,
-    presentedSignature: sign(body, timestamp),
+    presentedSignature: sign(bytes, timestamp),
     secret: SECRET,
     now: NOW,
   };
@@ -31,7 +34,7 @@ describe("verifyIngestSignature", () => {
     expect(() =>
       verifyIngestSignature({
         ...validInput(rawBody),
-        body: JSON.stringify(JSON.parse(rawBody)),
+        body: encoder.encode(JSON.stringify(JSON.parse(rawBody))),
       }),
     ).toThrowError(expect.objectContaining({ code: "SIGNATURE_INVALID" }));
   });

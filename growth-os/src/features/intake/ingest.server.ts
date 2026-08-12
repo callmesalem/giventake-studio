@@ -292,15 +292,61 @@ function errorResponse(code: IngestErrorCode, requestId: string, status: number)
   return jsonResponse({ code, request_id: requestId }, status);
 }
 
+async function readBoundedRawBody(request: Request): Promise<Uint8Array> {
+  if (!request.body) return new Uint8Array();
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_BODY_BYTES) {
+        await reader.cancel();
+        throw new IngestSignatureError("PAYLOAD_TOO_LARGE");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const rawBody = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    rawBody.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return rawBody;
+}
+
+function parseUtf8Json(rawBody: Uint8Array): unknown {
+  if (rawBody[0] === 0xef && rawBody[1] === 0xbb && rawBody[2] === 0xbf) {
+    throw new IngestBoundaryError("INVALID_PAYLOAD");
+  }
+  try {
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(rawBody));
+  } catch {
+    throw new IngestBoundaryError("INVALID_PAYLOAD");
+  }
+}
+
 export async function handleIngestRequestWith(
   request: Request,
   dependencies: HttpDependencies,
 ): Promise<Response> {
   const requestId = dependencies.requestId();
   try {
-    const rawBody = await request.text();
-    if (Buffer.byteLength(rawBody, "utf8") > MAX_BODY_BYTES) {
-      return errorResponse("PAYLOAD_TOO_LARGE", requestId, 413);
+    let rawBody: Uint8Array;
+    try {
+      rawBody = await readBoundedRawBody(request);
+    } catch (error) {
+      if (error instanceof IngestSignatureError && error.code === "PAYLOAD_TOO_LARGE") {
+        return errorResponse("PAYLOAD_TOO_LARGE", requestId, 413);
+      }
+      return errorResponse("INVALID_PAYLOAD", requestId, 400);
     }
 
     const siteKeyId = request.headers.get("X-GT-Key-Id") ?? "";
@@ -314,9 +360,6 @@ export async function handleIngestRequestWith(
     const site = await dependencies.findSite(siteKeyId);
     if (!site?.enabled) return errorResponse("AUTHENTICATION_FAILED", requestId, 401);
     const now = dependencies.now();
-    if (!(await dependencies.consumeRateLimit(site.id, site.tenantId, now))) {
-      return errorResponse("RATE_LIMITED", requestId, 429);
-    }
 
     try {
       verifyIngestSignature({
@@ -334,12 +377,11 @@ export async function handleIngestRequestWith(
       return errorResponse("AUTHENTICATION_FAILED", requestId, 401);
     }
 
-    let unknownPayload: unknown;
-    try {
-      unknownPayload = JSON.parse(rawBody);
-    } catch {
-      return errorResponse("INVALID_PAYLOAD", requestId, 400);
+    if (!(await dependencies.consumeRateLimit(site.id, site.tenantId, now))) {
+      return errorResponse("RATE_LIMITED", requestId, 429);
     }
+
+    const unknownPayload = parseUtf8Json(rawBody);
     const parsed = leadEventV1Schema.safeParse(unknownPayload);
     if (!parsed.success || parsed.data.event_id !== idempotencyKey) {
       return errorResponse("INVALID_PAYLOAD", requestId, 400);
@@ -347,7 +389,7 @@ export async function handleIngestRequestWith(
 
     const acknowledgment = await dependencies.ingest(siteKeyId, parsed.data, {
       idempotencyKey,
-      bodyDigest: createHash("sha256").update(rawBody, "utf8").digest("hex"),
+      bodyDigest: createHash("sha256").update(rawBody).digest("hex"),
       requestId,
     });
     return jsonResponse(acknowledgment, acknowledgment.status === "accepted" ? 202 : 200);

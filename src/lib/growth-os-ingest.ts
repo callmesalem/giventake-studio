@@ -97,6 +97,7 @@ async function signRawBody(secret: string, message: string) {
 
 export async function deliverLeadToGrowthOs(
   event: LeadEventV1,
+  signal?: AbortSignal,
 ): Promise<"accepted" | "duplicate" | "unconfigured"> {
   const url = env("GROWTH_OS_INGEST_URL");
   const siteKeyId = env("GROWTH_OS_SITE_KEY_ID");
@@ -119,6 +120,7 @@ export async function deliverLeadToGrowthOs(
       "X-GT-Signature": signature,
     },
     body: rawBody,
+    signal,
   });
 
   if (response.status === 202) return "accepted";

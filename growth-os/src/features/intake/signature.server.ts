@@ -9,7 +9,7 @@ const ISO_TIMESTAMP_PATTERN =
 const SIGNATURE_PATTERN = /^sha256=([0-9a-f]{64})$/i;
 
 export type VerifySignatureInput = {
-  body: string;
+  body: Uint8Array;
   timestamp: string;
   idempotencyKey: string;
   presentedSignature: string;
@@ -27,7 +27,7 @@ export class IngestSignatureError extends Error {
 }
 
 export function verifyIngestSignature(input: VerifySignatureInput): void {
-  if (Buffer.byteLength(input.body, "utf8") > MAX_BODY_BYTES) {
+  if (input.body.byteLength > MAX_BODY_BYTES) {
     throw new IngestSignatureError("PAYLOAD_TOO_LARGE");
   }
 
@@ -50,8 +50,8 @@ export function verifyIngestSignature(input: VerifySignatureInput): void {
   const signatureMatch = SIGNATURE_PATTERN.exec(input.presentedSignature);
   if (!signatureMatch) throw new IngestSignatureError("SIGNATURE_INVALID");
 
-  const message = `${input.timestamp}\n${input.idempotencyKey}\n${input.body}`;
-  const expected = createHmac("sha256", input.secret).update(message, "utf8").digest();
+  const prefix = Buffer.from(`${input.timestamp}\n${input.idempotencyKey}\n`, "utf8");
+  const expected = createHmac("sha256", input.secret).update(prefix).update(input.body).digest();
   const presented = Buffer.from(signatureMatch[1]!, "hex");
   if (!timingSafeEqual(expected, presented)) {
     throw new IngestSignatureError("SIGNATURE_INVALID");

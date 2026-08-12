@@ -176,6 +176,13 @@ function sign(body: string, timestamp: string, idempotencyKey = EVENT_ID) {
     .digest("hex")}`;
 }
 
+function signBytes(body: Uint8Array, timestamp: string, idempotencyKey = EVENT_ID) {
+  return `sha256=${createHmac("sha256", SECRET)
+    .update(`${timestamp}\n${idempotencyKey}\n`, "utf8")
+    .update(body)
+    .digest("hex")}`;
+}
+
 function requestFor(
   body: string,
   overrides: Partial<Record<"keyId" | "timestamp" | "idempotencyKey" | "signature", string>> = {},
@@ -192,6 +199,36 @@ function requestFor(
       "X-GT-Signature": overrides.signature ?? sign(body, timestamp, idempotencyKey),
     },
     body,
+  });
+}
+
+function wireRequest(
+  body: ReadableStream<Uint8Array>,
+  bytes: Uint8Array,
+  overrides: Partial<Record<"keyId" | "timestamp" | "idempotencyKey" | "signature", string>> = {},
+) {
+  const timestamp = overrides.timestamp ?? NOW.toISOString();
+  const idempotencyKey = overrides.idempotencyKey ?? EVENT_ID;
+  return new Request("https://app.giventakedevs.com/api/ingest/v1/leads", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-GT-Key-Id": overrides.keyId ?? KEY_ID,
+      "X-GT-Timestamp": timestamp,
+      "X-GT-Idempotency-Key": idempotencyKey,
+      "X-GT-Signature": overrides.signature ?? signBytes(bytes, timestamp, idempotencyKey),
+    },
+    body,
+    duplex: "half",
+  } as RequestInit & { duplex: "half" });
+}
+
+function streamFromBytes(bytes: Uint8Array) {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(bytes);
+      controller.close();
+    },
   });
 }
 
@@ -282,6 +319,66 @@ describe("signed lead ingestion HTTP contract", () => {
     expect(JSON.stringify(error)).not.toContain("lead@example.com");
   });
 
+  it.each([
+    ["a UTF-8 BOM", new Uint8Array([0xef, 0xbb, 0xbf, ...Buffer.from(JSON.stringify(baseEvent))])],
+    ["malformed UTF-8", new Uint8Array([0x7b, 0x80, 0x7d])],
+  ])("rejects signed wire bytes containing %s without normalization", async (_name, bytes) => {
+    const response = await handleIngestRequestWith(
+      wireRequest(streamFromBytes(bytes), bytes),
+      httpDependencies(),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await errorBody(response)).toEqual({ code: "INVALID_PAYLOAD", request_id: REQUEST_ID });
+  });
+
+  it("stops a streaming body at the 32 KiB boundary before parsing", async () => {
+    let pulls = 0;
+    let cancelled = false;
+    const chunks = [new Uint8Array(16_384), new Uint8Array(16_384), new Uint8Array([0])];
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const chunk = chunks[pulls++];
+        if (chunk) controller.enqueue(chunk);
+        else controller.close();
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const bytes = new Uint8Array(32_769);
+    const response = await handleIngestRequestWith(wireRequest(stream, bytes), httpDependencies());
+
+    expect(response.status).toBe(413);
+    expect(await errorBody(response)).toEqual({
+      code: "PAYLOAD_TOO_LARGE",
+      request_id: REQUEST_ID,
+    });
+    expect(cancelled).toBe(true);
+    expect(pulls).toBeLessThanOrEqual(3);
+  });
+
+  it("does not let invalid signatures consume a site's valid-request quota", async () => {
+    const body = JSON.stringify(baseEvent);
+    let validAttempts = 0;
+    const consumeRateLimit = vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(++validAttempts <= 120));
+    const dependencies = httpDependencies({ consumeRateLimit });
+
+    for (let index = 0; index < 121; index += 1) {
+      const invalid = await handleIngestRequestWith(
+        requestFor(body, { signature: "sha256=deadbeef" }),
+        dependencies,
+      );
+      expect(invalid.status).toBe(401);
+    }
+
+    const valid = await handleIngestRequestWith(requestFor(body), dependencies);
+    expect(valid.status).toBe(202);
+    expect(consumeRateLimit).toHaveBeenCalledTimes(1);
+  });
+
   it("returns 413 before parsing an oversized raw body", async () => {
     const response = await handleIngestRequestWith(
       requestFor("x".repeat(32_769)),
@@ -328,5 +425,20 @@ describe("signed lead ingestion HTTP contract", () => {
 
     expect(response.status).toBe(429);
     expect(await errorBody(response)).toEqual({ code: "RATE_LIMITED", request_id: REQUEST_ID });
+  });
+
+  it("enforces 429 only after 120 authenticated requests for the site", async () => {
+    const body = JSON.stringify(baseEvent);
+    let authenticatedAttempts = 0;
+    const consumeRateLimit = vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(++authenticatedAttempts <= 120));
+    const dependencies = httpDependencies({ consumeRateLimit });
+
+    for (let index = 0; index < 120; index += 1) {
+      expect((await handleIngestRequestWith(requestFor(body), dependencies)).status).toBe(202);
+    }
+    expect((await handleIngestRequestWith(requestFor(body), dependencies)).status).toBe(429);
+    expect(consumeRateLimit).toHaveBeenCalledTimes(121);
   });
 });

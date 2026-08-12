@@ -36,6 +36,7 @@ import { buildGrowthOsLeadEvent, deliverLeadToGrowthOs } from "@/lib/growth-os-i
 
 const FALLBACK_TO = "hello@giventakedevs.com";
 const PRIVACY_TO = "privacy@giventakedevs.com";
+const DELIVERY_TIMEOUT_MS = 10_000;
 
 function env(key: string): string | undefined {
   const value = process.env[key];
@@ -47,6 +48,7 @@ async function sendMail(
   subject: string,
   text: string,
   replyTo: string,
+  signal?: AbortSignal,
 ): Promise<IntakeResult> {
   const apiKey = env("RESEND_API_KEY");
   const from = env("INTAKE_FROM_EMAIL");
@@ -60,6 +62,7 @@ async function sendMail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ from, to: [to], subject, text, reply_to: replyTo }),
+      signal,
     });
 
     if (!response.ok) {
@@ -77,29 +80,69 @@ type DeliveryDestination = "email" | "growth_os";
 type ContactDeliveryDependencies = {
   requestId: () => string;
   buildEvent: (input: ContactInput) => LeadEventV1;
-  sendEmail: (input: ContactInput) => Promise<IntakeResult>;
-  sendGrowthOs: (event: LeadEventV1) => Promise<GrowthDeliveryResult>;
+  sendEmail: (input: ContactInput, signal: AbortSignal) => Promise<IntakeResult>;
+  sendGrowthOs: (event: LeadEventV1, signal: AbortSignal) => Promise<GrowthDeliveryResult>;
   logStatus: (destination: DeliveryDestination, status: string, requestId: string) => void;
+  timeoutMs?: number;
 };
+
+class DeliveryTimeoutError extends Error {
+  constructor() {
+    super("DELIVERY_TIMEOUT");
+  }
+}
+
+async function runWithDeadline<T>(
+  operation: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout>;
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timeout = setTimeout(() => {
+      controller.abort();
+      reject(new DeliveryTimeoutError());
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([
+      Promise.resolve().then(() => operation(controller.signal)),
+      deadline,
+    ]);
+  } finally {
+    clearTimeout(timeout!);
+  }
+}
 
 export async function deliverContactWith(
   input: ContactInput,
   dependencies: ContactDeliveryDependencies,
 ): Promise<IntakeResult> {
   const requestId = dependencies.requestId();
-  const event = dependencies.buildEvent(input);
+  const timeoutMs = dependencies.timeoutMs ?? DELIVERY_TIMEOUT_MS;
   const [email, growthOs] = await Promise.allSettled([
-    dependencies.sendEmail(input),
-    dependencies.sendGrowthOs(event),
+    runWithDeadline((signal) => dependencies.sendEmail(input, signal), timeoutMs),
+    runWithDeadline(
+      (signal) => dependencies.sendGrowthOs(dependencies.buildEvent(input), signal),
+      timeoutMs,
+    ),
   ]);
 
   if (email.status === "rejected") {
-    dependencies.logStatus("email", "failed", requestId);
+    dependencies.logStatus(
+      "email",
+      email.reason instanceof DeliveryTimeoutError ? "timeout" : "failed",
+      requestId,
+    );
   } else if (email.value.status === "error") {
     dependencies.logStatus("email", "error", requestId);
   }
   if (growthOs.status === "rejected") {
-    dependencies.logStatus("growth_os", "failed", requestId);
+    dependencies.logStatus(
+      "growth_os",
+      growthOs.reason instanceof DeliveryTimeoutError ? "timeout" : "failed",
+      requestId,
+    );
   }
 
   const emailSent = email.status === "fulfilled" && email.value.status === "sent";
@@ -158,9 +201,9 @@ export const submitContact = createServerFn({ method: "POST" })
     return deliverContactWith(data, {
       requestId: randomUUID,
       buildEvent: buildGrowthOsLeadEvent,
-      async sendEmail(input) {
+      async sendEmail(input, signal) {
         const { subject, text } = formatContactEmail(input);
-        return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, input.email);
+        return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, input.email, signal);
       },
       sendGrowthOs: deliverLeadToGrowthOs,
       logStatus: logDeliveryStatus,
