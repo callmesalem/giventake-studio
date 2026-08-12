@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { changeLeadStatus, recordRevenue, reopenLead } from "./leads.functions";
 import {
   ISO_4217_CURRENCIES,
+  currencyMinorUnits,
   majorAmountToMinor,
   type LeadDetail,
   type LeadStatus,
@@ -12,6 +13,8 @@ import { canTransitionLead, LEAD_STATUSES } from "./lead-state";
 
 type LeadDetailProps = {
   lead: LeadDetail;
+  readOnly?: boolean;
+  refresh?: () => Promise<void>;
   saveStatus?: (input: { leadId: string; to: LeadStatus }) => Promise<{ status: LeadStatus }>;
   saveRevenue?: (
     input: RevenueInput,
@@ -31,6 +34,8 @@ function dateTime(value: string) {
 
 export function LeadDetailView({
   lead,
+  readOnly = false,
+  refresh = async () => {},
   saveStatus = (input) => changeLeadStatus({ data: input }),
   saveRevenue = (input) => recordRevenue({ data: input }),
   saveReopen = (input) => reopenLead({ data: input }),
@@ -48,6 +53,7 @@ export function LeadDetailView({
     try {
       const result = await saveStatus({ leadId: lead.id, to });
       setStatus(result.status);
+      await refresh();
       setMutationState("saved");
     } catch {
       setMutationState("error");
@@ -60,11 +66,12 @@ export function LeadDetailView({
     try {
       await saveRevenue({
         leadId: lead.id,
-        amountMinor: majorAmountToMinor(amount),
+        amountMinor: majorAmountToMinor(amount, currency),
         currency,
         confirmedAt,
         note: note.trim() || undefined,
       });
+      await refresh();
       setMutationState("saved");
     } catch {
       setMutationState("error");
@@ -78,6 +85,7 @@ export function LeadDetailView({
       const result = await saveReopen({ leadId: lead.id, reason: reopenReason });
       setStatus(result.status);
       setReopenReason("");
+      await refresh();
       setMutationState("saved");
     } catch {
       setMutationState("error");
@@ -109,6 +117,12 @@ export function LeadDetailView({
         <p className="m-0 text-sm text-slate-500">Received {dateTime(lead.occurredAt)}</p>
       </header>
 
+      {readOnly ? (
+        <p className="mt-5 w-fit border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-900">
+          Support session: read-only
+        </p>
+      ) : null}
+
       <section aria-labelledby="status-heading" className="mt-7 border-t border-slate-200 pt-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="m-0 text-base font-bold text-slate-950" id="status-heading">
@@ -123,26 +137,30 @@ export function LeadDetailView({
             </p>
           ) : null}
         </div>
-        <div
-          aria-label="Lead status"
-          className="mt-3 inline-flex max-w-full flex-wrap overflow-hidden rounded border border-slate-300 bg-white"
-          role="group"
-        >
-          {statusChoices.map((candidate) => (
-            <button
-              aria-pressed={candidate === status}
-              className="min-h-9 border-r border-slate-300 px-3 text-sm font-semibold text-slate-700 last:border-r-0 hover:bg-slate-50 aria-pressed:bg-slate-900 aria-pressed:text-white disabled:cursor-wait"
-              disabled={candidate === status || mutationState === "saving"}
-              key={candidate}
-              onClick={() => updateStatus(candidate)}
-              type="button"
-            >
-              {titleCase(candidate)}
-            </button>
-          ))}
-        </div>
+        {readOnly ? (
+          <p className="mt-3 text-sm font-semibold text-slate-800">{titleCase(status)}</p>
+        ) : (
+          <div
+            aria-label="Lead status"
+            className="mt-3 inline-flex max-w-full flex-wrap overflow-hidden rounded border border-slate-300 bg-white"
+            role="group"
+          >
+            {statusChoices.map((candidate) => (
+              <button
+                aria-pressed={candidate === status}
+                className="min-h-9 border-r border-slate-300 px-3 text-sm font-semibold text-slate-700 last:border-r-0 hover:bg-slate-50 aria-pressed:bg-slate-900 aria-pressed:text-white disabled:cursor-wait"
+                disabled={candidate === status || mutationState === "saving"}
+                key={candidate}
+                onClick={() => updateStatus(candidate)}
+                type="button"
+              >
+                {titleCase(candidate)}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {terminal ? (
+        {terminal && !readOnly ? (
           <form className="mt-5 grid max-w-2xl gap-3" onSubmit={submitReopen}>
             <label className="grid gap-1.5 text-sm font-semibold text-slate-800">
               Reopen reason
@@ -167,7 +185,7 @@ export function LeadDetailView({
         ) : null}
       </section>
 
-      {status === "won" ? (
+      {status === "won" && !readOnly ? (
         <section aria-labelledby="revenue-heading" className="mt-7 border-t border-slate-200 pt-5">
           <h2 className="m-0 text-base font-bold text-slate-950" id="revenue-heading">
             Revenue
@@ -179,7 +197,11 @@ export function LeadDetailView({
                 className="h-10 rounded border border-slate-300 bg-white px-3 font-normal outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
                 inputMode="decimal"
                 onChange={(event) => setAmount(event.target.value)}
-                pattern="(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?"
+                pattern={
+                  currencyMinorUnits(currency) === 0
+                    ? "(?:0|[1-9][0-9]*)"
+                    : `(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,${currencyMinorUnits(currency)}})?`
+                }
                 placeholder="3500.00"
                 required
                 value={amount}
@@ -314,9 +336,6 @@ export function LeadDetailView({
                   <p className="mb-0 mt-1 text-sm text-slate-600">
                     {titleCase(event.previousStatus)} to {titleCase(event.currentStatus)}
                   </p>
-                ) : null}
-                {event.reason ? (
-                  <p className="mb-0 mt-1 text-sm text-slate-600">{event.reason}</p>
                 ) : null}
                 <time className="mt-1 block text-xs text-slate-500" dateTime={event.createdAt}>
                   {dateTime(event.createdAt)}

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { LeadList } from "@/features/leads/lead-list";
 import { listLeads } from "@/features/leads/leads.functions";
 import { leadListInputSchema } from "@/features/leads/lead.schemas";
@@ -13,5 +13,18 @@ export const Route = createFileRoute("/_app/leads")({
 function LeadListRoute() {
   const page = Route.useLoaderData();
   const filters = Route.useSearch();
-  return <LeadList filters={filters} page={page} />;
+  const { supportSession } = getRouteApi("/_app").useLoaderData();
+  return <LeadListRouteContent filters={filters} page={page} supportSession={supportSession} />;
+}
+
+export function LeadListRouteContent({
+  filters,
+  page,
+  supportSession,
+}: {
+  filters: Parameters<typeof LeadList>[0]["filters"];
+  page: Parameters<typeof LeadList>[0]["page"];
+  supportSession: { expiresAt: string } | null;
+}) {
+  return <LeadList filters={filters} page={page} readOnly={Boolean(supportSession)} />;
 }

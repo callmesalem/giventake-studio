@@ -179,3 +179,144 @@ No root application file changed.
 - The finite ISO 4217 allowlist includes current `XCG` and will need intentional migration/schema updates when the standard changes.
 - The live smoke test covers server startup and the public login route only. Authenticated lead behavior is covered by component, server-boundary, pgTAP, typecheck, and production route-build verification rather than a seeded browser session.
 - Vite continues to emit the existing `vite-tsconfig-paths` advisory; it is unrelated to Task 6.
+
+## Fix Round 1
+
+Date: 2026-08-12
+
+### Result
+
+Addressed all seven Important findings without changing the root application or generated route tree:
+
+- Replaced caller-settable GUC authorization with invoker-security triggers that compare `current_user` to the owner of the `SECURITY DEFINER` transaction functions. Authenticated callers cannot manufacture that role boundary; RLS still hides cross-tenant rows before a row trigger executes.
+- Added immutable revenue history with `superseded_at`, a partial unique current-outcome index, append-only replacement recording, and atomic supersession when a won lead reopens.
+- Persisted the immediate preterminal status and restored `new`, `qualified`, or `booked` exactly on reopen. Reopened leads expose no current revenue until won and recorded again.
+- Restricted lifecycle audit metadata to finite change/status/date/count fields. Reopen reason, amount, note, and ciphertext never enter audit or client DTOs.
+- Added the `amount_minor_text(revenue_outcomes)` database boundary and kept confirmed revenue as decimal strings through server DTOs and UI formatting.
+- Added a deterministic ISO 4217 exponent map: zero-decimal currencies and no-minor-unit ISO units use 0, BHD/IQD/JOD/KWD/LYD/OMR/TND use 3, CLF/UYW use 4, and the maintained remainder uses 2.
+- Added explicit tenant predicates for embedded attribution and revenue relations and shared tenant adapters for attribution, consent, audit, and current-revenue detail reads. Active lead reads retain `restricted_at is null`.
+- Threaded parent support-session state into both lead routes. Support sees a clear read-only state and no status, reopen, or revenue controls.
+- Owner mutations await route invalidation before displaying success, refreshing status, current revenue, audit chronology, and activity timestamps.
+- Removed exact email/phone from GET route validation and links. Exact lookup and lookup pagination now use a POST server function and component-local state.
+
+### RED Evidence
+
+Focused application command from `growth-os/`:
+
+```powershell
+& '.\node_modules\.bin\vitest.exe' run src/features/leads --reporter=verbose
+```
+
+Result: failed as expected with 15 focused assertions covering the missing POST lookup schema/function, currency exponent formatting, explicit query adapters, bigint text mapping, reason-free audit DTO, support read-only route/component state, refresh sequencing, and PII-free pagination.
+
+Direct database command against the unchanged Task 6 schema:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task6_lead_ledger.test.sql
+```
+
+Result: failed as expected. Five of 32 assertions failed: both caller-set GUCs bypassed their direct-write guards, and the successful unauthorized status mutation contaminated three downstream transaction assertions.
+
+Incremental embedded-scope command:
+
+```powershell
+& '.\node_modules\.bin\vitest.exe' run src/features/leads/leads.server.test.ts --reporter=dot
+```
+
+Result: 1 of 25 tests failed as expected because `scopeEmbeddedLeadRelations` did not yet exist. The passing implementation then asserted exact `attribution_touches.tenant_id`, `revenue_outcomes.tenant_id`, `revenue_outcomes.superseded_at is null`, parent `tenant_id`, and parent `restricted_at is null` predicates.
+
+Incremental no-minor-unit ISO command:
+
+```powershell
+& '.\node_modules\.bin\vitest.exe' run src/features/leads/leads.server.test.ts --reporter=dot
+```
+
+Result: 1 of 25 tests failed as expected because XAU inherited the two-decimal default (`100` instead of `1`). The explicit no-minor-unit set corrected it.
+
+### GREEN Evidence
+
+Focused lead command:
+
+```powershell
+& '.\node_modules\.bin\vitest.exe' run src/features/leads --reporter=dot
+```
+
+Result: 4 files passed, 62 tests passed.
+
+Focused real-database command:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' test db supabase/tests/release1_task6_fix_round1.test.sql
+```
+
+Result: 38 assertions passed. Coverage includes GUC spoofing, same-tenant direct-write denial, cross-tenant zero-row behavior, all requested reopen paths, current/history uniqueness, re-win, no lost current ledger values, exact bigint text above `Number.MAX_SAFE_INTEGER` and at PostgreSQL bigint max, finite audit metadata, composite tenant integrity, row locks, and the partial unique concurrency safeguard.
+
+Clean reset and full pgTAP commands:
+
+```powershell
+& '.\node_modules\.bin\supabase.exe' db reset
+npx --yes bun run test:db
+```
+
+Result: all 11 migrations applied from an empty database; 9 pgTAP files passed, 261 assertions passed.
+
+Final Growth OS commands:
+
+```powershell
+npx --yes bun run test
+npx --yes bun run typecheck
+npx --yes bun run lint
+npx --yes bun run build
+```
+
+Result: 16 files and 160 tests passed; typecheck and lint passed; production client and SSR builds passed with 1,920 client modules and 103 SSR modules. Generated routes remain `/leads` and `/leads/$leadId`, with no `routeTree.gen.ts` diff.
+
+Final hygiene and scans:
+
+```powershell
+git diff --check
+```
+
+Result: passed. `growth-os/supabase/.branches` was physically removed, no root application files changed, and scans found no client bundle/source matches for service or crypto keys, ciphertext/hash/internal ledger columns, support internals, fixture PII, lead logging, PII route parameters, or migration GUC authorization.
+
+The running local application at `http://127.0.0.1:4174/login` returned HTTP 200 and rendered Growth OS.
+
+### Fix Round 1 Changed Files
+
+- `.superpowers/sdd/2026-08-09-giventake-growth-os-release-1/task-6-report.md`
+- `growth-os/src/features/audit/audit.server.ts`
+- `growth-os/src/features/leads/lead-detail.tsx`
+- `growth-os/src/features/leads/lead-list.tsx`
+- `growth-os/src/features/leads/lead-routes.test.tsx`
+- `growth-os/src/features/leads/lead-ui.test.tsx`
+- `growth-os/src/features/leads/lead.schemas.ts`
+- `growth-os/src/features/leads/leads.functions.ts`
+- `growth-os/src/features/leads/leads.server.test.ts`
+- `growth-os/src/features/leads/leads.server.ts`
+- `growth-os/src/lib/database.types.ts`
+- `growth-os/src/routes/_app.leads.$leadId.tsx`
+- `growth-os/src/routes/_app.leads.tsx`
+- `growth-os/supabase/migrations/202608120010_task6_lead_ledger.sql`
+- `growth-os/supabase/migrations/202608120011_task6_fix_round1.sql`
+- `growth-os/supabase/tests/release1_task6_lead_ledger.test.sql`
+- `growth-os/supabase/tests/release1_task6_fix_round1.test.sql`
+
+### Fix Round 1 Self-Review
+
+- The old and invented GUC names appear only in adversarial pgTAP and no migration function reads or sets custom authorization state.
+- Invoker triggers reject authenticated direct writes while transaction RPCs execute DML as their database owner; direct cross-tenant updates still touch no visible row and do not fire the guard.
+- Every lifecycle RPC locks the active tenant lead before state decisions. The partial unique index provides the final one-current-row guarantee under concurrent revenue attempts.
+- Revenue replacement updates only supersession metadata on the prior current row and inserts a new row; previous amount, currency, date, actor, and encrypted note remain historical.
+- Reopen atomically restores `preterminal_status`, clears it on the nonterminal lead, supersedes current revenue, updates activity, and writes one finite audit event.
+- List and detail select only `amount_minor_text`; no code path reads `amount_minor` through a JavaScript number.
+- Exact lookup still HMACs normalized values server-side and decrypts only returned rows, but PII is absent from route search, form actions, browser history, and pagination hrefs.
+- Support read-only state comes from the exact-session parent loader; server mutation ownership checks remain the authoritative denial.
+- Mutation success is set only after awaited route invalidation.
+- Client DTOs and UI expose no reopen reason, revenue note, historical internal values, storage column, lookup hash, or support capability detail.
+
+### Fix Round 1 Concerns And Maintenance
+
+- The finite ISO 4217 code allowlist and exponent exceptions are maintained data. Standard changes require an intentional SQL allowlist and TypeScript exponent-map update together.
+- Concurrency is verified through lead-row `FOR UPDATE` checks, the partial unique current-outcome index, and transactional pgTAP flows. The local pgTAP harness does not run a separate multi-connection race.
+- The authenticated lead routes remain covered by server, component, route, and database tests rather than a seeded browser login. The live route smoke check covers the public login response.
+- Vite continues to emit the existing `vite-tsconfig-paths` advisory; this round does not broaden into that separate cleanup.

@@ -1,17 +1,25 @@
 import { Filter, RefreshCw, Search } from "lucide-react";
-import { useState } from "react";
-import type { LeadListPage, LeadStatus } from "./lead.schemas";
+import { useState, type FormEvent } from "react";
+import { searchLeads } from "./leads.functions";
+import {
+  formatMinorAmount,
+  type LeadListPage,
+  type LeadLookupInput,
+  type LeadStatus,
+} from "./lead.schemas";
+
+type NonPiiFilters = {
+  status?: LeadStatus;
+  source?: string;
+  from?: string;
+  to?: string;
+};
 
 type LeadListProps = {
   page: LeadListPage;
-  filters?: {
-    status?: LeadStatus;
-    source?: string;
-    exactEmail?: string;
-    exactPhone?: string;
-    from?: string;
-    to?: string;
-  };
+  filters?: NonPiiFilters;
+  readOnly?: boolean;
+  lookupLeads?: (input: LeadLookupInput) => Promise<LeadListPage>;
 };
 
 const statusStyles: Record<LeadStatus, string> = {
@@ -31,56 +39,136 @@ function formatDate(value: string) {
 }
 
 function formatRevenue(amount: string | null, currency: string | null) {
-  if (!amount || !currency) return "Not recorded";
-  const minor = BigInt(amount);
-  const whole = minor / 100n;
-  const fraction = (minor % 100n).toString().padStart(2, "0");
-  return `${currency} ${whole.toLocaleString("en-US")}.${fraction}`;
+  return amount && currency ? formatMinorAmount(amount, currency) : "Not recorded";
 }
 
-function nextPageHref(filters: LeadListProps["filters"], cursor: string) {
+function nextPageHref(filters: NonPiiFilters, cursor: string) {
   const parameters = new URLSearchParams();
-  for (const [key, value] of Object.entries(filters ?? {})) {
+  for (const [key, value] of Object.entries(filters)) {
     if (value) parameters.set(key, value);
   }
   parameters.set("cursor", cursor);
   return `/leads?${parameters.toString()}`;
 }
 
-export function LeadList({ page, filters = {} }: LeadListProps) {
+function lookupInput(
+  filters: NonPiiFilters,
+  exactEmail: string,
+  exactPhone: string,
+  cursor?: string,
+): LeadLookupInput {
+  return {
+    ...(filters.status ? { status: filters.status } : {}),
+    ...(filters.source ? { source: filters.source } : {}),
+    ...(filters.from ? { from: filters.from } : {}),
+    ...(filters.to ? { to: filters.to } : {}),
+    ...(exactEmail.trim() ? { exactEmail: exactEmail.trim() } : {}),
+    ...(exactPhone.trim() ? { exactPhone: exactPhone.trim() } : {}),
+    ...(cursor ? { cursor } : {}),
+    limit: 25,
+  };
+}
+
+export function LeadList({
+  page,
+  filters = {},
+  readOnly = false,
+  lookupLeads = (input) => searchLeads({ data: input }),
+}: LeadListProps) {
   const [filtersVisible, setFiltersVisible] = useState(
-    Boolean(filters.status || filters.source || filters.from || filters.to || filters.exactPhone),
+    Boolean(filters.status || filters.source || filters.from || filters.to),
   );
+  const [exactEmail, setExactEmail] = useState("");
+  const [exactPhone, setExactPhone] = useState("");
+  const [lookupPage, setLookupPage] = useState<LeadListPage | null>(null);
+  const [activeLookup, setActiveLookup] = useState<LeadLookupInput | null>(null);
+  const [lookupPending, setLookupPending] = useState(false);
+
+  async function submitLookup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const input = lookupInput(filters, exactEmail, exactPhone);
+    setLookupPending(true);
+    try {
+      setLookupPage(await lookupLeads(input));
+      setActiveLookup(input);
+    } finally {
+      setLookupPending(false);
+    }
+  }
+
+  async function nextLookupPage() {
+    if (!lookupPage?.nextCursor || !activeLookup) return;
+    const input = { ...activeLookup, cursor: lookupPage.nextCursor };
+    setLookupPending(true);
+    try {
+      setLookupPage(await lookupLeads(input));
+      setActiveLookup(input);
+    } finally {
+      setLookupPending(false);
+    }
+  }
+
+  const displayedPage = lookupPage ?? page;
 
   return (
     <section aria-labelledby="lead-list-title" className="border-t border-slate-300 pt-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl" id="lead-list-title">
-            Leads
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">{page.items.length} leads in this page</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl" id="lead-list-title">
+              Leads
+            </h1>
+            {readOnly ? (
+              <span className="border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-900">
+                Support session: read-only
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-sm text-slate-600">
+            {displayedPage.items.length} leads in this page
+          </p>
         </div>
-        <form className="flex min-w-0 flex-1 flex-wrap justify-end gap-2" method="get">
-          <label className="sr-only" htmlFor="lead-email-search">
-            Exact email
-          </label>
-          <input
-            className="h-9 min-w-0 flex-1 rounded border border-slate-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100 sm:max-w-72"
-            defaultValue={filters.exactEmail}
-            id="lead-email-search"
-            name="exactEmail"
-            placeholder="Exact email"
-            type="email"
-          />
-          <button
-            aria-label="Search leads"
-            className="inline-flex h-9 w-9 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-            title="Search leads"
-            type="submit"
+
+        <div className="flex min-w-0 flex-1 flex-wrap justify-end gap-2">
+          <form
+            aria-label="Exact lead lookup"
+            className="flex min-w-0 flex-1 justify-end gap-2"
+            method="post"
+            onSubmit={submitLookup}
           >
-            <Search aria-hidden="true" size={17} />
-          </button>
+            <label className="sr-only" htmlFor="lead-email-search">
+              Exact email
+            </label>
+            <input
+              className="h-9 min-w-0 flex-1 rounded border border-slate-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100 sm:max-w-72"
+              id="lead-email-search"
+              onChange={(event) => setExactEmail(event.target.value)}
+              placeholder="Exact email"
+              type="email"
+              value={exactEmail}
+            />
+            <label className="sr-only" htmlFor="lead-phone-search">
+              Exact phone
+            </label>
+            <input
+              className="h-9 min-w-0 flex-1 rounded border border-slate-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100 sm:max-w-56"
+              id="lead-phone-search"
+              maxLength={32}
+              onChange={(event) => setExactPhone(event.target.value)}
+              placeholder="Exact phone"
+              type="tel"
+              value={exactPhone}
+            />
+            <button
+              aria-label="Search leads"
+              className="inline-flex h-9 w-9 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:text-slate-400"
+              disabled={lookupPending || (!exactEmail.trim() && !exactPhone.trim())}
+              title="Search leads"
+              type="submit"
+            >
+              <Search aria-hidden="true" size={17} />
+            </button>
+          </form>
           <button
             aria-expanded={filtersVisible}
             aria-label="Filter leads"
@@ -100,65 +188,64 @@ export function LeadList({ page, filters = {} }: LeadListProps) {
           >
             <RefreshCw aria-hidden="true" size={17} />
           </button>
-
-          {filtersVisible ? (
-            <div className="grid w-full gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2 lg:grid-cols-5">
-              <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                Status
-                <select
-                  className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
-                  defaultValue={filters.status ?? ""}
-                  name="status"
-                >
-                  <option value="">All statuses</option>
-                  {(["new", "qualified", "booked", "won", "lost"] as const).map((status) => (
-                    <option key={status} value={status}>
-                      {titleCase(status)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                Source
-                <input
-                  className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
-                  defaultValue={filters.source}
-                  maxLength={80}
-                  name="source"
-                />
-              </label>
-              <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                Exact phone
-                <input
-                  className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
-                  defaultValue={filters.exactPhone}
-                  maxLength={32}
-                  name="exactPhone"
-                  type="tel"
-                />
-              </label>
-              <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                Received from
-                <input
-                  className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
-                  defaultValue={filters.from}
-                  name="from"
-                  type="date"
-                />
-              </label>
-              <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                Received through
-                <input
-                  className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
-                  defaultValue={filters.to}
-                  name="to"
-                  type="date"
-                />
-              </label>
-            </div>
-          ) : null}
-        </form>
+        </div>
       </div>
+
+      {filtersVisible ? (
+        <form
+          className="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2 lg:grid-cols-4"
+          method="get"
+        >
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
+            Status
+            <select
+              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
+              defaultValue={filters.status ?? ""}
+              name="status"
+            >
+              <option value="">All statuses</option>
+              {(["new", "qualified", "booked", "won", "lost"] as const).map((status) => (
+                <option key={status} value={status}>
+                  {titleCase(status)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
+            Source
+            <input
+              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
+              defaultValue={filters.source}
+              maxLength={80}
+              name="source"
+            />
+          </label>
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
+            Received from
+            <input
+              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
+              defaultValue={filters.from}
+              name="from"
+              type="date"
+            />
+          </label>
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
+            Received through
+            <input
+              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm font-normal"
+              defaultValue={filters.to}
+              name="to"
+              type="date"
+            />
+          </label>
+          <button
+            className="h-9 w-fit rounded bg-slate-900 px-3 text-sm font-semibold text-white"
+            type="submit"
+          >
+            Apply filters
+          </button>
+        </form>
+      ) : null}
 
       <div className="mt-5 overflow-x-auto border-y border-slate-200 bg-white">
         <table className="w-full min-w-[920px] border-collapse text-left text-sm">
@@ -180,7 +267,7 @@ export function LeadList({ page, filters = {} }: LeadListProps) {
             </tr>
           </thead>
           <tbody>
-            {page.items.map((lead) => (
+            {displayedPage.items.map((lead) => (
               <tr
                 className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
                 key={lead.id}
@@ -214,7 +301,7 @@ export function LeadList({ page, filters = {} }: LeadListProps) {
                 </td>
               </tr>
             ))}
-            {page.items.length === 0 ? (
+            {displayedPage.items.length === 0 ? (
               <tr>
                 <td className="px-3 py-10 text-center text-slate-500" colSpan={7}>
                   No leads match these filters.
@@ -225,14 +312,25 @@ export function LeadList({ page, filters = {} }: LeadListProps) {
         </table>
       </div>
 
-      {page.nextCursor ? (
+      {displayedPage.nextCursor ? (
         <div className="mt-4 flex justify-end">
-          <a
-            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 no-underline hover:bg-slate-50"
-            href={nextPageHref(filters, page.nextCursor)}
-          >
-            Next page
-          </a>
+          {lookupPage ? (
+            <button
+              className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              disabled={lookupPending}
+              onClick={nextLookupPage}
+              type="button"
+            >
+              Next page
+            </button>
+          ) : (
+            <a
+              className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 no-underline hover:bg-slate-50"
+              href={nextPageHref(filters, displayedPage.nextCursor)}
+            >
+              Next page
+            </a>
+          )}
         </div>
       ) : null}
     </section>

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   LeadNotFoundError,
+  formatMinorAmount,
+  leadLookupInputSchema,
   leadListInputSchema,
   majorAmountToMinor,
   reopenLeadInputSchema,
@@ -12,6 +14,10 @@ import {
   listLeadsWith,
   recordRevenueWith,
   reopenLeadWith,
+  scopeActiveLeadQuery,
+  scopeEmbeddedLeadRelations,
+  scopeTenantQuery,
+  searchLeadsWith,
 } from "./leads.server";
 
 const TENANT_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
@@ -48,12 +54,19 @@ const encryptedRow = {
 };
 
 describe("lead schemas", () => {
-  it("caps list pages at 100 and validates exact lookup filters", () => {
+  it("caps list pages at 100 and keeps exact lookup out of GET filters", () => {
     expect(leadListInputSchema.parse({ limit: 500 }).limit).toBe(100);
-    expect(
-      leadListInputSchema.parse({ limit: 25, exactEmail: " Lead@Example.com " }).exactEmail,
-    ).toBe("lead@example.com");
+    expect(() =>
+      leadListInputSchema.parse({ limit: 25, exactEmail: "Lead@Example.com" }),
+    ).toThrow();
     expect(() => leadListInputSchema.parse({ limit: 25, status: "archived" })).toThrow();
+  });
+
+  it("validates exact email and phone only in the POST lookup contract", () => {
+    expect(
+      leadLookupInputSchema.parse({ limit: 25, exactEmail: " Lead@Example.com " }).exactEmail,
+    ).toBe("lead@example.com");
+    expect(() => leadLookupInputSchema.parse({ limit: 25 })).toThrow();
   });
 
   it.each(["0", "-1", "1.001", "not-money", "9223372036854775808"])(
@@ -105,10 +118,21 @@ describe("lead schemas", () => {
     ).toThrow();
   });
 
-  it("converts major currency input only when it has at most two decimals", () => {
-    expect(majorAmountToMinor("3500.00")).toBe("350000");
-    expect(majorAmountToMinor("0.01")).toBe("1");
-    expect(() => majorAmountToMinor("1.001")).toThrow();
+  it("converts and formats major values with the ISO 4217 currency exponent", () => {
+    expect(majorAmountToMinor("3500.00", "USD")).toBe("350000");
+    expect(formatMinorAmount("350000", "USD")).toBe("USD 3,500.00");
+    expect(majorAmountToMinor("3500", "JPY")).toBe("3500");
+    expect(formatMinorAmount("3500", "JPY")).toBe("JPY 3,500");
+    expect(majorAmountToMinor("1.234", "BHD")).toBe("1234");
+    expect(formatMinorAmount("1234", "BHD")).toBe("BHD 1.234");
+    expect(majorAmountToMinor("1", "XAU")).toBe("1");
+    expect(() => majorAmountToMinor("1.0", "XAU")).toThrow();
+  });
+
+  it("rejects decimal places beyond the selected currency exponent", () => {
+    expect(() => majorAmountToMinor("1.001", "USD")).toThrow();
+    expect(() => majorAmountToMinor("1.0", "JPY")).toThrow();
+    expect(() => majorAmountToMinor("1.2345", "BHD")).toThrow();
   });
 
   it("requires a trimmed 10-500 character reopen reason", () => {
@@ -149,7 +173,7 @@ describe("lead server boundary", () => {
     );
 
     const page = await listLeadsWith(
-      { limit: 25, exactEmail: "LEAD@example.com" },
+      { limit: 25 },
       {
         requireTenant: vi.fn().mockImplementation(async () => {
           sequence.push("context");
@@ -157,7 +181,7 @@ describe("lead server boundary", () => {
         }),
         loadPage,
         decrypt,
-        hashLookup: vi.fn().mockReturnValue("email-hash"),
+        hashLookup: vi.fn(),
       },
     );
 
@@ -166,7 +190,6 @@ describe("lead server boundary", () => {
       expect.objectContaining({
         tenantId: TENANT_ID,
         restrictedOnly: true,
-        exactEmailHash: "email-hash",
       }),
     );
     expect(decrypt).toHaveBeenCalledTimes(3);
@@ -183,7 +206,7 @@ describe("lead server boundary", () => {
     const decrypt = vi.fn();
     const hashLookup = vi.fn().mockReturnValueOnce("email-hash").mockReturnValueOnce("phone-hash");
 
-    await listLeadsWith(
+    await searchLeadsWith(
       { limit: 25, exactEmail: "lead@example.com", exactPhone: "+1 (555) 010-0100" },
       {
         requireTenant: vi.fn().mockResolvedValue({ tenantId: TENANT_ID }),
@@ -196,6 +219,33 @@ describe("lead server boundary", () => {
     expect(hashLookup).toHaveBeenNthCalledWith(1, "lead@example.com", "email");
     expect(hashLookup).toHaveBeenNthCalledWith(2, "+1 (555) 010-0100", "phone");
     expect(decrypt).not.toHaveBeenCalled();
+  });
+
+  it("applies explicit tenant and active-row predicates through the query adapter", () => {
+    const calls: Array<[string, string, unknown]> = [];
+    const query = {
+      eq(column: string, value: unknown) {
+        calls.push(["eq", column, value]);
+        return this;
+      },
+      is(column: string, value: unknown) {
+        calls.push(["is", column, value]);
+        return this;
+      },
+    };
+
+    scopeTenantQuery(query, TENANT_ID);
+    scopeActiveLeadQuery(query, TENANT_ID);
+    scopeEmbeddedLeadRelations(query, TENANT_ID);
+
+    expect(calls).toEqual([
+      ["eq", "tenant_id", TENANT_ID],
+      ["eq", "tenant_id", TENANT_ID],
+      ["is", "restricted_at", null],
+      ["eq", "attribution_touches.tenant_id", TENANT_ID],
+      ["eq", "revenue_outcomes.tenant_id", TENANT_ID],
+      ["is", "revenue_outcomes.superseded_at", null],
+    ]);
   });
 
   it("uses the strongest returned attribution confidence deterministically", async () => {
@@ -274,6 +324,16 @@ describe("lead server boundary", () => {
                 unrelated_internal_value: "must-not-escape",
               },
             },
+            {
+              action: "lead.reopened",
+              created_at: "2026-08-11T16:00:00.000Z",
+              metadata: {
+                previous_status: "lost",
+                current_status: "qualified",
+                reason: "must-not-escape",
+                superseded_count: 0,
+              },
+            },
           ],
           revenue: null,
         }),
@@ -297,10 +357,51 @@ describe("lead server boundary", () => {
         previousStatus: "new",
         currentStatus: "qualified",
       },
+      {
+        action: "lead.reopened",
+        createdAt: "2026-08-11T16:00:00.000Z",
+        previousStatus: "lost",
+        currentStatus: "qualified",
+        supersededCount: 0,
+      },
     ]);
     expect(JSON.stringify(detail)).not.toMatch(
-      /ciphertext|lookup_hash|raw_provider_metadata|unrelated_internal_value/,
+      /ciphertext|lookup_hash|raw_provider_metadata|unrelated_internal_value|must-not-escape/,
     );
+  });
+
+  it("keeps database bigint text exact above JavaScript safe integer range", async () => {
+    const detail = await getLeadWith(
+      { leadId: LEAD_ID },
+      {
+        requireTenant: vi.fn().mockResolvedValue({ tenantId: TENANT_ID }),
+        loadDetail: vi.fn().mockResolvedValue({
+          lead: {
+            ...encryptedRow,
+            phone_ciphertext: null,
+            notes_ciphertext: "encrypted-notes",
+            budget_range: "5k-10k",
+            timeline_range: "1-2-months",
+          },
+          touches: [],
+          consent: {
+            policy_version: consent.policy_version,
+            source: consent.source,
+            recorded_at: consent.recorded_at,
+            categories: consent,
+          },
+          audit: [],
+          revenue: {
+            amount_minor_text: "9223372036854775807",
+            currency: "USD",
+            confirmed_on: "2026-08-12",
+          },
+        }),
+        decrypt: vi.fn((value: string) => value),
+      },
+    );
+
+    expect(detail.confirmedRevenueMinor).toBe("9223372036854775807");
   });
 
   it("allows a won transition without inventing revenue", async () => {

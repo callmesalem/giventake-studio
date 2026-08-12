@@ -11,6 +11,7 @@ import {
   LeadNotFoundError,
   consentReceiptV1Schema,
   leadIdInputSchema,
+  leadLookupInputSchema,
   leadListInputSchema,
   parseRevenueInputAt,
   reopenLeadInputSchema,
@@ -21,6 +22,7 @@ import {
   type LeadListInput,
   type LeadListItem,
   type LeadListPage,
+  type LeadLookupInput,
   type LeadStatus,
   type ParsedLeadListInput,
   type RevenueInput,
@@ -42,7 +44,7 @@ type EncryptedLeadListRow = {
   occurred_at: string;
   last_activity_at: string;
   attribution_touches: Array<{ confidence: AttributionConfidence }>;
-  revenue_outcomes: Array<{ amount_minor: number | string; currency: string }>;
+  revenue_outcomes: Array<{ amount_minor_text: string; currency: string }>;
 };
 
 type EncryptedLeadDetailRow = EncryptedLeadListRow & {
@@ -74,7 +76,7 @@ type StoredAudit = {
 };
 
 type StoredRevenue = {
-  amount_minor: number | string;
+  amount_minor_text: string;
   currency: string;
   confirmed_on: string;
 };
@@ -129,7 +131,7 @@ function mapListItem(
     status: row.status,
     declaredSource: row.declared_source,
     confidence,
-    confirmedRevenueMinor: revenue ? String(revenue.amount_minor) : null,
+    confirmedRevenueMinor: revenue?.amount_minor_text ?? null,
     confirmedRevenueCurrency: revenue?.currency ?? null,
     occurredAt: row.occurred_at,
     lastActivityAt: row.last_activity_at,
@@ -177,12 +179,6 @@ export async function listLeadsWith(
     source: parsed.source,
     from: parsed.from,
     to: parsed.to,
-    exactEmailHash: parsed.exactEmail
-      ? dependencies.hashLookup(parsed.exactEmail, "email")
-      : undefined,
-    exactPhoneHash: parsed.exactPhone
-      ? dependencies.hashLookup(parsed.exactPhone, "phone")
-      : undefined,
     cursor: parsed.cursor,
     limit: parsed.limit,
   };
@@ -194,14 +190,75 @@ export async function listLeadsWith(
   };
 }
 
+export async function searchLeadsWith(
+  input: LeadLookupInput,
+  dependencies: ListDependencies,
+): Promise<LeadListPage> {
+  const context = await dependencies.requireTenant();
+  const parsed = leadLookupInputSchema.parse(input);
+  const page = await dependencies.loadPage({
+    tenantId: context.tenantId,
+    restrictedOnly: true,
+    status: parsed.status,
+    source: parsed.source,
+    from: parsed.from,
+    to: parsed.to,
+    exactEmailHash: parsed.exactEmail
+      ? dependencies.hashLookup(parsed.exactEmail, "email")
+      : undefined,
+    exactPhoneHash: parsed.exactPhone
+      ? dependencies.hashLookup(parsed.exactPhone, "phone")
+      : undefined,
+    cursor: parsed.cursor,
+    limit: parsed.limit,
+  });
+  return {
+    items: page.rows.map((row) => mapListItem(row, dependencies.decrypt)),
+    nextCursor: page.hasMore && page.rows.length > 0 ? encodeCursor(page.rows.at(-1)!) : null,
+  };
+}
+
+type TenantScopedQuery = {
+  eq(column: string, value: unknown): unknown;
+};
+
+type ActiveLeadScopedQuery = TenantScopedQuery & {
+  is(column: string, value: unknown): unknown;
+};
+
+export function scopeTenantQuery<T extends TenantScopedQuery>(query: T, tenantId: string): T {
+  return query.eq("tenant_id", tenantId) as T;
+}
+
+export function scopeActiveLeadQuery<T extends ActiveLeadScopedQuery>(
+  query: T,
+  tenantId: string,
+): T {
+  return (query.eq("tenant_id", tenantId) as T).is("restricted_at", null) as T;
+}
+
+export function scopeEmbeddedLeadRelations<T extends ActiveLeadScopedQuery>(
+  query: T,
+  tenantId: string,
+): T {
+  return (
+    (query.eq("attribution_touches.tenant_id", tenantId) as T).eq(
+      "revenue_outcomes.tenant_id",
+      tenantId,
+    ) as T
+  ).is("revenue_outcomes.superseded_at", null) as T;
+}
+
 async function loadLeadPage(input: ListQueryInput) {
-  let query = createUserSupabase()
-    .from("leads")
-    .select(
-      "id, name_ciphertext, email_ciphertext, company_ciphertext, status, declared_source, occurred_at, last_activity_at, attribution_touches(confidence), revenue_outcomes(amount_minor, currency)",
-    )
-    .eq("tenant_id", input.tenantId)
-    .is("restricted_at", null)
+  let query = scopeActiveLeadQuery(
+    createUserSupabase()
+      .from("leads")
+      .select(
+        "id, name_ciphertext, email_ciphertext, company_ciphertext, status, declared_source, occurred_at, last_activity_at, attribution_touches(tenant_id, confidence), revenue_outcomes(tenant_id, amount_minor_text, currency, superseded_at)",
+      ),
+    input.tenantId,
+  );
+  query = scopeEmbeddedLeadRelations(query, input.tenantId)
     .order("occurred_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(input.limit + 1);
@@ -231,6 +288,15 @@ async function loadLeadPage(input: ListQueryInput) {
 
 export async function listLeads(input: LeadListInput): Promise<LeadListPage> {
   return listLeadsWith(input, {
+    requireTenant: requireTenantContext,
+    loadPage: loadLeadPage,
+    decrypt: decryptField,
+    hashLookup: lookupHash,
+  });
+}
+
+export async function searchLeads(input: LeadLookupInput): Promise<LeadListPage> {
+  return searchLeadsWith(input, {
     requireTenant: requireTenantContext,
     loadPage: loadLeadPage,
     decrypt: decryptField,
@@ -270,11 +336,20 @@ function mapAudit(event: StoredAudit): LeadAuditEvent {
   const result: LeadAuditEvent = { action: event.action, createdAt: event.created_at };
   if (isLeadStatus(metadata.previous_status)) result.previousStatus = metadata.previous_status;
   if (isLeadStatus(metadata.current_status)) result.currentStatus = metadata.current_status;
-  if (event.action === "lead.reopened" && typeof metadata.reason === "string") {
-    result.reason = metadata.reason;
-  }
+  if (
+    metadata.change_code === "lead_status_changed" ||
+    metadata.change_code === "lead_reopened" ||
+    metadata.change_code === "revenue_recorded"
+  )
+    result.changeCode = metadata.change_code;
   if (event.action === "revenue.recorded" && typeof metadata.recorded_on === "string") {
     result.recordedOn = metadata.recorded_on;
+  }
+  if (
+    typeof metadata.superseded_count === "number" &&
+    Number.isSafeInteger(metadata.superseded_count)
+  ) {
+    result.supersededCount = metadata.superseded_count;
   }
   return result;
 }
@@ -294,7 +369,7 @@ export async function getLeadWith(
   const categories = bundle.consent.categories;
   return {
     ...listItem,
-    confirmedRevenueMinor: bundle.revenue ? String(bundle.revenue.amount_minor) : null,
+    confirmedRevenueMinor: bundle.revenue?.amount_minor_text ?? null,
     confirmedRevenueCurrency: bundle.revenue?.currency ?? null,
     phone: bundle.lead.phone_ciphertext
       ? dependencies.decrypt(bundle.lead.phone_ciphertext, "lead")
@@ -321,45 +396,46 @@ export async function getLeadWith(
 
 async function loadLeadDetail(tenantId: string, leadId: string): Promise<DetailBundle | null> {
   const supabase = createUserSupabase();
-  const { data: lead, error: leadError } = await supabase
-    .from("leads")
-    .select(
-      "id, name_ciphertext, email_ciphertext, phone_ciphertext, company_ciphertext, notes_ciphertext, status, declared_source, budget_range, timeline_range, occurred_at, last_activity_at, attribution_touches(confidence), revenue_outcomes(amount_minor, currency)",
-    )
-    .eq("tenant_id", tenantId)
-    .eq("id", leadId)
-    .is("restricted_at", null)
-    .maybeSingle();
+  const leadQuery = scopeActiveLeadQuery(
+    supabase
+      .from("leads")
+      .select(
+        "id, name_ciphertext, email_ciphertext, phone_ciphertext, company_ciphertext, notes_ciphertext, status, declared_source, budget_range, timeline_range, occurred_at, last_activity_at, attribution_touches(tenant_id, confidence), revenue_outcomes(tenant_id, amount_minor_text, currency, superseded_at)",
+      ),
+    tenantId,
+  );
+  const scopedLead = scopeEmbeddedLeadRelations(leadQuery, tenantId);
+  const { data: lead, error: leadError } = await scopedLead.eq("id", leadId).maybeSingle();
   if (leadError) throw leadError;
   if (!lead) return null;
 
   const [touchesResult, consentResult, auditResult, revenueResult] = await Promise.all([
-    supabase
-      .from("attribution_touches")
-      .select("touch_type, normalized_source, confidence, state, created_at")
-      .eq("tenant_id", tenantId)
+    scopeTenantQuery(
+      supabase
+        .from("attribution_touches")
+        .select("touch_type, normalized_source, confidence, state, created_at"),
+      tenantId,
+    )
       .eq("lead_id", leadId)
       .order("created_at", { ascending: true }),
-    supabase
-      .from("consent_receipts")
-      .select("policy_version, source, recorded_at, categories")
-      .eq("tenant_id", tenantId)
+    scopeTenantQuery(
+      supabase.from("consent_receipts").select("policy_version, source, recorded_at, categories"),
+      tenantId,
+    )
       .eq("lead_id", leadId)
       .eq("receipt_type", "website_lead")
       .single(),
-    supabase
-      .from("audit_events")
-      .select("action, created_at, metadata")
-      .eq("tenant_id", tenantId)
+    scopeTenantQuery(supabase.from("audit_events").select("action, created_at, metadata"), tenantId)
       .eq("target_id", leadId)
       .eq("target_type", "lead")
       .in("action", ["lead.created", "lead.status_changed", "lead.reopened", "revenue.recorded"])
       .order("created_at", { ascending: false }),
-    supabase
-      .from("revenue_outcomes")
-      .select("amount_minor, currency, confirmed_on")
-      .eq("tenant_id", tenantId)
+    scopeTenantQuery(
+      supabase.from("revenue_outcomes").select("amount_minor_text, currency, confirmed_on"),
+      tenantId,
+    )
       .eq("lead_id", leadId)
+      .is("superseded_at", null)
       .maybeSingle(),
   ]);
 

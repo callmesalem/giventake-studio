@@ -213,6 +213,26 @@ export const leadListInputSchema = z
     source: optionalTrimmed(80),
     from: dateOnly.optional(),
     to: dateOnly.optional(),
+    cursor: optionalTrimmed(1000),
+    limit: z.coerce.number().int().positive().catch(25),
+  })
+  .strict()
+  .transform((input) => ({ ...input, limit: Math.min(input.limit, 100) }))
+  .superRefine((input, context) => {
+    if (input.from && input.to && input.from > input.to) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "From date must not follow to date",
+      });
+    }
+  });
+
+export const leadLookupInputSchema = z
+  .object({
+    status: z.enum(LEAD_STATUSES).optional(),
+    source: optionalTrimmed(80),
+    from: dateOnly.optional(),
+    to: dateOnly.optional(),
     exactEmail: z.string().trim().toLowerCase().email().max(255).optional(),
     exactPhone: optionalTrimmed(32),
     cursor: optionalTrimmed(1000),
@@ -221,6 +241,12 @@ export const leadListInputSchema = z
   .strict()
   .transform((input) => ({ ...input, limit: Math.min(input.limit, 100) }))
   .superRefine((input, context) => {
+    if (!input.exactEmail && !input.exactPhone) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Exact email or phone is required",
+      });
+    }
     if (input.from && input.to && input.from > input.to) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
@@ -285,18 +311,76 @@ export function parseRevenueInputAt(input: unknown, now: Date): RevenueInput {
   return parsed;
 }
 
-export function majorAmountToMinor(value: string): string {
-  const match = /^(0|[1-9]\d*)(?:\.(\d{1,2}))?$/.exec(value.trim());
-  if (!match) throw new Error("Amount must have at most two decimal places");
-  const amount = BigInt(match[1]!) * 100n + BigInt((match[2] ?? "").padEnd(2, "0") || "0");
+const ZERO_MINOR_UNIT_CURRENCIES = new Set([
+  "BIF",
+  "CLP",
+  "DJF",
+  "GNF",
+  "ISK",
+  "JPY",
+  "KMF",
+  "KRW",
+  "PYG",
+  "RWF",
+  "UGX",
+  "UYI",
+  "VND",
+  "VUV",
+  "XAF",
+  "XAG",
+  "XAU",
+  "XBA",
+  "XBB",
+  "XBC",
+  "XBD",
+  "XDR",
+  "XOF",
+  "XPD",
+  "XPF",
+  "XPT",
+  "XSU",
+  "XTS",
+  "XUA",
+  "XXX",
+]);
+const THREE_MINOR_UNIT_CURRENCIES = new Set(["BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND"]);
+const FOUR_MINOR_UNIT_CURRENCIES = new Set(["CLF", "UYW"]);
+
+export function currencyMinorUnits(currencyCode: string): number {
+  if (!currencySet.has(currencyCode)) throw new Error("Invalid ISO 4217 currency");
+  if (ZERO_MINOR_UNIT_CURRENCIES.has(currencyCode)) return 0;
+  if (THREE_MINOR_UNIT_CURRENCIES.has(currencyCode)) return 3;
+  if (FOUR_MINOR_UNIT_CURRENCIES.has(currencyCode)) return 4;
+  return 2;
+}
+
+export function majorAmountToMinor(value: string, currencyCode: string): string {
+  const exponent = currencyMinorUnits(currencyCode);
+  const decimalPattern = exponent === 0 ? "" : `(?:\\.(\\d{1,${exponent}}))?`;
+  const match = new RegExp(`^(0|[1-9]\\d*)${decimalPattern}$`).exec(value.trim());
+  if (!match) throw new Error(`Amount must have at most ${exponent} decimal places`);
+  const scale = 10n ** BigInt(exponent);
+  const fraction = exponent === 0 ? "" : (match[2] ?? "").padEnd(exponent, "0");
+  const amount = BigInt(match[1]!) * scale + BigInt(fraction || "0");
   if (amount <= 0n || amount > 9_223_372_036_854_775_807n) {
     throw new Error("Amount must be a positive bigint");
   }
   return amount.toString();
 }
 
+export function formatMinorAmount(amountMinor: string, currencyCode: string): string {
+  const exponent = currencyMinorUnits(currencyCode);
+  const scale = 10n ** BigInt(exponent);
+  const amount = BigInt(amountMinor);
+  const whole = (amount / scale).toLocaleString("en-US");
+  if (exponent === 0) return `${currencyCode} ${whole}`;
+  const fraction = (amount % scale).toString().padStart(exponent, "0");
+  return `${currencyCode} ${whole}.${fraction}`;
+}
+
 export type LeadListInput = z.input<typeof leadListInputSchema>;
 export type ParsedLeadListInput = z.output<typeof leadListInputSchema>;
+export type LeadLookupInput = z.input<typeof leadLookupInputSchema>;
 export type StatusChangeInput = z.infer<typeof statusChangeSchema>;
 export type ReopenLeadInput = z.infer<typeof reopenLeadInputSchema>;
 export type RevenueInput = z.infer<typeof revenueInputSchema>;
@@ -325,8 +409,9 @@ export type LeadAuditEvent = {
   createdAt: string;
   previousStatus?: LeadStatus;
   currentStatus?: LeadStatus;
-  reason?: string;
+  changeCode?: "lead_status_changed" | "lead_reopened" | "revenue_recorded";
   recordedOn?: string;
+  supersededCount?: number;
 };
 
 export type LeadDetail = LeadListItem & {

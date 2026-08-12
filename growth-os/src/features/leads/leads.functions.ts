@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import {
   leadIdInputSchema,
+  leadLookupInputSchema,
   leadListInputSchema,
   reopenLeadInputSchema,
   revenueInputSchema,
@@ -12,6 +13,13 @@ export const listLeads = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { listLeads: loadLeads } = await import("./leads.server");
     return loadLeads(data);
+  });
+
+export const searchLeads = createServerFn({ method: "POST" })
+  .validator((input: unknown) => leadLookupInputSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { searchLeads: search } = await import("./leads.server");
+    return search(data);
   });
 
 export const getLead = createServerFn({ method: "GET" })

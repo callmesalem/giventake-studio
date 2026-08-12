@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(32);
 
 select has_function(
   'public',
@@ -82,7 +82,7 @@ insert into public.leads (
   id, tenant_id, site_id, external_event_id, status,
   name_ciphertext, email_ciphertext, email_lookup_hash, phone_ciphertext,
   phone_lookup_hash, company_ciphertext, notes_ciphertext, declared_source,
-  budget_range, timeline_range, occurred_at
+  budget_range, timeline_range, occurred_at, preterminal_status
 )
 values
   (
@@ -91,7 +91,7 @@ values
     'a1000000-0000-0000-0000-000000000001',
     'a3000000-0000-0000-0000-000000000001', 'qualified',
     'v1.fixture.name.a1', 'v1.fixture.email.a1', repeat('a', 64), null, null,
-    null, 'v1.fixture.notes.a1', 'google', '5k-10k', '1-2-months', now() - interval '3 days'
+    null, 'v1.fixture.notes.a1', 'google', '5k-10k', '1-2-months', now() - interval '3 days', null
   ),
   (
     'a2000000-0000-0000-0000-000000000002',
@@ -99,7 +99,7 @@ values
     'a1000000-0000-0000-0000-000000000001',
     'a3000000-0000-0000-0000-000000000002', 'lost',
     'v1.fixture.name.a2', 'v1.fixture.email.a2', repeat('b', 64), null, null,
-    null, 'v1.fixture.notes.a2', 'direct', '10k-25k', '3-6-months', now() - interval '2 days'
+    null, 'v1.fixture.notes.a2', 'direct', '10k-25k', '3-6-months', now() - interval '2 days', 'qualified'
   ),
   (
     'b2000000-0000-0000-0000-000000000001',
@@ -107,7 +107,7 @@ values
     'b1000000-0000-0000-0000-000000000001',
     'b3000000-0000-0000-0000-000000000001', 'qualified',
     'v1.fixture.name.b1', 'v1.fixture.email.b1', repeat('c', 64), null, null,
-    null, 'v1.fixture.notes.b1', 'referral', '5k-10k', '1-2-months', now() - interval '1 day'
+    null, 'v1.fixture.notes.b1', 'referral', '5k-10k', '1-2-months', now() - interval '1 day', null
   );
 
 insert into public.consent_receipts (
@@ -303,10 +303,9 @@ select is(
   'lead.reopened',
   'reopen writes its distinct audit action'
 );
-select is(
-  (select metadata ->> 'reason' from public.audit_events where request_id = 'a4000000-0000-0000-0000-000000000012'),
-  'Customer restarted the project discussion.',
-  'reopen audit retains the required sanitized reason'
+select ok(
+  not (select metadata ? 'reason' from public.audit_events where request_id = 'a4000000-0000-0000-0000-000000000012'),
+  'reopen audit never stores the reason free text'
 );
 
 reset role;
@@ -323,6 +322,27 @@ before insert on public.audit_events
 for each row execute function public.task6_reject_audit();
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true);
+
+select set_config('app.lead_status_transaction', 'true', true);
+select throws_ok(
+  $$ update public.leads
+     set status = 'lost'
+     where id = 'a2000000-0000-0000-0000-000000000002' $$,
+  '42501',
+  'lead status changes require transaction function',
+  'caller-settable status GUC cannot bypass the transactional guard'
+);
+select set_config('app.revenue_transaction', 'true', true);
+select throws_ok(
+  $$ update public.revenue_outcomes
+     set amount_minor = 2
+     where lead_id = 'a2000000-0000-0000-0000-000000000001' $$,
+  '42501',
+  'revenue changes require transaction function',
+  'caller-settable revenue GUC cannot bypass the transactional guard'
+);
+select set_config('app.lead_status_transaction', 'false', true);
+select set_config('app.revenue_transaction', 'false', true);
 
 select throws_ok(
   $$ select public.change_lead_status(

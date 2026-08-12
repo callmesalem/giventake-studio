@@ -707,6 +707,7 @@ export type Database = {
           occurred_at: string;
           phone_ciphertext: string | null;
           phone_lookup_hash: string | null;
+          preterminal_status: Database["public"]["Enums"]["lead_status"] | null;
           restricted_at: string | null;
           site_id: string;
           source_detail: string | null;
@@ -730,6 +731,7 @@ export type Database = {
           occurred_at: string;
           phone_ciphertext?: string | null;
           phone_lookup_hash?: string | null;
+          preterminal_status?: Database["public"]["Enums"]["lead_status"] | null;
           restricted_at?: string | null;
           site_id: string;
           source_detail?: string | null;
@@ -753,6 +755,7 @@ export type Database = {
           occurred_at?: string;
           phone_ciphertext?: string | null;
           phone_lookup_hash?: string | null;
+          preterminal_status?: Database["public"]["Enums"]["lead_status"] | null;
           restricted_at?: string | null;
           site_id?: string;
           source_detail?: string | null;
@@ -1004,7 +1007,7 @@ export type Database = {
       };
       revenue_outcomes: {
         Row: {
-          amount_minor: number;
+          amount_minor: string;
           confirmed_by: string;
           confirmed_on: string;
           created_at: string;
@@ -1012,11 +1015,12 @@ export type Database = {
           id: string;
           lead_id: string;
           note_ciphertext: string | null;
+          superseded_at: string | null;
           tenant_id: string;
           updated_at: string;
         };
         Insert: {
-          amount_minor: number;
+          amount_minor: string;
           confirmed_by: string;
           confirmed_on: string;
           created_at?: string;
@@ -1024,11 +1028,12 @@ export type Database = {
           id?: string;
           lead_id: string;
           note_ciphertext?: string | null;
+          superseded_at?: string | null;
           tenant_id: string;
           updated_at?: string;
         };
         Update: {
-          amount_minor?: number;
+          amount_minor?: string;
           confirmed_by?: string;
           confirmed_on?: string;
           created_at?: string;
@@ -1036,6 +1041,7 @@ export type Database = {
           id?: string;
           lead_id?: string;
           note_ciphertext?: string | null;
+          superseded_at?: string | null;
           tenant_id?: string;
           updated_at?: string;
         };
@@ -1057,7 +1063,7 @@ export type Database = {
           {
             foreignKeyName: "revenue_outcomes_tenant_lead_fkey";
             columns: ["tenant_id", "lead_id"];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: "leads";
             referencedColumns: ["tenant_id", "id"];
           },
@@ -1318,6 +1324,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      amount_minor_text: {
+        Args: { outcome: Database["public"]["Tables"]["revenue_outcomes"]["Row"] };
+        Returns: string;
+      };
       change_lead_status: {
         Args: {
           event_request_id: string;

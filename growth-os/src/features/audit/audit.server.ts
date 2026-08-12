@@ -64,25 +64,19 @@ const uuid = z.string().uuid();
 const isoDate = z.string().date();
 const isoDateTime = z.string().datetime({ offset: true });
 const nullable = <Schema extends z.ZodTypeAny>(schema: Schema) => schema.nullable().optional();
-const hasControlCharacter = (value: string) =>
-  Array.from(value).some((character) => {
-    const code = character.charCodeAt(0);
-    return code <= 31 || code === 127;
-  });
-
 export const auditMetadataSchema = z
   .object({
     channel: nullable(z.enum(["magic_link"])),
-    change_code: nullable(z.enum(["invitation_accepted", "settings_saved"])),
-    reason_code: nullable(z.enum(["tenant_not_allowed"])),
-    reason: nullable(
-      z
-        .string()
-        .trim()
-        .min(10)
-        .max(500)
-        .refine((value) => !hasControlCharacter(value)),
+    change_code: nullable(
+      z.enum([
+        "invitation_accepted",
+        "settings_saved",
+        "lead_status_changed",
+        "lead_reopened",
+        "revenue_recorded",
+      ]),
     ),
+    reason_code: nullable(z.enum(["tenant_not_allowed"])),
     status: nullable(auditStatusSchema),
     previous_status: nullable(auditStatusSchema),
     current_status: nullable(auditStatusSchema),
@@ -127,6 +121,7 @@ export const auditMetadataSchema = z
     audit_rows_deleted: nullable(nonnegativeCount),
     privacy_rows_deleted: nullable(nonnegativeCount),
     matched_count: nullable(nonnegativeCount),
+    superseded_count: nullable(nonnegativeCount),
     has_more: nullable(z.boolean()),
   })
   .strict();

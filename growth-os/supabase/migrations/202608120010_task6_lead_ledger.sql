@@ -6,7 +6,7 @@ set search_path = ''
 as $$
 declare
   allowed_keys constant text[] := array[
-    'channel', 'change_code', 'reason_code', 'reason',
+    'channel', 'change_code', 'reason_code',
     'status', 'previous_status', 'current_status',
     'provider', 'error_code', 'attribution_model', 'confidence', 'request_type',
     'expires_at', 'occurred_at', 'completed_at', 'window_start', 'window_end', 'recorded_on',
@@ -27,20 +27,11 @@ begin
   loop
     if not item.key = any(allowed_keys)
       or jsonb_typeof(item.value) not in ('string', 'number', 'boolean', 'null')
-      or (item.key <> 'reason' and char_length(item.value::text) > 500) then
+      or char_length(item.value::text) > 500 then
       return false;
     end if;
 
     scalar_value := item.value #>> '{}';
-
-    if item.key = 'reason'
-      and (
-        jsonb_typeof(item.value) <> 'string'
-        or char_length(scalar_value) not between 10 and 500
-        or scalar_value ~ '[[:cntrl:]]'
-      ) then
-      return false;
-    end if;
 
     if item.key = 'channel'
       and jsonb_typeof(item.value) <> 'null'
@@ -180,13 +171,17 @@ where restricted_at is null;
 create function public.enforce_lead_status_transaction()
 returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 begin
   if old.status is distinct from new.status
     and auth.uid() is not null
-    and coalesce(current_setting('app.lead_status_transaction', true), '') <> 'true' then
+    and current_user <> pg_get_userbyid((
+      select routine.proowner
+      from pg_catalog.pg_proc routine
+      where routine.oid = 'public.change_lead_status(uuid,uuid,public.lead_status,uuid)'::regprocedure
+    )) then
     raise exception using errcode = '42501', message = 'lead status changes require transaction function';
   end if;
   return new;
@@ -200,12 +195,16 @@ for each row execute function public.enforce_lead_status_transaction();
 create function public.enforce_revenue_transaction()
 returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 begin
   if auth.uid() is not null
-    and coalesce(current_setting('app.revenue_transaction', true), '') <> 'true' then
+    and current_user <> pg_get_userbyid((
+      select routine.proowner
+      from pg_catalog.pg_proc routine
+      where routine.oid = 'public.record_lead_revenue(uuid,uuid,bigint,text,date,text,uuid)'::regprocedure
+    )) then
     raise exception using errcode = '42501', message = 'revenue changes require transaction function';
   end if;
   if tg_op = 'DELETE' then
@@ -259,8 +258,6 @@ begin
     raise exception using errcode = '22023', message = 'lead status transition is not allowed';
   end if;
 
-  perform set_config('app.lead_status_transaction', 'true', true);
-
   update public.leads
   set status = next_status,
       last_activity_at = changed_at,
@@ -268,8 +265,6 @@ begin
   where tenant_id = target_tenant
     and id = target_lead
     and restricted_at is null;
-
-  perform set_config('app.lead_status_transaction', 'false', true);
 
   perform public.write_audit_event(
     target_tenant,
@@ -333,8 +328,6 @@ begin
     raise exception using errcode = '22023', message = 'only terminal leads can be reopened';
   end if;
 
-  perform set_config('app.lead_status_transaction', 'true', true);
-
   update public.leads
   set status = 'qualified',
       last_activity_at = reopened_at,
@@ -342,8 +335,6 @@ begin
   where tenant_id = target_tenant
     and id = target_lead
     and restricted_at is null;
-
-  perform set_config('app.lead_status_transaction', 'false', true);
 
   perform public.write_audit_event(
     target_tenant,
@@ -353,8 +344,7 @@ begin
     event_request_id,
     jsonb_build_object(
       'previous_status', previous_status,
-      'current_status', 'qualified',
-      'reason', canonical_reason
+      'current_status', 'qualified'
     ),
     actor_user_id
   );
@@ -417,8 +407,6 @@ begin
     raise exception using errcode = 'P0002', message = 'lead not found';
   end if;
 
-  perform set_config('app.revenue_transaction', 'true', true);
-
   insert into public.revenue_outcomes (
     tenant_id,
     lead_id,
@@ -448,8 +436,6 @@ begin
       confirmed_by = excluded.confirmed_by,
       note_ciphertext = excluded.note_ciphertext,
       updated_at = excluded.updated_at;
-
-  perform set_config('app.revenue_transaction', 'false', true);
 
   update public.leads
   set last_activity_at = recorded_at,
