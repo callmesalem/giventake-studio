@@ -117,8 +117,8 @@ const migrations = readdirSync(migrationDir)
 const throughTask6 = migrations.filter((name) => name < "202608120014");
 const task7Migrations = migrations.filter((name) => name >= "202608120014");
 
-if (!task7Migrations.some((name) => name.startsWith("202608120017_"))) {
-  throw new Error("expected additive Task 7 retry migration 017");
+if (!task7Migrations.some((name) => name.startsWith("202608120018_"))) {
+  throw new Error("expected additive Task 7 wall-clock lease migration 018");
 }
 if (!database.startsWith("growth_os_task7_retries_")) {
   throw new Error("refusing to use a non-test database name");

@@ -62,8 +62,8 @@ const migrations = readdirSync(migrationDir)
 const through015 = migrations.filter((name) => name < "202608120016");
 const after015 = migrations.filter((name) => name >= "202608120016");
 
-if (!after015.some((name) => name.startsWith("202608120017_"))) {
-  throw new Error("expected additive Task 7 migration 017");
+if (!after015.some((name) => name.startsWith("202608120018_"))) {
+  throw new Error("expected additive Task 7 wall-clock lease migration 018");
 }
 if (!database.startsWith("growth_os_task7_retry_upgrade_015_")) {
   throw new Error("refusing to use a non-test database name");
