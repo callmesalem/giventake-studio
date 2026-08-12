@@ -64,6 +64,18 @@ function contactInput(description) {
     budget: "2.5-10k",
     timeline: "1-3mo",
     source: "direct",
+    landing_page: "https://giventakedevs.com/contact",
+    consent_receipt: {
+      policy_version: "privacy-2026-08-08",
+      source: "contact-form",
+      necessary: true,
+      analytics: false,
+      marketing: false,
+      preferences: false,
+      contact_requested: true,
+      gpc: false,
+      recorded_at: "2026-08-09T16:00:00.000Z",
+    },
   };
 }
 

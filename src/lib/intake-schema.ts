@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { consentReceiptV1Schema } from "@giventake/growth-os-contract";
 import {
   CONTACT_BUDGET_VALUES,
   CONTACT_SOURCE_VALUES,
@@ -19,22 +20,30 @@ export {
 
 const optionalAttribution = z.string().trim().max(200).optional();
 
-export const contactSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().email("Enter a valid email").max(255),
-  company: z.string().trim().max(120).optional(),
-  description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
-  budget: z.enum(CONTACT_BUDGET_VALUES, { required_error: "Select a budget" }),
-  timeline: z.enum(CONTACT_TIMELINE_VALUES, { required_error: "Select a timeline" }),
-  source: z.enum(CONTACT_SOURCE_VALUES, { required_error: "Select how you heard about us" }),
-  source_detail: z.string().trim().max(160).optional(),
-  utm_source: optionalAttribution,
-  utm_medium: optionalAttribution,
-  utm_campaign: optionalAttribution,
-  utm_content: optionalAttribution,
-  utm_term: optionalAttribution,
-  referrer: optionalAttribution,
-});
+export const contactSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required").max(100),
+    email: z.string().trim().email("Enter a valid email").max(255),
+    company: z.string().trim().max(120).optional(),
+    description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
+    budget: z.enum(CONTACT_BUDGET_VALUES, { required_error: "Select a budget" }),
+    timeline: z.enum(CONTACT_TIMELINE_VALUES, { required_error: "Select a timeline" }),
+    source: z.enum(CONTACT_SOURCE_VALUES, { required_error: "Select how you heard about us" }),
+    source_detail: z.string().trim().max(160).optional(),
+    utm_source: optionalAttribution,
+    utm_medium: optionalAttribution,
+    utm_campaign: optionalAttribution,
+    utm_content: optionalAttribution,
+    utm_term: optionalAttribution,
+    referrer: optionalAttribution,
+    landing_page: z.string().url().max(500),
+    gclid: optionalAttribution,
+    gbraid: optionalAttribution,
+    wbraid: optionalAttribution,
+    fbclid: optionalAttribution,
+    consent_receipt: consentReceiptV1Schema,
+  })
+  .strict();
 
 export type ContactInput = z.infer<typeof contactSchema>;
 

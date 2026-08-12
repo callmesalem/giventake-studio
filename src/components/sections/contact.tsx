@@ -21,8 +21,10 @@ import {
 import { readLeadAttribution, type LeadAttribution } from "@/lib/lead-attribution";
 import { submitContact } from "@/lib/intake";
 import { trackLeadEvent } from "@/lib/tracking";
+import { useConsent } from "@/lib/use-consent";
+import { detectGpc } from "@/lib/consent-core";
 
-const schema = contactSchema.extend({
+const schema = contactSchema.omit({ consent_receipt: true, landing_page: true }).extend({
   consent: z
     .string()
     .refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
@@ -33,6 +35,7 @@ const CONTACT_EMAIL = "hello@giventakedevs.com";
 type Outcome = "idle" | "sent" | "mailto";
 
 export function ContactCTA() {
+  const consent = useConsent();
   const [outcome, setOutcome] = useState<Outcome>("idle");
   const [submitting, setSubmitting] = useState(false);
   const [attribution] = useState<LeadAttribution>(() => readLeadAttribution());
@@ -47,6 +50,12 @@ export function ContactCTA() {
 
   /** Fallback used when no mail provider is configured, or the send fails. */
   function handOffToMailClient(d: z.infer<typeof schema>) {
+    let referrerDomain: string | null = null;
+    try {
+      referrerDomain = d.referrer ? new URL(d.referrer).hostname : null;
+    } catch {
+      referrerDomain = null;
+    }
     const subject = `Project brief · ${d.name}${d.company ? ` · ${d.company}` : ""}`;
     const body = [
       `Name: ${d.name}`,
@@ -61,7 +70,7 @@ export function ContactCTA() {
       d.utm_campaign ? `UTM campaign: ${d.utm_campaign}` : null,
       d.utm_content ? `UTM content: ${d.utm_content}` : null,
       d.utm_term ? `UTM term: ${d.utm_term}` : null,
-      d.referrer ? `Referrer: ${d.referrer}` : null,
+      referrerDomain ? `Referrer domain: ${referrerDomain}` : null,
       "",
       "Project:",
       d.description,
@@ -83,7 +92,28 @@ export function ContactCTA() {
       return;
     }
 
-    const { consent: _consent, ...payload } = parsed.data;
+    const { consent: _privacyAcknowledgment, ...formPayload } = parsed.data;
+    const gpc = consent.gpc || detectGpc();
+    const marketing = consent.state.marketing && !gpc;
+    const payload = contactSchema.parse({
+      ...formPayload,
+      landing_page: `${window.location.origin}${window.location.pathname}`,
+      gclid: marketing ? formPayload.gclid : undefined,
+      gbraid: marketing ? formPayload.gbraid : undefined,
+      wbraid: marketing ? formPayload.wbraid : undefined,
+      fbclid: marketing ? formPayload.fbclid : undefined,
+      consent_receipt: {
+        policy_version: "privacy-2026-08-08",
+        source: "contact-form",
+        necessary: true,
+        analytics: consent.state.analytics,
+        marketing,
+        preferences: consent.state.preferences,
+        contact_requested: true,
+        gpc,
+        recorded_at: new Date().toISOString(),
+      },
+    });
     setSubmitting(true);
     try {
       const result = await submitContact({ data: payload });
@@ -354,6 +384,10 @@ export function ContactCTA() {
                 <input type="hidden" name="utm_content" value={attribution.utm_content ?? ""} />
                 <input type="hidden" name="utm_term" value={attribution.utm_term ?? ""} />
                 <input type="hidden" name="referrer" value={attribution.referrer ?? ""} />
+                <input type="hidden" name="gclid" value={attribution.gclid ?? ""} />
+                <input type="hidden" name="gbraid" value={attribution.gbraid ?? ""} />
+                <input type="hidden" name="wbraid" value={attribution.wbraid ?? ""} />
+                <input type="hidden" name="fbclid" value={attribution.fbclid ?? ""} />
 
                 <button
                   type="submit"

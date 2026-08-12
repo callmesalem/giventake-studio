@@ -585,6 +585,49 @@ export type Database = {
           },
         ];
       };
+      ingest_rate_limit_attempts: {
+        Row: {
+          attempted_at: string;
+          id: string;
+          site_id: string;
+          tenant_id: string;
+        };
+        Insert: {
+          attempted_at: string;
+          id?: string;
+          site_id: string;
+          tenant_id: string;
+        };
+        Update: {
+          attempted_at?: string;
+          id?: string;
+          site_id?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ingest_rate_limit_attempts_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ingest_rate_limit_attempts_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ingest_rate_limit_attempts_tenant_site_fkey";
+            columns: ["tenant_id", "site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
       ingest_idempotency: {
         Row: {
           accepted_at: string;
@@ -1275,6 +1318,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      consume_site_ingest_rate_limit: {
+        Args: {
+          attempt_time: string;
+          target_site: string;
+          target_tenant: string;
+        };
+        Returns: boolean;
+      };
       accept_membership_invitation: {
         Args: {
           event_request_id: string;
@@ -1302,6 +1353,21 @@ export type Database = {
       has_active_support_session: {
         Args: { target_tenant: string };
         Returns: boolean;
+      };
+      ingest_website_lead: {
+        Args: {
+          attribution: Json;
+          consent: Json;
+          encrypted_lead: Json;
+          event_occurred_at: string;
+          event_request_id: string;
+          external_event: string;
+          request_body_digest: string;
+          request_idempotency_key: string;
+          target_site: string;
+          target_tenant: string;
+        };
+        Returns: Json;
       };
       is_allowlisted_click_ids: {
         Args: { input_value: Json };

@@ -16,6 +16,7 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as ApiIngestV1LeadsRouteImport } from './routes/api.ingest.v1.leads'
 
 const SelectTenantRoute = SelectTenantRouteImport.update({
   id: '/select-tenant',
@@ -51,6 +52,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiIngestV1LeadsRoute = ApiIngestV1LeadsRouteImport.update({
+  id: '/api/ingest/v1/leads',
+  path: '/api/ingest/v1/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AppIndexRoute
+  '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_app/': typeof AppIndexRoute
+  '/api/ingest/v1/leads': typeof ApiIngestV1LeadsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/admin/support'
     | '/auth/callback'
+    | '/api/ingest/v1/leads'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/auth/callback'
     | '/'
+    | '/api/ingest/v1/leads'
   id:
     | '__root__'
     | '/_app'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/auth/callback'
     | '/_app/'
+    | '/api/ingest/v1/leads'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,6 +124,7 @@ export interface RootRouteChildren {
   SelectTenantRoute: typeof SelectTenantRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ApiIngestV1LeadsRoute: typeof ApiIngestV1LeadsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/ingest/v1/leads': {
+      id: '/api/ingest/v1/leads'
+      path: '/api/ingest/v1/leads'
+      fullPath: '/api/ingest/v1/leads'
+      preLoaderRoute: typeof ApiIngestV1LeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -186,6 +206,7 @@ const rootRouteChildren: RootRouteChildren = {
   SelectTenantRoute: SelectTenantRoute,
   AdminSupportRoute: AdminSupportRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ApiIngestV1LeadsRoute: ApiIngestV1LeadsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

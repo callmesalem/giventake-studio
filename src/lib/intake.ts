@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { randomUUID } from "node:crypto";
+import type { LeadEventV1 } from "@giventake/growth-os-contract";
 import {
   contactSchema,
   dsarSchema,
@@ -6,6 +8,7 @@ import {
   type DsarInput,
   type IntakeResult,
 } from "@/lib/intake-schema";
+import { buildGrowthOsLeadEvent, deliverLeadToGrowthOs } from "@/lib/growth-os-ingest";
 
 /**
  * Server-side intake for the contact and data-request forms.
@@ -60,43 +63,108 @@ async function sendMail(
     });
 
     if (!response.ok) {
-      // Never log the body — it echoes the submission, which is personal data.
-      console.error(`Intake mail failed: ${response.status}`);
       return { status: "error", message: "We couldn't send that. Please email us directly." };
     }
     return { status: "sent" };
-  } catch (error) {
-    console.error("Intake mail threw", error instanceof Error ? error.message : "unknown");
+  } catch {
     return { status: "error", message: "We couldn't send that. Please email us directly." };
   }
+}
+
+type GrowthDeliveryResult = "accepted" | "duplicate" | "unconfigured";
+type DeliveryDestination = "email" | "growth_os";
+
+type ContactDeliveryDependencies = {
+  requestId: () => string;
+  buildEvent: (input: ContactInput) => LeadEventV1;
+  sendEmail: (input: ContactInput) => Promise<IntakeResult>;
+  sendGrowthOs: (event: LeadEventV1) => Promise<GrowthDeliveryResult>;
+  logStatus: (destination: DeliveryDestination, status: string, requestId: string) => void;
+};
+
+export async function deliverContactWith(
+  input: ContactInput,
+  dependencies: ContactDeliveryDependencies,
+): Promise<IntakeResult> {
+  const requestId = dependencies.requestId();
+  const event = dependencies.buildEvent(input);
+  const [email, growthOs] = await Promise.allSettled([
+    dependencies.sendEmail(input),
+    dependencies.sendGrowthOs(event),
+  ]);
+
+  if (email.status === "rejected") {
+    dependencies.logStatus("email", "failed", requestId);
+  } else if (email.value.status === "error") {
+    dependencies.logStatus("email", "error", requestId);
+  }
+  if (growthOs.status === "rejected") {
+    dependencies.logStatus("growth_os", "failed", requestId);
+  }
+
+  const emailSent = email.status === "fulfilled" && email.value.status === "sent";
+  const growthSent =
+    growthOs.status === "fulfilled" &&
+    (growthOs.value === "accepted" || growthOs.value === "duplicate");
+  if (emailSent || growthSent) return { status: "sent" };
+
+  const bothUnconfigured =
+    email.status === "fulfilled" &&
+    email.value.status === "unconfigured" &&
+    growthOs.status === "fulfilled" &&
+    growthOs.value === "unconfigured";
+  if (bothUnconfigured) return { status: "unconfigured" };
+  return { status: "error", message: "We couldn't send that. Please email us directly." };
+}
+
+export function formatContactEmail(input: ContactInput) {
+  let referrerDomain: string | null = null;
+  try {
+    referrerDomain = input.referrer ? new URL(input.referrer).hostname : null;
+  } catch {
+    referrerDomain = null;
+  }
+  const subject = `Project brief · ${input.name}${input.company ? ` · ${input.company}` : ""}`;
+  const text = [
+    `Name: ${input.name}`,
+    `Email: ${input.email}`,
+    input.company ? `Company: ${input.company}` : null,
+    `Budget: ${input.budget}`,
+    `Timeline: ${input.timeline}`,
+    `Source: ${input.source}`,
+    input.source_detail ? `Source detail: ${input.source_detail}` : null,
+    input.utm_source ? `UTM source: ${input.utm_source}` : null,
+    input.utm_medium ? `UTM medium: ${input.utm_medium}` : null,
+    input.utm_campaign ? `UTM campaign: ${input.utm_campaign}` : null,
+    input.utm_content ? `UTM content: ${input.utm_content}` : null,
+    input.utm_term ? `UTM term: ${input.utm_term}` : null,
+    referrerDomain ? `Referrer domain: ${referrerDomain}` : null,
+    "",
+    "Project:",
+    input.description,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return { subject, text };
+}
+
+function logDeliveryStatus(destination: DeliveryDestination, status: string, requestId: string) {
+  console.error(`Intake ${destination} status=${status} request_id=${requestId}`);
 }
 
 export const submitContact = createServerFn({ method: "POST" })
   .validator((data: ContactInput) => contactSchema.parse(data))
   .handler(async ({ data }): Promise<IntakeResult> => {
-    const subject = `Project brief · ${data.name}${data.company ? ` · ${data.company}` : ""}`;
-    const text = [
-      `Name: ${data.name}`,
-      `Email: ${data.email}`,
-      data.company ? `Company: ${data.company}` : null,
-      `Budget: ${data.budget}`,
-      `Timeline: ${data.timeline}`,
-      `Source: ${data.source}`,
-      data.source_detail ? `Source detail: ${data.source_detail}` : null,
-      data.utm_source ? `UTM source: ${data.utm_source}` : null,
-      data.utm_medium ? `UTM medium: ${data.utm_medium}` : null,
-      data.utm_campaign ? `UTM campaign: ${data.utm_campaign}` : null,
-      data.utm_content ? `UTM content: ${data.utm_content}` : null,
-      data.utm_term ? `UTM term: ${data.utm_term}` : null,
-      data.referrer ? `Referrer: ${data.referrer}` : null,
-      "",
-      "Project:",
-      data.description,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);
+    return deliverContactWith(data, {
+      requestId: randomUUID,
+      buildEvent: buildGrowthOsLeadEvent,
+      async sendEmail(input) {
+        const { subject, text } = formatContactEmail(input);
+        return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, input.email);
+      },
+      sendGrowthOs: deliverLeadToGrowthOs,
+      logStatus: logDeliveryStatus,
+    });
   });
 
 export const submitDsar = createServerFn({ method: "POST" })
@@ -122,5 +190,8 @@ export const submitDsar = createServerFn({ method: "POST" })
       .filter(Boolean)
       .join("\n");
 
-    return sendMail(env("INTAKE_TO_EMAIL") ?? PRIVACY_TO, subject, text, data.email);
+    const requestId = randomUUID();
+    const result = await sendMail(env("INTAKE_TO_EMAIL") ?? PRIVACY_TO, subject, text, data.email);
+    if (result.status === "error") logDeliveryStatus("email", "error", requestId);
+    return result;
   });
