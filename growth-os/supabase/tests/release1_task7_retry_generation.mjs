@@ -117,8 +117,8 @@ const migrations = readdirSync(migrationDir)
 const throughTask6 = migrations.filter((name) => name < "202608120014");
 const task7Migrations = migrations.filter((name) => name >= "202608120014");
 
-if (!task7Migrations.some((name) => name.startsWith("202608120016_"))) {
-  throw new Error("expected additive Task 7 retry migration 016");
+if (!task7Migrations.some((name) => name.startsWith("202608120017_"))) {
+  throw new Error("expected additive Task 7 retry migration 017");
 }
 if (!database.startsWith("growth_os_task7_retries_")) {
   throw new Error("refusing to use a non-test database name");
@@ -308,6 +308,68 @@ try {
       throw new Error("a claim snapshot crossed a tenant or lead boundary");
     }
   }
+
+  psql(
+    database,
+    `update public.attribution_recompute_jobs
+     set status = 'succeeded', attempt_count = 0,
+         claimed_generation = null, claim_token = null, lease_expires_at = null,
+         next_retry_at = null, sanitized_failure_code = null;
+     update public.attribution_recompute_jobs
+     set status = 'processing', attempt_count = 4,
+         claimed_generation = generation,
+         claim_token = 'c1600000-0000-4000-8000-000000000001',
+         lease_expires_at = '2029-12-31 23:59:00+00',
+         next_retry_at = null, sanitized_failure_code = null
+     where tenant_id = 'c1aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+       and lead_id = 'c1200000-0000-4000-8000-000000000002';
+     update public.attribution_recompute_jobs
+     set status = 'pending', attempt_count = 0,
+         claimed_generation = null, claim_token = null, lease_expires_at = null,
+         next_retry_at = null, sanitized_failure_code = null
+     where tenant_id = 'd1bbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+       and lead_id = 'd1200000-0000-4000-8000-000000000001';`,
+  );
+
+  const lockedExpiredJob = psqlAsync(
+    database,
+    `begin;
+     select * from public.attribution_recompute_jobs
+     where tenant_id = 'c1aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+       and lead_id = 'c1200000-0000-4000-8000-000000000002'
+     for update;
+     select pg_advisory_lock(716, 2);
+     select pg_sleep(2);
+     commit;`,
+  );
+  await waitForAdvisoryLock(716, 2);
+  const unlockedClaimOutput = await psqlAsync(
+    database,
+    `set statement_timeout = '500ms';
+     set role service_role;
+     select public.claim_attribution_recompute_jobs(1, '2030-01-01 00:00:00+00');`,
+  );
+  const unlockedClaim = JSON.parse(unlockedClaimOutput)[0];
+  await lockedExpiredJob;
+  if (
+    unlockedClaim?.tenant_id !== "d1bbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" ||
+    unlockedClaim?.lead_id !== "d1200000-0000-4000-8000-000000000001"
+  ) {
+    throw new Error("locked expired work blocked or contaminated an unrelated tenant claim");
+  }
+  psql(
+    database,
+    `do $$
+     begin
+       if not exists (
+         select 1 from public.attribution_recompute_jobs
+         where tenant_id = 'c1aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+           and lead_id = 'c1200000-0000-4000-8000-000000000002'
+           and status = 'processing' and attempt_count = 4
+           and claim_token = 'c1600000-0000-4000-8000-000000000001'
+       ) then raise exception 'skipped locked job changed during unrelated claim'; end if;
+     end $$;`,
+  );
 
   process.stdout.write("Task 7 generation-safe retries and concurrent claims: PASS\n");
 } finally {

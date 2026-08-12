@@ -11,6 +11,7 @@
     "test:db": "supabase test db",
     "test:db:upgrade": "node supabase/tests/release1_task6_upgrade.mjs",
     "test:db:task7-upgrade": "node supabase/tests/release1_task7_upgrade_concurrency.mjs",
+    "test:db:task7-upgrade-015": "node supabase/tests/release1_task7_retry_upgrade_015.mjs",
     "test:db:task7-retries": "node supabase/tests/release1_task7_retry_generation.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

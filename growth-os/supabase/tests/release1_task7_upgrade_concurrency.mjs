@@ -100,8 +100,8 @@ const migrations = readdirSync(migrationDir)
 const throughTask6 = migrations.filter((name) => name < "202608120014");
 const task7Migrations = migrations.filter((name) => name >= "202608120014");
 
-if (!task7Migrations.some((name) => name.startsWith("202608120016_"))) {
-  throw new Error("expected Task 7 migrations through 016");
+if (!task7Migrations.some((name) => name.startsWith("202608120017_"))) {
+  throw new Error("expected Task 7 migrations through 017");
 }
 if (!database.startsWith("growth_os_task7_upgrade_")) {
   throw new Error("refusing to use a non-test database name");
