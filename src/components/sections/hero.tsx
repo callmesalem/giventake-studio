@@ -30,18 +30,19 @@ export function Hero() {
             data-crit="hero-title"
             className="font-display text-[44px] font-medium leading-[0.98] tracking-[-0.035em] text-ink sm:text-[56px] md:text-[72px] lg:text-[80px]"
           >
-            Stop looking for developers.
+            Software for the parts you're
             <br />
-            <span className="text-muted-ink">Start building.</span>
+            <span className="text-muted-ink">still doing by hand.</span>
           </h1>
 
           <p
             data-crit="hero-lede"
             className="mt-8 max-w-xl text-[17px] leading-[1.55] text-muted-ink md:text-[18px]"
           >
-            We're a development studio that builds with AI coding agents and modern tools. You get
-            the speed of a small team without the overhead of hiring one. Tell us what you need. A
-            few weeks later, you're using it.
+            We build the software small businesses actually run on: dashboards that replace five
+            spreadsheets, booking that ends the phone tag, intake that sorts itself. Built by
+            someone who runs operations-heavy businesses, not an agency layering on overhead. Tell
+            us what's eating your week. A few weeks later, you're using the fix.
           </p>
 
           <div data-crit="hero-cta" className="mt-10 flex flex-wrap items-center gap-3 rise-in">
