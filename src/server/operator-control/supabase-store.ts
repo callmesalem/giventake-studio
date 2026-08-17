@@ -116,6 +116,17 @@ export class SupabaseOperatorStore implements OperatorStore {
   async getDashboardSnapshot(): Promise<OperatorDashboardSnapshot> {
     return this.#rpc("operator_dashboard_snapshot", {});
   }
+  /**
+   * Persist a real inbound website lead. Writes a lead + touchpoint + agent_log
+   * row via the `capture_website_lead` definer RPC. It never sends and never
+   * starts an operator run — recording an inbound enquiry is "track", not
+   * outbound.
+   */
+  async captureWebsiteLead(
+    payload: Record<string, unknown>,
+  ): Promise<{ leadId: string; touchpointId: string; duplicate: boolean; suppressed: boolean }> {
+    return this.#rpc("capture_website_lead", { p_payload: payload });
+  }
   async approveSyntheticDraft(
     approvalId: string,
     expectedHash: string,
