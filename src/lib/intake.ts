@@ -39,6 +39,52 @@ function env(key: string): string | undefined {
   return value && value.trim() ? value.trim() : undefined;
 }
 
+/**
+ * Best-effort CRM persistence for a contact-form submission.
+ *
+ * Writes the enquiry to Supabase (`leads` + `touchpoint` + `agent_log`) via the
+ * server-only capture RPC. This is track-only: it never sends anything and never
+ * starts an operator run. Sending stays hard-disabled at every layer.
+ *
+ * Degrades exactly like the mail path: with no `SUPABASE_URL` /
+ * `SUPABASE_SERVICE_ROLE_KEY` configured it does nothing, and any write failure
+ * is swallowed (never logged with PII) so a CRM outage can never drop or block
+ * an enquiry — the mail/mailto path still runs.
+ *
+ * The store is imported dynamically so this server-only module (service-role
+ * key, PostgREST client) is never pulled into the browser bundle.
+ */
+async function persistLead(data: ContactInput): Promise<void> {
+  const url = env("SUPABASE_URL");
+  const serviceRoleKey = env("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !serviceRoleKey) return;
+  try {
+    const { SupabaseOperatorStore } = await import("@/server/operator-control/supabase-store");
+    const store = new SupabaseOperatorStore({ url, serviceRoleKey });
+    await store.captureWebsiteLead({
+      email: data.email,
+      name: data.name,
+      company: data.company,
+      description: data.description,
+      budget: data.budget,
+      timeline: data.timeline,
+      source: data.source,
+      source_detail: data.source_detail,
+      attribution: {
+        utm_source: data.utm_source,
+        utm_medium: data.utm_medium,
+        utm_campaign: data.utm_campaign,
+        utm_content: data.utm_content,
+        utm_term: data.utm_term,
+        referrer: data.referrer,
+      },
+    });
+  } catch (error) {
+    // Never drop or block the enquiry over a CRM write; never log the body (PII).
+    console.error("Lead persistence failed", error instanceof Error ? error.message : "unknown");
+  }
+}
+
 async function sendMail(
   to: string,
   subject: string,
@@ -95,6 +141,9 @@ export const submitContact = createServerFn({ method: "POST" })
     ]
       .filter(Boolean)
       .join("\n");
+
+    // Track the lead in the CRM (best-effort, no send), then notify the human.
+    await persistLead(data);
 
     return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);
   });
