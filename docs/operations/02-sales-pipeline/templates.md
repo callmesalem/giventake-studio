@@ -17,19 +17,33 @@ no personal signature. Substitutions are `{{field}}` from the `leads` record.
 
 **Sent:** within 1 hour in business hours, next business morning otherwise.
 
-> **Subject:** Got your project brief
+> **Decision (2026-08-18):** this warmer welcome copy is the standard website-form
+> auto-reply, replacing the earlier "Got your project brief" acknowledgement.
+> Guardrails unchanged: no specific price/timeline/availability, the charter §5
+> footer is required verbatim, and it sends as the studio with no personal
+> signature. Wired into the intake flow (`src/lib/lead-autoreply.ts`, rendered from
+> `submitContact` in `src/lib/intake.ts`) but **dormant** — it sends nothing until
+> the Resend domain is verified and `LEAD_AUTOREPLY_ENABLED` is turned on.
+
+> **Subject:** Welcome to GivenTake Devs, let's turn that into something built
 >
 > Hi {{first_name}},
 >
-> Thanks for the details on {{project_shorthand}} — it came through and someone is
-> reading it properly rather than skimming it.
+> Thanks for reaching out to GivenTake Devs. We build software for businesses:
+> websites, web apps, internal tools, automations, and AI, without you having to
+> hire and manage a dev team.
 >
-> You'll hear back within one business day. If it turns out we're not the right
-> people for this, we'll say so and point you somewhere better.
+> Here is how we work:
+> - You tell us the problem or the idea.
+> - A short discovery call to understand your business and what "done" looks like.
+> - A clear proposal covering scope, timeline, and price, before any work begins.
 >
-> In the meantime, if it's useful: our full process is at giventakedevs.com/process, and
-> how we actually use AI to build things is at giventakedevs.com/how-we-use-ai. Both are
-> longer and more specific than most studios put in public.
+> Our model is simple: you bring the problem, we figure out the technology and
+> build the solution. Think of us as your on-demand development team.
+>
+> —
+> This message was sent automatically by GivenTake Devs.
+> Reply and a person will read it.
 
 ---
 
