@@ -17,12 +17,21 @@ import { Route as OperatorDashboardRouteImport } from './routes/operator-dashboa
 import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
 import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
 import { Route as DataRequestRouteImport } from './routes/data-request'
+import { Route as CrmRouteImport } from './routes/crm'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as CrmIndexRouteImport } from './routes/crm.index'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
+import { Route as CrmTeamRouteImport } from './routes/crm.team'
+import { Route as CrmLoginRouteImport } from './routes/crm.login'
+import { Route as CrmLeadsRouteImport } from './routes/crm.leads'
+import { Route as CrmDealsRouteImport } from './routes/crm.deals'
+import { Route as CrmContactsRouteImport } from './routes/crm.contacts'
+import { Route as CrmCompaniesRouteImport } from './routes/crm.companies'
+import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
 
 const TermsRoute = TermsRouteImport.update({
@@ -65,6 +74,11 @@ const DataRequestRoute = DataRequestRouteImport.update({
   path: '/data-request',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmRoute = CrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CookiesRoute = CookiesRouteImport.update({
   id: '/cookies',
   path: '/cookies',
@@ -85,6 +99,11 @@ const ServicesIndexRoute = ServicesIndexRouteImport.update({
   path: '/services/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmIndexRoute = CrmIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrmRoute,
+} as any)
 const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
   id: '/articles/',
   path: '/articles/',
@@ -94,6 +113,41 @@ const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/services/$slug',
   path: '/services/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CrmTeamRoute = CrmTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmLoginRoute = CrmLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmLeadsRoute = CrmLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmDealsRoute = CrmDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmContactsRoute = CrmContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmCompaniesRoute = CrmCompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmApprovalsRoute = CrmApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => CrmRoute,
 } as any)
 const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
   id: '/articles/$slug',
@@ -105,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
+  '/crm': typeof CrmRouteWithChildren
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
@@ -114,8 +169,16 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
+  '/crm/approvals': typeof CrmApprovalsRoute
+  '/crm/companies': typeof CrmCompaniesRoute
+  '/crm/contacts': typeof CrmContactsRoute
+  '/crm/deals': typeof CrmDealsRoute
+  '/crm/leads': typeof CrmLeadsRoute
+  '/crm/login': typeof CrmLoginRoute
+  '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/articles/': typeof ArticlesIndexRoute
+  '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -131,8 +194,16 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
+  '/crm/approvals': typeof CrmApprovalsRoute
+  '/crm/companies': typeof CrmCompaniesRoute
+  '/crm/contacts': typeof CrmContactsRoute
+  '/crm/deals': typeof CrmDealsRoute
+  '/crm/leads': typeof CrmLeadsRoute
+  '/crm/login': typeof CrmLoginRoute
+  '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/articles': typeof ArticlesIndexRoute
+  '/crm': typeof CrmIndexRoute
   '/services': typeof ServicesIndexRoute
 }
 export interface FileRoutesById {
@@ -140,6 +211,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
+  '/crm': typeof CrmRouteWithChildren
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
@@ -149,8 +221,16 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
+  '/crm/approvals': typeof CrmApprovalsRoute
+  '/crm/companies': typeof CrmCompaniesRoute
+  '/crm/contacts': typeof CrmContactsRoute
+  '/crm/deals': typeof CrmDealsRoute
+  '/crm/leads': typeof CrmLeadsRoute
+  '/crm/login': typeof CrmLoginRoute
+  '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/articles/': typeof ArticlesIndexRoute
+  '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
 }
 export interface FileRouteTypes {
@@ -159,6 +239,7 @@ export interface FileRouteTypes {
     | '/'
     | '/compliance'
     | '/cookies'
+    | '/crm'
     | '/data-request'
     | '/do-not-sell'
     | '/how-we-use-ai'
@@ -168,8 +249,16 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/articles/$slug'
+    | '/crm/approvals'
+    | '/crm/companies'
+    | '/crm/contacts'
+    | '/crm/deals'
+    | '/crm/leads'
+    | '/crm/login'
+    | '/crm/team'
     | '/services/$slug'
     | '/articles/'
+    | '/crm/'
     | '/services/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -185,14 +274,23 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/articles/$slug'
+    | '/crm/approvals'
+    | '/crm/companies'
+    | '/crm/contacts'
+    | '/crm/deals'
+    | '/crm/leads'
+    | '/crm/login'
+    | '/crm/team'
     | '/services/$slug'
     | '/articles'
+    | '/crm'
     | '/services'
   id:
     | '__root__'
     | '/'
     | '/compliance'
     | '/cookies'
+    | '/crm'
     | '/data-request'
     | '/do-not-sell'
     | '/how-we-use-ai'
@@ -202,8 +300,16 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/articles/$slug'
+    | '/crm/approvals'
+    | '/crm/companies'
+    | '/crm/contacts'
+    | '/crm/deals'
+    | '/crm/leads'
+    | '/crm/login'
+    | '/crm/team'
     | '/services/$slug'
     | '/articles/'
+    | '/crm/'
     | '/services/'
   fileRoutesById: FileRoutesById
 }
@@ -211,6 +317,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ComplianceRoute: typeof ComplianceRoute
   CookiesRoute: typeof CookiesRoute
+  CrmRoute: typeof CrmRouteWithChildren
   DataRequestRoute: typeof DataRequestRoute
   DoNotSellRoute: typeof DoNotSellRoute
   HowWeUseAiRoute: typeof HowWeUseAiRoute
@@ -283,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm': {
+      id: '/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof CrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cookies': {
       id: '/cookies'
       path: '/cookies'
@@ -311,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/': {
+      id: '/crm/'
+      path: '/'
+      fullPath: '/crm/'
+      preLoaderRoute: typeof CrmIndexRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/articles/': {
       id: '/articles/'
       path: '/articles'
@@ -325,6 +446,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/team': {
+      id: '/crm/team'
+      path: '/team'
+      fullPath: '/crm/team'
+      preLoaderRoute: typeof CrmTeamRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/login': {
+      id: '/crm/login'
+      path: '/login'
+      fullPath: '/crm/login'
+      preLoaderRoute: typeof CrmLoginRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/leads': {
+      id: '/crm/leads'
+      path: '/leads'
+      fullPath: '/crm/leads'
+      preLoaderRoute: typeof CrmLeadsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/deals': {
+      id: '/crm/deals'
+      path: '/deals'
+      fullPath: '/crm/deals'
+      preLoaderRoute: typeof CrmDealsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/contacts': {
+      id: '/crm/contacts'
+      path: '/contacts'
+      fullPath: '/crm/contacts'
+      preLoaderRoute: typeof CrmContactsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/companies': {
+      id: '/crm/companies'
+      path: '/companies'
+      fullPath: '/crm/companies'
+      preLoaderRoute: typeof CrmCompaniesRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/approvals': {
+      id: '/crm/approvals'
+      path: '/approvals'
+      fullPath: '/crm/approvals'
+      preLoaderRoute: typeof CrmApprovalsRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/articles/$slug': {
       id: '/articles/$slug'
       path: '/articles/$slug'
@@ -335,10 +505,35 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CrmRouteChildren {
+  CrmApprovalsRoute: typeof CrmApprovalsRoute
+  CrmCompaniesRoute: typeof CrmCompaniesRoute
+  CrmContactsRoute: typeof CrmContactsRoute
+  CrmDealsRoute: typeof CrmDealsRoute
+  CrmLeadsRoute: typeof CrmLeadsRoute
+  CrmLoginRoute: typeof CrmLoginRoute
+  CrmTeamRoute: typeof CrmTeamRoute
+  CrmIndexRoute: typeof CrmIndexRoute
+}
+
+const CrmRouteChildren: CrmRouteChildren = {
+  CrmApprovalsRoute: CrmApprovalsRoute,
+  CrmCompaniesRoute: CrmCompaniesRoute,
+  CrmContactsRoute: CrmContactsRoute,
+  CrmDealsRoute: CrmDealsRoute,
+  CrmLeadsRoute: CrmLeadsRoute,
+  CrmLoginRoute: CrmLoginRoute,
+  CrmTeamRoute: CrmTeamRoute,
+  CrmIndexRoute: CrmIndexRoute,
+}
+
+const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ComplianceRoute: ComplianceRoute,
   CookiesRoute: CookiesRoute,
+  CrmRoute: CrmRouteWithChildren,
   DataRequestRoute: DataRequestRoute,
   DoNotSellRoute: DoNotSellRoute,
   HowWeUseAiRoute: HowWeUseAiRoute,
