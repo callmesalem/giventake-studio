@@ -195,6 +195,35 @@ export const crmLeads = createServerFn({ method: "GET" }).handler(async (): Prom
   }));
 });
 
+export interface DecideApprovalInput {
+  id: string;
+  decision: "approved" | "rejected";
+  reason: string;
+}
+
+function validateDecide(data: DecideApprovalInput): DecideApprovalInput {
+  const id = typeof data?.id === "string" ? data.id.trim() : "";
+  const decision =
+    data?.decision === "approved" ? "approved" : data?.decision === "rejected" ? "rejected" : null;
+  const reason = typeof data?.reason === "string" ? data.reason.trim() : "";
+  if (!/^[0-9a-fA-F-]{36}$/.test(id))
+    throw new Response("Valid approval id required", { status: 400 });
+  if (!decision) throw new Response("Decision must be approved or rejected", { status: 400 });
+  if (reason.length < 3) throw new Response("A decision reason is required", { status: 400 });
+  return { id, decision, reason };
+}
+
+export const decideCrmApproval = createServerFn({ method: "POST" })
+  .validator(validateDecide)
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { requireCrmSession } = await import("./crm-auth.server");
+    const session = await requireCrmSession();
+    const { CrmActions } = await import("@/server/crm/actions");
+    const actions = new CrmActions(config());
+    await actions.decideApproval(data.id, data.decision, `crm:${session.email}`, data.reason);
+    return { ok: true };
+  });
+
 export const crmApprovals = createServerFn({ method: "GET" }).handler(
   async (): Promise<ApprovalRow[]> => {
     const read = await reader();
