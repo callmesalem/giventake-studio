@@ -51,8 +51,11 @@ interface GoTrueSession {
 }
 
 function roleOf(user: GoTrueUser): "admin" | "member" {
-  const meta = { ...(user.app_metadata ?? {}), ...(user.user_metadata ?? {}) };
-  return meta.role === "admin" ? "admin" : "member";
+  // Authorization role comes ONLY from app_metadata. user_metadata is
+  // user-editable (a member can PUT /auth/v1/user {"data":{"role":"admin"}}
+  // with their own token), so trusting it here would allow self-escalation to
+  // admin. app_metadata is settable only by the service role / admin API.
+  return (user.app_metadata ?? {}).role === "admin" ? "admin" : "member";
 }
 
 function nameOf(user: GoTrueUser): string {
