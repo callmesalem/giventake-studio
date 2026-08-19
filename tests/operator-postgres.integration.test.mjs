@@ -63,6 +63,7 @@ try {
     "20260814150000_synthetic_lead_workflow.sql",
     "20260814170000_synthetic_draft_human_decisions.sql",
     "20260814180000_operator_security_hardening.sql",
+    "20260817120000_website_lead_capture.sql",
   ]) {
     execFileSync(
       "docker",
@@ -338,6 +339,102 @@ try {
       "service_role",
     ),
   );
+  // --- Website lead capture (real inbound track; never sends, never runs an op) ---
+  // service_role has no direct table access; capture RPC is the only way in.
+  assert.equal(
+    psql(
+      "select has_function_privilege('service_role','public.capture_website_lead(jsonb)','execute')," +
+        "has_function_privilege('anon','public.capture_website_lead(jsonb)','execute')," +
+        "has_function_privilege('authenticated','public.capture_website_lead(jsonb)','execute');",
+    ),
+    "t|f|f",
+  );
+  for (const table of ["invoices", "agent_log"])
+    assert.equal(
+      psql(
+        `select has_table_privilege('service_role','public.${table}','select,insert,update,delete');`,
+      ),
+      "f",
+    );
+  assert.throws(() => psql("select * from agent_log;", "service_role"));
+  const capturePayload = (email = "owner@realbiz.com") =>
+    JSON.stringify({
+      email,
+      name: "Jordan Real",
+      company: "Real Biz LLC",
+      description: "We need a booking and payments flow for our shop.",
+      budget: "5k-15k",
+      timeline: "1-3-months",
+      source: "referral_partner",
+      source_detail: "Referred by a past client",
+      attribution: { utm_source: "newsletter", referrer: "https://example.com" },
+    });
+  const captured = JSON.parse(
+    psql(`select capture_website_lead('${capturePayload()}'::jsonb);`, "service_role"),
+  );
+  assert.equal(captured.duplicate, false);
+  assert.equal(captured.suppressed, false);
+  // Wrote a REAL (synthetic=false) lead with the enriched columns.
+  assert.equal(
+    psql(
+      `select email||'|'||status||'|'||source||'|'||(synthetic::text) from leads where id='${captured.leadId}';`,
+    ),
+    "owner@realbiz.com|new|referral_partner|false",
+  );
+  // Wrote a real touchpoint and a §9 agent_log row; NO operator_run was created.
+  assert.equal(
+    psql(
+      `select kind||'|'||(synthetic::text) from touchpoints where id='${captured.touchpointId}';`,
+    ),
+    "website_contact_form|false",
+  );
+  assert.equal(
+    psql(
+      `select operator||'|'||outcome||'|'||(escalated::text) from agent_log where lead_id='${captured.leadId}';`,
+    ),
+    "website-intake|lead_captured|false",
+  );
+  assert.equal(psql(`select count(*) from operator_runs where lead_id='${captured.leadId}';`), "0");
+  // Repeat submission dedupes to the same lead, adds a fresh touchpoint.
+  const dupe = JSON.parse(
+    psql(`select capture_website_lead('${capturePayload()}'::jsonb);`, "service_role"),
+  );
+  assert.equal(dupe.duplicate, true);
+  assert.equal(dupe.leadId, captured.leadId);
+  assert.equal(psql(`select count(*) from touchpoints where lead_id='${captured.leadId}';`), "2");
+  // Suppressed address is recorded but flagged (so no human accidentally reaches out).
+  psql(
+    "insert into do_not_contact(normalized_address,reason) values ('blocked@realbiz.com','opted out');",
+  );
+  const suppressed = JSON.parse(
+    psql(
+      `select capture_website_lead('${capturePayload("blocked@realbiz.com")}'::jsonb);`,
+      "service_role",
+    ),
+  );
+  assert.equal(suppressed.suppressed, true);
+  assert.equal(psql(`select status from leads where id='${suppressed.leadId}';`), "suppressed");
+  // Input validation: bad email and unexpected keys are rejected.
+  assert.throws(() =>
+    psql(
+      `select capture_website_lead('${capturePayload("not-an-email")}'::jsonb);`,
+      "service_role",
+    ),
+  );
+  assert.throws(() =>
+    psql(
+      `select capture_website_lead('{"email":"x@y.com","name":"A","evil":"1"}'::jsonb);`,
+      "service_role",
+    ),
+  );
+  // The synthetic path is untouched: its guards still reject a real email.
+  assert.throws(() =>
+    psql(
+      `select operator_create_synthetic_lead_run('fixture:still-guarded','${fixture.replace("alex@sample.invalid", "real@example.com")}'::jsonb);`,
+      "service_role",
+    ),
+  );
+
   console.log("operator PostgreSQL integration: ok");
 } finally {
   try {
