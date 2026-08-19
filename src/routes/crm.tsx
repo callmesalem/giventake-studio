@@ -9,6 +9,9 @@ import {
   ShieldCheck,
   UserCog,
   LogOut,
+  Menu,
+  X,
+  Loader2,
 } from "lucide-react";
 import { getCrmSession, logoutCrm } from "@/lib/crm-auth";
 import type { CrmSession } from "@/server/crm/auth";
@@ -26,6 +29,8 @@ export const Route = createFileRoute("/crm")({
     return { session };
   },
   component: CrmLayout,
+  pendingComponent: CrmPending,
+  errorComponent: CrmError,
 });
 
 const NAV = [
@@ -37,7 +42,10 @@ const NAV = [
   { to: "/crm/approvals", label: "Approvals", icon: ShieldCheck, exact: false },
 ] as const;
 
-function Sidebar({ session }: { session: CrmSession }) {
+const navLinkClass =
+  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-foreground";
+
+function SidebarContent({ session, onNavigate }: { session: CrmSession; onNavigate?: () => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -59,18 +67,19 @@ function Sidebar({ session }: { session: CrmSession }) {
     .join("");
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-card">
+    <div className="flex h-full flex-col">
       <div className="border-b border-border px-5 py-5">
         <p className="text-sm font-semibold tracking-tight text-foreground">GivenTake CRM</p>
         <p className="text-xs text-muted-foreground">Team workspace</p>
       </div>
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {NAV.map(({ to, label, icon: Icon, exact }) => (
           <Link
             key={to}
             to={to}
             activeOptions={{ exact }}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-foreground"
+            onClick={onNavigate}
+            className={navLinkClass}
           >
             <Icon className="size-4" />
             {label}
@@ -80,7 +89,8 @@ function Sidebar({ session }: { session: CrmSession }) {
           <Link
             to="/crm/team"
             activeOptions={{ exact: false }}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-foreground"
+            onClick={onNavigate}
+            className={navLinkClass}
           >
             <UserCog className="size-4" />
             Team
@@ -107,12 +117,13 @@ function Sidebar({ session }: { session: CrmSession }) {
           {busy ? "Signing out…" : "Sign out"}
         </button>
       </div>
-    </aside>
+    </div>
   );
 }
 
 function CrmLayout() {
   const { session } = Route.useRouteContext();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Login page: rendered without the authenticated shell.
   if (!session) {
@@ -120,13 +131,92 @@ function CrmLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <Sidebar session={session} />
+    <div className="min-h-screen bg-background text-foreground md:flex">
+      {/* Desktop sidebar */}
+      <aside className="hidden w-60 shrink-0 border-r border-border bg-card md:block">
+        <div className="sticky top-0 h-screen">
+          <SidebarContent session={session} />
+        </div>
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3 md:hidden">
+        <div>
+          <p className="text-sm font-semibold text-foreground">GivenTake CRM</p>
+        </div>
+        <button
+          type="button"
+          aria-label="Open menu"
+          onClick={() => setMobileOpen(true)}
+          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <Menu className="size-5" />
+        </button>
+      </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-y-0 left-0 w-64 border-r border-border bg-card shadow-xl">
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setMobileOpen(false)}
+              className="absolute right-2 top-3 rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <X className="size-5" />
+            </button>
+            <SidebarContent session={session} onNavigate={() => setMobileOpen(false)} />
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 overflow-x-auto">
-        <div className="mx-auto max-w-6xl p-8">
+        <div className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>
       </main>
+    </div>
+  );
+}
+
+function CrmPending() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function CrmError({ error }: { error: Error }) {
+  const router = useRouter();
+  const message = error instanceof Error ? error.message : "Something went wrong.";
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 text-center">
+        <h1 className="text-lg font-semibold text-foreground">This didn't load</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+        <div className="mt-5 flex justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => void router.invalidate()}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Try again
+          </button>
+          <Link
+            to="/crm/login"
+            className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+          >
+            Sign in again
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
