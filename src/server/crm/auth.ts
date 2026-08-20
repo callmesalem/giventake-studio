@@ -117,6 +117,39 @@ export class CrmAuth {
     };
   }
 
+  /**
+   * Build the GoTrue authorize URL for a Google OAuth (PKCE) sign-in. The caller
+   * generates the code_verifier, stores it, and passes its s256 challenge here.
+   */
+  googleAuthorizeUrl(redirectTo: string, codeChallenge: string): string {
+    const params = new URLSearchParams({
+      provider: "google",
+      redirect_to: redirectTo,
+      code_challenge: codeChallenge,
+      code_challenge_method: "s256",
+    });
+    return `${this.#url}/auth/v1/authorize?${params.toString()}`;
+  }
+
+  /** Exchange an OAuth authorization code (PKCE) for a session. Throws on failure. */
+  async exchangeCodeForSession(authCode: string, codeVerifier: string): Promise<CrmLoginResult> {
+    const res = await this.#fetch(`${this.#url}/auth/v1/token?grant_type=pkce`, {
+      method: "POST",
+      headers: this.#headers(),
+      body: JSON.stringify({ auth_code: authCode, code_verifier: codeVerifier }),
+    });
+    if (!res.ok) throw new Error("oauth_exchange_failed");
+    const data = (await res.json()) as GoTrueSession;
+    return {
+      session: toSession(data.user),
+      tokens: {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresIn: data.expires_in,
+      },
+    };
+  }
+
   /** Validate an access token and return the session, or null if invalid/expired. */
   async userFromAccessToken(accessToken: string): Promise<CrmSession | null> {
     if (!accessToken) return null;
