@@ -6,13 +6,23 @@
  * server-function handlers in crm-auth.ts (and crm-data.ts); the `.server.ts`
  * suffix and the dynamic import keep it off the client dependency graph.
  */
-import { getCookie, setCookie, deleteCookie } from "@tanstack/react-start/server";
+import {
+  getCookie,
+  setCookie,
+  deleteCookie,
+  getRequestHeaders,
+} from "@tanstack/react-start/server";
 import type { CrmAuth, CrmSession } from "@/server/crm/auth";
 import type { CrmLoginInput, AddTeamMemberInput } from "@/lib/crm-auth";
 
 const ACCESS_COOKIE = "gt_crm_at";
 const REFRESH_COOKIE = "gt_crm_rt";
+const PKCE_COOKIE = "gt_pkce_verifier";
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+/** Only Google accounts on this Workspace domain may sign in. */
+const ALLOWED_EMAIL_DOMAIN = (
+  process.env.CRM_ALLOWED_EMAIL_DOMAIN || "giventakedevs.com"
+).toLowerCase();
 
 function config() {
   const url = process.env.SUPABASE_URL;
@@ -46,6 +56,51 @@ function clearSessionCookies() {
 async function authClient(): Promise<CrmAuth> {
   const { CrmAuth } = await import("@/server/crm/auth");
   return new CrmAuth(config());
+}
+
+/** Absolute origin of the current request, for building the OAuth redirect URL. */
+function siteOrigin(): string {
+  const headers = getRequestHeaders();
+  const host = headers.get("host") ?? "crm.giventakedevs.com";
+  const proto =
+    headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
+}
+
+async function pkcePair(): Promise<{ verifier: string; challenge: string }> {
+  const { randomBytes, createHash } = await import("node:crypto");
+  const verifier = randomBytes(48).toString("base64url");
+  const challenge = createHash("sha256").update(verifier).digest("base64url");
+  return { verifier, challenge };
+}
+
+/** Begin Google sign-in: store the PKCE verifier and return the authorize URL. */
+export async function startGoogleLoginImpl(): Promise<string> {
+  const auth = await authClient();
+  const { verifier, challenge } = await pkcePair();
+  setCookie(PKCE_COOKIE, verifier, cookieOptions(600)); // 10 minutes
+  return auth.googleAuthorizeUrl(`${siteOrigin()}/crm/auth/callback`, challenge);
+}
+
+/**
+ * Complete Google sign-in: exchange the code, enforce the Workspace domain, and
+ * set the session cookies. Throws a coded Error the callback route maps to a
+ * friendly message.
+ */
+export async function completeGoogleLoginImpl(code: string): Promise<void> {
+  const auth = await authClient();
+  const verifier = getCookie(PKCE_COOKIE);
+  deleteCookie(PKCE_COOKIE, { path: "/" });
+  if (!verifier) throw new Error("missing_pkce");
+
+  const result = await auth.exchangeCodeForSession(code, verifier);
+  const email = result.session.email.toLowerCase();
+  if (!email.endsWith(`@${ALLOWED_EMAIL_DOMAIN}`)) {
+    // Not a Workspace account for this domain: revoke and refuse.
+    await auth.logout(result.tokens.accessToken);
+    throw new Error("domain_not_allowed");
+  }
+  setSessionCookies(result.tokens.accessToken, result.tokens.refreshToken, result.tokens.expiresIn);
 }
 
 /** Validate the access cookie, refreshing transparently; null when logged out. */
