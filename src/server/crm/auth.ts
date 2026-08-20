@@ -84,7 +84,13 @@ export class CrmAuth {
     }
     this.#url = config.url.replace(/\/$/, "");
     this.#key = config.serviceRoleKey;
-    this.#fetch = config.fetch ?? fetch;
+    // Wrap global fetch instead of storing it directly. On the Cloudflare
+    // Workers runtime, calling `this.#fetch(...)` when `#fetch` IS the bare
+    // global `fetch` throws "Illegal invocation: function called with incorrect
+    // `this`" (fetch must run with `this` === globalThis). The wrapper preserves
+    // the correct binding. Every Supabase call goes through here, so without
+    // this the entire CRM auth/data layer fails on Workers.
+    this.#fetch = config.fetch ?? ((input, init) => fetch(input, init));
   }
 
   #headers(bearer?: string): Record<string, string> {
