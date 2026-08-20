@@ -33,6 +33,8 @@ import { Route as CrmContactsRouteImport } from './routes/crm.contacts'
 import { Route as CrmCompaniesRouteImport } from './routes/crm.companies'
 import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
+import { Route as CrmAuthGoogleRouteImport } from './routes/crm.auth.google'
+import { Route as CrmAuthCallbackRouteImport } from './routes/crm.auth.callback'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -154,6 +156,16 @@ const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
   path: '/articles/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrmAuthGoogleRoute = CrmAuthGoogleRouteImport.update({
+  id: '/auth/google',
+  path: '/auth/google',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmAuthCallbackRoute = CrmAuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => CrmRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,6 +192,8 @@ export interface FileRoutesByFullPath {
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
+  '/crm/auth/callback': typeof CrmAuthCallbackRoute
+  '/crm/auth/google': typeof CrmAuthGoogleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -205,6 +219,8 @@ export interface FileRoutesByTo {
   '/articles': typeof ArticlesIndexRoute
   '/crm': typeof CrmIndexRoute
   '/services': typeof ServicesIndexRoute
+  '/crm/auth/callback': typeof CrmAuthCallbackRoute
+  '/crm/auth/google': typeof CrmAuthGoogleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -232,6 +248,8 @@ export interface FileRoutesById {
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
+  '/crm/auth/callback': typeof CrmAuthCallbackRoute
+  '/crm/auth/google': typeof CrmAuthGoogleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -260,6 +278,8 @@ export interface FileRouteTypes {
     | '/articles/'
     | '/crm/'
     | '/services/'
+    | '/crm/auth/callback'
+    | '/crm/auth/google'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -285,6 +305,8 @@ export interface FileRouteTypes {
     | '/articles'
     | '/crm'
     | '/services'
+    | '/crm/auth/callback'
+    | '/crm/auth/google'
   id:
     | '__root__'
     | '/'
@@ -311,6 +333,8 @@ export interface FileRouteTypes {
     | '/articles/'
     | '/crm/'
     | '/services/'
+    | '/crm/auth/callback'
+    | '/crm/auth/google'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -502,6 +526,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArticlesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crm/auth/google': {
+      id: '/crm/auth/google'
+      path: '/auth/google'
+      fullPath: '/crm/auth/google'
+      preLoaderRoute: typeof CrmAuthGoogleRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/auth/callback': {
+      id: '/crm/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/crm/auth/callback'
+      preLoaderRoute: typeof CrmAuthCallbackRouteImport
+      parentRoute: typeof CrmRoute
+    }
   }
 }
 
@@ -514,6 +552,8 @@ interface CrmRouteChildren {
   CrmLoginRoute: typeof CrmLoginRoute
   CrmTeamRoute: typeof CrmTeamRoute
   CrmIndexRoute: typeof CrmIndexRoute
+  CrmAuthCallbackRoute: typeof CrmAuthCallbackRoute
+  CrmAuthGoogleRoute: typeof CrmAuthGoogleRoute
 }
 
 const CrmRouteChildren: CrmRouteChildren = {
@@ -525,6 +565,8 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmLoginRoute: CrmLoginRoute,
   CrmTeamRoute: CrmTeamRoute,
   CrmIndexRoute: CrmIndexRoute,
+  CrmAuthCallbackRoute: CrmAuthCallbackRoute,
+  CrmAuthGoogleRoute: CrmAuthGoogleRoute,
 }
 
 const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)

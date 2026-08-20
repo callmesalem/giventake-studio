@@ -19,11 +19,13 @@ import type { CrmSession } from "@/server/crm/auth";
 export const Route = createFileRoute("/crm")({
   beforeLoad: async ({ location }) => {
     const session = await getCrmSession();
-    const onLogin = location.pathname === "/crm/login";
-    if (!session && !onLogin) {
+    // Public paths within /crm: the login page and the OAuth start/callback routes.
+    const isPublic =
+      location.pathname === "/crm/login" || location.pathname.startsWith("/crm/auth/");
+    if (!session && !isPublic) {
       throw redirect({ to: "/crm/login", search: { redirect: location.pathname } });
     }
-    if (session && onLogin) {
+    if (session && location.pathname === "/crm/login") {
       throw redirect({ to: "/crm" });
     }
     return { session };

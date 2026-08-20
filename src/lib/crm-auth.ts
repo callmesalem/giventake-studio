@@ -64,3 +64,22 @@ export const addTeamMember = createServerFn({ method: "POST" })
 export const listTeamMembers = createServerFn({ method: "GET" }).handler(async () =>
   (await import("./crm-auth.server")).listTeamMembersImpl(),
 );
+
+/** Start Google sign-in; returns the GoTrue authorize URL to redirect to. */
+export const startGoogleLogin = createServerFn({ method: "GET" }).handler(
+  async (): Promise<string> => (await import("./crm-auth.server")).startGoogleLoginImpl(),
+);
+
+function validateOAuthCode(data: { code: string }): { code: string } {
+  const code = typeof data?.code === "string" ? data.code : "";
+  if (!code) throw new Response("Missing authorization code", { status: 400 });
+  return { code };
+}
+
+/** Complete Google sign-in from the OAuth callback code. */
+export const completeGoogleLogin = createServerFn({ method: "POST" })
+  .validator(validateOAuthCode)
+  .handler(async ({ data }) => {
+    await (await import("./crm-auth.server")).completeGoogleLoginImpl(data.code);
+    return { ok: true } as const;
+  });
