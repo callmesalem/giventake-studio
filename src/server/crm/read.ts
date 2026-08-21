@@ -164,6 +164,17 @@ export class CrmRead {
     );
   }
 
+  /** Whole small table, ordered. relatedBy needs a filter column; these tables
+   *  are read in full. */
+  relatedByAll<T = Record<string, unknown>>(
+    table: string,
+    select = "*",
+    order = "created_at.desc",
+    limit = 300,
+  ): Promise<T[]> {
+    return this.#select<T>(table, `select=${select}&order=${order}&limit=${limit}`);
+  }
+
   /** Which channel produced paying clients. Built this morning and displayed
    *  nowhere until now. */
   attribution<T = unknown>(): Promise<T> {

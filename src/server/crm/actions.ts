@@ -201,4 +201,39 @@ export class CrmActions {
     });
   }
 
+
+  /* ── Phase 06: referrals ──────────────────────────────────────────────── */
+
+  upsertReferralPartner(input: {
+    id?: string | null;
+    name: string;
+    kind?: string | null;
+    contactEmail?: string | null;
+    notes?: string | null;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("referral_partner_upsert", {
+      p_id: input.id ?? null,
+      p_name: input.name,
+      p_kind: input.kind ?? null,
+      p_contact_email: input.contactEmail ?? null,
+      p_notes: input.notes ?? null,
+    });
+  }
+
+  recordReferral(input: {
+    partnerId: string;
+    leadId?: string | null;
+    companyName: string;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("referral_record", {
+      p_partner_id: input.partnerId,
+      p_lead_id: input.leadId ?? null,
+      p_company_name: input.companyName,
+    });
+  }
+
+  setReferralStatus(id: string, status: string): Promise<unknown> {
+    return this.#rpc<unknown>("referral_set_status", { p_id: id, p_status: status });
+  }
+
 }
