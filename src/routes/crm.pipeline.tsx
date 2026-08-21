@@ -37,7 +37,7 @@ function Pipeline() {
 
   async function confirmMove(event: React.FormEvent) {
     event.preventDefault();
-    if (!pending) return;
+    if (!pending || !pending.to) return;
     setBusy(true);
     setError(null);
     try {
@@ -67,13 +67,37 @@ function Pipeline() {
           className="mb-5 rounded-lg border border-border bg-card p-4"
         >
           <p className="text-sm font-medium text-foreground">
-            Move &ldquo;{pending.deal.name}&rdquo; to {pending.to}
+            Move &ldquo;{pending.deal.name}&rdquo;
+            {pending.to ? ` to ${pending.to}` : ""}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {columns.find((c) => c.name === pending.to)?.gate
-              ? `Gate: ${columns.find((c) => c.name === pending.to)?.gate}`
-              : "This stage has no gate."}
-          </p>
+          {!pending.to && (
+            <select
+              required
+              value={pending.to}
+              onChange={(e) => setPending({ ...pending, to: e.target.value })}
+              aria-label="Destination stage"
+              className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Choose a stage…</option>
+              {columns
+                .filter((c) => c.name !== pending.deal.from)
+                .map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+            </select>
+          )}
+          {/* Only speak about the gate once a destination exists. Saying
+              "this stage has no gate" before one is chosen is a false claim
+              about a stage the user has not picked. */}
+          {pending.to && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {columns.find((c) => c.name === pending.to)?.gate
+                ? `Gate: ${columns.find((c) => c.name === pending.to)?.gate}`
+                : "This stage has no gate."}
+            </p>
+          )}
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -90,7 +114,7 @@ function Pipeline() {
           <div className="mt-3 flex gap-2">
             <button
               type="submit"
-              disabled={busy || !note.trim()}
+              disabled={busy || !note.trim() || !pending.to}
               className="rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
             >
               {busy ? "Moving…" : "Move deal"}
@@ -177,6 +201,20 @@ function Pipeline() {
                         {usd.format(deal.value_usd)}
                       </p>
                     )}
+                    {/* Dragging is a convenience for pointers. This is the path
+                        that works everywhere: touch, keyboard, screen reader. */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPending({
+                          deal: { id: deal.id, name: deal.name, from: col.name },
+                          to: "",
+                        })
+                      }
+                      className="mt-2 w-full rounded border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
+                    >
+                      Move
+                    </button>
                   </article>
                 ))}
                 {col.deals.length === 0 && (
