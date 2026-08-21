@@ -41,7 +41,7 @@ assertFileContains(
 );
 assertFileContains(
   "src/lib/intake.ts",
-  'const FALLBACK_TO = "info@giventakedevs.com";',
+  'const FALLBACK_TO = "build@giventakedevs.com";',
   "Contact fallback email must be the monitored mailbox.",
 );
 assertFileContains(

@@ -30,11 +30,11 @@
   // Nothing secret belongs in this block; it is committed to the repo.
   // RESEND_API_KEY and the SUPABASE_* values stay as dashboard Secrets.
   "vars": {
-    "INTAKE_FROM_EMAIL": "info@giventakedevs.com",
+    "INTAKE_FROM_EMAIL": "build@giventakedevs.com",
 
     // Where the lead notification is delivered. Without this the code falls back
     // to hello@giventakedevs.com (src/lib/intake.ts), which is not a mailbox
     // Salem reads - so notifications sent successfully and went nowhere.
-    "INTAKE_TO_EMAIL": "info@giventakedevs.com"
+    "INTAKE_TO_EMAIL": "build@giventakedevs.com"
   }
 }
