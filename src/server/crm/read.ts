@@ -164,6 +164,22 @@ export class CrmRead {
     );
   }
 
+  /** Case-insensitive contains-match across the given columns.
+   *
+   *  The term is sanitised by the caller before it gets here. PostgREST parses
+   *  commas and parentheses as syntax inside or=(), so an unsanitised term is
+   *  not merely a bad search, it is a query-injection surface. */
+  searchIn<T = Record<string, unknown>>(
+    table: string,
+    columns: string[],
+    term: string,
+    select: string,
+    limit = 25,
+  ): Promise<T[]> {
+    const or = columns.map((c) => `${c}.ilike.*${term}*`).join(",");
+    return this.#select<T>(table, `select=${select}&or=(${or})&limit=${limit}`);
+  }
+
   /** The 12 seeded stages, in process order. */
   listStages<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(

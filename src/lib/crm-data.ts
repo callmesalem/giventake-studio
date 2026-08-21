@@ -868,3 +868,72 @@ export const crmPipeline = createServerFn({ method: "GET" }).handler(
     return columns;
   },
 );
+
+/* ── Phase 04: search ───────────────────────────────────────────────────── */
+
+export interface SearchHit {
+  kind: "company" | "contact" | "deal" | "lead";
+  id: string;
+  title: string;
+  subtitle: string | null;
+  href: string;
+}
+
+/** Strip everything PostgREST treats as syntax inside or=(). Commas, parens and
+ *  dots are structural there, so a raw term is an injection surface rather than
+ *  just a bad search. Letters, digits, spaces, @ and - are enough to find a
+ *  company or a person. */
+function searchTerm(value: unknown): string {
+  const raw = typeof value === "string" ? value : "";
+  // Collapse the runs of whitespace that stripping adjacent metacharacters
+  // leaves behind - "a),b" would otherwise become "a   b", and an ilike pattern
+  // with doubled spaces matches nothing.
+  return raw
+    .replace(/[^\p{L}\p{N}\s@-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60);
+}
+
+export const crmSearch = createServerFn({ method: "GET" })
+  .validator((d: { q: string }) => ({ q: searchTerm(d?.q) }))
+  .handler(async ({ data }): Promise<SearchHit[]> => {
+    if (data.q.length < 2) return [];
+    const read = await reader();
+    const [companies, contacts, deals, leads] = await Promise.all([
+      read.searchIn<Record<string, unknown>>("companies", ["name", "domain"], data.q, "id,name,domain"),
+      read.searchIn<Record<string, unknown>>("contacts", ["name", "email"], data.q, "id,name,email,job_title"),
+      read.searchIn<Record<string, unknown>>("deals", ["name"], data.q, "id,name,stage"),
+      read.searchIn<Record<string, unknown>>("leads", ["name", "email", "company"], data.q, "id,name,email,company"),
+    ]);
+    return [
+      ...companies.map((r) => ({
+        kind: "company" as const,
+        id: String(r.id),
+        title: str(r.name) ?? "(unnamed)",
+        subtitle: str(r.domain),
+        href: `/crm/companies/${String(r.id)}`,
+      })),
+      ...contacts.map((r) => ({
+        kind: "contact" as const,
+        id: String(r.id),
+        title: str(r.name) ?? "(unnamed)",
+        subtitle: str(r.email) ?? str(r.job_title),
+        href: `/crm/contacts/${String(r.id)}`,
+      })),
+      ...deals.map((r) => ({
+        kind: "deal" as const,
+        id: String(r.id),
+        title: str(r.name) ?? "(unnamed)",
+        subtitle: str(r.stage),
+        href: `/crm/deals/${String(r.id)}`,
+      })),
+      ...leads.map((r) => ({
+        kind: "lead" as const,
+        id: String(r.id),
+        title: str(r.name) ?? str(r.email) ?? "Lead",
+        subtitle: str(r.company) ?? str(r.email),
+        href: `/crm/leads/${String(r.id)}`,
+      })),
+    ];
+  });
