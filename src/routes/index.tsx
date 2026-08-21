@@ -49,7 +49,7 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${BASE_URL}/` },
       { property: "og:site_name", content: "GivenTake Devs" },
-      { property: "og:image", content: ogImageUrl },
+      ...(ogImageUrl ? [{ property: "og:image", content: ogImageUrl }] : []),
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       {
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/")({
         content:
           "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools — built with human review.",
       },
-      { name: "twitter:image", content: ogImageUrl },
+      ...(ogImageUrl ? [{ name: "twitter:image", content: ogImageUrl }] : []),
       {
         name: "twitter:image:alt",
         content: "GivenTake Devs — Your On-Demand Development Team",
