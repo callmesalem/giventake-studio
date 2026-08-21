@@ -12,6 +12,7 @@ function hydrate(row) {
     id: row.id,
     tenantId: row.tenant_id,
     job: JSON.parse(row.payload),
+    runtime: JSON.parse(row.runtime ?? "{}"),
     status: row.status,
     availableAt: row.available_at,
     leaseOwner: row.lease_owner,
@@ -30,6 +31,7 @@ export function createWorkerRepository({ databasePath }) {
       id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
       payload TEXT NOT NULL,
+      runtime TEXT NOT NULL DEFAULT '{}',
       status TEXT NOT NULL,
       available_at TEXT NOT NULL,
       lease_owner TEXT,
@@ -52,6 +54,11 @@ export function createWorkerRepository({ databasePath }) {
       created_at TEXT NOT NULL
     );
   `);
+
+  const columns = database.prepare("PRAGMA table_info(jobs)").all();
+  if (!columns.some((column) => column.name === "runtime")) {
+    database.exec("ALTER TABLE jobs ADD COLUMN runtime TEXT NOT NULL DEFAULT '{}'");
+  }
 
   const getStatement = database.prepare("SELECT * FROM jobs WHERE id = ?");
   const attemptsStatement = database.prepare(
@@ -148,6 +155,12 @@ export function createWorkerRepository({ databasePath }) {
     },
     setStatus(id, status, now, options) {
       return updateStatus(id, status, now, options);
+    },
+    setRuntime(id, runtime, now) {
+      database
+        .prepare("UPDATE jobs SET runtime = ?, updated_at = ? WHERE id = ?")
+        .run(JSON.stringify(runtime), timestamp(now), id);
+      return get(id);
     },
     complete(id, now) {
       return updateStatus(id, "completed", now);
