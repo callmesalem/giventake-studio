@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { crmContact } from "@/lib/crm-data";
-import { Card, DetailHeader, DetailLayout, Field, FieldList, Timeline } from "@/components/crm/ui";
+import { crmContact, saveContact } from "@/lib/crm-data";
+import { Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, EntityForm, Disclosure } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/contacts/$id")({
   loader: ({ params }) => crmContact({ data: { id: params.id } }),
@@ -23,6 +23,31 @@ function Contact() {
           ) : (
             contact.job_title
           )
+        }
+        action={
+          <Disclosure label="Edit" openLabel={`Edit ${contact.name}`}>
+            <EntityForm
+              fields={[
+                { name: "name", label: "Name", required: true },
+                { name: "jobTitle", label: "Role" },
+                { name: "email", label: "Email", type: "email" },
+                { name: "phone", label: "Phone", type: "tel" },
+              ]}
+              values={{
+                name: contact.name,
+                jobTitle: contact.job_title ?? "",
+                email: contact.email ?? "",
+                phone: contact.phone ?? "",
+              }}
+              submitLabel="Save changes"
+              columns={2}
+              onSubmit={(data) =>
+                saveContact({
+                  data: { ...data, id: contact.id, companyId: contact.company?.id ?? null },
+                })
+              }
+            />
+          </Disclosure>
         }
       />
       <DetailLayout

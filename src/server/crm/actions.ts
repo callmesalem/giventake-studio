@@ -69,4 +69,136 @@ export class CrmActions {
       p_reason: reason,
     });
   }
+
+  /* ── Phase 02: human writes ────────────────────────────────────────────────
+   *
+   * Every one of these goes through the same *_upsert RPCs the agents use. No
+   * new data path, so the audit trail, validation and RLS that already guard
+   * agent writes guard these identically.
+   *
+   * Identity note: the upserts key on (source, source_record_id). Editing a
+   * record Piper created must therefore pass PIPER'S keys back, not the
+   * editor's - otherwise the upsert inserts a second row instead of updating
+   * the first. The caller resolves the existing keys and hands them in, which
+   * also means provenance survives an edit: a company Piper sourced still says
+   * so after a human corrects its address.
+   */
+
+  upsertCompany(input: {
+    source: string;
+    sourceRecordId: string;
+    name: string;
+    domain?: string | null;
+    description?: string | null;
+    employeeRange?: string | null;
+    location?: string | null;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("company_upsert", {
+      p_source: input.source,
+      p_source_record_id: input.sourceRecordId,
+      p_name: input.name,
+      p_domain: input.domain ?? null,
+      p_description: input.description ?? null,
+      p_categories: null,
+      p_employee_range: input.employeeRange ?? null,
+      p_location: input.location ?? null,
+      p_socials: null,
+      p_metadata: null,
+    });
+  }
+
+  upsertContact(input: {
+    source: string;
+    sourceRecordId: string;
+    companyId?: string | null;
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    jobTitle?: string | null;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("contact_upsert", {
+      p_source: input.source,
+      p_source_record_id: input.sourceRecordId,
+      p_company_id: input.companyId ?? null,
+      p_name: input.name,
+      p_email: input.email ?? null,
+      p_phone: input.phone ?? null,
+      p_job_title: input.jobTitle ?? null,
+      p_socials: null,
+      p_metadata: null,
+    });
+  }
+
+  upsertDeal(input: {
+    source: string;
+    sourceRecordId: string;
+    companyId?: string | null;
+    name: string;
+    stage?: string | null;
+    valueUsd?: number | null;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("deal_upsert", {
+      p_source: input.source,
+      p_source_record_id: input.sourceRecordId,
+      p_company_id: input.companyId ?? null,
+      p_name: input.name,
+      p_stage: input.stage ?? null,
+      p_value_usd: input.valueUsd ?? null,
+      p_metadata: null,
+    });
+  }
+
+  upsertNote(input: {
+    source: string;
+    sourceRecordId: string;
+    companyId?: string | null;
+    title?: string | null;
+    content: string;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("note_upsert", {
+      p_source: input.source,
+      p_source_record_id: input.sourceRecordId,
+      p_company_id: input.companyId ?? null,
+      p_title: input.title ?? null,
+      p_content: input.content,
+      p_metadata: null,
+    });
+  }
+
+  upsertTask(input: {
+    source: string;
+    sourceRecordId: string;
+    companyId?: string | null;
+    content: string;
+    isCompleted?: boolean;
+    deadlineAt?: string | null;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("task_upsert", {
+      p_source: input.source,
+      p_source_record_id: input.sourceRecordId,
+      p_company_id: input.companyId ?? null,
+      p_content: input.content,
+      p_is_completed: input.isCompleted ?? false,
+      p_deadline_at: input.deadlineAt ?? null,
+      p_metadata: null,
+    });
+  }
+
+  /** Advance a deal. The RPC stamps the actor and requires a note; it does NOT
+   *  assert the stage gate was satisfied, because that is a human judgement and
+   *  a function cannot witness it. */
+  advanceDealStage(input: {
+    dealId: string;
+    toStage: string;
+    note: string;
+    actor: string;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("deal_advance_stage", {
+      p_deal_id: input.dealId,
+      p_to_stage: input.toStage,
+      p_note: input.note,
+      p_actor: input.actor,
+    });
+  }
+
 }

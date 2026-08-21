@@ -164,6 +164,14 @@ export class CrmRead {
     );
   }
 
+  /** The 12 seeded stages, in process order. */
+  listStages<T = Record<string, unknown>>(): Promise<T[]> {
+    return this.#select<T>(
+      "pipeline_stages",
+      "select=name,sort_order,artifact,gate&order=sort_order.asc&limit=50",
+    );
+  }
+
   listTasks<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "tasks",
