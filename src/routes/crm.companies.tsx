@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmCompanies, saveCompany } from "@/lib/crm-data";
-import { PageHeader, LinkedTable, Badge, EntityForm, Disclosure } from "@/components/crm/ui";
+import { PageHeader, LinkedTable, Badge, EntityForm, Disclosure, useListFilter } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/companies")({
   loader: () => crmCompanies(),
@@ -9,6 +9,13 @@ export const Route = createFileRoute("/crm/companies")({
 
 function Companies() {
   const rows = Route.useLoaderData();
+  const { session } = Route.useRouteContext();
+  const me = session?.userId ?? null;
+  const { filtered, control } = useListFilter(
+    rows,
+    (r) => [r.name, r.domain, r.location, r.source].filter(Boolean).join(" "),
+    me,
+  );
   return (
     <div>
       <PageHeader title="Companies" subtitle={`${rows.length} companies`} action={
@@ -27,9 +34,10 @@ function Companies() {
           </Disclosure>
         }
       />
+      {control}
       <LinkedTable
         columns={["Name", "Domain", "Location", "Size", "Source"]}
-        rows={rows.map((c) => ({ href: `/crm/companies/${c.id}`, cells: [
+        rows={filtered.map((c) => ({ href: `/crm/companies/${c.id}`, cells: [
           <span className="font-medium">{c.name}</span>,
           c.domain ? (
             <a

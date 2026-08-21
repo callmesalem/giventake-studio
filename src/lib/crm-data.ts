@@ -28,6 +28,7 @@ async function reader() {
 
 export interface CompanyRow {
   id: string;
+  owner_id: string | null;
   name: string;
   domain: string | null;
   location: string | null;
@@ -36,6 +37,7 @@ export interface CompanyRow {
 }
 export interface ContactRow {
   id: string;
+  owner_id: string | null;
   name: string;
   email: string | null;
   phone: string | null;
@@ -44,6 +46,8 @@ export interface ContactRow {
 }
 export interface DealRow {
   id: string;
+  owner_id: string | null;
+  assigned_to: string | null;
   name: string;
   stage: string | null;
   value_usd: number | null;
@@ -60,6 +64,8 @@ export interface ApprovalRow {
 }
 export interface LeadRow {
   id: string;
+  owner_id: string | null;
+  assigned_to: string | null;
   name: string | null;
   email: string | null;
   company: string | null;
@@ -133,6 +139,7 @@ export const crmCompanies = createServerFn({ method: "GET" }).handler(
     const rows = await read.listCompanies<Record<string, unknown>>();
     return rows.map((r) => ({
       id: String(r.id),
+      owner_id: str(r.owner_id),
       name: str(r.name) ?? "(unnamed)",
       domain: str(r.domain),
       location: str(r.location),
@@ -152,6 +159,7 @@ export const crmContacts = createServerFn({ method: "GET" }).handler(
     const nameById = new Map(companies.map((c) => [String(c.id), str(c.name)]));
     return contacts.map((r) => ({
       id: String(r.id),
+      owner_id: str(r.owner_id),
       name: str(r.name) ?? "(unnamed)",
       email: str(r.email),
       phone: str(r.phone),
@@ -170,6 +178,8 @@ export const crmDeals = createServerFn({ method: "GET" }).handler(async (): Prom
   const nameById = new Map(companies.map((c) => [String(c.id), str(c.name)]));
   return deals.map((r) => ({
     id: String(r.id),
+    owner_id: str(r.owner_id),
+    assigned_to: str(r.assigned_to),
     name: str(r.name) ?? "(unnamed)",
     stage: str(r.stage),
     value_usd: num(r.value_usd),
@@ -183,6 +193,8 @@ export const crmLeads = createServerFn({ method: "GET" }).handler(async (): Prom
   const rows = await read.listLeads<Record<string, unknown>>();
   return rows.map((r) => ({
     id: String(r.id),
+    owner_id: str(r.owner_id),
+    assigned_to: str(r.assigned_to),
     name: str(r.name),
     email: str(r.email),
     company: str(r.company),
@@ -606,6 +618,8 @@ export const crmContact = createServerFn({ method: "GET" })
 
 export interface TaskRow {
   id: string;
+  owner_id: string | null;
+  assigned_to: string | null;
   content: string;
   is_completed: boolean;
   deadline_at: string | null;
@@ -626,6 +640,8 @@ export const crmTasks = createServerFn({ method: "GET" }).handler(
     const nameById = new Map(companies.map((c) => [String(c.id), str(c.name)]));
     return tasks.map((t) => ({
       id: String(t.id),
+      owner_id: str(t.owner_id),
+      assigned_to: str(t.assigned_to),
       content: str(t.content) ?? "",
       is_completed: Boolean(t.is_completed),
       deadline_at: str(t.deadline_at),

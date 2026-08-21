@@ -78,19 +78,19 @@ export class CrmRead {
   listCompanies<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "companies",
-      "select=id,name,domain,description,employee_range,location,source&order=name.asc&limit=500",
+      "select=id,name,domain,description,employee_range,location,source,owner_id&order=name.asc&limit=500",
     );
   }
   listDeals<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "deals",
-      "select=id,name,stage,value_usd,company_id,source&order=created_at.desc&limit=500",
+      "select=id,name,stage,value_usd,company_id,source,owner_id,assigned_to&order=created_at.desc&limit=500",
     );
   }
   listContacts<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "contacts",
-      "select=id,name,email,phone,job_title,company_id&order=name.asc&limit=500",
+      "select=id,name,email,phone,job_title,company_id,owner_id&order=name.asc&limit=500",
     );
   }
   listPendingApprovals<T = Record<string, unknown>>(): Promise<T[]> {
