@@ -29,7 +29,7 @@ import {
  *
  * Configure with (see docs/business/06-launch-checklist.md):
  *   RESEND_API_KEY   - provider key. Absent => unconfigured => mailto fallback.
- *   INTAKE_TO_EMAIL  - destination. Defaults to hello@giventakedevs.com.
+ *   INTAKE_TO_EMAIL  - destination. Defaults to info@giventakedevs.com.
  *   INTAKE_FROM_EMAIL- verified sender on your domain.
  *
  * The website lead welcome auto-reply is built here but ships DORMANT. It sends
@@ -41,7 +41,7 @@ import {
  * docs/contracts/subprocessor-list.md BEFORE it goes live.
  */
 
-const FALLBACK_TO = "hello@giventakedevs.com";
+const FALLBACK_TO = "info@giventakedevs.com";
 const PRIVACY_TO = "privacy@giventakedevs.com";
 
 function env(key: string): string | undefined {

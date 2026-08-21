@@ -28,7 +28,7 @@ const schema = contactSchema.extend({
     .refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
 });
 
-const CONTACT_EMAIL = "hello@giventakedevs.com";
+const CONTACT_EMAIL = "info@giventakedevs.com";
 
 type Outcome = "idle" | "sent" | "mailto";
 
@@ -152,10 +152,10 @@ export function ContactCTA() {
                 Prefer email?
               </p>
               <a
-                href="mailto:hello@giventakedevs.com"
+                href="mailto:info@giventakedevs.com"
                 className="mt-1 block text-[16px] font-semibold text-ink hover:text-violet"
               >
-                hello@giventakedevs.com
+                info@giventakedevs.com
               </a>
             </div>
           </div>
