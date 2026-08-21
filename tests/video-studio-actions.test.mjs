@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer } from "vite";
 
-const identity = { tenantId: "giventake-devs", actorId: "operator-1" };
 const input = {
   tenantId: "giventake-devs",
   name: "Action campaign",
@@ -19,12 +18,8 @@ try {
     "/src/lib/studio/actions.ts",
   );
 
-  assert.equal(createStudioCampaignActionSchema.safeParse({ identity, input }).success, true);
-  assert.equal(
-    createStudioCampaignActionSchema.safeParse({ identity: { actorId: "operator-1" }, input })
-      .success,
-    false,
-  );
+  assert.equal(createStudioCampaignActionSchema.safeParse({ input }).success, true);
+  assert.equal(createStudioCampaignActionSchema.safeParse({}).success, false);
 
   console.log("Video Studio action contracts passed.");
 } finally {

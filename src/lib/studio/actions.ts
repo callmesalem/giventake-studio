@@ -1,87 +1,87 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import {
-  approveEditInputSchema,
-  approveStoryboardInputSchema,
-  campaignIdSchema,
-  createCampaignInputSchema,
-  handoffInputSchema,
-  studioIdentitySchema,
-} from "./schema";
+import { campaignIdSchema, createCampaignInputSchema } from "./schema";
+import { getStudioIdentity } from "./identity";
 import { getStudioServer } from "./server";
 import { runFixtureWorker } from "./worker";
 
 const campaignActionSchema = z.object({
-  identity: studioIdentitySchema,
   campaignId: campaignIdSchema,
 });
 
 export const createStudioCampaignActionSchema = z.object({
-  identity: studioIdentitySchema,
   input: createCampaignInputSchema,
 });
 
-function requireMatchingTenant(identityTenantId: string, inputTenantId: string): void {
+function requireMatchingTenant(inputTenantId: string): ReturnType<typeof getStudioIdentity> {
+  const identity = getStudioIdentity();
+  const identityTenantId = identity.tenantId;
   if (identityTenantId !== inputTenantId)
     throw new Error("Studio tenant identity does not match input.");
+  return identity;
 }
 
 export const createStudioCampaign = createServerFn({ method: "POST" })
   .validator((data: unknown) => createStudioCampaignActionSchema.parse(data))
   .handler(({ data }) => {
-    requireMatchingTenant(data.identity.tenantId, data.input.tenantId);
-    return getStudioServer().service.createCampaign(data.input, data.identity.actorId);
+    const identity = requireMatchingTenant(data.input.tenantId);
+    return getStudioServer().service.createCampaign(data.input, identity.actorId);
   });
 
 export const listStudioCampaigns = createServerFn({ method: "POST" })
-  .validator((data: unknown) => studioIdentitySchema.parse(data))
-  .handler(({ data }) => getStudioServer().repository.listCampaigns(data.tenantId));
+  .validator(() => z.object({}).parse({}))
+  .handler(() => getStudioServer().repository.listCampaigns(getStudioIdentity().tenantId));
 
 export const planStudioCampaign = createServerFn({ method: "POST" })
   .validator((data: unknown) => campaignActionSchema.parse(data))
-  .handler(({ data }) =>
-    getStudioServer().service.planCampaign(
-      data.identity.tenantId,
+  .handler(({ data }) => {
+    const identity = getStudioIdentity();
+    return getStudioServer().service.planCampaign(
+      identity.tenantId,
       data.campaignId,
-      data.identity.actorId,
-    ),
-  );
+      identity.actorId,
+    );
+  });
 
 export const approveStudioStoryboard = createServerFn({ method: "POST" })
-  .validator((data: unknown) => approveStoryboardInputSchema.parse(data))
-  .handler(({ data }) =>
-    getStudioServer().service.approveStoryboard(
-      data.identity.tenantId,
+  .validator((data: unknown) => campaignActionSchema.parse(data))
+  .handler(({ data }) => {
+    const identity = getStudioIdentity();
+    return getStudioServer().service.approveStoryboard(
+      identity.tenantId,
       data.campaignId,
-      data.identity.actorId,
-    ),
-  );
+      identity.actorId,
+    );
+  });
 
 export const renderStudioCampaign = createServerFn({ method: "POST" })
   .validator((data: unknown) => campaignActionSchema.parse(data))
   .handler(async ({ data }) => {
     const server = getStudioServer();
-    server.service.queueRender(data.identity.tenantId, data.campaignId, data.identity.actorId);
-    return runFixtureWorker(server.repository, data.identity.tenantId, "fixture-worker");
+    const identity = getStudioIdentity();
+    server.service.queueRender(identity.tenantId, data.campaignId, identity.actorId);
+    return runFixtureWorker(server.repository, identity.tenantId, "fixture-worker");
   });
 
 export const approveStudioEdit = createServerFn({ method: "POST" })
-  .validator((data: unknown) => approveEditInputSchema.parse(data))
-  .handler(({ data }) =>
-    getStudioServer().service.approveEdit(
-      data.identity.tenantId,
+  .validator((data: unknown) => campaignActionSchema.parse(data))
+  .handler(({ data }) => {
+    const identity = getStudioIdentity();
+    return getStudioServer().service.approveEdit(
+      identity.tenantId,
       data.campaignId,
-      data.identity.actorId,
-    ),
-  );
+      identity.actorId,
+    );
+  });
 
 export const handoffStudioExport = createServerFn({ method: "POST" })
-  .validator((data: unknown) => handoffInputSchema.parse(data))
-  .handler(({ data }) =>
-    getStudioServer().service.handoffExport(
-      data.identity.tenantId,
+  .validator((data: unknown) => campaignActionSchema.parse(data))
+  .handler(({ data }) => {
+    const identity = getStudioIdentity();
+    return getStudioServer().service.handoffExport(
+      identity.tenantId,
       data.campaignId,
-      data.identity.actorId,
-    ),
-  );
+      identity.actorId,
+    );
+  });
