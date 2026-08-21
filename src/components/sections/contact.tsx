@@ -23,9 +23,13 @@ import { submitContact } from "@/lib/intake";
 import { trackLeadEvent } from "@/lib/tracking";
 
 const schema = contactSchema.extend({
+  // An unchecked box is omitted from FormData entirely, so this arrives as
+  // `undefined`, not "". z.string() then failed on TYPE before .refine could
+  // run, showing the visitor Zod's raw "expected string, received undefined".
+  // z.unknown() accepts the value so the readable message is what they see.
   consent: z
-    .string()
-    .refine((v) => v === "on", { message: "Please confirm you've read the privacy notice" }),
+    .unknown()
+    .refine((v) => v === "on", { error: "Please confirm you've read the privacy notice" }),
 });
 
 const CONTACT_EMAIL = "info@giventakedevs.com";
@@ -35,6 +39,7 @@ type Outcome = "idle" | "sent" | "mailto";
 export function ContactCTA() {
   const [outcome, setOutcome] = useState<Outcome>("idle");
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [attribution] = useState<LeadAttribution>(() => readLeadAttribution());
 
   function leadEventProps(d: z.infer<typeof schema>) {
@@ -79,9 +84,25 @@ export function ContactCTA() {
     const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
     const parsed = schema.safeParse(data);
     if (!parsed.success) {
+      // A toast alone is easy to miss, and the dropdowns give no other signal
+      // that they are the reason nothing happened. Put the message on the field
+      // and move the cursor there.
+      const next: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0] ?? "");
+        if (key && !next[key]) next[key] = issue.message;
+      }
+      setErrors(next);
+      const firstKey = Object.keys(next)[0];
+      if (firstKey) {
+        const el = form.querySelector<HTMLElement>(`[name="${firstKey}"]`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.focus?.();
+      }
       toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
       return;
     }
+    setErrors({});
 
     const { consent: _consent, ...payload } = parsed.data;
     setSubmitting(true);
@@ -250,7 +271,7 @@ export function ContactCTA() {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-[1fr_1fr]">
-                  <Field label="How did you hear about us?">
+                  <Field label="How did you hear about us?" error={errors.source}>
                     <Select name="source" required>
                       <SelectTrigger
                         aria-label="How did you hear about us?"
@@ -277,7 +298,7 @@ export function ContactCTA() {
                   </Field>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Budget">
+                  <Field label="Budget" error={errors.budget}>
                     <Select name="budget" required>
                       <SelectTrigger
                         aria-label="Budget"
@@ -294,7 +315,7 @@ export function ContactCTA() {
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Timeline">
+                  <Field label="Timeline" error={errors.timeline}>
                     <Select name="timeline" required>
                       <SelectTrigger
                         aria-label="Timeline"
@@ -372,11 +393,24 @@ export function ContactCTA() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+  error,
+}: {
+  label: string;
+  children: React.ReactNode;
+  error?: string;
+}) {
   return (
     <div className="space-y-1.5">
       <label className="text-[13px] font-medium text-ink">{label}</label>
       {children}
+      {error ? (
+        <p role="alert" className="text-[12.5px] font-medium text-red-600">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
