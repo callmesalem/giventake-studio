@@ -1,14 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { crmDeal, crmStages, advanceStage, saveDeal } from "@/lib/crm-data";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { crmDeal, crmStages, advanceStage, saveDeal, assignRecord } from "@/lib/crm-data";
+import { listAssignableMembers } from "@/lib/crm-auth";
 import {
   Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge,
-  EntityForm, Disclosure,
+  EntityForm, Disclosure, OwnerPicker,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/deals/$id")({
   loader: async ({ params }) => ({
     deal: await crmDeal({ data: { id: params.id } }),
     stages: await crmStages(),
+    members: (await listAssignableMembers()).members,
   }),
   component: Deal,
 });
@@ -16,7 +18,8 @@ export const Route = createFileRoute("/crm/deals/$id")({
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 function Deal() {
-  const { deal, stages } = Route.useLoaderData();
+  const { deal, stages, members } = Route.useLoaderData();
+  const router = useRouter();
   return (
     <div>
       <DetailHeader
@@ -95,6 +98,18 @@ function Deal() {
           </>
         }
         aside={
+          <>
+          <Card title="Assignment">
+            <OwnerPicker
+              members={members}
+              value={deal.owner_id}
+              onChange={(userId) =>
+                assignRecord({
+                  data: { table: "deals", column: "owner_id", id: deal.id, userId: userId ?? "" },
+                }).then(() => router.invalidate())
+              }
+            />
+          </Card>
           <Card title="Details">
             <FieldList>
               <Field label="Value">{deal.value_usd != null ? usd.format(deal.value_usd) : null}</Field>
@@ -116,6 +131,7 @@ function Deal() {
               </Field>
             </FieldList>
           </Card>
+          </>
         }
       />
     </div>
