@@ -30,6 +30,7 @@ import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
 import { Route as CrmSearchRouteImport } from './routes/crm.search'
 import { Route as CrmReferralsRouteImport } from './routes/crm.referrals'
 import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
+import { Route as CrmMarketingRouteImport } from './routes/crm.marketing'
 import { Route as CrmLoginRouteImport } from './routes/crm.login'
 import { Route as CrmLeadsRouteImport } from './routes/crm.leads'
 import { Route as CrmDealsRouteImport } from './routes/crm.deals'
@@ -150,6 +151,11 @@ const CrmPipelineRoute = CrmPipelineRouteImport.update({
   path: '/pipeline',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmMarketingRoute = CrmMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmLoginRoute = CrmLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -242,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/crm/deals': typeof CrmDealsRouteWithChildren
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
+  '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/search': typeof CrmSearchRoute
@@ -278,6 +285,7 @@ export interface FileRoutesByTo {
   '/crm/deals': typeof CrmDealsRouteWithChildren
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
+  '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/search': typeof CrmSearchRoute
@@ -316,6 +324,7 @@ export interface FileRoutesById {
   '/crm/deals': typeof CrmDealsRouteWithChildren
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
+  '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/search': typeof CrmSearchRoute
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/crm/deals'
     | '/crm/leads'
     | '/crm/login'
+    | '/crm/marketing'
     | '/crm/pipeline'
     | '/crm/referrals'
     | '/crm/search'
@@ -391,6 +401,7 @@ export interface FileRouteTypes {
     | '/crm/deals'
     | '/crm/leads'
     | '/crm/login'
+    | '/crm/marketing'
     | '/crm/pipeline'
     | '/crm/referrals'
     | '/crm/search'
@@ -428,6 +439,7 @@ export interface FileRouteTypes {
     | '/crm/deals'
     | '/crm/leads'
     | '/crm/login'
+    | '/crm/marketing'
     | '/crm/pipeline'
     | '/crm/referrals'
     | '/crm/search'
@@ -613,6 +625,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmPipelineRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/crm/marketing': {
+      id: '/crm/marketing'
+      path: '/marketing'
+      fullPath: '/crm/marketing'
+      preLoaderRoute: typeof CrmMarketingRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/crm/login': {
       id: '/crm/login'
       path: '/login'
@@ -770,6 +789,7 @@ interface CrmRouteChildren {
   CrmDealsRoute: typeof CrmDealsRouteWithChildren
   CrmLeadsRoute: typeof CrmLeadsRouteWithChildren
   CrmLoginRoute: typeof CrmLoginRoute
+  CrmMarketingRoute: typeof CrmMarketingRoute
   CrmPipelineRoute: typeof CrmPipelineRoute
   CrmReferralsRoute: typeof CrmReferralsRoute
   CrmSearchRoute: typeof CrmSearchRoute
@@ -788,6 +808,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmDealsRoute: CrmDealsRouteWithChildren,
   CrmLeadsRoute: CrmLeadsRouteWithChildren,
   CrmLoginRoute: CrmLoginRoute,
+  CrmMarketingRoute: CrmMarketingRoute,
   CrmPipelineRoute: CrmPipelineRoute,
   CrmReferralsRoute: CrmReferralsRoute,
   CrmSearchRoute: CrmSearchRoute,

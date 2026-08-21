@@ -1229,3 +1229,58 @@ export const assignRecord = createServerFn({ method: "POST" })
     await actions.assign(data.table, data.column, data.id, data.userId);
     return { ok: true };
   });
+
+/* ── Phase 09: marketing surfaces ───────────────────────────────────────── */
+
+export interface MarketingVM {
+  campaigns: { id: string; name: string; goal: string | null; channel: string | null; status: string | null }[];
+  subscribers: { total: number; byStatus: Record<string, number> };
+  reviews: {
+    id: string;
+    author_name: string | null;
+    source: string | null;
+    rating: number | null;
+    quote: string | null;
+    status: string | null;
+    permission_obtained: boolean | null;
+  }[];
+}
+
+export const crmMarketing = createServerFn({ method: "GET" }).handler(
+  async (): Promise<MarketingVM> => {
+    const read = await reader();
+    const [campaigns, subscribers, reviews] = await Promise.all([
+      read.relatedByAll<Record<string, unknown>>("campaigns", "id,name,goal,channel,status"),
+      read.relatedByAll<Record<string, unknown>>("newsletter_subscribers", "id,status"),
+      read.relatedByAll<Record<string, unknown>>(
+        "reviews",
+        "id,author_name,source,rating,quote,status,permission_obtained",
+      ),
+    ]);
+    const byStatus: Record<string, number> = {};
+    for (const s of subscribers) {
+      const key = str(s.status) ?? "unknown";
+      byStatus[key] = (byStatus[key] ?? 0) + 1;
+    }
+    return {
+      campaigns: campaigns.map((c) => ({
+        id: String(c.id),
+        name: str(c.name) ?? "(unnamed)",
+        goal: str(c.goal),
+        channel: str(c.channel),
+        status: str(c.status),
+      })),
+      subscribers: { total: subscribers.length, byStatus },
+      reviews: reviews.map((r) => ({
+        id: String(r.id),
+        author_name: str(r.author_name),
+        source: str(r.source),
+        rating: num(r.rating),
+        quote: str(r.quote),
+        status: str(r.status),
+        permission_obtained:
+          typeof r.permission_obtained === "boolean" ? r.permission_obtained : null,
+      })),
+    };
+  },
+);
