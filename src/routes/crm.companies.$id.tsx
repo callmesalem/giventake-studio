@@ -1,12 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { crmCompany, addNote, saveCompany, saveContact, saveDeal } from "@/lib/crm-data";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { crmCompany, addNote, saveCompany, saveContact, saveDeal, assignRecord } from "@/lib/crm-data";
+import { listAssignableMembers } from "@/lib/crm-auth";
 import {
   Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, LinkedTable, Badge,
-  EntityForm, Disclosure,
+  EntityForm, Disclosure, OwnerPicker,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/companies/$id")({
-  loader: ({ params }) => crmCompany({ data: { id: params.id } }),
+  loader: async ({ params }) => ({
+    company: await crmCompany({ data: { id: params.id } }),
+    members: (await listAssignableMembers()).members,
+  }),
   component: Company,
 });
 
@@ -21,7 +25,8 @@ const COMPANY_FIELDS = [
 ];
 
 function Company() {
-  const company = Route.useLoaderData();
+  const { company, members } = Route.useLoaderData();
+  const router = useRouter();
   return (
     <div>
       <DetailHeader
@@ -115,6 +120,18 @@ function Company() {
           </>
         }
         aside={
+          <>
+          <Card title="Assignment">
+            <OwnerPicker
+              members={members}
+              value={company.owner_id}
+              onChange={(userId) =>
+                assignRecord({
+                  data: { table: "companies", column: "owner_id", id: company.id, userId: userId ?? "" },
+                }).then(() => router.invalidate())
+              }
+            />
+          </Card>
           <Card title="Details">
             <FieldList>
               <Field label="Domain">
@@ -137,6 +154,7 @@ function Company() {
               </Field>
             </FieldList>
           </Card>
+          </>
         }
       />
     </div>

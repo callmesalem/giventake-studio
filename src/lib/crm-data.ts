@@ -393,6 +393,7 @@ export interface LeadDetail {
   consent_text: string | null;
   created_at: string | null;
   last_touch_at: string | null;
+  owner_id: string | null;
   events: TimelineEvent[];
 }
 
@@ -419,6 +420,7 @@ export const crmLead = createServerFn({ method: "GET" })
       consent_text: str(row.consent_text),
       created_at: str(row.created_at),
       last_touch_at: str(row.last_touch_at),
+      owner_id: str(row.owner_id),
       events: await leadTimeline(read, data.id),
     };
   });
@@ -432,6 +434,7 @@ export interface CompanyDetail {
   description: string | null;
   source: string | null;
   created_at: string | null;
+  owner_id: string | null;
   contacts: { id: string; name: string; email: string | null; job_title: string | null }[];
   deals: { id: string; name: string; stage: string | null; value_usd: number | null }[];
   events: TimelineEvent[];
@@ -468,6 +471,7 @@ export const crmCompany = createServerFn({ method: "GET" })
       description: str(row.description),
       source: str(row.source),
       created_at: str(row.created_at),
+      owner_id: str(row.owner_id),
       contacts: contacts.map((c) => ({
         id: String(c.id),
         name: str(c.name) ?? "(unnamed)",
@@ -493,6 +497,7 @@ export interface DealDetail {
   closed_at: string | null;
   lost_reason: string | null;
   created_at: string | null;
+  owner_id: string | null;
   company: { id: string; name: string } | null;
   lead: { id: string; name: string | null; email: string | null } | null;
   stageGate: { artifact: string | null; gate: string | null } | null;
@@ -551,6 +556,7 @@ export const crmDeal = createServerFn({ method: "GET" })
       closed_at: str(row.closed_at),
       lost_reason: str(row.lost_reason),
       created_at: str(row.created_at),
+      owner_id: str(row.owner_id),
       company: company ? { id: String(company.id), name: str(company.name) ?? "(unnamed)" } : null,
       lead: lead
         ? { id: String(lead.id), name: str(lead.name), email: str(lead.email) }
@@ -1178,3 +1184,32 @@ export const crmClients = createServerFn({ method: "GET" }).handler(
     };
   },
 );
+
+/* ── Phase 07: assignment ───────────────────────────────────────────────── */
+
+const ASSIGNABLE_TABLES = [
+  "leads", "deals", "tasks", "companies", "contacts",
+  "notes", "clients", "projects", "invoices", "referrals",
+] as const;
+
+export const assignRecord = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const table = typeof d?.table === "string" ? d.table : "";
+    if (!ASSIGNABLE_TABLES.includes(table as (typeof ASSIGNABLE_TABLES)[number])) {
+      throw new Response("Unknown record type", { status: 400 });
+    }
+    const column = d?.column === "assigned_to" ? "assigned_to" : "owner_id";
+    return {
+      table,
+      column,
+      id: requireUuid(d?.id),
+      // Empty string means unassign, which is a legitimate action and must not
+      // be confused with a malformed id.
+      userId: d?.userId === "" || d?.userId === null ? null : requireUuid(d?.userId),
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.assign(data.table, data.column, data.id, data.userId);
+    return { ok: true };
+  });

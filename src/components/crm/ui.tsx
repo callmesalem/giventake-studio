@@ -499,3 +499,66 @@ export function Disclosure({
     </div>
   );
 }
+
+/* ── Phase 07: assignment ───────────────────────────────────────────────── */
+
+export interface AssignableMember {
+  userId: string;
+  email: string;
+  fullName: string;
+}
+
+/** Who owns this record. Unassigned is a first-class option, not an accident:
+ *  an agent-sourced company nobody has picked up SHOULD read as unowned rather
+ *  than being silently attributed to whoever opened it. */
+export function OwnerPicker({
+  members,
+  value,
+  onChange,
+  label = "Owner",
+}: {
+  members: AssignableMember[];
+  value: string | null;
+  onChange: (userId: string | null) => Promise<unknown>;
+  label?: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-1">
+      <label className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </label>
+      <select
+        value={value ?? ""}
+        disabled={busy}
+        onChange={async (event) => {
+          const next = event.target.value === "" ? null : event.target.value;
+          setBusy(true);
+          setError(null);
+          try {
+            await onChange(next);
+          } catch (cause) {
+            setError(cause instanceof Error ? cause.message : "Could not save that.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm disabled:opacity-60"
+      >
+        <option value="">Unassigned</option>
+        {members.map((m) => (
+          <option key={m.userId} value={m.userId}>
+            {m.fullName || m.email}
+          </option>
+        ))}
+      </select>
+      {error && (
+        <p role="alert" className="text-xs font-medium text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

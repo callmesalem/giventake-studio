@@ -1,14 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { crmLead } from "@/lib/crm-data";
-import { Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge } from "@/components/crm/ui";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { crmLead, assignRecord } from "@/lib/crm-data";
+import { listAssignableMembers } from "@/lib/crm-auth";
+import { Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge, OwnerPicker } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/leads/$id")({
-  loader: ({ params }) => crmLead({ data: { id: params.id } }),
+  loader: async ({ params }) => ({
+    lead: await crmLead({ data: { id: params.id } }),
+    members: (await listAssignableMembers()).members,
+  }),
   component: Lead,
 });
 
 function Lead() {
-  const lead = Route.useLoaderData();
+  const { lead, members } = Route.useLoaderData();
+  const router = useRouter();
   return (
     <div>
       <DetailHeader
@@ -33,6 +38,17 @@ function Lead() {
         }
         aside={
           <>
+            <Card title="Assignment">
+              <OwnerPicker
+                members={members}
+                value={lead.owner_id}
+                onChange={(userId) =>
+                  assignRecord({
+                    data: { table: "leads", column: "owner_id", id: lead.id, userId: userId ?? "" },
+                  }).then(() => router.invalidate())
+                }
+              />
+            </Card>
             <Card title="Details">
               <FieldList>
                 <Field label="Email">{lead.email}</Field>

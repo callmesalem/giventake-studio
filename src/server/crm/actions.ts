@@ -236,4 +236,55 @@ export class CrmActions {
     return this.#rpc<unknown>("referral_set_status", { p_id: id, p_status: status });
   }
 
+
+  /* ── Phase 07: assignment ─────────────────────────────────────────────── */
+
+  /** Tables and columns that may be assigned. This is an allowlist, not a
+   *  convenience: without it, a table name reaching this method from anywhere
+   *  upstream would be an arbitrary-table write primitive holding the service
+   *  role key. Adding a table here is a deliberate act. */
+  static readonly ASSIGNABLE: Record<string, readonly string[]> = {
+    leads: ["owner_id", "assigned_to"],
+    deals: ["owner_id", "assigned_to"],
+    tasks: ["owner_id", "assigned_to"],
+    companies: ["owner_id"],
+    contacts: ["owner_id"],
+    notes: ["owner_id"],
+    clients: ["owner_id"],
+    projects: ["owner_id"],
+    invoices: ["owner_id"],
+    referrals: ["owner_id"],
+  };
+
+  /** The *_upsert RPCs do not carry ownership, so this writes through PostgREST
+   *  directly. Both table and column are checked against the allowlist first,
+   *  and the id is a validated UUID by the time it arrives. */
+  async assign(
+    table: string,
+    column: string,
+    id: string,
+    userId: string | null,
+  ): Promise<void> {
+    const columns = CrmActions.ASSIGNABLE[table];
+    if (!columns || !columns.includes(column)) {
+      throw new Response("That record cannot be assigned", { status: 400 });
+    }
+    const response = await this.#fetch(
+      `${this.#url}/rest/v1/${table}?id=eq.${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          apikey: this.#key,
+          Authorization: `Bearer ${this.#key}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ [column]: userId }),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`assign ${table}.${column} failed: ${response.status}`);
+    }
+  }
+
 }
