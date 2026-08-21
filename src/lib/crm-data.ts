@@ -1039,3 +1039,142 @@ export const crmDashboard = createServerFn({ method: "GET" }).handler(
     };
   },
 );
+
+/* ── Phase 06: referrals and the post-sale half ─────────────────────────── */
+
+export interface ReferralsVM {
+  partners: { id: string; name: string; kind: string | null; contact_email: string | null; notes: string | null }[];
+  referrals: {
+    id: string;
+    company_name: string | null;
+    status: string | null;
+    partner: string | null;
+    amount: number | null;
+    paid_at: string | null;
+    created_at: string | null;
+  }[];
+}
+
+export const crmReferrals = createServerFn({ method: "GET" }).handler(
+  async (): Promise<ReferralsVM> => {
+    const read = await reader();
+    const [partners, referrals] = await Promise.all([
+      read.relatedByAll<Record<string, unknown>>("referral_partners", "id,name,kind,contact_email,notes", "name.asc"),
+      read.relatedByAll<Record<string, unknown>>("referrals", "id,partner_id,company_name,status,amount,paid_at,created_at", "created_at.desc"),
+    ]);
+    const partnerName = new Map(partners.map((p) => [String(p.id), str(p.name)]));
+    return {
+      partners: partners.map((p) => ({
+        id: String(p.id),
+        name: str(p.name) ?? "(unnamed)",
+        kind: str(p.kind),
+        contact_email: str(p.contact_email),
+        notes: str(p.notes),
+      })),
+      referrals: referrals.map((r) => ({
+        id: String(r.id),
+        company_name: str(r.company_name),
+        status: str(r.status),
+        partner: r.partner_id ? (partnerName.get(String(r.partner_id)) ?? null) : null,
+        amount: num(r.amount),
+        paid_at: str(r.paid_at),
+        created_at: str(r.created_at),
+      })),
+    };
+  },
+);
+
+export const savePartner = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: optionalUuid(d?.id),
+    name: text(d?.name, "Name", 200, true) as string,
+    kind: text(d?.kind, "Kind", 60),
+    contactEmail: text(d?.contactEmail, "Email", 255),
+    notes: text(d?.notes, "Notes", 2000),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.upsertReferralPartner(data);
+    return { ok: true };
+  });
+
+export const recordReferral = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    partnerId: requireUuid(d?.partnerId),
+    companyName: text(d?.companyName, "Company", 200, true) as string,
+    leadId: optionalUuid(d?.leadId),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.recordReferral(data);
+    return { ok: true };
+  });
+
+export const setReferralStatus = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: requireUuid(d?.id),
+    status: text(d?.status, "Status", 40, true) as string,
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.setReferralStatus(data.id, data.status);
+    return { ok: true };
+  });
+
+export interface ClientsVM {
+  clients: {
+    id: string;
+    name: string;
+    created_at: string | null;
+    projects: { id: string; name: string }[];
+    invoices: { id: string; status: string | null; amount_cents: number | null; paid_at: string | null }[];
+  }[];
+  invoicedCents: number;
+  paidCents: number;
+}
+
+/** Stages 5-11 of the process: what happens after a deal closes. */
+export const crmClients = createServerFn({ method: "GET" }).handler(
+  async (): Promise<ClientsVM> => {
+    const read = await reader();
+    const [clients, projects, invoices] = await Promise.all([
+      read.relatedByAll<Record<string, unknown>>("clients", "id,name,created_at", "created_at.desc"),
+      read.relatedByAll<Record<string, unknown>>("projects", "id,client_id,name", "created_at.desc"),
+      read.relatedByAll<Record<string, unknown>>("invoices", "id,project_id,status,amount_cents,paid_at", "created_at.desc"),
+    ]);
+    const invoicesByProject = new Map<string, Record<string, unknown>[]>();
+    for (const i of invoices) {
+      const key = String(i.project_id ?? "");
+      if (!invoicesByProject.has(key)) invoicesByProject.set(key, []);
+      invoicesByProject.get(key)!.push(i);
+    }
+    let invoicedCents = 0;
+    let paidCents = 0;
+    for (const i of invoices) {
+      const cents = num(i.amount_cents) ?? 0;
+      invoicedCents += cents;
+      if (i.paid_at) paidCents += cents;
+    }
+    return {
+      clients: clients.map((c) => {
+        const own = projects.filter((p) => String(p.client_id ?? "") === String(c.id));
+        return {
+          id: String(c.id),
+          name: str(c.name) ?? "(unnamed)",
+          created_at: str(c.created_at),
+          projects: own.map((p) => ({ id: String(p.id), name: str(p.name) ?? "(unnamed)" })),
+          invoices: own.flatMap((p) =>
+            (invoicesByProject.get(String(p.id)) ?? []).map((i) => ({
+              id: String(i.id),
+              status: str(i.status),
+              amount_cents: num(i.amount_cents),
+              paid_at: str(i.paid_at),
+            })),
+          ),
+        };
+      }),
+      invoicedCents,
+      paidCents,
+    };
+  },
+);
