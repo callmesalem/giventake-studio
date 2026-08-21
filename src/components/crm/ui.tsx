@@ -562,3 +562,66 @@ export function OwnerPicker({
     </div>
   );
 }
+
+/* ── Phase 08: list filtering ───────────────────────────────────────────── */
+
+export interface Ownable {
+  owner_id?: string | null;
+  assigned_to?: string | null;
+}
+
+/** Text filter plus a mine/all switch, applied in the browser.
+ *
+ *  Client-side because these lists are capped at 500 rows server-side, so the
+ *  data is already present and a round trip per keystroke would be slower and
+ *  no more correct. If a list ever outgrows that cap this has to move to the
+ *  query - the cap is the thing to watch, not the filter. */
+export function useListFilter<T extends Ownable>(
+  rows: T[],
+  toText: (row: T) => string,
+  currentUserId: string | null,
+) {
+  const [query, setQuery] = useState("");
+  const [mineOnly, setMineOnly] = useState(false);
+
+  const needle = query.trim().toLowerCase();
+  const filtered = rows.filter((row) => {
+    if (mineOnly && currentUserId) {
+      const mine = row.owner_id === currentUserId || row.assigned_to === currentUserId;
+      if (!mine) return false;
+    }
+    if (!needle) return true;
+    return toText(row).toLowerCase().includes(needle);
+  });
+
+  const control = (
+    <div className="mb-4 flex flex-wrap items-center gap-2">
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Filter…"
+        aria-label="Filter this list"
+        className="w-full max-w-xs rounded-md border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary"
+      />
+      {currentUserId && (
+        <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={mineOnly}
+            onChange={(e) => setMineOnly(e.target.checked)}
+            className="h-3.5 w-3.5"
+          />
+          Mine only
+        </label>
+      )}
+      {(needle || mineOnly) && (
+        <span className="text-xs tabular-nums text-muted-foreground">
+          {filtered.length} of {rows.length}
+        </span>
+      )}
+    </div>
+  );
+
+  return { filtered, control };
+}

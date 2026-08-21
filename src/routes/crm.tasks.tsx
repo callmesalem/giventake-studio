@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { crmTasks, setTaskCompleted } from "@/lib/crm-data";
-import { PageHeader, Card, EmptyState, Badge } from "@/components/crm/ui";
+import { PageHeader, Card, EmptyState, Badge, useListFilter } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/tasks")({
   loader: () => crmTasks(),
@@ -61,12 +61,20 @@ function TaskRowView({ task }: { task: ReturnType<typeof Route.useLoaderData>[nu
 
 function Tasks() {
   const rows = Route.useLoaderData();
-  const open = rows.filter((t) => !t.is_completed);
-  const done = rows.filter((t) => t.is_completed);
+  const { session } = Route.useRouteContext();
+  const me = session?.userId ?? null;
+  const { filtered, control } = useListFilter(
+    rows,
+    (t) => [t.content, t.source, t.company].filter(Boolean).join(" "),
+    me,
+  );
+  const open = filtered.filter((t) => !t.is_completed);
+  const done = filtered.filter((t) => t.is_completed);
 
   return (
     <div>
       <PageHeader title="Tasks" subtitle={`${open.length} open · ${done.length} completed`} />
+      {control}
       {open.length === 0 && done.length === 0 ? (
         <EmptyState>Nothing here yet. Agent escalations appear on this page.</EmptyState>
       ) : (

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmLeads } from "@/lib/crm-data";
-import { PageHeader, LinkedTable, Badge } from "@/components/crm/ui";
+import { PageHeader, LinkedTable, Badge, useListFilter } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/leads")({
   loader: () => crmLeads(),
@@ -19,15 +19,23 @@ function when(iso: string | null) {
 
 function Leads() {
   const rows = Route.useLoaderData();
+  const { session } = Route.useRouteContext();
+  const me = session?.userId ?? null;
+  const { filtered, control } = useListFilter(
+    rows,
+    (r) => [r.name, r.email, r.company, r.status, r.source].filter(Boolean).join(" "),
+    me,
+  );
   return (
     <div>
       <PageHeader
         title="Leads"
         subtitle={`${rows.length} leads from the website and inbound sources`}
       />
+      {control}
       <LinkedTable
         columns={["Name", "Company", "Email", "Status", "Source", "Budget", "Score", "Captured"]}
-        rows={rows.map((l) => ({ href: `/crm/leads/${l.id}`, cells: [
+        rows={filtered.map((l) => ({ href: `/crm/leads/${l.id}`, cells: [
           <span className="font-medium">{l.name ?? "(no name)"}</span>,
           dash(l.company),
           l.email ? (
