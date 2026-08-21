@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { crmCompanies } from "@/lib/crm-data";
-import { PageHeader, LinkedTable, Badge } from "@/components/crm/ui";
+import { crmCompanies, saveCompany } from "@/lib/crm-data";
+import { PageHeader, LinkedTable, Badge, EntityForm, Disclosure } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/companies")({
   loader: () => crmCompanies(),
@@ -11,7 +11,22 @@ function Companies() {
   const rows = Route.useLoaderData();
   return (
     <div>
-      <PageHeader title="Companies" subtitle={`${rows.length} companies`} />
+      <PageHeader title="Companies" subtitle={`${rows.length} companies`} action={
+          <Disclosure label="New company" openLabel="New company">
+            <EntityForm
+              fields={[
+                { name: "name", label: "Name", required: true },
+                { name: "domain", label: "Domain", placeholder: "example.com" },
+                { name: "location", label: "Location" },
+                { name: "employeeRange", label: "Size", placeholder: "1-10" },
+              ]}
+              submitLabel="Create company"
+              columns={2}
+              onSubmit={(data) => saveCompany({ data })}
+            />
+          </Disclosure>
+        }
+      />
       <LinkedTable
         columns={["Name", "Domain", "Location", "Size", "Source"]}
         rows={rows.map((c) => ({ href: `/crm/companies/${c.id}`, cells: [

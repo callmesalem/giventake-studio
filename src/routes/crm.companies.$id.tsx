@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { crmCompany } from "@/lib/crm-data";
-import { Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, LinkedTable, Badge } from "@/components/crm/ui";
+import { crmCompany, addNote, saveCompany, saveContact, saveDeal } from "@/lib/crm-data";
+import {
+  Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, LinkedTable, Badge,
+  EntityForm, Disclosure,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/companies/$id")({
   loader: ({ params }) => crmCompany({ data: { id: params.id } }),
@@ -8,6 +11,14 @@ export const Route = createFileRoute("/crm/companies/$id")({
 });
 
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+const COMPANY_FIELDS = [
+  { name: "name", label: "Name", required: true },
+  { name: "domain", label: "Domain", placeholder: "example.com" },
+  { name: "location", label: "Location" },
+  { name: "employeeRange", label: "Size", placeholder: "1-10" },
+  { name: "description", label: "Description", type: "textarea" as const, rows: 3 },
+];
 
 function Company() {
   const company = Route.useLoaderData();
@@ -19,6 +30,17 @@ function Company() {
         title={company.name}
         subtitle={company.location}
         badge={company.source ? <Badge value={company.source} /> : null}
+        action={
+          <Disclosure label="Edit" openLabel={`Edit ${company.name}`}>
+            <EntityForm
+              fields={COMPANY_FIELDS}
+              values={company as unknown as Record<string, unknown>}
+              submitLabel="Save changes"
+              columns={2}
+              onSubmit={(data) => saveCompany({ data: { ...data, id: company.id } })}
+            />
+          </Disclosure>
+        }
       />
       <DetailLayout
         main={
@@ -29,6 +51,21 @@ function Company() {
               </Card>
             )}
             <Card title={`Contacts (${company.contacts.length})`}>
+              <div className="mb-4">
+                <Disclosure label="Add contact" openLabel="New contact">
+                  <EntityForm
+                    fields={[
+                      { name: "name", label: "Name", required: true },
+                      { name: "jobTitle", label: "Role" },
+                      { name: "email", label: "Email", type: "email" },
+                      { name: "phone", label: "Phone", type: "tel" },
+                    ]}
+                    submitLabel="Add contact"
+                    columns={2}
+                    onSubmit={(data) => saveContact({ data: { ...data, companyId: company.id } })}
+                  />
+                </Disclosure>
+              </div>
               <LinkedTable
                 columns={["Name", "Role", "Email"]}
                 rows={company.contacts.map((c) => ({
@@ -38,19 +75,41 @@ function Company() {
               />
             </Card>
             <Card title={`Deals (${company.deals.length})`}>
+              <div className="mb-4">
+                <Disclosure label="Add deal" openLabel="New deal">
+                  <EntityForm
+                    fields={[
+                      { name: "name", label: "Deal name", required: true },
+                      { name: "valueUsd", label: "Value (USD)", type: "number" },
+                    ]}
+                    submitLabel="Add deal"
+                    columns={2}
+                    onSubmit={(data) => saveDeal({ data: { ...data, companyId: company.id } })}
+                  />
+                </Disclosure>
+              </div>
               <LinkedTable
                 columns={["Deal", "Stage", "Value"]}
                 rows={company.deals.map((d) => ({
                   href: `/crm/deals/${d.id}`,
-                  cells: [
-                    d.name,
-                    d.stage ?? "—",
-                    d.value_usd != null ? usd.format(d.value_usd) : "—",
-                  ],
+                  cells: [d.name, d.stage ?? "—", d.value_usd != null ? usd.format(d.value_usd) : "—"],
                 }))}
               />
             </Card>
+
             <Card title="Activity">
+              <div className="mb-4">
+                <Disclosure label="Add note" openLabel="Add a note">
+                  <EntityForm
+                    fields={[
+                      { name: "title", label: "Title", placeholder: "Optional" },
+                      { name: "content", label: "Note", type: "textarea", required: true, rows: 4 },
+                    ]}
+                    submitLabel="Save note"
+                    onSubmit={(data) => addNote({ data: { ...data, companyId: company.id } })}
+                  />
+                </Disclosure>
+              </div>
               <Timeline events={company.events} />
             </Card>
           </>

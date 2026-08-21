@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export function PageHeader({
@@ -301,6 +301,201 @@ export function LinkedTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/* ── Phase 02: writing ──────────────────────────────────────────────────────
+ * A small form kit. One generic EntityForm drives create and edit for every
+ * record type, so adding a field is a data change rather than another copy of
+ * the same JSX.
+ */
+
+export interface FormFieldDef {
+  name: string;
+  label: string;
+  type?: "text" | "email" | "tel" | "number" | "textarea" | "select" | "date";
+  required?: boolean;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  help?: string;
+  rows?: number;
+}
+
+const inputClass =
+  "w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground " +
+  "outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-60";
+
+export function FormControl({
+  field,
+  defaultValue,
+  error,
+}: {
+  field: FormFieldDef;
+  defaultValue?: string | number | null;
+  error?: string;
+}) {
+  const id = `f-${field.name}`;
+  const common = {
+    id,
+    name: field.name,
+    required: field.required,
+    placeholder: field.placeholder,
+    defaultValue: defaultValue ?? "",
+    className: inputClass,
+    "aria-invalid": error ? true : undefined,
+  } as const;
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-xs font-medium text-foreground">
+        {field.label}
+        {field.required && <span className="ml-0.5 text-muted-foreground">*</span>}
+      </label>
+
+      {field.type === "textarea" ? (
+        <textarea {...common} rows={field.rows ?? 4} />
+      ) : field.type === "select" ? (
+        <select {...common}>
+          <option value="">&mdash;</option>
+          {(field.options ?? []).map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input {...common} type={field.type ?? "text"} />
+      )}
+
+      {field.help && !error && <p className="text-xs text-muted-foreground">{field.help}</p>}
+      {error && (
+        <p role="alert" className="text-xs font-medium text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Create/edit form. Submits a plain FormData object to `onSubmit`, which is a
+ *  server function — no client-side data layer to keep in sync. */
+export function EntityForm({
+  fields,
+  values,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  columns = 1,
+}: {
+  fields: FormFieldDef[];
+  values?: Record<string, unknown>;
+  submitLabel: string;
+  onSubmit: (data: Record<string, string>) => Promise<unknown>;
+  onCancel?: () => void;
+  columns?: 1 | 2;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handle(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
+    setBusy(true);
+    setError(null);
+    try {
+      await onSubmit(data);
+      form.reset();
+      // A full reload keeps the page authoritative. Optimistic local state would
+      // be faster and would also let the screen disagree with the database,
+      // which for a CRM is the worse trade.
+      window.location.reload();
+    } catch (cause) {
+      setError(
+        cause instanceof Error && cause.message
+          ? cause.message
+          : "That didn't save. Please try again.",
+      );
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handle} className="space-y-4">
+      <div className={cn("grid gap-4", columns === 2 && "sm:grid-cols-2")}>
+        {fields.map((f) => (
+          <div key={f.name} className={f.type === "textarea" ? "sm:col-span-2" : undefined}>
+            <FormControl field={f} defaultValue={values?.[f.name] as string | undefined} />
+          </div>
+        ))}
+      </div>
+
+      {error && (
+        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? "Saving…" : submitLabel}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="rounded-md border border-border px-3.5 py-2 text-sm font-medium text-foreground"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
+
+/** A form hidden behind a button until wanted. Keeps list pages uncluttered
+ *  while still offering a create action on every one of them. */
+export function Disclosure({
+  label,
+  children,
+  openLabel,
+}: {
+  label: string;
+  children: ReactNode;
+  openLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+      >
+        {label}
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground">{openLabel ?? label}</h3>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Close
+        </button>
+      </div>
+      {children}
     </div>
   );
 }

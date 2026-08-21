@@ -629,3 +629,189 @@ export const crmTasks = createServerFn({ method: "GET" }).handler(
     }));
   },
 );
+
+/* ── Phase 02: writes ───────────────────────────────────────────────────────
+ *
+ * Human edits go through the same *_upsert RPCs the agents use, so validation,
+ * audit and RLS are shared rather than duplicated.
+ *
+ * The actor is always `crm:<email>`. Agent writes are stamped `agent:<name>`.
+ * Keeping the prefixes distinct means the audit trail can always answer whether
+ * a change came from a person or a process, which is the whole point of having
+ * one.
+ */
+
+function text(value: unknown, field: string, max: number, required = false): string | null {
+  const s = typeof value === "string" ? value.trim() : "";
+  if (!s) {
+    if (required) throw new Response(`${field} is required`, { status: 400 });
+    return null;
+  }
+  if (s.length > max) throw new Response(`${field} is too long`, { status: 400 });
+  return s;
+}
+
+function optionalUuid(id: unknown): string | null {
+  if (id === null || id === undefined || id === "") return null;
+  return requireUuid(id);
+}
+
+/** Session + write layer, gated identically to reads. */
+async function writer() {
+  const { requireCrmSession } = await import("./crm-auth.server");
+  const session = await requireCrmSession();
+  const { CrmActions } = await import("@/server/crm/actions");
+  return { actions: new CrmActions(config()), actor: `crm:${session.email}` };
+}
+
+/** The upserts key on (source, source_record_id). For an EDIT we must reuse the
+ *  row's existing pair or the upsert inserts a second row. Reading them back
+ *  also preserves provenance: a company Piper sourced still says so after a
+ *  human corrects it. */
+async function identityFor(
+  table: string,
+  id: string | null,
+): Promise<{ source: string; sourceRecordId: string }> {
+  if (!id) {
+    return { source: "crm", sourceRecordId: crypto.randomUUID() };
+  }
+  const read = await reader();
+  const row = await read.getById<Record<string, unknown>>(table, id, "id,source,source_record_id");
+  notFound(row);
+  return {
+    source: str(row.source) ?? "crm",
+    // Older rows may predate source_record_id; fall back to the row id, which is
+    // stable and unique, rather than minting a new key that would fork the row.
+    sourceRecordId: str(row.source_record_id) ?? String(row.id),
+  };
+}
+
+export const saveCompany = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: optionalUuid(d?.id),
+    name: text(d?.name, "Name", 200, true) as string,
+    domain: text(d?.domain, "Domain", 200),
+    description: text(d?.description, "Description", 4000),
+    location: text(d?.location, "Location", 200),
+    employeeRange: text(d?.employeeRange, "Size", 60),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    const identity = await identityFor("companies", data.id);
+    await actions.upsertCompany({ ...identity, ...data });
+    return { ok: true };
+  });
+
+export const saveContact = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: optionalUuid(d?.id),
+    companyId: optionalUuid(d?.companyId),
+    name: text(d?.name, "Name", 200, true) as string,
+    email: text(d?.email, "Email", 255),
+    phone: text(d?.phone, "Phone", 60),
+    jobTitle: text(d?.jobTitle, "Role", 200),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    const identity = await identityFor("contacts", data.id);
+    await actions.upsertContact({ ...identity, ...data });
+    return { ok: true };
+  });
+
+export const saveDeal = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const raw = d?.valueUsd;
+    const valueUsd =
+      raw === null || raw === undefined || raw === "" ? null : Number(raw);
+    if (valueUsd !== null && (!Number.isFinite(valueUsd) || valueUsd < 0)) {
+      throw new Response("Value must be a positive number", { status: 400 });
+    }
+    return {
+      id: optionalUuid(d?.id),
+      companyId: optionalUuid(d?.companyId),
+      name: text(d?.name, "Name", 200, true) as string,
+      stage: text(d?.stage, "Stage", 80),
+      valueUsd,
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    const identity = await identityFor("deals", data.id);
+    await actions.upsertDeal({ ...identity, ...data });
+    return { ok: true };
+  });
+
+export const addNote = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    companyId: optionalUuid(d?.companyId),
+    title: text(d?.title, "Title", 200),
+    content: text(d?.content, "Note", 8000, true) as string,
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions, actor } = await writer();
+    // A note is always new; there is no edit-in-place, so the key is fresh and
+    // the actor is recorded as the source rather than a generic "crm".
+    await actions.upsertNote({
+      source: actor,
+      sourceRecordId: crypto.randomUUID(),
+      companyId: data.companyId,
+      title: data.title,
+      content: data.content,
+    });
+    return { ok: true };
+  });
+
+export const setTaskCompleted = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: requireUuid(d?.id),
+    isCompleted: Boolean(d?.isCompleted),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    const read = await reader();
+    const row = await read.getById<Record<string, unknown>>(
+      "tasks",
+      data.id,
+      "id,source,source_record_id,company_id,content,deadline_at",
+    );
+    notFound(row);
+    // Re-upsert with the same identity so this updates rather than duplicates.
+    await actions.upsertTask({
+      source: str(row.source) ?? "crm",
+      sourceRecordId: str(row.source_record_id) ?? String(row.id),
+      companyId: str(row.company_id),
+      content: str(row.content) ?? "",
+      isCompleted: data.isCompleted,
+      deadlineAt: str(row.deadline_at),
+    });
+    return { ok: true };
+  });
+
+export const advanceStage = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    dealId: requireUuid(d?.dealId),
+    toStage: text(d?.toStage, "Stage", 80, true) as string,
+    // The note is mandatory by design. Advancing a stage crosses a gate, and a
+    // stage change with no stated reason is not evidence of anything.
+    note: text(d?.note, "Note", 2000, true) as string,
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions, actor } = await writer();
+    await actions.advanceDealStage({ ...data, actor });
+    return { ok: true };
+  });
+
+/** Stage options for the board and the advance control, straight from the
+ *  seeded table so the UI cannot drift from the documented process. */
+export const crmStages = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ name: string; sort_order: number; artifact: string | null; gate: string | null }[]> => {
+    const read = await reader();
+    const rows = await read.listStages<Record<string, unknown>>().catch(() => []);
+    return rows.map((r) => ({
+      name: str(r.name) ?? "",
+      sort_order: num(r.sort_order) ?? 0,
+      artifact: str(r.artifact),
+      gate: str(r.gate),
+    }));
+  },
+);
