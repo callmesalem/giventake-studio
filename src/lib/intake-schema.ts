@@ -28,6 +28,11 @@ export const contactSchema = z.object({
   timeline: z.enum(CONTACT_TIMELINE_VALUES, { error: "Select a timeline" }),
   source: z.enum(CONTACT_SOURCE_VALUES, { error: "Select how you heard about us" }),
   source_detail: z.string().trim().max(160).optional(),
+  // Consent evidence. Optional in the schema because the server must never
+  // depend on the client to prove consent - it records what it is given and
+  // stores nothing when it is given nothing.
+  consent_given: z.boolean().optional(),
+  consent_text: z.string().trim().max(2000).optional(),
   utm_source: optionalAttribution,
   utm_medium: optionalAttribution,
   utm_campaign: optionalAttribution,
