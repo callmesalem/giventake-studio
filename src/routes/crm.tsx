@@ -5,6 +5,7 @@ import {
   Inbox,
   Building2,
   Users,
+  KanbanSquare,
   Handshake,
   CheckSquare,
   ShieldCheck,
@@ -42,6 +43,7 @@ const NAV = [
   { to: "/crm/companies", label: "Companies", icon: Building2, exact: false },
   { to: "/crm/contacts", label: "Contacts", icon: Users, exact: false },
   { to: "/crm/deals", label: "Deals", icon: Handshake, exact: false },
+  { to: "/crm/pipeline", label: "Pipeline", icon: KanbanSquare, exact: false },
   { to: "/crm/tasks", label: "Tasks", icon: CheckSquare, exact: false },
   { to: "/crm/approvals", label: "Approvals", icon: ShieldCheck, exact: false },
 ] as const;
