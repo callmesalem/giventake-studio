@@ -35,7 +35,13 @@ export const workerSignatureHeadersSchema = z.object({
   signature: z.string().regex(/^[a-f0-9]{64}$/),
 });
 
+export const workerStatusRequestSchema = z.object({
+  tenantId: z.string().trim().min(3).max(80),
+  jobId: z.string().trim().min(8).max(128),
+});
+
 export type ProductionRenderJob = z.infer<typeof productionRenderJobSchema>;
+export type WorkerStatusRequest = z.infer<typeof workerStatusRequestSchema>;
 
 export type ProviderPollResult =
   | { state: "pending"; retryAfterMs: number }
@@ -71,8 +77,8 @@ function stableJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-export function createWorkerSignature(
-  body: ProductionRenderJob,
+export function createWorkerRequestSignature(
+  body: unknown,
   secret: string,
   timestamp: string,
   requestId: string,
@@ -80,6 +86,15 @@ export function createWorkerSignature(
   return createHmac("sha256", secret)
     .update(`${timestamp}.${requestId}.${stableJson(body)}`)
     .digest("hex");
+}
+
+export function createWorkerSignature(
+  body: ProductionRenderJob,
+  secret: string,
+  timestamp: string,
+  requestId: string,
+): string {
+  return createWorkerRequestSignature(body, secret, timestamp, requestId);
 }
 
 export function verifyWorkerSignature(
@@ -97,7 +112,7 @@ export function verifyWorkerSignature(
   if (!Number.isFinite(timestampMs) || Math.abs(now.getTime() - timestampMs) > 5 * 60 * 1000)
     return false;
 
-  const expected = createWorkerSignature(body, secret, timestamp, requestId);
+  const expected = createWorkerRequestSignature(body, secret, timestamp, requestId);
   return timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"));
 }
 
