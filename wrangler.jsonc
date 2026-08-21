@@ -15,5 +15,21 @@
     { "pattern": "giventakedevs.com", "custom_domain": true },
     { "pattern": "www.giventakedevs.com", "custom_domain": true },
     { "pattern": "crm.giventakedevs.com", "custom_domain": true }
-  ]
+  ],
+
+  // Plain-text vars MUST live here, not only in the dashboard.
+  //
+  // Secrets survive a deploy because Cloudflare stores them separately, but
+  // plain vars are part of the uploaded config: any `wrangler versions upload`
+  // or `wrangler deploy` replaces them with whatever this file declares. On
+  // 2026-08-21 a build dropped INTAKE_FROM_EMAIL that had been set in the
+  // dashboard an hour earlier, which silently reverted the contact form to its
+  // mailto fallback - `sendMail` returns "unconfigured" unless BOTH
+  // RESEND_API_KEY and INTAKE_FROM_EMAIL are present (src/lib/intake.ts).
+  //
+  // Nothing secret belongs in this block; it is committed to the repo.
+  // RESEND_API_KEY and the SUPABASE_* values stay as dashboard Secrets.
+  "vars": {
+    "INTAKE_FROM_EMAIL": "info@giventakedevs.com"
+  }
 }
