@@ -78,6 +78,24 @@ function SidebarContent({ session, onNavigate }: { session: CrmSession; onNaviga
         <p className="text-sm font-semibold tracking-tight text-foreground">GivenTake CRM</p>
         <p className="text-xs text-muted-foreground">Team workspace</p>
       </div>
+      <form
+        role="search"
+        className="px-3 pt-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const value = new FormData(event.currentTarget).get("q");
+          void router.navigate({ to: "/crm/search", search: { q: String(value ?? "") } });
+        }}
+      >
+        <input
+          name="q"
+          type="search"
+          placeholder="Search…"
+          aria-label="Search the CRM"
+          data-testid="crm-search-box"
+          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary"
+        />
+      </form>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {NAV.map(({ to, label, icon: Icon, exact }) => (
           <Link
