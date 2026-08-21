@@ -23,7 +23,7 @@ export function createFixtureProvider(): VideoProvider {
     async poll(providerRequestId) {
       const result = results.get(providerRequestId);
       if (!result) throw new Error("Fixture provider request was not found.");
-      return result;
+      return { state: "completed", result };
     },
     async cancel(providerRequestId) {
       results.delete(providerRequestId);

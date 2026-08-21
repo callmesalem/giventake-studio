@@ -48,17 +48,22 @@ export function createSoraVideoProvider(options: SoraVideoProviderOptions): Vide
       const video = await request(`https://api.openai.com/v1/videos/${providerRequestId}`, {
         headers: { Authorization: `Bearer ${options.apiKey}` },
       });
-      if (video.status !== "completed") {
-        throw new Error(
-          `Sora video ${providerRequestId} is not complete: ${video.status ?? "unknown"}.`,
-        );
+      if (video.status === "completed") {
+        return {
+          state: "completed" as const,
+          result: {
+            providerRequestId,
+            assetUrl: `https://api.openai.com/v1/videos/${providerRequestId}/content`,
+            durationSeconds: durations.get(providerRequestId) ?? 0,
+            costCents: 0,
+          },
+        };
       }
-      return {
-        providerRequestId,
-        assetUrl: `https://api.openai.com/v1/videos/${providerRequestId}/content`,
-        durationSeconds: durations.get(providerRequestId) ?? 0,
-        costCents: 0,
-      };
+      if (video.status === "failed") {
+        return { state: "failed" as const, category: "provider_failed" as const, retryable: false };
+      }
+      if (video.status === "cancelled") return { state: "cancelled" as const };
+      return { state: "pending" as const, retryAfterMs: 15_000 };
     },
     async cancel(providerRequestId) {
       const response = await fetcher(`https://api.openai.com/v1/videos/${providerRequestId}`, {

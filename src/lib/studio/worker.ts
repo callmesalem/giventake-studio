@@ -33,7 +33,10 @@ export async function runFixtureWorker(
         throw new Error("Fixture render estimate exceeds campaign budget.");
       }
       const providerRequestId = await provider.submit(request);
-      const result = await provider.poll(providerRequestId);
+      const polled = await provider.poll(providerRequestId);
+      if (polled.state !== "completed")
+        throw new Error(`Fixture provider did not complete: ${polled.state}.`);
+      const result = polled.result;
       repository.addAuditEvent({
         id: randomUUID(),
         tenantId,

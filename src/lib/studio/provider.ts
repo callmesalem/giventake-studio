@@ -1,3 +1,4 @@
+import type { ProviderPollResult } from "./render-job";
 import type { StoryboardScene } from "./types";
 
 export type VideoGenerationRequest = {
@@ -17,6 +18,6 @@ export interface VideoProvider {
   readonly name: string;
   estimate(request: VideoGenerationRequest): Promise<number>;
   submit(request: VideoGenerationRequest): Promise<string>;
-  poll(providerRequestId: string): Promise<VideoGenerationResult>;
+  poll(providerRequestId: string): Promise<ProviderPollResult>;
   cancel(providerRequestId: string): Promise<void>;
 }

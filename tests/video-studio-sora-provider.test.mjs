@@ -37,8 +37,17 @@ try {
   assert.equal(calls[0].init.body.get("seconds"), "5");
 
   const result = await provider.poll(providerRequestId);
-  assert.equal(result.assetUrl, "https://api.openai.com/v1/videos/video_123/content");
+  assert.equal(result.state, "completed");
+  assert.equal(result.result.assetUrl, "https://api.openai.com/v1/videos/video_123/content");
   assert.equal(calls[1].url, "https://api.openai.com/v1/videos/video_123");
+
+  const pendingProvider = createSoraVideoProvider({
+    apiKey: "test-key",
+    fetch: async () =>
+      new Response(JSON.stringify({ id: "video_pending", status: "in_progress" }), { status: 200 }),
+  });
+  const pending = await pendingProvider.poll("video_pending");
+  assert.deepEqual(pending, { state: "pending", retryAfterMs: 15_000 });
 
   console.log("Video Studio Sora provider contract passed.");
 } finally {
