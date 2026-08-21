@@ -42,7 +42,7 @@ export class SupabaseOperatorStore implements OperatorStore {
       throw new Error("operator database configuration missing");
     this.#url = options.url.replace(/\/$/, "");
     this.#key = options.serviceRoleKey;
-    this.#fetch = options.fetch ?? fetch;
+    this.#fetch = options.fetch ?? ((input, init) => fetch(input, init));
   }
   async #rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
     const response = await this.#fetch(`${this.#url}/rest/v1/rpc/${name}`, {
