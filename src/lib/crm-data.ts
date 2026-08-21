@@ -937,3 +937,105 @@ export const crmSearch = createServerFn({ method: "GET" })
       })),
     ];
   });
+
+/* ── Phase 05: the dashboard ────────────────────────────────────────────── */
+
+export interface DashboardVM {
+  needsYou: {
+    openTasks: { id: string; content: string; deadline_at: string | null; source: string | null }[];
+    pendingApprovals: number;
+    staleDeals: { id: string; name: string; stage: string | null; days: number }[];
+  };
+  pipeline: { name: string; count: number; total_usd: number }[];
+  attribution: { source: string; leads: number; deals: number; clients: number; valueWonUsd: number }[];
+  totals: { deals: number; pipelineUsd: number; companies: number; leads: number };
+}
+
+const DAY = 86_400_000;
+
+/** A deal nobody has touched in this long is the thing most likely to be
+ *  quietly dying, which is exactly what a dashboard should surface. */
+const STALE_DAYS = 7;
+
+export const crmDashboard = createServerFn({ method: "GET" }).handler(
+  async (): Promise<DashboardVM> => {
+    const read = await reader();
+    const [stages, deals, companies, leads, tasks, approvals, attributionRaw] = await Promise.all([
+      read.listStages<Record<string, unknown>>(),
+      read.listDeals<Record<string, unknown>>(),
+      read.listCompanies<Record<string, unknown>>(),
+      read.listLeads<Record<string, unknown>>(),
+      read.listTasks<Record<string, unknown>>(),
+      read.listPendingApprovals<Record<string, unknown>>(),
+      read.attribution<{ bySource?: unknown[] }>().catch(() => ({ bySource: [] })),
+    ]);
+
+    const known = new Set(stages.map((s) => str(s.name)));
+    const buckets = new Map(
+      stages.map((s) => [str(s.name) ?? "", { name: str(s.name) ?? "", count: 0, total_usd: 0 }]),
+    );
+    let pipelineUsd = 0;
+    for (const d of deals) {
+      const stage = str(d.stage);
+      const key = stage && known.has(stage) ? stage : (str(stages[0]?.name) ?? "");
+      const bucket = buckets.get(key);
+      const value = num(d.value_usd) ?? 0;
+      pipelineUsd += value;
+      if (bucket) {
+        bucket.count += 1;
+        bucket.total_usd += value;
+      }
+    }
+
+    const now = Date.now();
+    const staleDeals = deals
+      .map((d) => {
+        const touched = str(d.updated_at) ?? str(d.created_at);
+        const days = touched ? Math.floor((now - new Date(touched).getTime()) / DAY) : 0;
+        return {
+          id: String(d.id),
+          name: str(d.name) ?? "(unnamed)",
+          stage: str(d.stage),
+          days,
+        };
+      })
+      .filter((d) => d.days >= STALE_DAYS)
+      .sort((a, b) => b.days - a.days)
+      .slice(0, 8);
+
+    const bySource = Array.isArray(attributionRaw?.bySource) ? attributionRaw.bySource : [];
+
+    return {
+      needsYou: {
+        openTasks: tasks
+          .filter((t) => !t.is_completed)
+          .slice(0, 8)
+          .map((t) => ({
+            id: String(t.id),
+            content: str(t.content) ?? "",
+            deadline_at: str(t.deadline_at),
+            source: str(t.source),
+          })),
+        pendingApprovals: approvals.length,
+        staleDeals,
+      },
+      pipeline: [...buckets.values()].filter((b) => b.count > 0),
+      attribution: bySource.map((row) => {
+        const r = row as Record<string, unknown>;
+        return {
+          source: str(r.source) ?? "unknown",
+          leads: num(r.leads) ?? 0,
+          deals: num(r.deals) ?? 0,
+          clients: num(r.clients) ?? 0,
+          valueWonUsd: num(r.valueWonUsd) ?? 0,
+        };
+      }),
+      totals: {
+        deals: deals.length,
+        pipelineUsd,
+        companies: companies.length,
+        leads: leads.length,
+      },
+    };
+  },
+);

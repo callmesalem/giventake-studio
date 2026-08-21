@@ -164,6 +164,12 @@ export class CrmRead {
     );
   }
 
+  /** Which channel produced paying clients. Built this morning and displayed
+   *  nowhere until now. */
+  attribution<T = unknown>(): Promise<T> {
+    return this.#rpc<T>("attribution_snapshot");
+  }
+
   /** Case-insensitive contains-match across the given columns.
    *
    *  The term is sanitised by the caller before it gets here. PostgREST parses
