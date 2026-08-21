@@ -18,6 +18,7 @@ import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProcessRouteImport } from './routes/process'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
@@ -69,6 +70,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
+    | '/studio'
     | '/terms'
     | '/articles/$slug'
     | '/services/$slug'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
+    | '/studio'
     | '/terms'
     | '/articles/$slug'
     | '/services/$slug'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
+    | '/studio'
     | '/terms'
     | '/articles/$slug'
     | '/services/$slug'
@@ -205,6 +217,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProcessRoute: typeof ProcessRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StudioRoute: typeof StudioRoute
   TermsRoute: typeof TermsRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -325,6 +345,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProcessRoute: ProcessRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StudioRoute: StudioRoute,
   TermsRoute: TermsRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,
