@@ -104,7 +104,15 @@ export function ContactCTA() {
     }
     setErrors({});
 
-    const { consent: _consent, ...payload } = parsed.data;
+    // Store the wording the visitor actually saw, read from the rendered label
+    // rather than a constant. A constant drifts silently the day someone edits
+    // the copy; the DOM cannot disagree with itself.
+    const consentText = form
+      .querySelector("[data-consent-label]")
+      ?.textContent?.replace(/\s+/g, " ")
+      .trim();
+    const { consent: _consent, ...rest } = parsed.data;
+    const payload = { ...rest, consent_given: true, consent_text: consentText };
     setSubmitting(true);
     try {
       const result = await submitContact({ data: payload });
@@ -341,7 +349,7 @@ export function ContactCTA() {
                     required
                     className="mt-0.5 h-4 w-4 flex-none accent-ink"
                   />
-                  <span className="text-[12.5px] leading-relaxed text-muted-ink">
+                  <span data-consent-label className="text-[12.5px] leading-relaxed text-muted-ink">
                     I've read the{" "}
                     <a href="/privacy" className="font-medium text-ink underline">
                       Privacy Policy

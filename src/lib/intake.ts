@@ -85,6 +85,10 @@ async function persistLead(data: ContactInput): Promise<{ suppressed: boolean } 
       timeline: data.timeline,
       source: data.source,
       source_detail: data.source_detail,
+      consent:
+        data.consent_given === undefined
+          ? undefined
+          : { given: data.consent_given, text: data.consent_text },
       attribution: {
         utm_source: data.utm_source,
         utm_medium: data.utm_medium,
