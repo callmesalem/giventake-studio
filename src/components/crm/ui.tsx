@@ -112,3 +112,195 @@ export function Badge({ value, kind = "neutral" }: { value: string; kind?: "neut
     </span>
   );
 }
+
+/* ── Phase 01 additions ─────────────────────────────────────────────────────
+ * Detail-page scaffolding. Mobile-first throughout: single column by default,
+ * the sidebar only appears once there is room for it.
+ */
+
+/** Back link + title + optional status line, for a single record. */
+export function DetailHeader({
+  backTo,
+  backLabel,
+  title,
+  subtitle,
+  badge,
+  action,
+}: {
+  backTo: string;
+  backLabel: string;
+  title: string;
+  subtitle?: ReactNode;
+  badge?: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="mb-6">
+      <a
+        href={backTo}
+        className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+      >
+        <span aria-hidden="true">&larr;</span> {backLabel}
+      </a>
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{title}</h1>
+          {subtitle && (
+            <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {badge}
+          {action}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Label/value pair. Values wrap rather than truncate — on a phone a truncated
+ *  email is worse than a two-line one. */
+export function Field({ label, children }: { label: string; children: ReactNode }) {
+  const empty = children === null || children === undefined || children === "";
+  return (
+    <div className="py-2.5">
+      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 break-words text-sm text-foreground">
+        {empty ? <span className="text-muted-foreground">&mdash;</span> : children}
+      </dd>
+    </div>
+  );
+}
+
+export function FieldList({ children }: { children: ReactNode }) {
+  return <dl className="divide-y divide-border">{children}</dl>;
+}
+
+/** Two-column on desktop, stacked on mobile. Detail first in DOM order so the
+ *  record itself is what a phone shows before the side panel. */
+export function DetailLayout({ main, aside }: { main: ReactNode; aside: ReactNode }) {
+  return (
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="min-w-0 space-y-5">{main}</div>
+      <div className="space-y-5">{aside}</div>
+    </div>
+  );
+}
+
+const TIMELINE_TONE: Record<string, string> = {
+  touchpoint: "bg-blue-500",
+  agent: "bg-violet-500",
+  note: "bg-amber-500",
+  stage: "bg-emerald-500",
+  task: "bg-slate-400",
+};
+
+export interface TimelineItem {
+  id: string;
+  at: string | null;
+  kind: string;
+  title: string;
+  detail: string | null;
+  actor: string | null;
+}
+
+/** Everything that happened to a record, newest first, from whichever table
+ *  recorded it. The dot colour encodes the source so agent activity is
+ *  distinguishable from human activity at a glance. */
+export function Timeline({ events }: { events: TimelineItem[] }) {
+  if (!events.length) {
+    return <EmptyState>Nothing has happened here yet.</EmptyState>;
+  }
+  return (
+    <ol className="relative space-y-0">
+      {events.map((e, i) => (
+        <li key={e.id} className="relative flex gap-3 pb-5 last:pb-0">
+          {i < events.length - 1 && (
+            <span
+              aria-hidden="true"
+              className="absolute left-[5px] top-4 h-full w-px bg-border"
+            />
+          )}
+          <span
+            aria-hidden="true"
+            className={cn(
+              "relative mt-1.5 h-[11px] w-[11px] flex-none rounded-full ring-2 ring-card",
+              TIMELINE_TONE[e.kind] ?? "bg-slate-400",
+            )}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <p className="text-sm font-medium text-foreground">{e.title}</p>
+              {e.actor && (
+                <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                  {e.actor}
+                </span>
+              )}
+            </div>
+            {e.detail && (
+              <p className="mt-0.5 break-words text-sm text-muted-foreground">{e.detail}</p>
+            )}
+            {e.at && (
+              <time className="mt-1 block text-xs tabular-nums text-muted-foreground">
+                {new Date(e.at).toLocaleString(undefined, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </time>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** A table whose rows navigate. Kept separate from DataTable so existing
+ *  read-only tables are untouched. */
+export function LinkedTable({
+  columns,
+  rows,
+}: {
+  columns: string[];
+  rows: { href: string; cells: ReactNode[] }[];
+}) {
+  if (!rows.length) return <EmptyState>Nothing here yet.</EmptyState>;
+  return (
+    <div className="overflow-x-auto rounded-lg border border-border">
+      <table className="w-full min-w-[520px] text-sm">
+        <thead>
+          <tr className="border-b border-border bg-muted/40">
+            {columns.map((c) => (
+              <th
+                key={c}
+                className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              >
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {rows.map((row) => (
+            <tr key={row.href} className="group hover:bg-muted/40">
+              {row.cells.map((cell, i) => (
+                <td key={i} className="px-4 py-2.5 align-top">
+                  {i === 0 ? (
+                    <a
+                      href={row.href}
+                      className="font-medium text-foreground underline-offset-2 group-hover:underline"
+                    >
+                      {cell}
+                    </a>
+                  ) : (
+                    cell
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

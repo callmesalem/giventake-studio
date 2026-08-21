@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmContacts } from "@/lib/crm-data";
-import { PageHeader, DataTable } from "@/components/crm/ui";
+import { PageHeader, LinkedTable } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/contacts")({
   loader: () => crmContacts(),
@@ -16,9 +16,9 @@ function Contacts() {
   return (
     <div>
       <PageHeader title="Contacts" subtitle={`${rows.length} contacts`} />
-      <DataTable
+      <LinkedTable
         columns={["Name", "Title", "Company", "Email", "Phone"]}
-        rows={rows.map((c) => [
+        rows={rows.map((c) => ({ href: `/crm/contacts/${c.id}`, cells: [
           <span className="font-medium">{c.name}</span>,
           dash(c.job_title),
           dash(c.company),
@@ -30,7 +30,7 @@ function Contacts() {
             <span className="text-muted-foreground">—</span>
           ),
           dash(c.phone),
-        ])}
+        ] }))}
       />
     </div>
   );

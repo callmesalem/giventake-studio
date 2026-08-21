@@ -238,3 +238,394 @@ export const crmApprovals = createServerFn({ method: "GET" }).handler(
     }));
   },
 );
+
+/* ── Phase 01: record detail ────────────────────────────────────────────────
+ *
+ * One server function per record type. Each returns the record plus everything
+ * attached to it, already shaped — the browser never sees a raw Supabase row.
+ *
+ * Ids are validated as UUIDs before they reach the read layer. PostgREST
+ * filters are built by string concatenation, so an unvalidated id is an
+ * injection surface; rejecting anything that is not a UUID closes it at the
+ * boundary rather than trusting every call site to be careful.
+ */
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function requireUuid(id: unknown): string {
+  const value = typeof id === "string" ? id.trim() : "";
+  if (!UUID.test(value)) throw new Response("Not found", { status: 404 });
+  return value;
+}
+
+function notFound(record: unknown): asserts record is Record<string, unknown> {
+  if (!record) throw new Response("Not found", { status: 404 });
+}
+
+/** A single thing that happened, from whichever table recorded it. */
+export interface TimelineEvent {
+  id: string;
+  at: string | null;
+  kind: "touchpoint" | "agent" | "note" | "stage" | "task";
+  title: string;
+  detail: string | null;
+  actor: string | null;
+}
+
+const byNewestFirst = (a: TimelineEvent, b: TimelineEvent) =>
+  (b.at ?? "").localeCompare(a.at ?? "");
+
+/** Human label for a touchpoint kind: website_contact_form -> Website contact form. */
+function humanise(value: string | null): string {
+  if (!value) return "Activity";
+  const spaced = value.replace(/[_-]+/g, " ").trim();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/** jsonb columns arrive as objects; render something readable without dumping
+ *  the whole blob at the user. */
+function summarise(content: unknown, keys: string[]): string | null {
+  if (!content || typeof content !== "object") return content ? String(content) : null;
+  const record = content as Record<string, unknown>;
+  const parts = keys
+    .map((k) => {
+      const v = record[k];
+      return v === null || v === undefined || v === "" ? null : `${humanise(k)}: ${String(v)}`;
+    })
+    .filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+async function leadTimeline(
+  read: Awaited<ReturnType<typeof reader>>,
+  leadId: string,
+): Promise<TimelineEvent[]> {
+  const [touchpoints, log] = await Promise.all([
+    read.relatedBy<Record<string, unknown>>(
+      "touchpoints",
+      "lead_id",
+      leadId,
+      "id,kind,content,created_at",
+    ),
+    read.relatedBy<Record<string, unknown>>(
+      "agent_log",
+      "lead_id",
+      leadId,
+      "id,operator,sop,step,outcome,escalated,created_at",
+    ),
+  ]);
+
+  const events: TimelineEvent[] = [
+    ...touchpoints.map((t) => ({
+      id: `tp-${String(t.id)}`,
+      at: str(t.created_at),
+      kind: "touchpoint" as const,
+      title: humanise(str(t.kind)),
+      detail: summarise(t.content, ["source", "budget", "timeline", "company", "description"]),
+      actor: null,
+    })),
+    ...log.map((l) => ({
+      id: `al-${String(l.id)}`,
+      at: str(l.created_at),
+      kind: "agent" as const,
+      title: `${humanise(str(l.step))}${l.escalated ? " — escalated" : ""}`,
+      detail: [str(l.outcome), str(l.sop)].filter(Boolean).join(" · ") || null,
+      actor: str(l.operator),
+    })),
+  ];
+  return events.sort(byNewestFirst);
+}
+
+async function companyTimeline(
+  read: Awaited<ReturnType<typeof reader>>,
+  companyId: string,
+): Promise<TimelineEvent[]> {
+  const [notes, tasks] = await Promise.all([
+    read.relatedBy<Record<string, unknown>>(
+      "notes",
+      "company_id",
+      companyId,
+      "id,title,content,source,created_at",
+    ),
+    read.relatedBy<Record<string, unknown>>(
+      "tasks",
+      "company_id",
+      companyId,
+      "id,content,is_completed,deadline_at,source,created_at",
+    ),
+  ]);
+
+  const events: TimelineEvent[] = [
+    ...notes.map((n) => ({
+      id: `nt-${String(n.id)}`,
+      at: str(n.created_at),
+      kind: "note" as const,
+      title: str(n.title) ?? "Note",
+      detail: str(n.content),
+      actor: str(n.source),
+    })),
+    ...tasks.map((t) => ({
+      id: `tk-${String(t.id)}`,
+      at: str(t.created_at),
+      kind: "task" as const,
+      title: t.is_completed ? "Task completed" : "Task",
+      detail: str(t.content),
+      actor: str(t.source),
+    })),
+  ];
+  return events.sort(byNewestFirst);
+}
+
+export interface LeadDetail {
+  id: string;
+  name: string | null;
+  email: string | null;
+  company: string | null;
+  status: string | null;
+  source: string | null;
+  source_detail: string | null;
+  budget: string | null;
+  timeline: string | null;
+  description: string | null;
+  qualification: string | null;
+  consent_given: boolean | null;
+  consent_at: string | null;
+  consent_text: string | null;
+  created_at: string | null;
+  last_touch_at: string | null;
+  events: TimelineEvent[];
+}
+
+export const crmLead = createServerFn({ method: "GET" })
+  .validator((data: { id: string }) => ({ id: requireUuid(data?.id) }))
+  .handler(async ({ data }): Promise<LeadDetail> => {
+    const read = await reader();
+    const row = await read.getById<Record<string, unknown>>("leads", data.id);
+    notFound(row);
+    return {
+      id: String(row.id),
+      name: str(row.name),
+      email: str(row.email),
+      company: str(row.company),
+      status: str(row.status),
+      source: str(row.source),
+      source_detail: str(row.source_detail),
+      budget: str(row.budget),
+      timeline: str(row.timeline),
+      description: str(row.description),
+      qualification: row.qualification ? JSON.stringify(row.qualification) : null,
+      consent_given: typeof row.consent_given === "boolean" ? row.consent_given : null,
+      consent_at: str(row.consent_at),
+      consent_text: str(row.consent_text),
+      created_at: str(row.created_at),
+      last_touch_at: str(row.last_touch_at),
+      events: await leadTimeline(read, data.id),
+    };
+  });
+
+export interface CompanyDetail {
+  id: string;
+  name: string;
+  domain: string | null;
+  location: string | null;
+  employee_range: string | null;
+  description: string | null;
+  source: string | null;
+  created_at: string | null;
+  contacts: { id: string; name: string; email: string | null; job_title: string | null }[];
+  deals: { id: string; name: string; stage: string | null; value_usd: number | null }[];
+  events: TimelineEvent[];
+}
+
+export const crmCompany = createServerFn({ method: "GET" })
+  .validator((data: { id: string }) => ({ id: requireUuid(data?.id) }))
+  .handler(async ({ data }): Promise<CompanyDetail> => {
+    const read = await reader();
+    const row = await read.getById<Record<string, unknown>>("companies", data.id);
+    notFound(row);
+    const [contacts, deals, events] = await Promise.all([
+      read.relatedBy<Record<string, unknown>>(
+        "contacts",
+        "company_id",
+        data.id,
+        "id,name,email,job_title",
+        "name.asc",
+      ),
+      read.relatedBy<Record<string, unknown>>(
+        "deals",
+        "company_id",
+        data.id,
+        "id,name,stage,value_usd",
+      ),
+      companyTimeline(read, data.id),
+    ]);
+    return {
+      id: String(row.id),
+      name: str(row.name) ?? "(unnamed)",
+      domain: str(row.domain),
+      location: str(row.location),
+      employee_range: str(row.employee_range),
+      description: str(row.description),
+      source: str(row.source),
+      created_at: str(row.created_at),
+      contacts: contacts.map((c) => ({
+        id: String(c.id),
+        name: str(c.name) ?? "(unnamed)",
+        email: str(c.email),
+        job_title: str(c.job_title),
+      })),
+      deals: deals.map((d) => ({
+        id: String(d.id),
+        name: str(d.name) ?? "(unnamed)",
+        stage: str(d.stage),
+        value_usd: num(d.value_usd),
+      })),
+      events,
+    };
+  });
+
+export interface DealDetail {
+  id: string;
+  name: string;
+  stage: string | null;
+  value_usd: number | null;
+  source: string | null;
+  closed_at: string | null;
+  lost_reason: string | null;
+  created_at: string | null;
+  company: { id: string; name: string } | null;
+  lead: { id: string; name: string | null; email: string | null } | null;
+  stageGate: { artifact: string | null; gate: string | null } | null;
+  events: TimelineEvent[];
+}
+
+export const crmDeal = createServerFn({ method: "GET" })
+  .validator((data: { id: string }) => ({ id: requireUuid(data?.id) }))
+  .handler(async ({ data }): Promise<DealDetail> => {
+    const read = await reader();
+    const row = await read.getById<Record<string, unknown>>("deals", data.id);
+    notFound(row);
+
+    const companyId = row.company_id ? String(row.company_id) : null;
+    const leadId = row.lead_id ? String(row.lead_id) : null;
+
+    const [company, lead, stages, stageEvents, related] = await Promise.all([
+      companyId
+        ? read.getById<Record<string, unknown>>("companies", companyId, "id,name")
+        : Promise.resolve(null),
+      leadId
+        ? read.getById<Record<string, unknown>>("leads", leadId, "id,name,email")
+        : Promise.resolve(null),
+      read.relatedBy<Record<string, unknown>>(
+        "pipeline_stages",
+        "name",
+        String(row.stage ?? ""),
+        "name,artifact,gate",
+        "name.asc",
+        1,
+      ).catch(() => []),
+      read.relatedBy<Record<string, unknown>>(
+        "deal_stage_events",
+        "deal_id",
+        data.id,
+        "id,from_stage,to_stage,actor,note,created_at",
+      ).catch(() => []),
+      companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
+    ]);
+
+    const stageHistory: TimelineEvent[] = stageEvents.map((e) => ({
+      id: `se-${String(e.id)}`,
+      at: str(e.created_at),
+      kind: "stage" as const,
+      title: `${str(e.from_stage) ?? "—"} → ${str(e.to_stage) ?? "—"}`,
+      detail: str(e.note),
+      actor: str(e.actor),
+    }));
+
+    return {
+      id: String(row.id),
+      name: str(row.name) ?? "(unnamed)",
+      stage: str(row.stage),
+      value_usd: num(row.value_usd),
+      source: str(row.source),
+      closed_at: str(row.closed_at),
+      lost_reason: str(row.lost_reason),
+      created_at: str(row.created_at),
+      company: company ? { id: String(company.id), name: str(company.name) ?? "(unnamed)" } : null,
+      lead: lead
+        ? { id: String(lead.id), name: str(lead.name), email: str(lead.email) }
+        : null,
+      stageGate: stages[0]
+        ? { artifact: str(stages[0].artifact), gate: str(stages[0].gate) }
+        : null,
+      events: [...stageHistory, ...related].sort(byNewestFirst),
+    };
+  });
+
+export interface ContactDetail {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  job_title: string | null;
+  created_at: string | null;
+  company: { id: string; name: string } | null;
+  events: TimelineEvent[];
+}
+
+export const crmContact = createServerFn({ method: "GET" })
+  .validator((data: { id: string }) => ({ id: requireUuid(data?.id) }))
+  .handler(async ({ data }): Promise<ContactDetail> => {
+    const read = await reader();
+    const row = await read.getById<Record<string, unknown>>("contacts", data.id);
+    notFound(row);
+    const companyId = row.company_id ? String(row.company_id) : null;
+    const [company, events] = await Promise.all([
+      companyId
+        ? read.getById<Record<string, unknown>>("companies", companyId, "id,name")
+        : Promise.resolve(null),
+      companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
+    ]);
+    return {
+      id: String(row.id),
+      name: str(row.name) ?? "(unnamed)",
+      email: str(row.email),
+      phone: str(row.phone),
+      job_title: str(row.job_title),
+      created_at: str(row.created_at),
+      company: company ? { id: String(company.id), name: str(company.name) ?? "(unnamed)" } : null,
+      events,
+    };
+  });
+
+export interface TaskRow {
+  id: string;
+  content: string;
+  is_completed: boolean;
+  deadline_at: string | null;
+  source: string | null;
+  company: string | null;
+  created_at: string | null;
+}
+
+/** Tasks had no interface at all. Piper's escalations land here — until now they
+ *  were only visible by querying Postgres directly. */
+export const crmTasks = createServerFn({ method: "GET" }).handler(
+  async (): Promise<TaskRow[]> => {
+    const read = await reader();
+    const [tasks, companies] = await Promise.all([
+      read.listTasks<Record<string, unknown>>(),
+      read.listCompanies<Record<string, unknown>>(),
+    ]);
+    const nameById = new Map(companies.map((c) => [String(c.id), str(c.name)]));
+    return tasks.map((t) => ({
+      id: String(t.id),
+      content: str(t.content) ?? "",
+      is_completed: Boolean(t.is_completed),
+      deadline_at: str(t.deadline_at),
+      source: str(t.source),
+      company: t.company_id ? (nameById.get(String(t.company_id)) ?? null) : null,
+      created_at: str(t.created_at),
+    }));
+  },
+);

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmDeals } from "@/lib/crm-data";
-import { PageHeader, DataTable, Badge } from "@/components/crm/ui";
+import { PageHeader, LinkedTable, Badge } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/deals")({
   loader: () => crmDeals(),
@@ -22,9 +22,9 @@ function Deals() {
         title="Deals"
         subtitle={`${rows.length} deals · ${usd.format(pipeline)} pipeline`}
       />
-      <DataTable
+      <LinkedTable
         columns={["Deal", "Company", "Stage", "Value", "Source"]}
-        rows={rows.map((d) => [
+        rows={rows.map((d) => ({ href: `/crm/deals/${d.id}`, cells: [
           <span className="font-medium">{d.name}</span>,
           d.company ?? <span className="text-muted-foreground">—</span>,
           d.stage ? <Badge value={d.stage} /> : <span className="text-muted-foreground">—</span>,
@@ -34,7 +34,7 @@ function Deals() {
             <span className="text-muted-foreground">—</span>
           ),
           d.source ? <Badge value={d.source} /> : <span className="text-muted-foreground">—</span>,
-        ])}
+        ] }))}
       />
     </div>
   );
