@@ -131,4 +131,43 @@ export class CrmRead {
       pendingApprovals: Array.isArray(pending) ? pending.length : 0,
     };
   }
+
+  // ── Phase 01: single records and their history ────────────────────────────
+  //
+  // PostgREST filters are built from an id we validate as a UUID before it gets
+  // here (see crm-data.ts). Anything that reaches this layer is already shaped.
+
+  /** One row by id, or null. Uses limit=1 rather than .single() so a missing
+   *  record is an empty result to handle, not a thrown error to catch. */
+  async getById<T = Record<string, unknown>>(
+    table: string,
+    id: string,
+    select = "*",
+  ): Promise<T | null> {
+    const rows = await this.#select<T>(table, `select=${select}&id=eq.${id}&limit=1`);
+    return rows[0] ?? null;
+  }
+
+  /** Rows of `table` whose `column` matches `value`. The building block for
+   *  every "what is attached to this record" query. */
+  relatedBy<T = Record<string, unknown>>(
+    table: string,
+    column: string,
+    value: string,
+    select = "*",
+    order = "created_at.desc",
+    limit = 200,
+  ): Promise<T[]> {
+    return this.#select<T>(
+      table,
+      `select=${select}&${column}=eq.${value}&order=${order}&limit=${limit}`,
+    );
+  }
+
+  listTasks<T = Record<string, unknown>>(): Promise<T[]> {
+    return this.#select<T>(
+      "tasks",
+      "select=id,content,is_completed,deadline_at,source,company_id,owner_id,assigned_to,created_at&order=created_at.desc&limit=500",
+    );
+  }
 }

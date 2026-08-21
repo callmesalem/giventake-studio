@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmLeads } from "@/lib/crm-data";
-import { PageHeader, DataTable, Badge } from "@/components/crm/ui";
+import { PageHeader, LinkedTable, Badge } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/leads")({
   loader: () => crmLeads(),
@@ -25,9 +25,9 @@ function Leads() {
         title="Leads"
         subtitle={`${rows.length} leads from the website and inbound sources`}
       />
-      <DataTable
+      <LinkedTable
         columns={["Name", "Company", "Email", "Status", "Source", "Budget", "Score", "Captured"]}
-        rows={rows.map((l) => [
+        rows={rows.map((l) => ({ href: `/crm/leads/${l.id}`, cells: [
           <span className="font-medium">{l.name ?? "(no name)"}</span>,
           dash(l.company),
           l.email ? (
@@ -42,7 +42,7 @@ function Leads() {
           dash(l.budget),
           l.score ? <Badge value={l.score} /> : <span className="text-muted-foreground">—</span>,
           <span className="whitespace-nowrap text-muted-foreground">{when(l.created_at)}</span>,
-        ])}
+        ] }))}
       />
     </div>
   );
