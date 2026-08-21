@@ -815,3 +815,56 @@ export const crmStages = createServerFn({ method: "GET" }).handler(
     }));
   },
 );
+
+/* ── Phase 03: the pipeline board ───────────────────────────────────────── */
+
+export interface PipelineColumn {
+  name: string;
+  sort_order: number;
+  artifact: string | null;
+  gate: string | null;
+  deals: { id: string; name: string; value_usd: number | null; company: string | null }[];
+  total_usd: number;
+}
+
+/** Stages and their deals together. Deals whose stage does not match a seeded
+ *  stage are grouped under the first column rather than dropped - a deal that
+ *  vanishes from the board because of a typo is worse than one in the wrong
+ *  place, because nobody goes looking for it. */
+export const crmPipeline = createServerFn({ method: "GET" }).handler(
+  async (): Promise<PipelineColumn[]> => {
+    const read = await reader();
+    const [stages, deals, companies] = await Promise.all([
+      read.listStages<Record<string, unknown>>(),
+      read.listDeals<Record<string, unknown>>(),
+      read.listCompanies<Record<string, unknown>>(),
+    ]);
+    const companyName = new Map(companies.map((c) => [String(c.id), str(c.name)]));
+    const known = new Set(stages.map((s) => str(s.name)));
+
+    const columns: PipelineColumn[] = stages.map((s) => ({
+      name: str(s.name) ?? "",
+      sort_order: num(s.sort_order) ?? 0,
+      artifact: str(s.artifact),
+      gate: str(s.gate),
+      deals: [],
+      total_usd: 0,
+    }));
+    const byName = new Map(columns.map((c) => [c.name, c]));
+
+    for (const d of deals) {
+      const stage = str(d.stage);
+      const column = (stage && known.has(stage) ? byName.get(stage) : undefined) ?? columns[0];
+      if (!column) continue;
+      const value = num(d.value_usd);
+      column.deals.push({
+        id: String(d.id),
+        name: str(d.name) ?? "(unnamed)",
+        value_usd: value,
+        company: d.company_id ? (companyName.get(String(d.company_id)) ?? null) : null,
+      });
+      column.total_usd += value ?? 0;
+    }
+    return columns;
+  },
+);
