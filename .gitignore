@@ -12,6 +12,7 @@ dist
 dist-ssr
 .output
 .worktrees/
+.playwright-cli/
 .superpowers/
 .vinxi
 .tanstack/**
