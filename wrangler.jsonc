@@ -1,0 +1,19 @@
+{
+  // Nitro generates .output/server/wrangler.json on every build and merges this
+  // file into it (nitro/dist/_presets.mjs: readWranglerConfig -> defu). Without
+  // the routes below the generated config declares no routing at all, and
+  // `npx wrangler deploy` - the deploy command on the production branch -
+  // removes the Custom Domains that are not declared. That has already happened
+  // once on this project: a deploy silently detached crm.giventakedevs.com and
+  // deleted its DNS record.
+  //
+  // `name` is pinned for the same class of reason: without it nitro auto-derives
+  // a worker name, so a rename of the directory or package would deploy to a
+  // different Worker than the one serving traffic.
+  "name": "callmesalem-giventake-studio",
+  "routes": [
+    { "pattern": "giventakedevs.com", "custom_domain": true },
+    { "pattern": "www.giventakedevs.com", "custom_domain": true },
+    { "pattern": "crm.giventakedevs.com", "custom_domain": true }
+  ]
+}
