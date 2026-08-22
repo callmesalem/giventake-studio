@@ -7,6 +7,14 @@
  * shaped view models below.
  */
 import { createServerFn } from "@tanstack/react-start";
+import {
+  isUuid,
+  searchTerm,
+  DISCLOSURE_FOOTER as FOOTER,
+  hasDisclosureFooter,
+  hasPostalAddress,
+  dollarsToCents,
+} from "@/lib/crm-guards";
 
 function config() {
   const url = process.env.SUPABASE_URL;
@@ -262,12 +270,9 @@ export const crmApprovals = createServerFn({ method: "GET" }).handler(
  * boundary rather than trusting every call site to be careful.
  */
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function requireUuid(id: unknown): string {
-  const value = typeof id === "string" ? id.trim() : "";
-  if (!UUID.test(value)) throw new Response("Not found", { status: 404 });
-  return value;
+  if (!isUuid(id)) throw new Response("Not found", { status: 404 });
+  return String(id).trim();
 }
 
 function notFound(record: unknown): asserts record is Record<string, unknown> {
@@ -917,22 +922,6 @@ export interface SearchHit {
   href: string;
 }
 
-/** Strip everything PostgREST treats as syntax inside or=(). Commas, parens and
- *  dots are structural there, so a raw term is an injection surface rather than
- *  just a bad search. Letters, digits, spaces, @ and - are enough to find a
- *  company or a person. */
-function searchTerm(value: unknown): string {
-  const raw = typeof value === "string" ? value : "";
-  // Collapse the runs of whitespace that stripping adjacent metacharacters
-  // leaves behind - "a),b" would otherwise become "a   b", and an ilike pattern
-  // with doubled spaces matches nothing.
-  return raw
-    .replace(/[^\p{L}\p{N}\s@-]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 60);
-}
-
 export const crmSearch = createServerFn({ method: "GET" })
   .validator((d: { q: string }) => ({ q: searchTerm(d?.q) }))
   .handler(async ({ data }): Promise<SearchHit[]> => {
@@ -1303,14 +1292,8 @@ export const crmMarketing = createServerFn({ method: "GET" }).handler(
 
 /* ── Phase 10: send preflight ───────────────────────────────────────────── */
 
-/** The disclosure footer, verbatim. Charter §5, and settled by Salem on
- *  2026-08-21: it stays. Copied here so the check compares against the exact
- *  bytes rather than something approximate. */
-export const DISCLOSURE_FOOTER = [
-  "—",
-  "This message was sent automatically by GivenTake Devs.",
-  "Reply and a person will read it.",
-].join("\n");
+/** Re-exported so callers have one import for the footer text. */
+export const DISCLOSURE_FOOTER = FOOTER;
 
 export interface GateResult {
   id: string;
@@ -1324,11 +1307,6 @@ export interface PreflightVM {
   gates: GateResult[];
   sendable: boolean;
 }
-
-/** US postal address, loosely: a street line and something that looks like a
- *  state and ZIP. Deliberately permissive - the point is to catch its ABSENCE,
- *  which is the current reality, not to validate formatting. */
-const POSTAL = /\d+\s+\S+.*\b[A-Z]{2}\s+\d{5}(-\d{4})?\b/;
 
 /** Could this message be sent, and if not, exactly why.
  *
@@ -1354,8 +1332,8 @@ export const sendPreflight = createServerFn({ method: "POST" })
       read.isApprovedRecipient(address, data.sop).catch(() => false),
     ]);
 
-    const hasFooter = data.body.includes(DISCLOSURE_FOOTER);
-    const hasPostal = POSTAL.test(data.body);
+    const hasFooter = hasDisclosureFooter(data.body);
+    const hasPostal = hasPostalAddress(data.body);
 
     const gates: GateResult[] = [
       {
@@ -1642,15 +1620,20 @@ export const saveCampaign = createServerFn({ method: "POST" })
 
 export const createInvoice = createServerFn({ method: "POST" })
   .validator((d: Record<string, unknown>) => {
-    const amount = Number(d?.amount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Response("Amount must be a positive number", { status: 400 });
+    let amountCents: number;
+    try {
+      // Exact decimal parsing; rejects more precision than a cent rather than
+      // silently choosing a direction to round it.
+      amountCents = dollarsToCents(d?.amount);
+    } catch (cause) {
+      throw new Response(
+        cause instanceof Error ? cause.message : "Amount must be a positive number",
+        { status: 400 },
+      );
     }
     return {
       projectId: requireUuid(d?.projectId),
-      // Entered in dollars, stored in cents. Rounding here rather than trusting
-      // float arithmetic downstream is what keeps totals exact.
-      amountCents: Math.round(amount * 100),
+      amountCents,
       currency: (text(d?.currency, "Currency", 3) ?? "USD").toUpperCase(),
       status: text(d?.status, "Status", 40) ?? "draft",
       dueAt: text(d?.dueAt, "Due date", 40),
