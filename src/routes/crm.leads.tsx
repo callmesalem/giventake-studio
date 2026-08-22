@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { crmLeads } from "@/lib/crm-data";
-import { PageHeader, LinkedTable, Badge, useListFilter } from "@/components/crm/ui";
+import { crmLeads, createLead } from "@/lib/crm-data";
+import { PageHeader, LinkedTable, Badge, useListFilter, EntityForm, Disclosure } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/leads")({
   loader: () => crmLeads(),
@@ -31,6 +31,22 @@ function Leads() {
       <PageHeader
         title="Leads"
         subtitle={`${rows.length} leads from the website and inbound sources`}
+      action={
+          <Disclosure label="New lead" openLabel="New lead">
+            <EntityForm
+              fields={[
+                { name: "name", label: "Name", required: true },
+                { name: "email", label: "Email", type: "email" as const, required: true },
+                { name: "company", label: "Company" },
+                { name: "source", label: "Source", placeholder: "how they reached you" },
+                { name: "description", label: "Notes", type: "textarea" as const, rows: 3 },
+              ]}
+              submitLabel="Create lead"
+              columns={2}
+              onSubmit={(data) => createLead({ data })}
+            />
+          </Disclosure>
+        }
       />
       {control}
       <LinkedTable

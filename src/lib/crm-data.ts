@@ -1392,3 +1392,39 @@ export const sendPreflight = createServerFn({ method: "POST" })
 
     return { gates, sendable: gates.every((g) => g.pass || !g.blocking) };
   });
+
+/* ── Phase 11: create-from-list ─────────────────────────────────────────── */
+
+/** Just enough of each company to populate a picker. Separate from crmCompanies
+ *  so a form does not pull descriptions and locations it will never show. */
+export const crmCompanyOptions = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ id: string; name: string }[]> => {
+    const read = await reader();
+    const rows = await read.listCompanies<Record<string, unknown>>();
+    return rows.map((r) => ({ id: String(r.id), name: str(r.name) ?? "(unnamed)" }));
+  },
+);
+
+/** Manual lead entry. SOP W.1 names Salem as a legitimate intake source, so this
+ *  is a supported path - but it records origin 'manual_entry' so the touchpoint
+ *  and agent_log say where the lead actually came from rather than claiming a
+ *  website submission that never happened.
+ *
+ *  No consent is sent, and that is deliberate: nobody ticked a box. The lead is
+ *  stored with consent_given NULL, which reads as "not recorded" rather than
+ *  implying an agreement we cannot evidence. */
+export const createLead = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    email: text(d?.email, "Email", 255, true) as string,
+    name: text(d?.name, "Name", 100, true) as string,
+    company: text(d?.company, "Company", 120),
+    description: text(d?.description, "Notes", 1500),
+    source: text(d?.source, "Source", 80),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { requireCrmSession } = await import("./crm-auth.server");
+    await requireCrmSession();
+    const { CrmActions } = await import("@/server/crm/actions");
+    await new CrmActions(config()).captureLead({ ...data, origin: "manual_entry" });
+    return { ok: true };
+  });
