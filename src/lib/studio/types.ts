@@ -16,6 +16,7 @@ export type CampaignStatus = (typeof campaignStatuses)[number];
 export type StudioIdentity = {
   tenantId: string;
   actorId: string;
+  role: "operator" | "reviewer" | "viewer";
 };
 
 export type StudioBrand = {
