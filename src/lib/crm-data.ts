@@ -14,6 +14,11 @@ import {
   hasDisclosureFooter,
   hasPostalAddress,
   dollarsToCents,
+  buildGates,
+  isSendable,
+  conversionKey,
+  canAssign,
+  type Gate,
 } from "@/lib/crm-guards";
 
 function config() {
@@ -1208,18 +1213,18 @@ export const crmClients = createServerFn({ method: "GET" }).handler(
 
 /* ── Phase 07: assignment ───────────────────────────────────────────────── */
 
-const ASSIGNABLE_TABLES = [
-  "leads", "deals", "tasks", "companies", "contacts",
-  "notes", "clients", "projects", "invoices", "referrals",
-] as const;
+
 
 export const assignRecord = createServerFn({ method: "POST" })
   .validator((d: Record<string, unknown>) => {
     const table = typeof d?.table === "string" ? d.table : "";
-    if (!ASSIGNABLE_TABLES.includes(table as (typeof ASSIGNABLE_TABLES)[number])) {
-      throw new Response("Unknown record type", { status: 400 });
-    }
     const column = d?.column === "assigned_to" ? "assigned_to" : "owner_id";
+    // One allowlist, checked here and again in the actions layer. Keeping a
+    // second copy of the table list in this file was how the two could drift
+    // apart and the looser one win.
+    if (!canAssign(table, column)) {
+      throw new Response("That record cannot be assigned", { status: 400 });
+    }
     return {
       table,
       column,
@@ -1295,16 +1300,10 @@ export const crmMarketing = createServerFn({ method: "GET" }).handler(
 /** Re-exported so callers have one import for the footer text. */
 export const DISCLOSURE_FOOTER = FOOTER;
 
-export interface GateResult {
-  id: string;
-  label: string;
-  pass: boolean;
-  detail: string;
-  blocking: boolean;
-}
+export type GateResult = Gate;
 
 export interface PreflightVM {
-  gates: GateResult[];
+  gates: Gate[];
   sendable: boolean;
 }
 
@@ -1335,56 +1334,17 @@ export const sendPreflight = createServerFn({ method: "POST" })
     const hasFooter = hasDisclosureFooter(data.body);
     const hasPostal = hasPostalAddress(data.body);
 
-    const gates: GateResult[] = [
-      {
-        id: "kill-switch",
-        label: "Outbound enabled",
-        pass: control.outboundEnabled === true,
-        blocking: true,
-        detail:
-          control.outboundEnabled === true
-            ? "operator_system_control.outbound_enabled is on."
-            : `Off${control.reason ? ` — "${control.reason}"` : ""}. Nothing can send while this is false.`,
-      },
-      {
-        id: "suppression",
-        label: "Not suppressed",
-        pass: suppressed === false,
-        blocking: true,
-        detail: suppressed
-          ? "This address is on do_not_contact. A hit is final."
-          : "No do_not_contact entry.",
-      },
-      {
-        id: "approved-recipient",
-        label: "On the approved list",
-        pass: approved === true,
-        blocking: true,
-        detail: approved
-          ? `Approved for SOP "${data.sop}".`
-          : `Not on approved_recipients for "${data.sop}". Charter §3.8: absence is a no, and a clean suppression check is not a substitute.`,
-      },
-      {
-        id: "footer",
-        label: "Disclosure footer present",
-        pass: hasFooter,
-        blocking: true,
-        detail: hasFooter
-          ? "Present verbatim."
-          : "Missing or altered. Charter §5 requires it exactly, and Salem confirmed on 2026-08-21 that it stays.",
-      },
-      {
-        id: "postal",
-        label: "Postal address (CAN-SPAM)",
-        pass: hasPostal,
-        blocking: true,
-        detail: hasPostal
-          ? "A postal address appears in the body."
-          : "No postal address found. CAN-SPAM requires one for the sending entity, and the entity is unformed — the MSA still reads [GivenTake Devs LLC] with Form 610 unfiled. This is the gate no code can clear.",
-      },
-    ];
+    const gates = buildGates({
+      outboundEnabled: control.outboundEnabled,
+      outboundReason: control.reason,
+      suppressed,
+      approvedRecipient: approved,
+      sop: data.sop,
+      hasFooter,
+      hasPostal,
+    });
 
-    return { gates, sendable: gates.every((g) => g.pass || !g.blocking) };
+    return { gates, sendable: isSendable(gates) };
   });
 
 /* ── Phase 11: create-from-list ─────────────────────────────────────────── */
@@ -1463,7 +1423,7 @@ export const convertLead = createServerFn({ method: "POST" })
     notFound(lead);
 
     const { actions } = await writer();
-    const key = `lead:${data.leadId}`;
+    const key = conversionKey(data.leadId);
 
     // Company first, if the lead named one. A lead with no company still
     // converts - a sole trader is a real prospect - the deal simply has no

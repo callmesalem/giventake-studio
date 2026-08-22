@@ -121,3 +121,134 @@ export function passesListFilter<T extends Ownable>(
   if (!needle) return true;
   return text.toLowerCase().includes(needle);
 }
+
+/* ── Assignment allowlist ───────────────────────────────────────────────────
+ *
+ * Ownership cannot go through the *_upsert RPCs, so it is written to PostgREST
+ * directly. Without this list, a table name arriving from anywhere upstream
+ * would be an arbitrary-table write primitive holding the service role key.
+ *
+ * It lives here, beside the tests, rather than inside the class that uses it -
+ * an allowlist nobody can test is a comment with extra steps.
+ */
+export const ASSIGNABLE: Record<string, readonly string[]> = {
+  leads: ["owner_id", "assigned_to"],
+  deals: ["owner_id", "assigned_to"],
+  tasks: ["owner_id", "assigned_to"],
+  companies: ["owner_id"],
+  contacts: ["owner_id"],
+  notes: ["owner_id"],
+  clients: ["owner_id"],
+  projects: ["owner_id"],
+  invoices: ["owner_id"],
+  referrals: ["owner_id"],
+};
+
+/** Whether this exact table and column pair may be assigned. */
+export function canAssign(table: unknown, column: unknown): boolean {
+  if (typeof table !== "string" || typeof column !== "string") return false;
+  const columns = Object.prototype.hasOwnProperty.call(ASSIGNABLE, table)
+    ? ASSIGNABLE[table]
+    : undefined;
+  return Boolean(columns?.includes(column));
+}
+
+/* ── Send gates ─────────────────────────────────────────────────────────────
+ *
+ * The five checks between a draft and a recipient, assembled from facts the
+ * caller has already gathered. Pure, so the decision itself is testable without
+ * a database or a mail provider.
+ */
+
+export interface GateFacts {
+  outboundEnabled: boolean | undefined;
+  outboundReason?: string | undefined;
+  suppressed: boolean;
+  approvedRecipient: boolean;
+  sop: string;
+  hasFooter: boolean;
+  hasPostal: boolean;
+}
+
+export interface Gate {
+  id: string;
+  label: string;
+  pass: boolean;
+  detail: string;
+  blocking: boolean;
+}
+
+export function buildGates(facts: GateFacts): Gate[] {
+  return [
+    {
+      id: "kill-switch",
+      label: "Outbound enabled",
+      // Anything other than an explicit true is off. An undefined control -
+      // unreadable, absent, malformed - must never read as permission.
+      pass: facts.outboundEnabled === true,
+      blocking: true,
+      detail:
+        facts.outboundEnabled === true
+          ? "operator_system_control.outbound_enabled is on."
+          : `Off${facts.outboundReason ? ` — "${facts.outboundReason}"` : ""}. Nothing can send while this is false.`,
+    },
+    {
+      id: "suppression",
+      label: "Not suppressed",
+      pass: facts.suppressed === false,
+      blocking: true,
+      detail: facts.suppressed
+        ? "This address is on do_not_contact. A hit is final."
+        : "No do_not_contact entry.",
+    },
+    {
+      id: "approved-recipient",
+      label: "On the approved list",
+      pass: facts.approvedRecipient === true,
+      blocking: true,
+      detail: facts.approvedRecipient
+        ? `Approved for SOP "${facts.sop}".`
+        : `Not on approved_recipients for "${facts.sop}". Charter §3.8: absence is a no, and a clean suppression check is not a substitute.`,
+    },
+    {
+      id: "footer",
+      label: "Disclosure footer present",
+      pass: facts.hasFooter,
+      blocking: true,
+      detail: facts.hasFooter
+        ? "Present verbatim."
+        : "Missing or altered. Charter §5 requires it exactly, and Salem confirmed on 2026-08-21 that it stays.",
+    },
+    {
+      id: "postal",
+      label: "Postal address (CAN-SPAM)",
+      pass: facts.hasPostal,
+      blocking: true,
+      detail: facts.hasPostal
+        ? "A postal address appears in the body."
+        : "No postal address found. CAN-SPAM requires one for the sending entity, and the entity is unformed — the MSA still reads [GivenTake Devs LLC] with Form 610 unfiled. This is the gate no code can clear.",
+    },
+  ];
+}
+
+export function isSendable(gates: Gate[]): boolean {
+  return gates.every((g) => g.pass || !g.blocking);
+}
+
+/* ── Conversion identity ────────────────────────────────────────────────────
+ *
+ * Converting a lead creates a company, a contact and a deal. All three key on
+ * this value, so a second click updates the same three rows instead of quietly
+ * creating a parallel set nobody notices until the pipeline total is wrong.
+ */
+export function conversionKey(leadId: string): string {
+  return `lead:${leadId}`;
+}
+
+/** Origins capture_website_lead accepts. Closed, because a free-text provenance
+ *  field stops meaning anything the first time somebody invents a value. */
+export const LEAD_ORIGINS = ["website_contact_form", "manual_entry", "referral_intake"] as const;
+
+export function isLeadOrigin(value: unknown): boolean {
+  return (LEAD_ORIGINS as readonly string[]).includes(String(value));
+}

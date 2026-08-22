@@ -3,10 +3,16 @@
  *
  * Separate from the read layer on purpose: this is the only module that mutates
  * CRM state from the dashboard, and it does so through security-definer RPCs with
- * the service-role key (server-side only). Currently limited to recording human
- * decisions on the approval queue — which marks a decision only and never sends,
- * deploys, or executes anything on its own.
+ * the service-role key (server-side only).
+ *
+ * It now covers every human write the dashboard makes: companies, contacts,
+ * deals, notes, tasks, stage advances, referrals, reviews, campaigns, invoices,
+ * clients and assignment. None of it sends, deploys, or executes anything on
+ * its own — the approval queue and the send gates remain the only paths toward
+ * a recipient, and both end at a human.
  */
+
+import { canAssign } from "@/lib/crm-guards";
 
 type Fetch = typeof globalThis.fetch;
 
@@ -241,23 +247,6 @@ export class CrmActions {
 
   /* ── Phase 07: assignment ─────────────────────────────────────────────── */
 
-  /** Tables and columns that may be assigned. This is an allowlist, not a
-   *  convenience: without it, a table name reaching this method from anywhere
-   *  upstream would be an arbitrary-table write primitive holding the service
-   *  role key. Adding a table here is a deliberate act. */
-  static readonly ASSIGNABLE: Record<string, readonly string[]> = {
-    leads: ["owner_id", "assigned_to"],
-    deals: ["owner_id", "assigned_to"],
-    tasks: ["owner_id", "assigned_to"],
-    companies: ["owner_id"],
-    contacts: ["owner_id"],
-    notes: ["owner_id"],
-    clients: ["owner_id"],
-    projects: ["owner_id"],
-    invoices: ["owner_id"],
-    referrals: ["owner_id"],
-  };
-
   /** The *_upsert RPCs do not carry ownership, so this writes through PostgREST
    *  directly. Both table and column are checked against the allowlist first,
    *  and the id is a validated UUID by the time it arrives. */
@@ -267,8 +256,11 @@ export class CrmActions {
     id: string,
     userId: string | null,
   ): Promise<void> {
-    const columns = CrmActions.ASSIGNABLE[table];
-    if (!columns || !columns.includes(column)) {
+    // canAssign lives in crm-guards and is tested there. The previous inline
+    // lookup indexed the record directly, so a table named "constructor" would
+    // have returned a function and thrown on .includes rather than being
+    // refused cleanly.
+    if (!canAssign(table, column)) {
       throw new Response("That record cannot be assigned", { status: 400 });
     }
     const response = await this.#fetch(
