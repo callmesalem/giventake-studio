@@ -1,18 +1,22 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { crmLead, assignRecord } from "@/lib/crm-data";
+import { crmLead, assignRecord, convertLead, crmStages } from "@/lib/crm-data";
 import { listAssignableMembers } from "@/lib/crm-auth";
-import { Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge, OwnerPicker } from "@/components/crm/ui";
+import {
+  Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge, OwnerPicker,
+  EntityForm, Disclosure,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/leads/$id")({
   loader: async ({ params }) => ({
     lead: await crmLead({ data: { id: params.id } }),
     members: (await listAssignableMembers()).members,
+    stages: await crmStages(),
   }),
   component: Lead,
 });
 
 function Lead() {
-  const { lead, members } = Route.useLoaderData();
+  const { lead, members, stages } = Route.useLoaderData();
   const router = useRouter();
   return (
     <div>
@@ -22,6 +26,41 @@ function Lead() {
         title={lead.name ?? lead.email ?? "Lead"}
         subtitle={lead.company}
         badge={lead.status ? <Badge value={lead.status} /> : null}
+        action={
+          lead.status === "converted" ? null : (
+            <Disclosure label="Convert to deal" openLabel="Convert this lead">
+              <p className="mb-3 text-xs text-muted-foreground">
+                Creates a company and contact from this lead, opens a deal, and
+                links the deal back to the lead so attribution can follow it
+                through to revenue.
+              </p>
+              <EntityForm
+                fields={[
+                  {
+                    name: "dealName",
+                    label: "Deal name",
+                    required: true,
+                  },
+                  {
+                    name: "stage",
+                    label: "Stage",
+                    type: "select" as const,
+                    options: stages.map((st) => ({ value: st.name, label: st.name })),
+                  },
+                  { name: "valueUsd", label: "Value (USD)", type: "number" as const },
+                ]}
+                values={{
+                  dealName: lead.company
+                    ? `${lead.company} — ${lead.budget ?? "project"}`
+                    : (lead.name ?? "New deal"),
+                }}
+                submitLabel="Convert"
+                columns={2}
+                onSubmit={(data) => convertLead({ data: { ...data, leadId: lead.id } })}
+              />
+            </Disclosure>
+          )
+        }
       />
       <DetailLayout
         main={
