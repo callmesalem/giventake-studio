@@ -145,8 +145,47 @@ assert.equal(
   false,
 );
 
-// An empty secret is a configuration error, not a soft failure.
+// Signing with no secret is a caller bug and throws.
 assert.throws(() => signPayload("", ts, nonce, payload), /secret/i);
+
+// But VERIFYING with no secret must report, never throw: the return type
+// promises a result and callers treat a throw as a 500. Without this guard the
+// same misconfiguration surfaces as a 401 or an uncaught 500 depending on
+// whether the timestamp happened to be in window.
+assert.equal(
+  verifySigned({ secret: "", timestamp: ts, nonce, payload, signature: sig, now: NOW }).reason,
+  "secret_missing",
+);
+
+// undefined fields must not break verification. The sender signs the object it
+// holds; the receiver signs what JSON.parse hands back. Those must agree, or an
+// optional field left unset gets rejected as a forgery.
+const withUndefined = { job_id: "j1", scene_index: undefined, kind: "scene_clip" };
+assert.equal(
+  signPayload(SECRET, ts, nonce, withUndefined),
+  signPayload(SECRET, ts, nonce, JSON.parse(JSON.stringify(withUndefined))),
+  "an undefined field must not change the signature",
+);
+assert.equal(
+  signPayload(SECRET, ts, nonce, { a: [1, undefined, 3] }),
+  signPayload(SECRET, ts, nonce, JSON.parse(JSON.stringify({ a: [1, undefined, 3] }))),
+  "undefined array holes must not change the signature",
+);
+assert.doesNotThrow(() => signPayload(SECRET, ts, nonce, undefined));
+
+// Exactly at the boundary is accepted; one millisecond past is not.
+assert.equal(
+  verifySigned({ secret: SECRET, timestamp: ts, nonce, payload, signature: sig, now: NOW + MAX_SKEW_MS }).ok,
+  true,
+);
+assert.equal(
+  verifySigned({ secret: SECRET, timestamp: ts, nonce, payload, signature: sig, now: NOW + MAX_SKEW_MS + 1 }).reason,
+  "timestamp_skew",
+);
+
+// Pin the output format: a digest or encoding change that stayed internally
+// consistent would otherwise pass unnoticed.
+assert.match(sig, /^[0-9a-f]{64}$/);
 
 console.log("video-signing: ok");
 ```
@@ -184,6 +223,7 @@ export const NONCE_HEADER = "x-gt-nonce";
 export const MAX_SKEW_MS = 5 * 60 * 1000;
 
 export type VerifyFailure =
+  | "secret_missing"
   | "timestamp_invalid"
   | "timestamp_skew"
   | "signature_mismatch";
@@ -204,13 +244,26 @@ export function signPayload(
   payload: unknown,
 ): string {
   if (!secret) throw new Error("signPayload requires a non-empty secret");
-  const base = `${timestamp}.${nonce}.${canonicalPayload(payload)}`;
+  // Normalise through JSON before canonicalising. The receiver only ever sees
+  // JSON.parse(body), so signing the pre-serialised object would disagree with
+  // it for any `undefined` value — a dropped key on one side, a present key on
+  // the other — and reject legitimate traffic as a forgery. `?? null` because
+  // JSON.stringify(undefined) returns the string "undefined", which JSON.parse
+  // then throws on.
+  const normalised = JSON.parse(JSON.stringify(payload ?? null)) as unknown;
+  const base = `${timestamp}.${nonce}.${canonicalPayload(normalised)}`;
   return createHmac("sha256", secret).update(base).digest("hex");
 }
 
 export function verifySigned(
   input: VerifyInput,
 ): { ok: true } | { ok: false; reason: VerifyFailure } {
+  // verifySigned must be total: its return type promises a result, and callers
+  // treat a throw as a 500. A missing secret is a server misconfiguration, so it
+  // is reported rather than thrown — videoEnv() is what refuses to start
+  // without one.
+  if (!input.secret) return { ok: false, reason: "secret_missing" };
+
   const sent = Number(input.timestamp);
   if (!Number.isFinite(sent)) return { ok: false, reason: "timestamp_invalid" };
 
@@ -2818,6 +2871,35 @@ const config = {
   );
 }
 
+// An optional field left undefined must still verify. The worker duplicates the
+// canonicaliser, so this is the assertion that catches the two implementations
+// drifting apart — the failure mode is every request being rejected as a forgery.
+{
+  let captured;
+  const client = new StudioClient(config, async (_url, init) => {
+    captured = { headers: init.headers, body: init.body };
+    return new Response(JSON.stringify({ asset_id: "a1", storage_path: "p", upload_url: "u", created: true }), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  });
+  await client.uploadIntent({
+    job_id: "j1", project_id: "p1", kind: "scene_clip",
+    scene_index: 0, content_type: "video/mp4", sha256: "abc", ext: "mp4",
+    rendition: undefined,
+  });
+  assert.equal(
+    verifySigned({
+      secret: SECRET,
+      timestamp: captured.headers["x-gt-timestamp"],
+      nonce: captured.headers["x-gt-nonce"],
+      payload: JSON.parse(captured.body),
+      signature: captured.headers["x-gt-signature"],
+    }).ok,
+    true,
+    "a payload with an undefined field must verify against the app's verifier",
+  );
+}
+
 // Nonces must differ between calls or the app will reject the second as a replay.
 {
   const nonces = [];
@@ -2904,8 +2986,16 @@ export class StudioClient {
   async #post<T>(path: string, payload: Record<string, unknown>): Promise<T> {
     const timestamp = String(Date.now());
     const nonce = randomUUID();
+
+    // Sign the JSON-normalised payload and send the SAME serialisation. The app
+    // verifies against JSON.parse(body), so signing the pre-serialised object
+    // would disagree with it whenever a field is `undefined` — an optional field
+    // left unset would sign fine here and be rejected there as a forgery. This
+    // must stay identical to signPayload() in src/server/video/signing.ts;
+    // tests/video-worker-client.test.mjs asserts the two agree.
+    const body = JSON.stringify(payload ?? null);
     const signature = createHmac("sha256", this.#config.secret)
-      .update(`${timestamp}.${nonce}.${canonical(payload)}`)
+      .update(`${timestamp}.${nonce}.${canonical(JSON.parse(body))}`)
       .digest("hex");
 
     const response = await this.#fetch(`${this.#config.appBaseUrl}${path}`, {
@@ -2916,7 +3006,7 @@ export class StudioClient {
         "x-gt-nonce": nonce,
         "x-gt-signature": signature,
       },
-      body: JSON.stringify(payload),
+      body,
     });
 
     if (response.status === 409) {
