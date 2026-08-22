@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { passesListFilter, type Ownable as GuardOwnable } from "@/lib/crm-guards";
 
 export function PageHeader({
   title,
@@ -596,14 +597,9 @@ export function useListFilter<T extends Ownable>(
   const [mineOnly, setMineOnly] = useState(false);
 
   const needle = query.trim().toLowerCase();
-  const filtered = rows.filter((row) => {
-    if (mineOnly && currentUserId) {
-      const mine = row.owner_id === currentUserId || row.assigned_to === currentUserId;
-      if (!mine) return false;
-    }
-    if (!needle) return true;
-    return toText(row).toLowerCase().includes(needle);
-  });
+  const filtered = rows.filter((row) =>
+    passesListFilter(row as GuardOwnable, toText(row), { query, mineOnly, currentUserId }),
+  );
 
   const control = (
     <div className="mb-4 flex flex-wrap items-center gap-2">
