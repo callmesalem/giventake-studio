@@ -1284,3 +1284,111 @@ export const crmMarketing = createServerFn({ method: "GET" }).handler(
     };
   },
 );
+
+/* ── Phase 10: send preflight ───────────────────────────────────────────── */
+
+/** The disclosure footer, verbatim. Charter §5, and settled by Salem on
+ *  2026-08-21: it stays. Copied here so the check compares against the exact
+ *  bytes rather than something approximate. */
+export const DISCLOSURE_FOOTER = [
+  "—",
+  "This message was sent automatically by GivenTake Devs.",
+  "Reply and a person will read it.",
+].join("\n");
+
+export interface GateResult {
+  id: string;
+  label: string;
+  pass: boolean;
+  detail: string;
+  blocking: boolean;
+}
+
+export interface PreflightVM {
+  gates: GateResult[];
+  sendable: boolean;
+}
+
+/** US postal address, loosely: a street line and something that looks like a
+ *  state and ZIP. Deliberately permissive - the point is to catch its ABSENCE,
+ *  which is the current reality, not to validate formatting. */
+const POSTAL = /\d+\s+\S+.*\b[A-Z]{2}\s+\d{5}(-\d{4})?\b/;
+
+/** Could this message be sent, and if not, exactly why.
+ *
+ * Every gate is evaluated and reported, rather than returning on the first
+ * failure. Being told one reason, fixing it, and discovering a second is how
+ * people conclude a system is broken. */
+export const sendPreflight = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    to: text(d?.to, "Recipient", 255, true) as string,
+    sop: text(d?.sop, "SOP", 80, true) as string,
+    body: text(d?.body, "Message", 20000, true) as string,
+  }))
+  .handler(async ({ data }): Promise<PreflightVM> => {
+    const read = await reader();
+    const address = data.to.trim().toLowerCase();
+
+    const [control, suppressed, approved] = await Promise.all([
+      // A failure here must read as "off", never as "unknown, proceed".
+      read
+        .systemControl<{ outboundEnabled?: boolean; reason?: string }>()
+        .catch(() => ({ outboundEnabled: false, reason: "control unreadable" })),
+      read.isSuppressed(address).catch(() => true),
+      read.isApprovedRecipient(address, data.sop).catch(() => false),
+    ]);
+
+    const hasFooter = data.body.includes(DISCLOSURE_FOOTER);
+    const hasPostal = POSTAL.test(data.body);
+
+    const gates: GateResult[] = [
+      {
+        id: "kill-switch",
+        label: "Outbound enabled",
+        pass: control.outboundEnabled === true,
+        blocking: true,
+        detail:
+          control.outboundEnabled === true
+            ? "operator_system_control.outbound_enabled is on."
+            : `Off${control.reason ? ` — "${control.reason}"` : ""}. Nothing can send while this is false.`,
+      },
+      {
+        id: "suppression",
+        label: "Not suppressed",
+        pass: suppressed === false,
+        blocking: true,
+        detail: suppressed
+          ? "This address is on do_not_contact. A hit is final."
+          : "No do_not_contact entry.",
+      },
+      {
+        id: "approved-recipient",
+        label: "On the approved list",
+        pass: approved === true,
+        blocking: true,
+        detail: approved
+          ? `Approved for SOP "${data.sop}".`
+          : `Not on approved_recipients for "${data.sop}". Charter §3.8: absence is a no, and a clean suppression check is not a substitute.`,
+      },
+      {
+        id: "footer",
+        label: "Disclosure footer present",
+        pass: hasFooter,
+        blocking: true,
+        detail: hasFooter
+          ? "Present verbatim."
+          : "Missing or altered. Charter §5 requires it exactly, and Salem confirmed on 2026-08-21 that it stays.",
+      },
+      {
+        id: "postal",
+        label: "Postal address (CAN-SPAM)",
+        pass: hasPostal,
+        blocking: true,
+        detail: hasPostal
+          ? "A postal address appears in the body."
+          : "No postal address found. CAN-SPAM requires one for the sending entity, and the entity is unformed — the MSA still reads [GivenTake Devs LLC] with Form 610 unfiled. This is the gate no code can clear.",
+      },
+    ];
+
+    return { gates, sendable: gates.every((g) => g.pass || !g.blocking) };
+  });

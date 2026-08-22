@@ -11,6 +11,7 @@ import {
   Briefcase,
   Share2,
   CheckSquare,
+  SendHorizonal,
   ShieldCheck,
   UserCog,
   LogOut,
@@ -52,6 +53,7 @@ const NAV = [
   { to: "/crm/clients", label: "Clients", icon: Briefcase, exact: false },
   { to: "/crm/marketing", label: "Marketing", icon: Megaphone, exact: false },
   { to: "/crm/approvals", label: "Approvals", icon: ShieldCheck, exact: false },
+  { to: "/crm/send-check", label: "Send check", icon: SendHorizonal, exact: false },
 ] as const;
 
 const navLinkClass =
