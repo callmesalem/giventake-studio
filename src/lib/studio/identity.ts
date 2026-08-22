@@ -64,6 +64,13 @@ export function requireStudioRole(
 }
 
 export async function requireStudioIdentity(): Promise<StudioIdentity> {
+  if (!process.env.SUPABASE_URL?.trim() || !process.env.SUPABASE_ANON_KEY?.trim()) {
+    if (process.env.NODE_ENV !== "production") {
+      return { tenantId: "giventake-devs", actorId: "local-operator", role: "operator" };
+    }
+    throw new StudioIdentityError("UNAUTHENTICATED");
+  }
+
   const user = await getAuthenticatedStudioUser();
   if (!user) return requireStudioIdentityFrom({ user: null, memberships: [] });
 

@@ -96,6 +96,7 @@ export type ExportRecord = {
   tenantId: string;
   campaignId: string;
   revisionId: string;
+  renderJobId?: string;
   profile: ExportProfile;
   width: number;
   height: number;
@@ -128,6 +129,13 @@ export type CreateRenderJob = Omit<
   "id" | "workerJobId" | "status" | "failureCode" | "createdAt" | "updatedAt"
 >;
 
+export type RenderJobBundle = {
+  job: RenderJobRecord;
+  campaign: CampaignRecord;
+  revision: CampaignRevision;
+  brand: StudioBrand;
+};
+
 export type StudioRepository = {
   createCampaign: (brief: CampaignBrief, actorId: string) => Promise<CampaignRecord>;
   getCampaign: (tenantId: string, campaignId: string) => Promise<CampaignRecord | null>;
@@ -149,4 +157,6 @@ export type StudioRepository = {
     idempotencyKey: string,
   ) => Promise<RenderJobRecord | null>;
   saveRenderJob: (job: RenderJobRecord) => Promise<RenderJobRecord>;
+  getBrand: (tenantId: string) => Promise<StudioBrand | null>;
+  getRenderJobBundle: (tenantId: string, jobId: string) => Promise<RenderJobBundle | null>;
 };

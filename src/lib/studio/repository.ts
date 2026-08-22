@@ -142,5 +142,17 @@ export function createStudioRepository(): StudioRepository {
       renderJobs.set(saved.id, saved);
       return copy(saved);
     },
+    async getBrand() {
+      return null;
+    },
+    async getRenderJobBundle(tenantId, jobId) {
+      const job = await this.getRenderJob(tenantId, jobId);
+      if (!job) return null;
+      const campaign = await this.getCampaign(tenantId, job.campaignId);
+      const revision = await this.getCurrentRevision(tenantId, job.campaignId);
+      const brand = await this.getBrand(tenantId);
+      if (!campaign || !revision || revision.id !== job.revisionId || !brand) return null;
+      return { job, campaign, revision, brand };
+    },
   };
 }

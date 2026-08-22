@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { createServer } from "vite";
 
 const input = {
-  tenantId: "giventake-devs",
   name: "Action campaign",
   goal: "Generate qualified inquiries",
   offer: "AI automation",
@@ -19,6 +18,11 @@ try {
   );
 
   assert.equal(createStudioCampaignActionSchema.safeParse({ input }).success, true);
+  assert.equal(
+    createStudioCampaignActionSchema.safeParse({ input: { ...input, tenantId: "tenant-a" } })
+      .success,
+    false,
+  );
   assert.equal(createStudioCampaignActionSchema.safeParse({}).success, false);
 
   console.log("Video Studio action contracts passed.");
