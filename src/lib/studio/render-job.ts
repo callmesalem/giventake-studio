@@ -65,6 +65,44 @@ export type ProviderCostPolicy = ReturnType<typeof createCostPolicy>;
 
 type ProviderRates = Record<string, Record<string, number>>;
 
+function parseAllowedProviders(value: string | undefined): Set<string> {
+  const providers = (value ?? "")
+    .split(",")
+    .map((provider) => provider.trim())
+    .filter(Boolean);
+  if (providers.length === 0) throw new Error("Video provider allowlist is not configured.");
+  return new Set(providers);
+}
+
+function parseProviderRates(value: string | undefined): ProviderRates {
+  if (!value) throw new Error("Video provider pricing is not configured.");
+  try {
+    const parsed = JSON.parse(value);
+    const result = z.record(z.record(z.number().finite().nonnegative())).safeParse(parsed);
+    if (!result.success) throw new Error("invalid provider pricing");
+    return result.data;
+  } catch {
+    throw new Error("Video provider pricing is invalid.");
+  }
+}
+
+export function createProviderPolicy(environment: Record<string, string | undefined>) {
+  const allowedProviders = parseAllowedProviders(environment.STUDIO_ALLOWED_RENDER_PROVIDERS);
+  const rates = parseProviderRates(environment.STUDIO_PROVIDER_RATES_JSON);
+
+  return {
+    rateFor(provider: string, model: string): number {
+      if (!allowedProviders.has(provider))
+        throw new Error("Video provider is not in the allowlist.");
+      const rate = rates[provider]?.[model];
+      if (rate === undefined) throw new Error("Video provider pricing is not configured.");
+      if (provider !== "fixture" && rate <= 0)
+        throw new Error("Paid video provider pricing must be positive.");
+      return rate;
+    },
+  };
+}
+
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
   if (value && typeof value === "object") {

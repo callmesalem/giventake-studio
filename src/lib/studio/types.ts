@@ -18,6 +18,18 @@ export type StudioIdentity = {
   actorId: string;
 };
 
+export type StudioBrand = {
+  id: string;
+  tenantId: string;
+  name: string;
+  website: string;
+  callToAction: string;
+  primaryColor: string | null;
+  accentColor: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type CampaignBrief = {
   tenantId: string;
   name: string;
@@ -90,17 +102,50 @@ export type ExportRecord = {
   createdAt: string;
 };
 
+export type RenderJobStatus =
+  "queued" | "submitted" | "rendering" | "completed" | "failed" | "cancelled";
+
+export type RenderJobRecord = {
+  id: string;
+  tenantId: string;
+  campaignId: string;
+  revisionId: string;
+  provider: string;
+  model: string;
+  requestedBudgetCents: number;
+  reservedCents: number;
+  idempotencyKey: string;
+  workerJobId: string | null;
+  status: RenderJobStatus;
+  failureCode: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateRenderJob = Omit<
+  RenderJobRecord,
+  "id" | "workerJobId" | "status" | "failureCode" | "createdAt" | "updatedAt"
+>;
+
 export type StudioRepository = {
-  createCampaign: (brief: CampaignBrief, actorId: string) => CampaignRecord;
-  getCampaign: (tenantId: string, campaignId: string) => CampaignRecord | null;
-  listCampaigns: (tenantId: string) => CampaignRecord[];
-  saveCampaign: (campaign: CampaignRecord) => CampaignRecord;
-  createRevision: (revision: CampaignRevision) => CampaignRevision;
-  getCurrentRevision: (tenantId: string, campaignId: string) => CampaignRevision | null;
-  addApproval: (approval: ApprovalRecord) => ApprovalRecord;
-  listApprovals: (tenantId: string, campaignId: string) => ApprovalRecord[];
-  addAuditEvent: (event: AuditEvent) => AuditEvent;
-  listAuditEvents: (tenantId: string, campaignId: string) => AuditEvent[];
-  addExport: (item: ExportRecord) => ExportRecord;
-  listExports: (tenantId: string, campaignId: string) => ExportRecord[];
+  createCampaign: (brief: CampaignBrief, actorId: string) => Promise<CampaignRecord>;
+  getCampaign: (tenantId: string, campaignId: string) => Promise<CampaignRecord | null>;
+  listCampaigns: (tenantId: string) => Promise<CampaignRecord[]>;
+  saveCampaign: (campaign: CampaignRecord) => Promise<CampaignRecord>;
+  createRevision: (revision: CampaignRevision) => Promise<CampaignRevision>;
+  getCurrentRevision: (tenantId: string, campaignId: string) => Promise<CampaignRevision | null>;
+  addApproval: (approval: ApprovalRecord) => Promise<ApprovalRecord>;
+  listApprovals: (tenantId: string, campaignId: string) => Promise<ApprovalRecord[]>;
+  addAuditEvent: (event: AuditEvent) => Promise<AuditEvent>;
+  listAuditEvents: (tenantId: string, campaignId: string) => Promise<AuditEvent[]>;
+  addExport: (item: ExportRecord) => Promise<ExportRecord>;
+  listExports: (tenantId: string, campaignId: string) => Promise<ExportRecord[]>;
+  createRenderJob: (job: CreateRenderJob) => Promise<RenderJobRecord>;
+  getRenderJob: (tenantId: string, jobId: string) => Promise<RenderJobRecord | null>;
+  getRenderJobByIdempotencyKey: (
+    tenantId: string,
+    campaignId: string,
+    idempotencyKey: string,
+  ) => Promise<RenderJobRecord | null>;
+  saveRenderJob: (job: RenderJobRecord) => Promise<RenderJobRecord>;
 };

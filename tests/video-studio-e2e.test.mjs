@@ -9,7 +9,7 @@ try {
   const { runFixtureWorker } = await vite.ssrLoadModule("/src/lib/studio/worker.ts");
   const repo = createStudioRepository();
   const service = createStudioService(repo);
-  const campaign = service.createCampaign(
+  const campaign = await service.createCampaign(
     {
       tenantId: "giventake-devs",
       name: "End-to-end launch creative",
@@ -22,18 +22,22 @@ try {
     "operator-1",
   );
 
-  service.planCampaign("giventake-devs", campaign.id, "operator-1");
-  service.approveStoryboard("giventake-devs", campaign.id, "operator-1");
-  service.queueRender("giventake-devs", campaign.id, "operator-1");
+  await service.planCampaign("giventake-devs", campaign.id, "operator-1");
+  await service.approveStoryboard("giventake-devs", campaign.id, "operator-1");
+  await service.requestRender("giventake-devs", campaign.id, "operator-1", {
+    provider: "fixture",
+    model: "fixture",
+    idempotencyKey: "11111111-1111-1111-1111-111111111111",
+    rateCentsPerSecond: 0,
+  });
   await runFixtureWorker(repo, "giventake-devs", "fixture-worker");
-  service.approveEdit("giventake-devs", campaign.id, "operator-1");
-  const handedOff = service.handoffExport("giventake-devs", campaign.id, "operator-1");
+  await service.approveEdit("giventake-devs", campaign.id, "operator-1");
+  const handedOff = await service.handoffExport("giventake-devs", campaign.id, "operator-1");
 
   assert.equal(handedOff.status, "handed_off");
-  assert.equal(repo.listExports("giventake-devs", campaign.id).length, 3);
+  assert.equal((await repo.listExports("giventake-devs", campaign.id)).length, 3);
   assert.equal(
-    repo
-      .listApprovals("giventake-devs", campaign.id)
+    (await repo.listApprovals("giventake-devs", campaign.id))
       .map((approval) => approval.kind)
       .join(","),
     "storyboard,edit,handoff",

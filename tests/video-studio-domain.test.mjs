@@ -16,6 +16,7 @@ const validCampaign = {
 try {
   const { createCampaignInputSchema } = await vite.ssrLoadModule("/src/lib/studio/schema.ts");
   const { assertTransition } = await vite.ssrLoadModule("/src/lib/studio/state-machine.ts");
+  const { createProviderPolicy } = await vite.ssrLoadModule("/src/lib/studio/render-job.ts");
 
   assert.equal(createCampaignInputSchema.safeParse(validCampaign).success, true);
   assert.equal(
@@ -29,6 +30,13 @@ try {
   assert.doesNotThrow(() =>
     assertTransition("awaiting_storyboard_approval", "approved_for_generation"),
   );
+  assert.equal(typeof createProviderPolicy, "function");
+  const policy = createProviderPolicy({
+    STUDIO_ALLOWED_RENDER_PROVIDERS: "fixture",
+    STUDIO_PROVIDER_RATES_JSON: '{"fixture":{"fixture":0}}',
+  });
+  assert.equal(policy.rateFor("fixture", "fixture"), 0);
+  assert.throws(() => policy.rateFor("sora", "sora-2"), /allowlist/i);
 
   console.log("Video Studio domain contracts passed.");
 } finally {

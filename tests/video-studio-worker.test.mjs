@@ -19,22 +19,30 @@ try {
   const { runFixtureWorker } = await vite.ssrLoadModule("/src/lib/studio/worker.ts");
   const repo = createStudioRepository();
   const service = createStudioService(repo);
-  const campaign = service.createCampaign(input, "operator-1");
+  const campaign = await service.createCampaign(input, "operator-1");
 
-  service.planCampaign("giventake-devs", campaign.id, "operator-1");
-  service.approveStoryboard("giventake-devs", campaign.id, "operator-1");
-  service.queueRender("giventake-devs", campaign.id, "operator-1");
+  await service.planCampaign("giventake-devs", campaign.id, "operator-1");
+  await service.approveStoryboard("giventake-devs", campaign.id, "operator-1");
+  await service.requestRender("giventake-devs", campaign.id, "operator-1", {
+    provider: "fixture",
+    model: "fixture",
+    idempotencyKey: "22222222-2222-2222-2222-222222222222",
+    rateCentsPerSecond: 0,
+  });
 
   const exports = await runFixtureWorker(repo, "giventake-devs", "fixture-worker");
   assert.deepEqual(
     exports.map((item) => item.profile),
     ["vertical", "square", "landscape"],
   );
-  assert.equal(repo.getCampaign("giventake-devs", campaign.id)?.status, "awaiting_edit_approval");
   assert.equal(
-    repo
-      .listAuditEvents("giventake-devs", campaign.id)
-      .some((event) => event.action === "qa.passed"),
+    (await repo.getCampaign("giventake-devs", campaign.id))?.status,
+    "awaiting_edit_approval",
+  );
+  assert.equal(
+    (await repo.listAuditEvents("giventake-devs", campaign.id)).some(
+      (event) => event.action === "qa.passed",
+    ),
     true,
   );
 

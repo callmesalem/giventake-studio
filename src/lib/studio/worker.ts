@@ -18,12 +18,12 @@ export async function runFixtureWorker(
   const provider = createFixtureProvider();
   const service = createStudioService(repository);
   const completedExports: ExportRecord[] = [];
-  const campaigns = repository
-    .listCampaigns(tenantId)
-    .filter((campaign) => campaign.status === "rendering");
+  const campaigns = (await repository.listCampaigns(tenantId)).filter(
+    (campaign) => campaign.status === "rendering",
+  );
 
   for (const campaign of campaigns) {
-    const revision = repository.getCurrentRevision(tenantId, campaign.id);
+    const revision = await repository.getCurrentRevision(tenantId, campaign.id);
     if (!revision) throw new Error("Rendering campaign has no current revision.");
 
     for (const scene of revision.storyboard) {
@@ -37,7 +37,7 @@ export async function runFixtureWorker(
       if (polled.state !== "completed")
         throw new Error(`Fixture provider did not complete: ${polled.state}.`);
       const result = polled.result;
-      repository.addAuditEvent({
+      await repository.addAuditEvent({
         id: randomUUID(),
         tenantId,
         campaignId: campaign.id,
@@ -54,7 +54,7 @@ export async function runFixtureWorker(
       });
     }
 
-    repository.addAuditEvent({
+    await repository.addAuditEvent({
       id: randomUUID(),
       tenantId,
       campaignId: campaign.id,
@@ -68,7 +68,7 @@ export async function runFixtureWorker(
       ExportProfile,
       { width: number; height: number },
     ][]) {
-      const item = repository.addExport({
+      const item = await repository.addExport({
         id: randomUUID(),
         tenantId,
         campaignId: campaign.id,
@@ -82,7 +82,7 @@ export async function runFixtureWorker(
       completedExports.push(item);
     }
 
-    service.completeRender(tenantId, campaign.id, actorId);
+    await service.completeRender(tenantId, campaign.id, actorId);
   }
 
   return completedExports;
