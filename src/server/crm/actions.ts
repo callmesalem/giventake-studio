@@ -393,4 +393,82 @@ export class CrmActions {
     if (!response.ok) throw new Error(`create project failed: ${response.status}`);
   }
 
+
+  /* ── Phase 14: reviews, campaigns, invoices ───────────────────────────── */
+
+  upsertReview(input: {
+    id?: string | null;
+    source: string;
+    authorName: string;
+    subject?: string | null;
+    rating?: number | null;
+    quote?: string | null;
+    permissionObtained: boolean;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("review_upsert", {
+      p_id: input.id ?? null,
+      p_source: input.source,
+      p_author_name: input.authorName,
+      p_subject: input.subject ?? null,
+      p_rating: input.rating ?? null,
+      p_quote: input.quote ?? null,
+      p_permission_obtained: input.permissionObtained,
+    });
+  }
+
+  /** The RPC refuses to publish a review with no permission on file. That check
+   *  lives in the database rather than here on purpose - a UI guard can be
+   *  bypassed, a function cannot. */
+  setReviewStatus(id: string, status: string): Promise<unknown> {
+    return this.#rpc<unknown>("review_set_status", { p_id: id, p_status: status });
+  }
+
+  upsertCampaign(input: {
+    id?: string | null;
+    name: string;
+    goal?: string | null;
+    channel?: string | null;
+    status?: string | null;
+    owner?: string | null;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("campaign_upsert", {
+      p_id: input.id ?? null,
+      p_name: input.name,
+      p_goal: input.goal ?? null,
+      p_channel: input.channel ?? null,
+      p_status: input.status ?? null,
+      p_audience: null,
+      p_owner: input.owner ?? null,
+    });
+  }
+
+  /** No invoice RPC exists, so an explicit column list again. Amounts are held
+   *  in CENTS - the column is amount_cents and money in floating point is how
+   *  totals drift by a penny and nobody can say why. */
+  async createInvoice(input: {
+    projectId: string;
+    amountCents: number;
+    currency: string;
+    status: string;
+    dueAt: string | null;
+  }): Promise<void> {
+    const response = await this.#fetch(`${this.#url}/rest/v1/invoices`, {
+      method: "POST",
+      headers: {
+        apikey: this.#key,
+        Authorization: `Bearer ${this.#key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        project_id: input.projectId,
+        amount_cents: input.amountCents,
+        currency: input.currency,
+        status: input.status,
+        due_at: input.dueAt,
+      }),
+    });
+    if (!response.ok) throw new Error(`create invoice failed: ${response.status}`);
+  }
+
 }

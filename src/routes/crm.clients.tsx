@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { crmClients } from "@/lib/crm-data";
-import { PageHeader, Card, EmptyState, StatCard, Badge } from "@/components/crm/ui";
+import { crmClients, createInvoice } from "@/lib/crm-data";
+import {
+  PageHeader, Card, EmptyState, StatCard, Badge, EntityForm, Disclosure,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/clients")({
   loader: () => crmClients(),
@@ -35,10 +37,21 @@ function Clients() {
               {client.projects.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No projects yet.</p>
               ) : (
-                <ul className="space-y-1.5 text-sm">
+                <ul className="space-y-2 text-sm">
                   {client.projects.map((p) => (
-                    <li key={p.id} className="text-foreground">
-                      {p.name}
+                    <li key={p.id} className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-foreground">{p.name}</span>
+                      <Disclosure label="Invoice" openLabel={`Invoice for ${p.name}`}>
+                        <EntityForm
+                          fields={[
+                            { name: "amount", label: "Amount (USD)", type: "number" as const, required: true },
+                            { name: "dueAt", label: "Due", type: "date" as const },
+                          ]}
+                          submitLabel="Raise invoice"
+                          columns={2}
+                          onSubmit={(data) => createInvoice({ data: { ...data, projectId: p.id } })}
+                        />
+                      </Disclosure>
                     </li>
                   ))}
                 </ul>

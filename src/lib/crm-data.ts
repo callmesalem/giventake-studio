@@ -1566,3 +1566,82 @@ export const convertDealToClient = createServerFn({ method: "POST" })
     if (data.projectName) await actions.createProject(clientId, data.projectName);
     return { ok: true, clientId, existed: false };
   });
+
+/* ── Phase 14: reviews, campaigns, invoices ─────────────────────────────── */
+
+/** Exactly what review_set_status accepts. Copied from the function, not
+ *  guessed - the referral vocabularies taught that lesson. */
+export const REVIEW_STATUSES = ["draft", "approved", "published", "archived"] as const;
+export const CAMPAIGN_STATUSES = ["draft", "active", "paused", "completed", "archived"] as const;
+
+export const saveReview = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const raw = d?.rating;
+    const rating = raw === null || raw === undefined || raw === "" ? null : Number(raw);
+    if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
+      throw new Response("Rating must be a whole number from 1 to 5", { status: 400 });
+    }
+    return {
+      id: optionalUuid(d?.id),
+      source: text(d?.source, "Source", 80, true) as string,
+      authorName: text(d?.authorName, "Author", 200, true) as string,
+      subject: text(d?.subject, "Subject", 200),
+      quote: text(d?.quote, "Quote", 4000),
+      rating,
+      permissionObtained: d?.permissionObtained === "on" || d?.permissionObtained === true,
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.upsertReview(data);
+    return { ok: true };
+  });
+
+export const setReviewStatus = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: requireUuid(d?.id),
+    status: text(d?.status, "Status", 40, true) as string,
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    // If this throws "cannot publish review without permission", that is the
+    // database refusing, and the message is shown to the user unchanged.
+    await actions.setReviewStatus(data.id, data.status);
+    return { ok: true };
+  });
+
+export const saveCampaign = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: optionalUuid(d?.id),
+    name: text(d?.name, "Name", 200, true) as string,
+    goal: text(d?.goal, "Goal", 500),
+    channel: text(d?.channel, "Channel", 80),
+    status: text(d?.status, "Status", 40),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions, actor } = await writer();
+    await actions.upsertCampaign({ ...data, owner: actor });
+    return { ok: true };
+  });
+
+export const createInvoice = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const amount = Number(d?.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Response("Amount must be a positive number", { status: 400 });
+    }
+    return {
+      projectId: requireUuid(d?.projectId),
+      // Entered in dollars, stored in cents. Rounding here rather than trusting
+      // float arithmetic downstream is what keeps totals exact.
+      amountCents: Math.round(amount * 100),
+      currency: (text(d?.currency, "Currency", 3) ?? "USD").toUpperCase(),
+      status: text(d?.status, "Status", 40) ?? "draft",
+      dueAt: text(d?.dueAt, "Due date", 40),
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.createInvoice(data);
+    return { ok: true };
+  });
