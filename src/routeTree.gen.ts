@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StudioRouteImport } from './routes/studio'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProcessRouteImport } from './routes/process'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -24,6 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as CrmIndexRouteImport } from './routes/crm.index'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
+import { Route as StudioSignInRouteImport } from './routes/studio.sign-in'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as CrmTeamRouteImport } from './routes/crm.team'
 import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
@@ -40,6 +42,7 @@ import { Route as CrmCompaniesRouteImport } from './routes/crm.companies'
 import { Route as CrmClientsRouteImport } from './routes/crm.clients'
 import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
+import { Route as StudioAuthCallbackRouteImport } from './routes/studio.auth.callback'
 import { Route as CrmLeadsIdRouteImport } from './routes/crm.leads.$id'
 import { Route as CrmDealsIdRouteImport } from './routes/crm.deals.$id'
 import { Route as CrmContactsIdRouteImport } from './routes/crm.contacts.$id'
@@ -50,6 +53,11 @@ import { Route as CrmAuthCallbackRouteImport } from './routes/crm.auth.callback'
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -121,6 +129,11 @@ const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
   id: '/articles/',
   path: '/articles/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const StudioSignInRoute = StudioSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => StudioRoute,
 } as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/services/$slug',
@@ -202,6 +215,11 @@ const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
   path: '/articles/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioAuthCallbackRoute = StudioAuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => StudioRoute,
+} as any)
 const CrmLeadsIdRoute = CrmLeadsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -245,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRouteWithChildren
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
@@ -262,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/studio/sign-in': typeof StudioSignInRoute
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -271,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/crm/contacts/$id': typeof CrmContactsIdRoute
   '/crm/deals/$id': typeof CrmDealsIdRoute
   '/crm/leads/$id': typeof CrmLeadsIdRoute
+  '/studio/auth/callback': typeof StudioAuthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -283,6 +304,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRouteWithChildren
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
@@ -300,6 +322,7 @@ export interface FileRoutesByTo {
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/studio/sign-in': typeof StudioSignInRoute
   '/articles': typeof ArticlesIndexRoute
   '/crm': typeof CrmIndexRoute
   '/services': typeof ServicesIndexRoute
@@ -309,6 +332,7 @@ export interface FileRoutesByTo {
   '/crm/contacts/$id': typeof CrmContactsIdRoute
   '/crm/deals/$id': typeof CrmDealsIdRoute
   '/crm/leads/$id': typeof CrmLeadsIdRoute
+  '/studio/auth/callback': typeof StudioAuthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -323,6 +347,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRouteWithChildren
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
@@ -340,6 +365,7 @@ export interface FileRoutesById {
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/studio/sign-in': typeof StudioSignInRoute
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -349,6 +375,7 @@ export interface FileRoutesById {
   '/crm/contacts/$id': typeof CrmContactsIdRoute
   '/crm/deals/$id': typeof CrmDealsIdRoute
   '/crm/leads/$id': typeof CrmLeadsIdRoute
+  '/studio/auth/callback': typeof StudioAuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -364,6 +391,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
+    | '/studio'
     | '/terms'
     | '/articles/$slug'
     | '/crm/approvals'
@@ -381,6 +409,7 @@ export interface FileRouteTypes {
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
+    | '/studio/sign-in'
     | '/articles/'
     | '/crm/'
     | '/services/'
@@ -390,6 +419,7 @@ export interface FileRouteTypes {
     | '/crm/contacts/$id'
     | '/crm/deals/$id'
     | '/crm/leads/$id'
+    | '/studio/auth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -402,6 +432,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
+    | '/studio'
     | '/terms'
     | '/articles/$slug'
     | '/crm/approvals'
@@ -419,6 +450,7 @@ export interface FileRouteTypes {
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
+    | '/studio/sign-in'
     | '/articles'
     | '/crm'
     | '/services'
@@ -428,6 +460,7 @@ export interface FileRouteTypes {
     | '/crm/contacts/$id'
     | '/crm/deals/$id'
     | '/crm/leads/$id'
+    | '/studio/auth/callback'
   id:
     | '__root__'
     | '/'
@@ -441,6 +474,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
+    | '/studio'
     | '/terms'
     | '/articles/$slug'
     | '/crm/approvals'
@@ -458,6 +492,7 @@ export interface FileRouteTypes {
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
+    | '/studio/sign-in'
     | '/articles/'
     | '/crm/'
     | '/services/'
@@ -467,6 +502,7 @@ export interface FileRouteTypes {
     | '/crm/contacts/$id'
     | '/crm/deals/$id'
     | '/crm/leads/$id'
+    | '/studio/auth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -481,6 +517,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProcessRoute: typeof ProcessRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StudioRoute: typeof StudioRouteWithChildren
   TermsRoute: typeof TermsRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
@@ -495,6 +532,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -594,6 +638,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/articles/'
       preLoaderRoute: typeof ArticlesIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/studio/sign-in': {
+      id: '/studio/sign-in'
+      path: '/sign-in'
+      fullPath: '/studio/sign-in'
+      preLoaderRoute: typeof StudioSignInRouteImport
+      parentRoute: typeof StudioRoute
     }
     '/services/$slug': {
       id: '/services/$slug'
@@ -706,6 +757,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/articles/$slug'
       preLoaderRoute: typeof ArticlesSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/studio/auth/callback': {
+      id: '/studio/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/studio/auth/callback'
+      preLoaderRoute: typeof StudioAuthCallbackRouteImport
+      parentRoute: typeof StudioRoute
     }
     '/crm/leads/$id': {
       id: '/crm/leads/$id'
@@ -842,6 +900,19 @@ const CrmRouteChildren: CrmRouteChildren = {
 
 const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
 
+interface StudioRouteChildren {
+  StudioSignInRoute: typeof StudioSignInRoute
+  StudioAuthCallbackRoute: typeof StudioAuthCallbackRoute
+}
+
+const StudioRouteChildren: StudioRouteChildren = {
+  StudioSignInRoute: StudioSignInRoute,
+  StudioAuthCallbackRoute: StudioAuthCallbackRoute,
+}
+
+const StudioRouteWithChildren =
+  StudioRoute._addFileChildren(StudioRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ComplianceRoute: ComplianceRoute,
@@ -854,6 +925,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProcessRoute: ProcessRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StudioRoute: StudioRouteWithChildren,
   TermsRoute: TermsRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,

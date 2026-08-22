@@ -1,0 +1,24 @@
+services:
+  video-worker:
+    build: .
+    env_file: ${STUDIO_WORKER_ENV_FILE:-.env}
+    ports:
+      - "127.0.0.1:8788:8788"
+    volumes:
+      - video-worker-data:/var/lib/giventake-video-worker
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8788/healthz').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  video-worker-data:

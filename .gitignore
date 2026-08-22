@@ -12,9 +12,13 @@ dist
 dist-ssr
 .output
 .worktrees/
+.playwright-cli/
+.superpowers/
 .vinxi
 .tanstack/**
 .nitro
+supabase/.branches/
+supabase/.temp/
 *.local
 
 # Environment — .env now holds real secrets (mail provider key).
