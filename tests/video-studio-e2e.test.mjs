@@ -1,5 +1,24 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createServer } from "vite";
+
+const studioRunbook = readFileSync(
+  "docs/operations/07-marketing-ops/video-agent-studio.md",
+  "utf8",
+);
+for (const required of [
+  "SUPABASE_URL",
+  "STUDIO_WORKER_SHARED_SECRET",
+  "STUDIO_OUTBOUND_KILL_SWITCH=true",
+  "npx supabase db push",
+  "fixture",
+  "do not enable a paid provider",
+  "video_studio.memberships",
+  "three export",
+  "rotate",
+]) {
+  assert.match(studioRunbook, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
+}
 
 const vite = await createServer({ logLevel: "silent", server: { middlewareMode: true } });
 
