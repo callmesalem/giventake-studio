@@ -7,6 +7,7 @@ import type {
   CampaignBrief,
   CampaignRecord,
   CampaignStatus,
+  RenderJobRecord,
   StoryboardScene,
   StudioRepository,
 } from "./types";
@@ -42,21 +43,21 @@ function makeStoryboard(brief: CampaignBrief): StoryboardScene[] {
 }
 
 export function createStudioService(repository: StudioRepository) {
-  function requireCampaign(tenantId: string, campaignId: string): CampaignRecord {
-    const campaign = repository.getCampaign(tenantId, campaignId);
+  async function requireCampaign(tenantId: string, campaignId: string): Promise<CampaignRecord> {
+    const campaign = await repository.getCampaign(tenantId, campaignId);
     if (!campaign) throw new Error("Campaign not found for this tenant.");
     return campaign;
   }
 
-  function transition(
+  async function transition(
     campaign: CampaignRecord,
     to: CampaignStatus,
     actorId: string,
     action: string,
-  ): CampaignRecord {
+  ): Promise<CampaignRecord> {
     assertTransition(campaign.status, to);
-    const saved = repository.saveCampaign({ ...campaign, status: to });
-    repository.addAuditEvent({
+    const saved = await repository.saveCampaign({ ...campaign, status: to });
+    await repository.addAuditEvent({
       id: randomUUID(),
       tenantId: saved.tenantId,
       campaignId: saved.id,
@@ -68,13 +69,13 @@ export function createStudioService(repository: StudioRepository) {
     return saved;
   }
 
-  function addApproval(
+  async function addApproval(
     campaign: CampaignRecord,
     actorId: string,
     kind: ApprovalRecord["kind"],
-  ): void {
+  ): Promise<void> {
     if (!campaign.currentRevisionId) throw new Error("Campaign needs a planned storyboard first.");
-    repository.addApproval({
+    await repository.addApproval({
       id: randomUUID(),
       tenantId: campaign.tenantId,
       campaignId: campaign.id,
@@ -86,13 +87,13 @@ export function createStudioService(repository: StudioRepository) {
   }
 
   return {
-    createCampaign(input: unknown, actorId: string) {
+    async createCampaign(input: unknown, actorId: string) {
       return repository.createCampaign(createCampaignInputSchema.parse(input), actorId);
     },
-    planCampaign(tenantId: string, campaignId: string, actorId: string) {
-      let campaign = requireCampaign(tenantId, campaignId);
-      campaign = transition(campaign, "planned", actorId, "campaign.planned");
-      const revision = repository.createRevision({
+    async planCampaign(tenantId: string, campaignId: string, actorId: string) {
+      let campaign = await requireCampaign(tenantId, campaignId);
+      campaign = await transition(campaign, "planned", actorId, "campaign.planned");
+      const revision = await repository.createRevision({
         id: randomUUID(),
         campaignId: campaign.id,
         tenantId: campaign.tenantId,
@@ -110,43 +111,95 @@ export function createStudioService(repository: StudioRepository) {
         createdAt: new Date().toISOString(),
         createdBy: actorId,
       });
-      campaign = repository.saveCampaign({ ...campaign, currentRevisionId: revision.id });
+      campaign = await repository.saveCampaign({ ...campaign, currentRevisionId: revision.id });
       return transition(campaign, "awaiting_storyboard_approval", actorId, "storyboard.created");
     },
-    approveStoryboard(tenantId: string, campaignId: string, actorId: string) {
-      const campaign = requireCampaign(tenantId, campaignId);
-      addApproval(campaign, actorId, "storyboard");
+    async approveStoryboard(tenantId: string, campaignId: string, actorId: string) {
+      const campaign = await requireCampaign(tenantId, campaignId);
+      await addApproval(campaign, actorId, "storyboard");
       return transition(campaign, "approved_for_generation", actorId, "storyboard.approved");
     },
-    queueRender(tenantId: string, campaignId: string, actorId: string) {
-      const campaign = requireCampaign(tenantId, campaignId);
-      const hasStoryboardApproval = repository
-        .listApprovals(tenantId, campaignId)
-        .some(
-          (approval) =>
-            approval.kind === "storyboard" && approval.revisionId === campaign.currentRevisionId,
-        );
+    async requestRender(
+      tenantId: string,
+      campaignId: string,
+      actorId: string,
+      request: {
+        provider: string;
+        model: string;
+        idempotencyKey: string;
+        rateCentsPerSecond: number;
+      },
+    ): Promise<RenderJobRecord> {
+      const existing = await repository.getRenderJobByIdempotencyKey(
+        tenantId,
+        campaignId,
+        request.idempotencyKey,
+      );
+      if (existing) return existing;
+
+      let campaign = await requireCampaign(tenantId, campaignId);
+      const hasStoryboardApproval = (await repository.listApprovals(tenantId, campaignId)).some(
+        (approval) =>
+          approval.kind === "storyboard" && approval.revisionId === campaign.currentRevisionId,
+      );
       if (!hasStoryboardApproval)
         throw new Error("Storyboard approval is required before rendering.");
       if (campaign.budgetCents <= 0) throw new Error("A positive generation budget is required.");
-      return transition(campaign, "rendering", actorId, "render.queued");
+      if (!Number.isFinite(request.rateCentsPerSecond) || request.rateCentsPerSecond < 0)
+        throw new Error("Render pricing is invalid.");
+      const revision = await repository.getCurrentRevision(tenantId, campaignId);
+      if (!revision) throw new Error("Campaign needs a current revision before rendering.");
+      const reservedCents = revision.storyboard.reduce(
+        (total, scene) => total + scene.durationSeconds * request.rateCentsPerSecond,
+        0,
+      );
+      if (reservedCents > campaign.budgetCents)
+        throw new Error("Render reservation exceeds the campaign budget.");
+
+      const job = await repository.createRenderJob({
+        tenantId,
+        campaignId,
+        revisionId: revision.id,
+        provider: request.provider,
+        model: request.model,
+        requestedBudgetCents: campaign.budgetCents,
+        reservedCents,
+        idempotencyKey: request.idempotencyKey,
+      });
+      campaign = await transition(campaign, "rendering", actorId, "render.queued");
+      await repository.addAuditEvent({
+        id: randomUUID(),
+        tenantId,
+        campaignId,
+        actorId,
+        action: "render.requested",
+        createdAt: new Date().toISOString(),
+        detail: {
+          renderJobId: job.id,
+          provider: request.provider,
+          model: request.model,
+          reservedCents,
+          campaignStatus: campaign.status,
+        },
+      });
+      return job;
     },
-    completeRender(tenantId: string, campaignId: string, actorId: string) {
+    async completeRender(tenantId: string, campaignId: string, actorId: string) {
       return transition(
-        requireCampaign(tenantId, campaignId),
+        await requireCampaign(tenantId, campaignId),
         "awaiting_edit_approval",
         actorId,
         "render.completed",
       );
     },
-    approveEdit(tenantId: string, campaignId: string, actorId: string) {
-      const campaign = requireCampaign(tenantId, campaignId);
-      addApproval(campaign, actorId, "edit");
+    async approveEdit(tenantId: string, campaignId: string, actorId: string) {
+      const campaign = await requireCampaign(tenantId, campaignId);
+      await addApproval(campaign, actorId, "edit");
       return transition(campaign, "exported", actorId, "edit.approved");
     },
-    handoffExport(tenantId: string, campaignId: string, actorId: string) {
-      const campaign = requireCampaign(tenantId, campaignId);
-      addApproval(campaign, actorId, "handoff");
+    async handoffExport(tenantId: string, campaignId: string, actorId: string) {
+      const campaign = await requireCampaign(tenantId, campaignId);
+      await addApproval(campaign, actorId, "handoff");
       return transition(campaign, "handed_off", actorId, "export.handed_off");
     },
   };

@@ -1,0 +1,68 @@
+project_id = "giventake-video-studio"
+
+[api]
+enabled = true
+port = 55321
+schemas = ["public", "video_studio"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 55322
+shadow_port = 55320
+major_version = 17
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+[db.seed]
+enabled = false
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 55323
+api_url = "http://127.0.0.1"
+
+[local_smtp]
+enabled = true
+port = 55324
+smtp_port = 55325
+pop3_port = 55326
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = [
+  "http://localhost:3000/studio/auth/callback",
+  "http://localhost:8080/studio/auth/callback"
+]
+jwt_expiry = 3600
+enable_signup = false
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = true
+max_frequency = "1m0s"
+otp_length = 6
+otp_expiry = 3600
+
+[edge_runtime]
+enabled = false
+policy = "per_worker"
+
+[analytics]
+enabled = false
+port = 55327
+backend = "postgres"

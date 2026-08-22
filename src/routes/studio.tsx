@@ -1,6 +1,6 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { LoaderCircle, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { Outlet, createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
+import { LoaderCircle, LogOut, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 
 import {
   approveStudioEdit,
@@ -11,11 +11,27 @@ import {
   planStudioCampaign,
   renderStudioCampaign,
 } from "@/lib/studio/actions";
+import { getStudioRouteSession, signOutStudio } from "@/lib/studio/auth-actions";
 import type { CampaignRecord } from "@/lib/studio/types";
 
-export const Route = createFileRoute("/studio")({ component: StudioPage });
+function isStudioAuthPath(pathname: string): boolean {
+  return pathname === "/studio/sign-in" || pathname === "/studio/auth/callback";
+}
 
-const tenantId = "giventake-devs";
+export const Route = createFileRoute("/studio")({
+  beforeLoad: async ({ location }) => {
+    if (isStudioAuthPath(location.pathname)) return;
+    const session = await getStudioRouteSession();
+    if (!session.authenticated) throw redirect({ to: "/studio/sign-in" });
+    return session;
+  },
+  loader: ({ location }) =>
+    isStudioAuthPath(location.pathname)
+      ? { authenticated: false as const, role: null }
+      : getStudioRouteSession(),
+  component: StudioRouteShell,
+});
+
 const fieldClass =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none focus:border-cyan-700 focus:ring-2 focus:ring-cyan-100";
 const primaryButton =
@@ -35,7 +51,7 @@ const defaultForm = {
 function actionLabel(status: CampaignRecord["status"]): string {
   if (status === "draft") return "Plan storyboard";
   if (status === "awaiting_storyboard_approval") return "Approve storyboard";
-  if (status === "approved_for_generation") return "Render fixture";
+  if (status === "approved_for_generation") return "Queue fixture render";
   if (status === "awaiting_edit_approval") return "Approve edit";
   if (status === "exported") return "Send to marketing drafts";
   if (status === "handed_off") return "Handed off";
@@ -48,11 +64,20 @@ function statusTone(status: CampaignRecord["status"]): string {
   return "bg-cyan-100 text-cyan-950";
 }
 
+function StudioRouteShell() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return isStudioAuthPath(pathname) ? <Outlet /> : <StudioPage />;
+}
+
 function StudioPage() {
+  const session = Route.useLoaderData();
   const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
   const [form, setForm] = useState(defaultForm);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const renderRequestKeys = useRef(new Map<string, string>());
+  const canOperate = session.role === "operator";
+  const canReview = canOperate || session.role === "reviewer";
 
   const refresh = useCallback(async () => {
     const next = await listStudioCampaigns({ data: {} });
@@ -60,7 +85,7 @@ function StudioPage() {
   }, []);
 
   useEffect(() => {
-    void refresh().catch(() => setMessage("Studio data is unavailable."));
+    void refresh().catch(() => window.location.assign("/studio/sign-in"));
   }, [refresh]);
 
   async function createCampaign(event: FormEvent<HTMLFormElement>) {
@@ -71,7 +96,6 @@ function StudioPage() {
       await createStudioCampaign({
         data: {
           input: {
-            tenantId,
             name: form.name.trim(),
             goal: form.goal.trim(),
             offer: form.offer.trim(),
@@ -84,8 +108,8 @@ function StudioPage() {
       setForm(defaultForm);
       await refresh();
       setMessage("Campaign created.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Campaign could not be created.");
+    } catch {
+      setMessage("Campaign could not be created.");
     } finally {
       setBusy(false);
     }
@@ -100,19 +124,43 @@ function StudioPage() {
       if (campaign.status === "awaiting_storyboard_approval") {
         await approveStudioStoryboard({ data });
       }
-      if (campaign.status === "approved_for_generation") await renderStudioCampaign({ data });
+      if (campaign.status === "approved_for_generation") {
+        const idempotencyKey =
+          renderRequestKeys.current.get(campaign.id) ?? globalThis.crypto.randomUUID();
+        renderRequestKeys.current.set(campaign.id, idempotencyKey);
+        await renderStudioCampaign({ data: { ...data, idempotencyKey } });
+      }
       if (campaign.status === "awaiting_edit_approval") await approveStudioEdit({ data });
       if (campaign.status === "exported") await handoffStudioExport({ data });
       await refresh();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Campaign could not advance.");
+    } catch {
+      setMessage("Campaign could not advance.");
     } finally {
       setBusy(false);
     }
   }
 
-  if (!import.meta.env.DEV) {
-    return <main className="min-h-screen bg-zinc-950" />;
+  async function signOut() {
+    setBusy(true);
+    try {
+      await signOutStudio();
+    } finally {
+      window.location.assign("/studio/sign-in");
+    }
+  }
+
+  function mayAdvance(campaign: CampaignRecord): boolean {
+    if (campaign.status === "draft" || campaign.status === "approved_for_generation") {
+      return canOperate;
+    }
+    if (
+      campaign.status === "awaiting_storyboard_approval" ||
+      campaign.status === "awaiting_edit_approval" ||
+      campaign.status === "exported"
+    ) {
+      return canReview;
+    }
+    return false;
   }
 
   return (
@@ -125,73 +173,89 @@ function StudioPage() {
             </div>
             <h1 className="mt-1 text-2xl font-semibold">Video Agent Studio</h1>
           </div>
-          <div className="flex items-center gap-2 text-sm text-zinc-600">
-            <ShieldCheck className="size-4 text-emerald-700" /> Human approval required
+          <div className="flex items-center gap-3 text-sm text-zinc-600">
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-emerald-700" /> Human approval required
+            </span>
+            <button
+              className={secondaryButton}
+              disabled={busy}
+              onClick={() => void signOut()}
+              type="button"
+            >
+              <LogOut className="size-4" /> Sign out
+            </button>
           </div>
         </div>
       </header>
 
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[21rem_minmax(0,1fr)] lg:px-8">
-        <section className="rounded-md border border-zinc-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Create campaign</h2>
-          <form className="mt-5 space-y-4" onSubmit={createCampaign}>
-            <Field label="Campaign name">
-              <input
-                required
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-                className={fieldClass}
-              />
-            </Field>
-            <Field label="Goal">
-              <textarea
-                required
-                value={form.goal}
-                onChange={(event) => setForm({ ...form, goal: event.target.value })}
-                className={`${fieldClass} min-h-20`}
-              />
-            </Field>
-            <Field label="Offer">
-              <input
-                required
-                value={form.offer}
-                onChange={(event) => setForm({ ...form, offer: event.target.value })}
-                className={fieldClass}
-              />
-            </Field>
-            <Field label="Audience">
-              <input
-                required
-                value={form.audience}
-                onChange={(event) => setForm({ ...form, audience: event.target.value })}
-                className={fieldClass}
-              />
-            </Field>
-            <Field label="CTA">
-              <input
-                required
-                value={form.callToAction}
-                onChange={(event) => setForm({ ...form, callToAction: event.target.value })}
-                className={fieldClass}
-              />
-            </Field>
-            <Field label="Generation ceiling (USD)">
-              <input
-                required
-                min="1"
-                step="1"
-                type="number"
-                value={form.budgetDollars}
-                onChange={(event) => setForm({ ...form, budgetDollars: event.target.value })}
-                className={fieldClass}
-              />
-            </Field>
-            <button disabled={busy} className={`${primaryButton} w-full`} type="submit">
-              {busy ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              Create campaign
-            </button>
-          </form>
-        </section>
+        {canOperate ? (
+          <section className="border border-zinc-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold">Create campaign</h2>
+            <form className="mt-5 space-y-4" onSubmit={createCampaign}>
+              <Field label="Campaign name">
+                <input
+                  required
+                  value={form.name}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  className={fieldClass}
+                />
+              </Field>
+              <Field label="Goal">
+                <textarea
+                  required
+                  value={form.goal}
+                  onChange={(event) => setForm({ ...form, goal: event.target.value })}
+                  className={`${fieldClass} min-h-20`}
+                />
+              </Field>
+              <Field label="Offer">
+                <input
+                  required
+                  value={form.offer}
+                  onChange={(event) => setForm({ ...form, offer: event.target.value })}
+                  className={fieldClass}
+                />
+              </Field>
+              <Field label="Audience">
+                <input
+                  required
+                  value={form.audience}
+                  onChange={(event) => setForm({ ...form, audience: event.target.value })}
+                  className={fieldClass}
+                />
+              </Field>
+              <Field label="CTA">
+                <input
+                  required
+                  value={form.callToAction}
+                  onChange={(event) => setForm({ ...form, callToAction: event.target.value })}
+                  className={fieldClass}
+                />
+              </Field>
+              <Field label="Generation ceiling (USD)">
+                <input
+                  required
+                  min="1"
+                  step="1"
+                  type="number"
+                  value={form.budgetDollars}
+                  onChange={(event) => setForm({ ...form, budgetDollars: event.target.value })}
+                  className={fieldClass}
+                />
+              </Field>
+              <button disabled={busy} className={`${primaryButton} w-full`} type="submit">
+                {busy ? <LoaderCircle className="size-4 animate-spin" /> : null}
+                Create campaign
+              </button>
+            </form>
+          </section>
+        ) : (
+          <aside className="border-l-4 border-cyan-700 px-4 py-3 text-sm text-zinc-700">
+            Review campaign storyboards, edits, and marketing drafts.
+          </aside>
+        )}
 
         <section>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -220,7 +284,7 @@ function StudioPage() {
           <div className="mt-5 space-y-3">
             {campaigns.length === 0 ? (
               <p className="border border-dashed border-zinc-300 px-5 py-12 text-center text-sm text-zinc-600">
-                Create a campaign to begin production.
+                No campaigns are ready for review.
               </p>
             ) : (
               campaigns.map((campaign) => (
@@ -259,7 +323,7 @@ function StudioPage() {
                     <p className="text-sm text-zinc-600">{campaign.callToAction}</p>
                     <button
                       className={primaryButton}
-                      disabled={busy || campaign.status === "handed_off"}
+                      disabled={busy || !mayAdvance(campaign)}
                       onClick={() => void advanceCampaign(campaign)}
                       type="button"
                     >
