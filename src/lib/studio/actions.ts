@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -13,10 +11,21 @@ import { getStudioServer } from "./server";
 const campaignActionSchema = z.object({
   campaignId: campaignIdSchema,
 });
-const renderCampaignActionSchema = campaignActionSchema.extend({
-  idempotencyKey: z.string().uuid().optional(),
+export const renderStudioCampaignActionSchema = campaignActionSchema.extend({
+  idempotencyKey: z.string().uuid(),
 });
 const createCampaignActionInputSchema = createCampaignInputSchema.omit({ tenantId: true }).strict();
+
+export function studioRenderEnvironment(environment: Record<string, string | undefined>) {
+  if (environment.NODE_ENV === "production") return environment;
+
+  return {
+    ...environment,
+    STUDIO_ALLOWED_RENDER_PROVIDERS: environment.STUDIO_ALLOWED_RENDER_PROVIDERS ?? "fixture",
+    STUDIO_PROVIDER_RATES_JSON:
+      environment.STUDIO_PROVIDER_RATES_JSON ?? '{"fixture":{"fixture":0}}',
+  };
+}
 
 export const createStudioCampaignActionSchema = z.object({
   input: createCampaignActionInputSchema,
@@ -70,13 +79,16 @@ export const approveStudioStoryboard = createServerFn({ method: "POST" })
   });
 
 export const renderStudioCampaign = createServerFn({ method: "POST" })
-  .validator((data: unknown) => renderCampaignActionSchema.parse(data))
+  .validator((data: unknown) => renderStudioCampaignActionSchema.parse(data))
   .handler(async ({ data }) => {
     const identity = await operatorContext();
     const server = await getStudioServer();
     const provider = "fixture";
     const model = "fixture";
-    const rateCentsPerSecond = createProviderPolicy(process.env).rateFor(provider, model);
+    const rateCentsPerSecond = createProviderPolicy(studioRenderEnvironment(process.env)).rateFor(
+      provider,
+      model,
+    );
     const job = await server.service.requestRender(
       identity.tenantId,
       data.campaignId,
@@ -84,7 +96,7 @@ export const renderStudioCampaign = createServerFn({ method: "POST" })
       {
         provider,
         model,
-        idempotencyKey: data.idempotencyKey ?? randomUUID(),
+        idempotencyKey: data.idempotencyKey,
         rateCentsPerSecond,
       },
     );

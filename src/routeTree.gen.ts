@@ -24,6 +24,8 @@ import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
+import { Route as StudioSignInRouteImport } from './routes/studio.sign-in'
+import { Route as StudioAuthCallbackRouteImport } from './routes/studio.auth.callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -100,6 +102,16 @@ const ServicesSlugRoute = ServicesSlugRouteImport.update({
   path: '/services/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioSignInRoute = StudioSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioAuthCallbackRoute = StudioAuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => StudioRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -111,12 +123,14 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/studio': typeof StudioRoute
+  '/studio': typeof StudioRouteWithChildren
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/studio/sign-in': typeof StudioSignInRoute
   '/articles/': typeof ArticlesIndexRoute
   '/services/': typeof ServicesIndexRoute
+  '/studio/auth/callback': typeof StudioAuthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -128,12 +142,14 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/studio': typeof StudioRoute
+  '/studio': typeof StudioRouteWithChildren
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/studio/sign-in': typeof StudioSignInRoute
   '/articles': typeof ArticlesIndexRoute
   '/services': typeof ServicesIndexRoute
+  '/studio/auth/callback': typeof StudioAuthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -146,12 +162,14 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/studio': typeof StudioRoute
+  '/studio': typeof StudioRouteWithChildren
   '/terms': typeof TermsRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/studio/sign-in': typeof StudioSignInRoute
   '/articles/': typeof ArticlesIndexRoute
   '/services/': typeof ServicesIndexRoute
+  '/studio/auth/callback': typeof StudioAuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -169,8 +187,10 @@ export interface FileRouteTypes {
     | '/terms'
     | '/articles/$slug'
     | '/services/$slug'
+    | '/studio/sign-in'
     | '/articles/'
     | '/services/'
+    | '/studio/auth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -186,8 +206,10 @@ export interface FileRouteTypes {
     | '/terms'
     | '/articles/$slug'
     | '/services/$slug'
+    | '/studio/sign-in'
     | '/articles'
     | '/services'
+    | '/studio/auth/callback'
   id:
     | '__root__'
     | '/'
@@ -203,8 +225,10 @@ export interface FileRouteTypes {
     | '/terms'
     | '/articles/$slug'
     | '/services/$slug'
+    | '/studio/sign-in'
     | '/articles/'
     | '/services/'
+    | '/studio/auth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -217,7 +241,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProcessRoute: typeof ProcessRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  StudioRoute: typeof StudioRoute
+  StudioRoute: typeof StudioRouteWithChildren
   TermsRoute: typeof TermsRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
@@ -332,8 +356,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio/sign-in': {
+      id: '/studio/sign-in'
+      path: '/sign-in'
+      fullPath: '/studio/sign-in'
+      preLoaderRoute: typeof StudioSignInRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/auth/callback': {
+      id: '/studio/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/studio/auth/callback'
+      preLoaderRoute: typeof StudioAuthCallbackRouteImport
+      parentRoute: typeof StudioRoute
+    }
   }
 }
+
+interface StudioRouteChildren {
+  StudioSignInRoute: typeof StudioSignInRoute
+  StudioAuthCallbackRoute: typeof StudioAuthCallbackRoute
+}
+
+const StudioRouteChildren: StudioRouteChildren = {
+  StudioSignInRoute: StudioSignInRoute,
+  StudioAuthCallbackRoute: StudioAuthCallbackRoute,
+}
+
+const StudioRouteWithChildren =
+  StudioRoute._addFileChildren(StudioRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -345,7 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProcessRoute: ProcessRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  StudioRoute: StudioRoute,
+  StudioRoute: StudioRouteWithChildren,
   TermsRoute: TermsRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,
