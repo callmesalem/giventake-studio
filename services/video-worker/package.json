@@ -1,0 +1,12 @@
+{
+  "name": "@giventake/video-worker",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.mjs",
+    "test": "node ../../tests/video-worker-e2e.test.mjs"
+  }
+}
