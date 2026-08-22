@@ -1,9 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { crmDeals } from "@/lib/crm-data";
-import { PageHeader, LinkedTable, Badge, useListFilter } from "@/components/crm/ui";
+import { crmDeals, crmCompanyOptions, crmStages, saveDeal } from "@/lib/crm-data";
+import { PageHeader, LinkedTable, Badge, useListFilter, EntityForm, Disclosure } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/deals")({
-  loader: () => crmDeals(),
+  loader: async () => ({
+    rows: await crmDeals(),
+    companies: await crmCompanyOptions(),
+    stages: await crmStages(),
+  }),
   component: Deals,
 });
 
@@ -14,7 +18,7 @@ const usd = new Intl.NumberFormat("en-US", {
 });
 
 function Deals() {
-  const rows = Route.useLoaderData();
+  const { rows, companies, stages } = Route.useLoaderData();
   const { session } = Route.useRouteContext();
   const me = session?.userId ?? null;
   const { filtered, control } = useListFilter(
@@ -28,6 +32,31 @@ function Deals() {
       <PageHeader
         title="Deals"
         subtitle={`${rows.length} deals · ${usd.format(pipeline)} pipeline`}
+      action={
+          <Disclosure label="New deal" openLabel="New deal">
+            <EntityForm
+              fields={[
+                { name: "name", label: "Deal name", required: true },
+                {
+                  name: "companyId",
+                  label: "Company",
+                  type: "select" as const,
+                  options: companies.map((c) => ({ value: c.id, label: c.name })),
+                },
+                {
+                  name: "stage",
+                  label: "Stage",
+                  type: "select" as const,
+                  options: stages.map((st) => ({ value: st.name, label: st.name })),
+                },
+                { name: "valueUsd", label: "Value (USD)", type: "number" as const },
+              ]}
+              submitLabel="Create deal"
+              columns={2}
+              onSubmit={(data) => saveDeal({ data })}
+            />
+          </Disclosure>
+        }
       />
       {control}
       <LinkedTable

@@ -287,4 +287,27 @@ export class CrmActions {
     }
   }
 
+
+  /** Lead intake. origin distinguishes a hand-typed lead from a website
+   *  submission so the audit trail is not a polite fiction. */
+  captureLead(input: {
+    email: string;
+    name: string;
+    company?: string | null;
+    description?: string | null;
+    source?: string | null;
+    origin: "manual_entry" | "referral_intake";
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("capture_website_lead", {
+      p_payload: {
+        email: input.email,
+        name: input.name,
+        company: input.company ?? undefined,
+        description: input.description ?? undefined,
+        source: input.source ?? undefined,
+        origin: input.origin,
+      },
+    });
+  }
+
 }

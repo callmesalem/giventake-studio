@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { crmDeal, crmStages, advanceStage, saveDeal, assignRecord } from "@/lib/crm-data";
+import { crmDeal, crmStages, advanceStage, saveDeal, assignRecord, addNote } from "@/lib/crm-data";
 import { listAssignableMembers } from "@/lib/crm-auth";
 import {
   Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge,
@@ -93,6 +93,27 @@ function Deal() {
             </Card>
 
             <Card title="Activity">
+              {/* Notes hang off the company, which is where the schema puts
+                  them - so a note added here is visible on the company too,
+                  and on every other deal with that company. That is the
+                  correct behaviour for an account note, and it is worth
+                  knowing rather than discovering. */}
+              {deal.company && (
+                <div className="mb-4">
+                  <Disclosure label="Add note" openLabel={`Note on ${deal.company.name}`}>
+                    <EntityForm
+                      fields={[
+                        { name: "title", label: "Title", placeholder: "Optional" },
+                        { name: "content", label: "Note", type: "textarea", required: true, rows: 4 },
+                      ]}
+                      submitLabel="Save note"
+                      onSubmit={(data) =>
+                        addNote({ data: { ...data, companyId: deal.company!.id } })
+                      }
+                    />
+                  </Disclosure>
+                </div>
+              )}
               <Timeline events={deal.events} />
             </Card>
           </>
