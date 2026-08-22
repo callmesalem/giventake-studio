@@ -27,6 +27,7 @@ import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as CrmTeamRouteImport } from './routes/crm.team'
 import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
+import { Route as CrmSendCheckRouteImport } from './routes/crm.send-check'
 import { Route as CrmSearchRouteImport } from './routes/crm.search'
 import { Route as CrmReferralsRouteImport } from './routes/crm.referrals'
 import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
@@ -134,6 +135,11 @@ const CrmTeamRoute = CrmTeamRouteImport.update({
 const CrmTasksRoute = CrmTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmSendCheckRoute = CrmSendCheckRouteImport.update({
+  id: '/send-check',
+  path: '/send-check',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmSearchRoute = CrmSearchRouteImport.update({
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/search': typeof CrmSearchRoute
+  '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -289,6 +296,7 @@ export interface FileRoutesByTo {
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/search': typeof CrmSearchRoute
+  '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/search': typeof CrmSearchRoute
+  '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/crm/pipeline'
     | '/crm/referrals'
     | '/crm/search'
+    | '/crm/send-check'
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/crm/pipeline'
     | '/crm/referrals'
     | '/crm/search'
+    | '/crm/send-check'
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/crm/pipeline'
     | '/crm/referrals'
     | '/crm/search'
+    | '/crm/send-check'
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
@@ -602,6 +614,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/crm/tasks'
       preLoaderRoute: typeof CrmTasksRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/send-check': {
+      id: '/crm/send-check'
+      path: '/send-check'
+      fullPath: '/crm/send-check'
+      preLoaderRoute: typeof CrmSendCheckRouteImport
       parentRoute: typeof CrmRoute
     }
     '/crm/search': {
@@ -793,6 +812,7 @@ interface CrmRouteChildren {
   CrmPipelineRoute: typeof CrmPipelineRoute
   CrmReferralsRoute: typeof CrmReferralsRoute
   CrmSearchRoute: typeof CrmSearchRoute
+  CrmSendCheckRoute: typeof CrmSendCheckRoute
   CrmTasksRoute: typeof CrmTasksRoute
   CrmTeamRoute: typeof CrmTeamRoute
   CrmIndexRoute: typeof CrmIndexRoute
@@ -812,6 +832,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmPipelineRoute: CrmPipelineRoute,
   CrmReferralsRoute: CrmReferralsRoute,
   CrmSearchRoute: CrmSearchRoute,
+  CrmSendCheckRoute: CrmSendCheckRoute,
   CrmTasksRoute: CrmTasksRoute,
   CrmTeamRoute: CrmTeamRoute,
   CrmIndexRoute: CrmIndexRoute,

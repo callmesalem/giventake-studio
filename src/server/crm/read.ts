@@ -175,6 +175,22 @@ export class CrmRead {
     return this.#select<T>(table, `select=${select}&order=${order}&limit=${limit}`);
   }
 
+  /** Charter §10 kill switch. */
+  systemControl<T = unknown>(): Promise<T> {
+    return this.#rpc<T>("operator_get_system_control");
+  }
+
+  /** do_not_contact. A hit is final. */
+  isSuppressed(address: string): Promise<boolean> {
+    return this.#rpc<boolean>("operator_is_suppressed", { p_address: address });
+  }
+
+  /** Charter §3.8 positive allowlist, per SOP. A clean suppression check is not
+   *  a substitute: absence from this list is a no. */
+  isApprovedRecipient(address: string, sop: string): Promise<boolean> {
+    return this.#rpc<boolean>("is_approved_recipient", { p_address: address, p_sop: sop });
+  }
+
   /** Which channel produced paying clients. Built this morning and displayed
    *  nowhere until now. */
   attribution<T = unknown>(): Promise<T> {
