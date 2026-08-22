@@ -69,6 +69,42 @@ jobs:
             exit 1
           fi
 
+  # End-to-end, in a real browser, against the real app. Its own job because it
+  # needs a browser download and system libraries, and because a rendering
+  # failure here means something different from a unit failure.
+  #
+  # It gates, unlike a11y. The contact form silently lost every lead for weeks
+  # and nothing in the unit suite could have noticed; this is the layer that
+  # would have.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install
+
+      - name: Install browser
+        run: bunx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: bun run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
   # The consent accessibility suite (20 axe-core + keyboard checks) needs a dev
   # server on :8080 and Playwright. Separate job so a flake here never blocks a
   # copy change, and continue-on-error until it has proved stable on CI.
