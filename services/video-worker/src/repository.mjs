@@ -53,6 +53,17 @@ export function createWorkerRepository({ databasePath }) {
       retryable INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS exports (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL,
+      profile TEXT NOT NULL,
+      width INTEGER NOT NULL,
+      height INTEGER NOT NULL,
+      output_path TEXT NOT NULL,
+      expected_duration_seconds INTEGER NOT NULL,
+      checksum TEXT,
+      created_at TEXT NOT NULL
+    );
   `);
 
   const columns = database.prepare("PRAGMA table_info(jobs)").all();
@@ -145,6 +156,23 @@ export function createWorkerRepository({ databasePath }) {
         .run(workerId, leaseUntil, current, next.id);
       return get(next.id);
     },
+    claimAssembly(workerId, now, leaseMs) {
+      const current = timestamp(now);
+      const next = database
+        .prepare(
+          `SELECT * FROM jobs
+           WHERE status = 'assembling' AND (lease_until IS NULL OR lease_until <= ?)
+           ORDER BY updated_at, created_at
+           LIMIT 1`,
+        )
+        .get(current);
+      if (!next) return null;
+      const leaseUntil = new Date(now.getTime() + leaseMs).toISOString();
+      database
+        .prepare("UPDATE jobs SET lease_owner = ?, lease_until = ?, updated_at = ? WHERE id = ?")
+        .run(workerId, leaseUntil, current, next.id);
+      return get(next.id);
+    },
     recordAttempt(id, category, detail, retryable, now) {
       database
         .prepare(
@@ -170,6 +198,45 @@ export function createWorkerRepository({ databasePath }) {
     },
     markQaFailed(id, category, now) {
       return updateStatus(id, "qa_failed", now, { errorCategory: category });
+    },
+    addExport(item) {
+      database
+        .prepare(
+          `INSERT INTO exports
+           (id, job_id, profile, width, height, output_path, expected_duration_seconds, checksum, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          item.id,
+          item.jobId,
+          item.profile,
+          item.width,
+          item.height,
+          item.outputPath,
+          item.expectedDurationSeconds,
+          item.checksum ?? null,
+          item.createdAt,
+        );
+      return item;
+    },
+    getExports(jobId) {
+      return database
+        .prepare(
+          `SELECT id, profile, width, height, output_path, expected_duration_seconds, checksum, created_at
+           FROM exports WHERE job_id = ?
+           ORDER BY CASE profile WHEN 'vertical' THEN 1 WHEN 'square' THEN 2 WHEN 'landscape' THEN 3 END`,
+        )
+        .all(jobId)
+        .map((item) => ({
+          id: item.id,
+          profile: item.profile,
+          width: item.width,
+          height: item.height,
+          outputPath: item.output_path,
+          expectedDurationSeconds: item.expected_duration_seconds,
+          checksum: item.checksum,
+          createdAt: item.created_at,
+        }));
     },
     queueCounts() {
       const rows = database
