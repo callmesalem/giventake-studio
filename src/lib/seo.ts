@@ -73,7 +73,14 @@ export function pageHead({ path, title, description, ogType = "website" }: PageH
             { property: "og:image:height", content: "630" },
           ]
         : []),
-      { property: "og:image:alt", content: `${SITE_NAME} — Your On-Demand Development Team` },
+      ...(OG_IMAGE_URL
+        ? [
+            {
+              property: "og:image:alt",
+              content: `${SITE_NAME} — Your On-Demand Development Team`,
+            },
+          ]
+        : []),
       {
         name: "twitter:card",
         content: OG_IMAGE_URL ? "summary_large_image" : "summary",
