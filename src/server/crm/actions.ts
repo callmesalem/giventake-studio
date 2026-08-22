@@ -152,6 +152,7 @@ export class CrmActions {
     source: string;
     sourceRecordId: string;
     companyId?: string | null;
+    leadId?: string | null;
     title?: string | null;
     content: string;
   }): Promise<unknown> {
@@ -162,6 +163,7 @@ export class CrmActions {
       p_title: input.title ?? null,
       p_content: input.content,
       p_metadata: null,
+      p_lead_id: input.leadId ?? null,
     });
   }
 

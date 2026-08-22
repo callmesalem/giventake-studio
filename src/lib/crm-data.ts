@@ -312,7 +312,7 @@ async function leadTimeline(
   read: Awaited<ReturnType<typeof reader>>,
   leadId: string,
 ): Promise<TimelineEvent[]> {
-  const [touchpoints, log] = await Promise.all([
+  const [touchpoints, log, notes] = await Promise.all([
     read.relatedBy<Record<string, unknown>>(
       "touchpoints",
       "lead_id",
@@ -325,6 +325,12 @@ async function leadTimeline(
       leadId,
       "id,operator,sop,step,outcome,escalated,created_at",
     ),
+    read.relatedBy<Record<string, unknown>>(
+      "notes",
+      "lead_id",
+      leadId,
+      "id,title,content,source,created_at",
+    ),
   ]);
 
   const events: TimelineEvent[] = [
@@ -335,6 +341,14 @@ async function leadTimeline(
       title: humanise(str(t.kind)),
       detail: summarise(t.content, ["source", "budget", "timeline", "company", "description"]),
       actor: null,
+    })),
+    ...notes.map((nt) => ({
+      id: `nt-${String(nt.id)}`,
+      at: str(nt.created_at),
+      kind: "note" as const,
+      title: str(nt.title) ?? "Note",
+      detail: str(nt.content),
+      actor: str(nt.source),
     })),
     ...log.map((l) => ({
       id: `al-${String(l.id)}`,
@@ -766,6 +780,7 @@ export const saveDeal = createServerFn({ method: "POST" })
 export const addNote = createServerFn({ method: "POST" })
   .validator((d: Record<string, unknown>) => ({
     companyId: optionalUuid(d?.companyId),
+    leadId: optionalUuid(d?.leadId),
     title: text(d?.title, "Title", 200),
     content: text(d?.content, "Note", 8000, true) as string,
   }))
@@ -777,6 +792,7 @@ export const addNote = createServerFn({ method: "POST" })
       source: actor,
       sourceRecordId: crypto.randomUUID(),
       companyId: data.companyId,
+      leadId: data.leadId,
       title: data.title,
       content: data.content,
     });
