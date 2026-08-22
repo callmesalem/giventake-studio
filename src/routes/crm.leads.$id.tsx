@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { crmLead, assignRecord, convertLead, crmStages } from "@/lib/crm-data";
+import { crmLead, assignRecord, convertLead, crmStages, addNote } from "@/lib/crm-data";
 import { listAssignableMembers } from "@/lib/crm-auth";
 import {
   Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge, OwnerPicker,
@@ -71,6 +71,18 @@ function Lead() {
               </p>
             </Card>
             <Card title="Activity">
+              <div className="mb-4">
+                <Disclosure label="Add note" openLabel="Note on this lead">
+                  <EntityForm
+                    fields={[
+                      { name: "title", label: "Title", placeholder: "Optional" },
+                      { name: "content", label: "Note", type: "textarea", required: true, rows: 4 },
+                    ]}
+                    submitLabel="Save note"
+                    onSubmit={(data) => addNote({ data: { ...data, leadId: lead.id } })}
+                  />
+                </Disclosure>
+              </div>
               <Timeline events={lead.events} />
             </Card>
           </>
