@@ -13,7 +13,8 @@
     "test:a11y": "python3 tests/a11y/consent_a11y.py",
     "test": "for test in tests/*.test.mjs; do case \"$test\" in *integration*) continue;; esac; node --experimental-strip-types \"$test\" || exit 1; done",
     "test:integration": "node tests/operator-postgres.integration.test.mjs",
-    "test:components": "vitest run --config vitest.config.ts"
+    "test:components": "vitest run --config vitest.config.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -72,6 +73,7 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "2.13.1",
+    "@playwright/test": "^1.62.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.6",
     "@types/node": "^22.16.5",
