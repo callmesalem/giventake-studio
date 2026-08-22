@@ -82,4 +82,57 @@ assert.equal(
 // An empty secret is a configuration error, not a soft failure.
 assert.throws(() => signPayload("", ts, nonce, payload), /secret/i);
 
+// A missing secret is reported, never thrown: verifySigned's return type
+// promises a result and callers treat a throw as a 500.
+assert.equal(
+  verifySigned({ secret: "", timestamp: ts, nonce, payload, signature: sig, now: NOW }).reason,
+  "secret_missing",
+);
+
+// undefined fields must not break verification. The sender signs the object it
+// holds; the receiver signs what JSON.parse gives back. Those must agree.
+const withUndefined = { job_id: "j1", scene_index: undefined, kind: "scene_clip" };
+const roundTripped = JSON.parse(JSON.stringify(withUndefined));
+assert.equal(
+  signPayload(SECRET, ts, nonce, withUndefined),
+  signPayload(SECRET, ts, nonce, roundTripped),
+  "an undefined field must not change the signature",
+);
+assert.equal(
+  signPayload(SECRET, ts, nonce, { a: [1, undefined, 3] }),
+  signPayload(SECRET, ts, nonce, JSON.parse(JSON.stringify({ a: [1, undefined, 3] }))),
+  "undefined array holes must not change the signature",
+);
+
+// A bare undefined payload must not crash.
+assert.doesNotThrow(() => signPayload(SECRET, ts, nonce, undefined));
+
+// Exactly at the skew boundary is still accepted; one millisecond past is not.
+assert.equal(
+  verifySigned({
+    secret: SECRET,
+    timestamp: ts,
+    nonce,
+    payload,
+    signature: sig,
+    now: NOW + MAX_SKEW_MS,
+  }).ok,
+  true,
+);
+assert.equal(
+  verifySigned({
+    secret: SECRET,
+    timestamp: ts,
+    nonce,
+    payload,
+    signature: sig,
+    now: NOW + MAX_SKEW_MS + 1,
+  }).reason,
+  "timestamp_skew",
+);
+
+// Pin the output format. A change of digest or encoding that stayed internally
+// consistent would otherwise pass unnoticed.
+assert.match(sig, /^[0-9a-f]{64}$/);
+
 console.log("video-signing: ok");

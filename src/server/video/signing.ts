@@ -20,7 +20,8 @@ export const NONCE_HEADER = "x-gt-nonce";
 /** Requests more than five minutes from server time are rejected. */
 export const MAX_SKEW_MS = 5 * 60 * 1000;
 
-export type VerifyFailure = "timestamp_invalid" | "timestamp_skew" | "signature_mismatch";
+export type VerifyFailure =
+  "secret_missing" | "timestamp_invalid" | "timestamp_skew" | "signature_mismatch";
 
 export interface VerifyInput {
   secret: string;
@@ -38,13 +39,24 @@ export function signPayload(
   payload: unknown,
 ): string {
   if (!secret) throw new Error("signPayload requires a non-empty secret");
-  const base = `${timestamp}.${nonce}.${canonicalPayload(payload)}`;
+  // Normalise through JSON before canonicalising. The receiver only ever sees
+  // JSON.parse(body), so signing the pre-serialised object would disagree with
+  // it for any `undefined` value: a dropped key on one side, a present key on
+  // the other. That would reject legitimate traffic as a forgery.
+  const normalised = JSON.parse(JSON.stringify(payload ?? null)) as unknown;
+  const base = `${timestamp}.${nonce}.${canonicalPayload(normalised)}`;
   return createHmac("sha256", secret).update(base).digest("hex");
 }
 
 export function verifySigned(
   input: VerifyInput,
 ): { ok: true } | { ok: false; reason: VerifyFailure } {
+  // verifySigned must be total: its return type promises a result, and callers
+  // treat a throw as a 500. A missing secret is a server misconfiguration, so it
+  // is reported rather than thrown — videoEnv() is what refuses to start without
+  // one.
+  if (!input.secret) return { ok: false, reason: "secret_missing" };
+
   const sent = Number(input.timestamp);
   if (!Number.isFinite(sent)) return { ok: false, reason: "timestamp_invalid" };
 
