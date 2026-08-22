@@ -314,7 +314,7 @@ export function LinkedTable({
 export interface FormFieldDef {
   name: string;
   label: string;
-  type?: "text" | "email" | "tel" | "number" | "textarea" | "select" | "date";
+  type?: "text" | "email" | "tel" | "number" | "textarea" | "select" | "date" | "checkbox";
   required?: boolean;
   placeholder?: string;
   options?: { value: string; label: string }[];
@@ -353,7 +353,18 @@ export function FormControl({
         {field.required && <span className="ml-0.5 text-muted-foreground">*</span>}
       </label>
 
-      {field.type === "textarea" ? (
+      {field.type === "checkbox" ? (
+        // An unticked box is omitted from FormData entirely, so the server
+        // treats absence as false. Same shape the contact form learned to
+        // handle today.
+        <input
+          id={id}
+          name={field.name}
+          type="checkbox"
+          defaultChecked={defaultValue === "on" || defaultValue === "true"}
+          className="h-4 w-4"
+        />
+      ) : field.type === "textarea" ? (
         <textarea {...common} rows={field.rows ?? 4} />
       ) : field.type === "select" ? (
         <select {...common}>

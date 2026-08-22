@@ -1,6 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { crmMarketing } from "@/lib/crm-data";
-import { PageHeader, Card, EmptyState, StatCard, Badge } from "@/components/crm/ui";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { toast } from "sonner";
+import {
+  crmMarketing, saveReview, setReviewStatus, saveCampaign,
+  REVIEW_STATUSES, CAMPAIGN_STATUSES,
+} from "@/lib/crm-data";
+import {
+  PageHeader, Card, EmptyState, StatCard, Badge, EntityForm, Disclosure,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/marketing")({
   loader: () => crmMarketing(),
@@ -9,6 +15,7 @@ export const Route = createFileRoute("/crm/marketing")({
 
 function Marketing() {
   const { campaigns, subscribers, reviews } = Route.useLoaderData();
+  const router = useRouter();
   // A quote you may not publish is not a proof asset, so this is the number
   // worth showing rather than the raw review count.
   const publishable = reviews.filter((r) => r.permission_obtained === true);
@@ -39,6 +46,26 @@ function Marketing() {
       </div>
 
       <Card title="Campaigns">
+        <div className="mb-4">
+          <Disclosure label="New campaign" openLabel="New campaign">
+            <EntityForm
+              fields={[
+                { name: "name", label: "Name", required: true },
+                { name: "channel", label: "Channel", placeholder: "email, social" },
+                {
+                  name: "status",
+                  label: "Status",
+                  type: "select" as const,
+                  options: CAMPAIGN_STATUSES.map((v) => ({ value: v, label: v })),
+                },
+                { name: "goal", label: "Goal", type: "textarea" as const, rows: 2 },
+              ]}
+              submitLabel="Create campaign"
+              columns={2}
+              onSubmit={(data) => saveCampaign({ data })}
+            />
+          </Disclosure>
+        </div>
         {campaigns.length === 0 ? (
           <EmptyState>
             No campaigns. Nothing sends from the CRM today - drafts stop at
@@ -81,6 +108,33 @@ function Marketing() {
       </Card>
 
       <Card title="Reviews">
+        <div className="mb-4">
+          <Disclosure label="Record review" openLabel="Record a review">
+            <p className="mb-3 text-xs text-muted-foreground">
+              Permission is what decides whether a quote can ever be published.
+              The database refuses to publish a review without it, so this is not
+              a formality.
+            </p>
+            <EntityForm
+              fields={[
+                { name: "authorName", label: "Author", required: true },
+                { name: "source", label: "Source", required: true, placeholder: "email, call, Google" },
+                { name: "subject", label: "Subject" },
+                { name: "rating", label: "Rating (1-5)", type: "number" as const },
+                { name: "quote", label: "Quote", type: "textarea" as const, rows: 3 },
+                {
+                  name: "permissionObtained",
+                  label: "Permission to publish",
+                  type: "checkbox" as const,
+                  help: "Only tick this if they have actually agreed.",
+                },
+              ]}
+              submitLabel="Save review"
+              columns={2}
+              onSubmit={(data) => saveReview({ data })}
+            />
+          </Disclosure>
+        </div>
         {reviews.length === 0 ? (
           <EmptyState>
             None yet. The site refuses to display proof it does not have, so this
@@ -103,6 +157,28 @@ function Marketing() {
                     {r.source && <Badge value={r.source} />}
                     {/* Permission is the gate on using a quote publicly, so it
                         reads as a warning when absent rather than a quiet null. */}
+                    <select
+                      defaultValue={r.status ?? "draft"}
+                      aria-label={`Status for ${r.author_name ?? "review"}`}
+                      onChange={async (event) => {
+                        try {
+                          await setReviewStatus({ data: { id: r.id, status: event.target.value } });
+                          await router.invalidate();
+                        } catch (cause) {
+                          // The database refuses to publish without permission.
+                          // Show its words rather than a generic failure.
+                          toast.error(
+                            cause instanceof Error ? cause.message : "Could not change status",
+                          );
+                          await router.invalidate();
+                        }
+                      }}
+                      className="rounded border border-border bg-background px-2 py-0.5 text-[11px]"
+                    >
+                      {REVIEW_STATUSES.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
                     {r.permission_obtained === true ? (
                       <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
                         cleared to publish
