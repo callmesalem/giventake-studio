@@ -345,4 +345,52 @@ export class CrmActions {
     if (!response.ok) throw new Error(`set lead status failed: ${response.status}`);
   }
 
+
+  /* ── Phase 13: deal becomes client ────────────────────────────────────── */
+
+  /** There is no client_upsert RPC, so this writes through PostgREST with an
+   *  explicit column list. Only these five columns are ever sent - synthetic,
+   *  created_at and id keep their defaults, and nothing here can set them. */
+  async createClient(input: {
+    name: string;
+    leadId: string | null;
+    dealId: string;
+    aiProcessingAllowed: boolean;
+    ownerId: string | null;
+  }): Promise<string> {
+    const response = await this.#fetch(`${this.#url}/rest/v1/clients`, {
+      method: "POST",
+      headers: {
+        apikey: this.#key,
+        Authorization: `Bearer ${this.#key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({
+        name: input.name,
+        lead_id: input.leadId,
+        deal_id: input.dealId,
+        ai_processing_allowed: input.aiProcessingAllowed,
+        owner_id: input.ownerId,
+      }),
+    });
+    if (!response.ok) throw new Error(`create client failed: ${response.status}`);
+    const rows = (await response.json()) as { id: string }[];
+    return rows[0]?.id ?? "";
+  }
+
+  async createProject(clientId: string, name: string): Promise<void> {
+    const response = await this.#fetch(`${this.#url}/rest/v1/projects`, {
+      method: "POST",
+      headers: {
+        apikey: this.#key,
+        Authorization: `Bearer ${this.#key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ client_id: clientId, name }),
+    });
+    if (!response.ok) throw new Error(`create project failed: ${response.status}`);
+  }
+
 }

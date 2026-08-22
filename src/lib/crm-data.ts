@@ -1512,3 +1512,57 @@ export const convertLead = createServerFn({ method: "POST" })
 
     return { ok: true, dealId, companyId };
   });
+
+/* ── Phase 13: a won deal becomes a client ──────────────────────────────── */
+
+/** Close the attribution chain: lead -> deal -> client.
+ *
+ * clients.lead_id and clients.deal_id were added this morning and nothing set
+ * them either, so attribution_snapshot counted clients as a number with no
+ * origin. Carrying the deal's lead_id through means revenue can finally be
+ * traced to the channel that produced it.
+ *
+ * ai_processing_allowed is asked, never assumed. The column defaults to false
+ * and this keeps that an explicit decision per client, because whether a client
+ * permits their data to be processed by agents is their call rather than a
+ * default nobody read.
+ */
+export const convertDealToClient = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    dealId: requireUuid(d?.dealId),
+    name: text(d?.name, "Client name", 200, true) as string,
+    projectName: text(d?.projectName, "Project", 200),
+    // A checkbox that was never ticked arrives absent, so anything other than
+    // an explicit "on" is a no.
+    aiProcessingAllowed: d?.aiProcessingAllowed === "on" || d?.aiProcessingAllowed === true,
+  }))
+  .handler(async ({ data }): Promise<{ ok: true; clientId: string; existed: boolean }> => {
+    const read = await reader();
+    const deal = await read.getById<Record<string, unknown>>("deals", data.dealId, "id,lead_id,owner_id");
+    notFound(deal);
+
+    // No source_record_id on clients to key on, so guard against a second click
+    // by looking for one already pointing at this deal.
+    const existing = await read.relatedBy<Record<string, unknown>>(
+      "clients",
+      "deal_id",
+      data.dealId,
+      "id",
+      "created_at.desc",
+      1,
+    );
+    if (existing.length) {
+      return { ok: true, clientId: String(existing[0].id), existed: true };
+    }
+
+    const { actions } = await writer();
+    const clientId = await actions.createClient({
+      name: data.name,
+      leadId: str(deal.lead_id),
+      dealId: data.dealId,
+      aiProcessingAllowed: data.aiProcessingAllowed,
+      ownerId: str(deal.owner_id),
+    });
+    if (data.projectName) await actions.createProject(clientId, data.projectName);
+    return { ok: true, clientId, existed: false };
+  });

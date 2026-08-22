@@ -1,5 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { crmDeal, crmStages, advanceStage, saveDeal, assignRecord, addNote } from "@/lib/crm-data";
+import {
+  crmDeal, crmStages, advanceStage, saveDeal, assignRecord, addNote, convertDealToClient,
+} from "@/lib/crm-data";
 import { listAssignableMembers } from "@/lib/crm-auth";
 import {
   Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge,
@@ -62,6 +64,30 @@ function Deal() {
                 </FieldList>
               </Card>
             )}
+
+            <Card title="Becomes a client">
+              <Disclosure label="Create client" openLabel="Create a client from this deal">
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Stage 4 of the process: signed and paid. This carries the deal's
+                  originating lead through, so revenue can be traced back to the
+                  channel that produced it.
+                </p>
+                <EntityForm
+                  fields={[
+                    { name: "name", label: "Client name", required: true },
+                    { name: "projectName", label: "First project", placeholder: "Optional" },
+                  ]}
+                  values={{ name: deal.company?.name ?? deal.name }}
+                  submitLabel="Create client"
+                  columns={2}
+                  onSubmit={(data) => convertDealToClient({ data: { ...data, dealId: deal.id } })}
+                />
+                <p className="mt-3 text-xs text-muted-foreground">
+                  AI processing stays off for a new client. Turn it on only when
+                  the client has agreed to it.
+                </p>
+              </Disclosure>
+            </Card>
 
             <Card title="Move stage">
               <Disclosure label="Advance stage" openLabel="Advance this deal">
