@@ -310,4 +310,39 @@ export class CrmActions {
     });
   }
 
+
+  /* ── Phase 12: lead conversion ────────────────────────────────────────── */
+
+  /** deal_upsert carries no lead_id, so the attribution link is set here.
+   *  A narrow method rather than a general patch: this is the only column it
+   *  can ever write, which is a smaller surface than a table/column allowlist
+   *  and needs no validation to stay correct. */
+  async linkDealToLead(dealId: string, leadId: string): Promise<void> {
+    const response = await this.#fetch(`${this.#url}/rest/v1/deals?id=eq.${dealId}`, {
+      method: "PATCH",
+      headers: {
+        apikey: this.#key,
+        Authorization: `Bearer ${this.#key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ lead_id: leadId }),
+    });
+    if (!response.ok) throw new Error(`link deal to lead failed: ${response.status}`);
+  }
+
+  async setLeadStatus(leadId: string, status: string): Promise<void> {
+    const response = await this.#fetch(`${this.#url}/rest/v1/leads?id=eq.${leadId}`, {
+      method: "PATCH",
+      headers: {
+        apikey: this.#key,
+        Authorization: `Bearer ${this.#key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) throw new Error(`set lead status failed: ${response.status}`);
+  }
+
 }

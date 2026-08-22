@@ -1428,3 +1428,87 @@ export const createLead = createServerFn({ method: "POST" })
     await new CrmActions(config()).captureLead({ ...data, origin: "manual_entry" });
     return { ok: true };
   });
+
+/* ── Phase 12: lead conversion ──────────────────────────────────────────── */
+
+export interface ConvertResult {
+  ok: true;
+  dealId: string;
+  companyId: string | null;
+}
+
+/** Turn a qualified lead into a company, a contact and a deal, and link the
+ *  deal back to the lead it came from.
+ *
+ * This is the step the pipeline was missing entirely: deals.lead_id existed and
+ * NOTHING had ever set it, so attribution_snapshot could count leads and deals
+ * but never connect one to the other.
+ *
+ * Idempotent by construction. All three records key on `lead:<leadId>`, so
+ * converting twice - a double click, a retry after a timeout - updates the same
+ * three rows instead of creating a second company, contact and deal that nobody
+ * would notice until the pipeline total looked wrong.
+ */
+export const convertLead = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const raw = d?.valueUsd;
+    const valueUsd = raw === null || raw === undefined || raw === "" ? null : Number(raw);
+    if (valueUsd !== null && (!Number.isFinite(valueUsd) || valueUsd < 0)) {
+      throw new Response("Value must be a positive number", { status: 400 });
+    }
+    return {
+      leadId: requireUuid(d?.leadId),
+      dealName: text(d?.dealName, "Deal name", 200, true) as string,
+      stage: text(d?.stage, "Stage", 80),
+      valueUsd,
+    };
+  })
+  .handler(async ({ data }): Promise<ConvertResult> => {
+    const read = await reader();
+    const lead = await read.getById<Record<string, unknown>>("leads", data.leadId);
+    notFound(lead);
+
+    const { actions } = await writer();
+    const key = `lead:${data.leadId}`;
+
+    // Company first, if the lead named one. A lead with no company still
+    // converts - a sole trader is a real prospect - the deal simply has no
+    // company attached rather than one invented from the person's name.
+    let companyId: string | null = null;
+    const companyName = str(lead.company);
+    if (companyName) {
+      const created = await actions.upsertCompany({
+        source: "crm",
+        sourceRecordId: key,
+        name: companyName,
+      });
+      companyId = typeof created === "string" ? created : null;
+    }
+
+    const contactName = str(lead.name);
+    if (contactName) {
+      await actions.upsertContact({
+        source: "crm",
+        sourceRecordId: key,
+        companyId,
+        name: contactName,
+        email: str(lead.email),
+      });
+    }
+
+    const deal = await actions.upsertDeal({
+      source: "crm",
+      sourceRecordId: key,
+      companyId,
+      name: data.dealName,
+      stage: data.stage,
+      valueUsd: data.valueUsd,
+    });
+    const dealId = typeof deal === "string" ? deal : null;
+    if (!dealId) throw new Response("Could not create the deal", { status: 500 });
+
+    await actions.linkDealToLead(dealId, data.leadId);
+    await actions.setLeadStatus(data.leadId, "converted");
+
+    return { ok: true, dealId, companyId };
+  });
