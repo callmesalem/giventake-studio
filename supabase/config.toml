@@ -1,0 +1,8 @@
+project_id = "giventake-studio"
+
+# Sami authenticates with his own channel token (x-sami-token / ?token=), not a
+# Supabase user JWT, so the platform's JWT gate has to be off or the request is
+# rejected before the function's own auth ever runs. The function refuses every
+# request that does not present the token, and it can only read.
+[functions.giventake-mcp]
+verify_jwt = false
