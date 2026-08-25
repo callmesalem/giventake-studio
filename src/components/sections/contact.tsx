@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +41,11 @@ export function ContactCTA() {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [attribution] = useState<LeadAttribution>(() => readLeadAttribution());
+  const [clientValidationReady, setClientValidationReady] = useState(false);
+
+  useEffect(() => {
+    setClientValidationReady(true);
+  }, []);
 
   function leadEventProps(d: z.infer<typeof schema>) {
     return {
@@ -238,7 +243,7 @@ export function ContactCTA() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={onSubmit} className="space-y-5" noValidate>
+              <form onSubmit={onSubmit} className="space-y-5" noValidate={clientValidationReady}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Name">
                     <Input
