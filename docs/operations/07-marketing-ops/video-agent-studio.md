@@ -18,6 +18,7 @@ Set these values in the server-side environment manager for each local, staging,
 | `SUPABASE_ANON_KEY` | project anon key | Cookie-bound authenticated user client |
 | `SUPABASE_SERVICE_ROLE_KEY` | project service role key | Administrative bootstrap and future worker integration only |
 | `STUDIO_APP_URL` | `https://<studio-host>` | Magic-link callback origin |
+| `VITE_VIDEO_AGENT_URL` | `https://<video-agent-host>` | Public Video Agent destination for an operator-selected campaign brief |
 | `STUDIO_WORKER_URL` | private TLS worker URL | Signed render control plane |
 | `STUDIO_WORKER_SHARED_SECRET` | 64-character hex secret | Shared HMAC secret; must match the VPS worker |
 | `STUDIO_OUTBOUND_KILL_SWITCH` | `true` | Blocks every worker submission by default |
@@ -74,6 +75,12 @@ npm run dev -- --port 8086
 ```
 
 Open `http://localhost:8086/studio` for the local operator fixture. Open `http://localhost:8086/studio/sign-in` to inspect the real sign-in screen. Local data resets when the server restarts.
+
+## Video Agent handoff
+
+An operator can select **Open in Video Agent** from a Studio campaign card. The action opens `VITE_VIDEO_AGENT_URL` with a versioned campaign brief and the Studio campaign ID. It does not share a session, tenant ID, approval record, provider credential, worker URL, asset URL, or customer data. Video Agent validates the brief before loading it and records the campaign ID as its source when the operator creates a new production campaign.
+
+Set `VITE_VIDEO_AGENT_URL=http://127.0.0.1:4174` for local development. Use the deployed Video Agent URL in a hosted environment. This browser handoff is not authorization and must never carry secrets or personal data.
 
 ## Controlled fixture activation
 

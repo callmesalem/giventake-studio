@@ -13,6 +13,7 @@ import {
 } from "@/lib/studio/actions";
 import { getStudioRouteSession, signOutStudio } from "@/lib/studio/auth-actions";
 import type { CampaignRecord } from "@/lib/studio/types";
+import { createVideoAgentHandoffUrl } from "@/lib/studio/video-agent-handoff";
 
 function isStudioAuthPath(pathname: string): boolean {
   return pathname === "/studio/sign-in" || pathname === "/studio/auth/callback";
@@ -47,6 +48,8 @@ const defaultForm = {
   callToAction: "Book a discovery call",
   budgetDollars: "25",
 };
+
+const videoAgentBaseUrl = import.meta.env.VITE_VIDEO_AGENT_URL || "http://127.0.0.1:4174";
 
 function actionLabel(status: CampaignRecord["status"]): string {
   if (status === "draft") return "Plan storyboard";
@@ -321,15 +324,27 @@ function StudioPage() {
                   </dl>
                   <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                     <p className="text-sm text-zinc-600">{campaign.callToAction}</p>
-                    <button
-                      className={primaryButton}
-                      disabled={busy || !mayAdvance(campaign)}
-                      onClick={() => void advanceCampaign(campaign)}
-                      type="button"
-                    >
-                      {busy ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                      {actionLabel(campaign.status)}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {canOperate ? (
+                        <a
+                          className={secondaryButton}
+                          href={createVideoAgentHandoffUrl(campaign, videoAgentBaseUrl)}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Open in Video Agent
+                        </a>
+                      ) : null}
+                      <button
+                        className={primaryButton}
+                        disabled={busy || !mayAdvance(campaign)}
+                        onClick={() => void advanceCampaign(campaign)}
+                        type="button"
+                      >
+                        {busy ? <LoaderCircle className="size-4 animate-spin" /> : null}
+                        {actionLabel(campaign.status)}
+                      </button>
+                    </div>
                   </div>
                 </article>
               ))

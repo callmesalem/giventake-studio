@@ -17,6 +17,8 @@ for (const token of [
   "Approve storyboard",
   "Approve edit",
   "Send to marketing drafts",
+  "Open in Video Agent",
+  "createVideoAgentHandoffUrl",
   "createStudioCampaign",
   "renderStudioCampaign",
   "beforeLoad",
