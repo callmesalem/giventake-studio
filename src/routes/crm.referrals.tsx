@@ -1,7 +1,13 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { crmReferrals, savePartner, recordReferral, setReferralStatus } from "@/lib/crm-data";
 import {
-  PageHeader, Card, EmptyState, Badge, EntityForm, Disclosure, LinkedTable,
+  PageHeader,
+  Card,
+  EmptyState,
+  Badge,
+  EntityForm,
+  Disclosure,
+  LinkedTable,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/referrals")({
@@ -74,8 +80,8 @@ function Referrals() {
       <Card title="Partners">
         {partners.length === 0 ? (
           <EmptyState>
-            No partners yet. Warm introductions are the channel the research called
-            highest leverage.
+            No partners yet. Warm introductions are the channel the research called highest
+            leverage.
           </EmptyState>
         ) : (
           <div className="space-y-4">
@@ -143,7 +149,9 @@ function Referrals() {
                     </td>
                     <td className="py-2 text-right tabular-nums">
                       {r.amount != null ? usd.format(r.amount) : "—"}
-                      {r.paid_at && <span className="ml-1 text-xs text-muted-foreground">paid</span>}
+                      {r.paid_at && (
+                        <span className="ml-1 text-xs text-muted-foreground">paid</span>
+                      )}
                     </td>
                   </tr>
                 ))}

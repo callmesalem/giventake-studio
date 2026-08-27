@@ -34,7 +34,10 @@ function Overview() {
           <div className="space-y-3">
             {pendingApprovals > 0 && (
               <Card>
-                <a href="/crm/approvals" className="text-sm font-medium underline-offset-2 hover:underline">
+                <a
+                  href="/crm/approvals"
+                  className="text-sm font-medium underline-offset-2 hover:underline"
+                >
                   {pendingApprovals} approval{pendingApprovals === 1 ? "" : "s"} waiting
                 </a>
               </Card>
@@ -68,7 +71,10 @@ function Overview() {
                 <ul className="space-y-1.5">
                   {staleDeals.map((deal) => (
                     <li key={deal.id} className="flex items-center justify-between gap-3 text-sm">
-                      <a href={`/crm/deals/${deal.id}`} className="min-w-0 truncate underline-offset-2 hover:underline">
+                      <a
+                        href={`/crm/deals/${deal.id}`}
+                        className="min-w-0 truncate underline-offset-2 hover:underline"
+                      >
                         {deal.name}
                       </a>
                       <span className="flex-none tabular-nums text-muted-foreground">
@@ -84,7 +90,11 @@ function Overview() {
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Pipeline" value={usd.format(d.totals.pipelineUsd)} hint={`${d.totals.deals} deals`} />
+        <StatCard
+          label="Pipeline"
+          value={usd.format(d.totals.pipelineUsd)}
+          hint={`${d.totals.deals} deals`}
+        />
         <StatCard label="Companies" value={d.totals.companies} />
         <StatCard label="Leads" value={d.totals.leads} />
         <StatCard label="Approvals" value={pendingApprovals} />
@@ -134,7 +144,9 @@ function Overview() {
                       <td className="py-1.5 text-right tabular-nums">{row.leads}</td>
                       <td className="py-1.5 text-right tabular-nums">{row.deals}</td>
                       <td className="py-1.5 text-right tabular-nums">{row.clients}</td>
-                      <td className="py-1.5 text-right tabular-nums">{usd.format(row.valueWonUsd)}</td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {usd.format(row.valueWonUsd)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

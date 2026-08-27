@@ -82,9 +82,7 @@ export function hasPostalAddress(body: unknown): boolean {
 export function dollarsToCents(value: unknown): number {
   const raw = typeof value === "string" ? value.trim() : String(value);
   if (!/^\d+(\.\d{1,2})?$/.test(raw)) {
-    throw new Error(
-      "Amount must be a positive number with at most two decimal places",
-    );
+    throw new Error("Amount must be a positive number with at most two decimal places");
   }
   const [whole, frac = ""] = raw.split(".");
   const cents = Number(whole) * 100 + Number((frac + "00").slice(0, 2));

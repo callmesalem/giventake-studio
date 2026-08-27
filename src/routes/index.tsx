@@ -57,7 +57,12 @@ export const Route = createFileRoute("/")({
           ]
         : []),
       ...(ogImageUrl
-        ? [{ property: "og:image:alt", content: "GivenTake Devs — Your On-Demand Development Team", }]
+        ? [
+            {
+              property: "og:image:alt",
+              content: "GivenTake Devs — Your On-Demand Development Team",
+            },
+          ]
         : []),
       {
         name: "twitter:card",
@@ -71,7 +76,12 @@ export const Route = createFileRoute("/")({
       },
       ...(ogImageUrl ? [{ name: "twitter:image", content: ogImageUrl }] : []),
       ...(ogImageUrl
-        ? [{ name: "twitter:image:alt", content: "GivenTake Devs — Your On-Demand Development Team", }]
+        ? [
+            {
+              name: "twitter:image:alt",
+              content: "GivenTake Devs — Your On-Demand Development Team",
+            },
+          ]
         : []),
     ],
     links: [{ rel: "canonical", href: `${BASE_URL}/` }],

@@ -71,7 +71,8 @@ export function mapAttioPerson(record: AttioRecord) {
     sourceRecordId: attioRecordId(record),
     name: full,
     email: (email?.["email_address"] as string) ?? null,
-    phone: (phone?.["phone_number"] as string) ?? (phone?.["original_phone_number"] as string) ?? null,
+    phone:
+      (phone?.["phone_number"] as string) ?? (phone?.["original_phone_number"] as string) ?? null,
     jobTitle: textVal(record, "job_title"),
     companyRecordId: (companyRef?.["target_record_id"] as string) ?? null,
     socials: { linkedin: textVal(record, "linkedin") },

@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmContact, saveContact } from "@/lib/crm-data";
-import { Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, EntityForm, Disclosure } from "@/components/crm/ui";
+import {
+  Card,
+  DetailHeader,
+  DetailLayout,
+  Field,
+  FieldList,
+  Timeline,
+  EntityForm,
+  Disclosure,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/contacts/$id")({
   loader: ({ params }) => crmContact({ data: { id: params.id } }),
@@ -17,7 +26,10 @@ function Contact() {
         title={contact.name}
         subtitle={
           contact.company ? (
-            <a href={`/crm/companies/${contact.company.id}`} className="underline underline-offset-2">
+            <a
+              href={`/crm/companies/${contact.company.id}`}
+              className="underline underline-offset-2"
+            >
               {contact.company.name}
             </a>
           ) : (

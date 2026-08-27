@@ -57,10 +57,18 @@ test("nextStepDue returns step 0 immediately (0h delay)", () => {
 test("nextStepDue withholds a step that is not yet due", () => {
   // step 1 needs 48h after lastAdvancedAt
   const base = 5 * HOUR;
-  const early = nextStepDue({ status: "active", currentStep: 1, lastAdvancedAt: base }, steps, base + 47 * HOUR);
+  const early = nextStepDue(
+    { status: "active", currentStep: 1, lastAdvancedAt: base },
+    steps,
+    base + 47 * HOUR,
+  );
   assert.equal(early.reason, "not_due");
   assert.equal(early.step, null);
-  const ready = nextStepDue({ status: "active", currentStep: 1, lastAdvancedAt: base }, steps, base + 48 * HOUR);
+  const ready = nextStepDue(
+    { status: "active", currentStep: 1, lastAdvancedAt: base },
+    steps,
+    base + 48 * HOUR,
+  );
   assert.equal(ready.reason, "due");
   assert.equal(ready.step.order, 1);
 });

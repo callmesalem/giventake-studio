@@ -2,8 +2,16 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { crmLead, assignRecord, convertLead, crmStages, addNote } from "@/lib/crm-data";
 import { listAssignableMembers } from "@/lib/crm-auth";
 import {
-  Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, Badge, OwnerPicker,
-  EntityForm, Disclosure,
+  Card,
+  DetailHeader,
+  DetailLayout,
+  Field,
+  FieldList,
+  Timeline,
+  Badge,
+  OwnerPicker,
+  EntityForm,
+  Disclosure,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/leads/$id")({
@@ -30,9 +38,8 @@ function Lead() {
           lead.status === "converted" ? null : (
             <Disclosure label="Convert to deal" openLabel="Convert this lead">
               <p className="mb-3 text-xs text-muted-foreground">
-                Creates a company and contact from this lead, opens a deal, and
-                links the deal back to the lead so attribution can follow it
-                through to revenue.
+                Creates a company and contact from this lead, opens a deal, and links the deal back
+                to the lead so attribution can follow it through to revenue.
               </p>
               <EntityForm
                 fields={[
@@ -67,7 +74,9 @@ function Lead() {
           <>
             <Card title="Enquiry">
               <p className="whitespace-pre-wrap text-sm text-foreground">
-                {lead.description ?? <span className="text-muted-foreground">No description given.</span>}
+                {lead.description ?? (
+                  <span className="text-muted-foreground">No description given.</span>
+                )}
               </p>
             </Card>
             <Card title="Activity">

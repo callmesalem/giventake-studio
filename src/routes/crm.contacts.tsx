@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmContacts, crmCompanyOptions, saveContact } from "@/lib/crm-data";
-import { PageHeader, LinkedTable, useListFilter, EntityForm, Disclosure } from "@/components/crm/ui";
+import {
+  PageHeader,
+  LinkedTable,
+  useListFilter,
+  EntityForm,
+  Disclosure,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/contacts")({
   loader: async () => ({
@@ -25,7 +31,10 @@ function Contacts() {
   );
   return (
     <div>
-      <PageHeader title="Contacts" subtitle={`${rows.length} contacts`} action={
+      <PageHeader
+        title="Contacts"
+        subtitle={`${rows.length} contacts`}
+        action={
           <Disclosure label="New contact" openLabel="New contact">
             <EntityForm
               fields={[
@@ -50,19 +59,22 @@ function Contacts() {
       {control}
       <LinkedTable
         columns={["Name", "Title", "Company", "Email", "Phone"]}
-        rows={filtered.map((c) => ({ href: `/crm/contacts/${c.id}`, cells: [
-          <span className="font-medium">{c.name}</span>,
-          dash(c.job_title),
-          dash(c.company),
-          c.email ? (
-            <a href={`mailto:${c.email}`} className="text-primary hover:underline">
-              {c.email}
-            </a>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          ),
-          dash(c.phone),
-        ] }))}
+        rows={filtered.map((c) => ({
+          href: `/crm/contacts/${c.id}`,
+          cells: [
+            <span className="font-medium">{c.name}</span>,
+            dash(c.job_title),
+            dash(c.company),
+            c.email ? (
+              <a href={`mailto:${c.email}`} className="text-primary hover:underline">
+                {c.email}
+              </a>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            ),
+            dash(c.phone),
+          ],
+        }))}
       />
     </div>
   );

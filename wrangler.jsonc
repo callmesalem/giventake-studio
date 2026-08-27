@@ -14,7 +14,7 @@
   "routes": [
     { "pattern": "giventakedevs.com", "custom_domain": true },
     { "pattern": "www.giventakedevs.com", "custom_domain": true },
-    { "pattern": "crm.giventakedevs.com", "custom_domain": true }
+    { "pattern": "crm.giventakedevs.com", "custom_domain": true },
   ],
 
   // Plain-text vars MUST live here, not only in the dashboard.
@@ -35,6 +35,6 @@
     // Where the lead notification is delivered. Without this the code falls back
     // to hello@giventakedevs.com (src/lib/intake.ts), which is not a mailbox
     // Salem reads - so notifications sent successfully and went nowhere.
-    "INTAKE_TO_EMAIL": "build@giventakedevs.com"
-  }
+    "INTAKE_TO_EMAIL": "build@giventakedevs.com",
+  },
 }
