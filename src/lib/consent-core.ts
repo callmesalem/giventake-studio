@@ -23,7 +23,13 @@ export type ConsentCategory = "necessary" | "preferences" | "analytics" | "marke
 export type ConsentState = Record<ConsentCategory, boolean>;
 
 export type ConsentSource =
-  "accept-all" | "reject-all" | "save-preferences" | "restored" | "gpc" | "expired" | "default";
+  | "accept-all"
+  | "reject-all"
+  | "save-preferences"
+  | "restored"
+  | "gpc"
+  | "expired"
+  | "default";
 
 export type ConsentAuditEntry = {
   at: string;

@@ -23,7 +23,8 @@ export type SubscriberStatus =
 export type IssueStatus = "draft" | "scheduled" | "sent" | "canceled" | "archived";
 
 export type ConfirmResult =
-  { ok: true; status: "confirmed" } | { ok: false; reason: "not_pending" | "token_expired" };
+  | { ok: true; status: "confirmed" }
+  | { ok: false; reason: "not_pending" | "token_expired" };
 
 /**
  * Apply a double opt-in confirmation. Succeeds only from `pending` and only

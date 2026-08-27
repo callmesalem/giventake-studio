@@ -548,22 +548,14 @@ export const crmDeal = createServerFn({ method: "GET" })
         ? read.getById<Record<string, unknown>>("leads", leadId, "id,name,email")
         : Promise.resolve(null),
       read
-        .relatedBy<Record<string, unknown>>(
-          "pipeline_stages",
-          "name",
-          String(row.stage ?? ""),
-          "name,artifact,gate",
-          "name.asc",
-          1,
-        )
+        .relatedBy<
+          Record<string, unknown>
+        >("pipeline_stages", "name", String(row.stage ?? ""), "name,artifact,gate", "name.asc", 1)
         .catch(() => []),
       read
-        .relatedBy<Record<string, unknown>>(
-          "deal_stage_events",
-          "deal_id",
-          data.id,
-          "id,from_stage,to_stage,actor,note,created_at",
-        )
+        .relatedBy<
+          Record<string, unknown>
+        >("deal_stage_events", "deal_id", data.id, "id,from_stage,to_stage,actor,note,created_at")
         .catch(() => []),
       companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
     ]);
