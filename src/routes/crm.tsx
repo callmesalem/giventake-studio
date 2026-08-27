@@ -18,6 +18,9 @@ import {
   Menu,
   X,
   Loader2,
+  BookOpen,
+  Sparkles,
+  Files,
 } from "lucide-react";
 import { getCrmSession, logoutCrm } from "@/lib/crm-auth";
 import type { CrmSession } from "@/server/crm/auth";
@@ -52,6 +55,9 @@ const NAV = [
   { to: "/crm/referrals", label: "Referrals", icon: Share2, exact: false },
   { to: "/crm/clients", label: "Clients", icon: Briefcase, exact: false },
   { to: "/crm/marketing", label: "Marketing", icon: Megaphone, exact: false },
+  { to: "/crm/playbook", label: "Playbook", icon: BookOpen, exact: false },
+  { to: "/crm/documents", label: "Documents", icon: Files, exact: false },
+  { to: "/crm/sami", label: "Sami", icon: Sparkles, exact: false },
   { to: "/crm/approvals", label: "Approvals", icon: ShieldCheck, exact: false },
   { to: "/crm/send-check", label: "Send check", icon: SendHorizonal, exact: false },
 ] as const;
