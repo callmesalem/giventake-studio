@@ -26,8 +26,11 @@ import { Route as CrmIndexRouteImport } from './routes/crm.index'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as CrmTeamRouteImport } from './routes/crm.team'
+import { Route as CrmSamiRouteImport } from './routes/crm.sami'
+import { Route as CrmPlaybookRouteImport } from './routes/crm.playbook'
 import { Route as CrmLoginRouteImport } from './routes/crm.login'
 import { Route as CrmLeadsRouteImport } from './routes/crm.leads'
+import { Route as CrmDocumentsRouteImport } from './routes/crm.documents'
 import { Route as CrmDealsRouteImport } from './routes/crm.deals'
 import { Route as CrmContactsRouteImport } from './routes/crm.contacts'
 import { Route as CrmCompaniesRouteImport } from './routes/crm.companies'
@@ -121,6 +124,16 @@ const CrmTeamRoute = CrmTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmSamiRoute = CrmSamiRouteImport.update({
+  id: '/sami',
+  path: '/sami',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmPlaybookRoute = CrmPlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmLoginRoute = CrmLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -129,6 +142,11 @@ const CrmLoginRoute = CrmLoginRouteImport.update({
 const CrmLeadsRoute = CrmLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmDocumentsRoute = CrmDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmDealsRoute = CrmDealsRouteImport.update({
@@ -185,8 +203,11 @@ export interface FileRoutesByFullPath {
   '/crm/companies': typeof CrmCompaniesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/deals': typeof CrmDealsRoute
+  '/crm/documents': typeof CrmDocumentsRoute
   '/crm/leads': typeof CrmLeadsRoute
   '/crm/login': typeof CrmLoginRoute
+  '/crm/playbook': typeof CrmPlaybookRoute
+  '/crm/sami': typeof CrmSamiRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/articles/': typeof ArticlesIndexRoute
@@ -212,8 +233,11 @@ export interface FileRoutesByTo {
   '/crm/companies': typeof CrmCompaniesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/deals': typeof CrmDealsRoute
+  '/crm/documents': typeof CrmDocumentsRoute
   '/crm/leads': typeof CrmLeadsRoute
   '/crm/login': typeof CrmLoginRoute
+  '/crm/playbook': typeof CrmPlaybookRoute
+  '/crm/sami': typeof CrmSamiRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/articles': typeof ArticlesIndexRoute
@@ -241,8 +265,11 @@ export interface FileRoutesById {
   '/crm/companies': typeof CrmCompaniesRoute
   '/crm/contacts': typeof CrmContactsRoute
   '/crm/deals': typeof CrmDealsRoute
+  '/crm/documents': typeof CrmDocumentsRoute
   '/crm/leads': typeof CrmLeadsRoute
   '/crm/login': typeof CrmLoginRoute
+  '/crm/playbook': typeof CrmPlaybookRoute
+  '/crm/sami': typeof CrmSamiRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/articles/': typeof ArticlesIndexRoute
@@ -271,8 +298,11 @@ export interface FileRouteTypes {
     | '/crm/companies'
     | '/crm/contacts'
     | '/crm/deals'
+    | '/crm/documents'
     | '/crm/leads'
     | '/crm/login'
+    | '/crm/playbook'
+    | '/crm/sami'
     | '/crm/team'
     | '/services/$slug'
     | '/articles/'
@@ -298,8 +328,11 @@ export interface FileRouteTypes {
     | '/crm/companies'
     | '/crm/contacts'
     | '/crm/deals'
+    | '/crm/documents'
     | '/crm/leads'
     | '/crm/login'
+    | '/crm/playbook'
+    | '/crm/sami'
     | '/crm/team'
     | '/services/$slug'
     | '/articles'
@@ -326,8 +359,11 @@ export interface FileRouteTypes {
     | '/crm/companies'
     | '/crm/contacts'
     | '/crm/deals'
+    | '/crm/documents'
     | '/crm/leads'
     | '/crm/login'
+    | '/crm/playbook'
+    | '/crm/sami'
     | '/crm/team'
     | '/services/$slug'
     | '/articles/'
@@ -477,6 +513,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmTeamRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/crm/sami': {
+      id: '/crm/sami'
+      path: '/sami'
+      fullPath: '/crm/sami'
+      preLoaderRoute: typeof CrmSamiRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/playbook': {
+      id: '/crm/playbook'
+      path: '/playbook'
+      fullPath: '/crm/playbook'
+      preLoaderRoute: typeof CrmPlaybookRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/crm/login': {
       id: '/crm/login'
       path: '/login'
@@ -489,6 +539,13 @@ declare module '@tanstack/react-router' {
       path: '/leads'
       fullPath: '/crm/leads'
       preLoaderRoute: typeof CrmLeadsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/documents': {
+      id: '/crm/documents'
+      path: '/documents'
+      fullPath: '/crm/documents'
+      preLoaderRoute: typeof CrmDocumentsRouteImport
       parentRoute: typeof CrmRoute
     }
     '/crm/deals': {
@@ -548,8 +605,11 @@ interface CrmRouteChildren {
   CrmCompaniesRoute: typeof CrmCompaniesRoute
   CrmContactsRoute: typeof CrmContactsRoute
   CrmDealsRoute: typeof CrmDealsRoute
+  CrmDocumentsRoute: typeof CrmDocumentsRoute
   CrmLeadsRoute: typeof CrmLeadsRoute
   CrmLoginRoute: typeof CrmLoginRoute
+  CrmPlaybookRoute: typeof CrmPlaybookRoute
+  CrmSamiRoute: typeof CrmSamiRoute
   CrmTeamRoute: typeof CrmTeamRoute
   CrmIndexRoute: typeof CrmIndexRoute
   CrmAuthCallbackRoute: typeof CrmAuthCallbackRoute
@@ -561,8 +621,11 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmCompaniesRoute: CrmCompaniesRoute,
   CrmContactsRoute: CrmContactsRoute,
   CrmDealsRoute: CrmDealsRoute,
+  CrmDocumentsRoute: CrmDocumentsRoute,
   CrmLeadsRoute: CrmLeadsRoute,
   CrmLoginRoute: CrmLoginRoute,
+  CrmPlaybookRoute: CrmPlaybookRoute,
+  CrmSamiRoute: CrmSamiRoute,
   CrmTeamRoute: CrmTeamRoute,
   CrmIndexRoute: CrmIndexRoute,
   CrmAuthCallbackRoute: CrmAuthCallbackRoute,

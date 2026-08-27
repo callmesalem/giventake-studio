@@ -39,9 +39,17 @@ export function StatCard({
   );
 }
 
-export function Card({ title, children }: { title?: string; children: ReactNode }) {
+export function Card({
+  title,
+  children,
+  className,
+}: {
+  title?: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <section className="rounded-lg border border-border bg-card">
+    <section className={cn("rounded-lg border border-border bg-card", className)}>
       {title && (
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
