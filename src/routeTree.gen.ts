@@ -9,95 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ProcessRouteImport } from './routes/process'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as OperatorDashboardRouteImport } from './routes/operator-dashboard'
-import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
-import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
-import { Route as DataRequestRouteImport } from './routes/data-request'
-import { Route as CrmRouteImport } from './routes/crm'
-import { Route as CookiesRouteImport } from './routes/cookies'
-import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ServicesIndexRouteImport } from './routes/services.index'
-import { Route as CrmIndexRouteImport } from './routes/crm.index'
+import { Route as ComplianceRouteImport } from './routes/compliance'
+import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as CrmRouteImport } from './routes/crm'
+import { Route as DataRequestRouteImport } from './routes/data-request'
+import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
+import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
+import { Route as OperatorDashboardRouteImport } from './routes/operator-dashboard'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProcessRouteImport } from './routes/process'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
-import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
-import { Route as CrmTeamRouteImport } from './routes/crm.team'
-import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
-import { Route as CrmSendCheckRouteImport } from './routes/crm.send-check'
-import { Route as CrmSearchRouteImport } from './routes/crm.search'
-import { Route as CrmSamiRouteImport } from './routes/crm.sami'
-import { Route as CrmReferralsRouteImport } from './routes/crm.referrals'
-import { Route as CrmPlaybookRouteImport } from './routes/crm.playbook'
-import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
-import { Route as CrmMarketingRouteImport } from './routes/crm.marketing'
-import { Route as CrmLoginRouteImport } from './routes/crm.login'
-import { Route as CrmLeadsRouteImport } from './routes/crm.leads'
-import { Route as CrmDocumentsRouteImport } from './routes/crm.documents'
-import { Route as CrmDealsRouteImport } from './routes/crm.deals'
-import { Route as CrmContactsRouteImport } from './routes/crm.contacts'
-import { Route as CrmCompaniesRouteImport } from './routes/crm.companies'
-import { Route as CrmClientsRouteImport } from './routes/crm.clients'
-import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
-import { Route as CrmLeadsIdRouteImport } from './routes/crm.leads.$id'
-import { Route as CrmDealsIdRouteImport } from './routes/crm.deals.$id'
-import { Route as CrmContactsIdRouteImport } from './routes/crm.contacts.$id'
-import { Route as CrmCompaniesIdRouteImport } from './routes/crm.companies.$id'
-import { Route as CrmAuthGoogleRouteImport } from './routes/crm.auth.google'
+import { Route as CrmIndexRouteImport } from './routes/crm.index'
+import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
+import { Route as CrmClientsRouteImport } from './routes/crm.clients'
+import { Route as CrmCompaniesRouteImport } from './routes/crm.companies'
+import { Route as CrmContactsRouteImport } from './routes/crm.contacts'
+import { Route as CrmDealsRouteImport } from './routes/crm.deals'
+import { Route as CrmDocumentsRouteImport } from './routes/crm.documents'
+import { Route as CrmLeadsRouteImport } from './routes/crm.leads'
+import { Route as CrmLoginRouteImport } from './routes/crm.login'
+import { Route as CrmMarketingRouteImport } from './routes/crm.marketing'
+import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
+import { Route as CrmPlaybookRouteImport } from './routes/crm.playbook'
+import { Route as CrmReferralsRouteImport } from './routes/crm.referrals'
+import { Route as CrmSamiRouteImport } from './routes/crm.sami'
+import { Route as CrmSearchRouteImport } from './routes/crm.search'
+import { Route as CrmSendCheckRouteImport } from './routes/crm.send-check'
+import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
+import { Route as CrmTeamRouteImport } from './routes/crm.team'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as CrmAuthCallbackRouteImport } from './routes/crm.auth.callback'
+import { Route as CrmAuthGoogleRouteImport } from './routes/crm.auth.google'
+import { Route as CrmCompaniesIdRouteImport } from './routes/crm.companies.$id'
+import { Route as CrmContactsIdRouteImport } from './routes/crm.contacts.$id'
+import { Route as CrmDealsIdRouteImport } from './routes/crm.deals.$id'
+import { Route as CrmLeadsIdRouteImport } from './routes/crm.leads.$id'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProcessRoute = ProcessRouteImport.update({
-  id: '/process',
-  path: '/process',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OperatorDashboardRoute = OperatorDashboardRouteImport.update({
-  id: '/operator-dashboard',
-  path: '/operator-dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HowWeUseAiRoute = HowWeUseAiRouteImport.update({
-  id: '/how-we-use-ai',
-  path: '/how-we-use-ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DoNotSellRoute = DoNotSellRouteImport.update({
-  id: '/do-not-sell',
-  path: '/do-not-sell',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DataRequestRoute = DataRequestRouteImport.update({
-  id: '/data-request',
-  path: '/data-request',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmRoute = CrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CookiesRoute = CookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComplianceRoute = ComplianceRouteImport.update({
@@ -105,14 +60,64 @@ const ComplianceRoute = ComplianceRouteImport.update({
   path: '/compliance',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ServicesIndexRoute = ServicesIndexRouteImport.update({
-  id: '/services/',
-  path: '/services/',
+const CrmRoute = CrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataRequestRoute = DataRequestRouteImport.update({
+  id: '/data-request',
+  path: '/data-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DoNotSellRoute = DoNotSellRouteImport.update({
+  id: '/do-not-sell',
+  path: '/do-not-sell',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowWeUseAiRoute = HowWeUseAiRouteImport.update({
+  id: '/how-we-use-ai',
+  path: '/how-we-use-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperatorDashboardRoute = OperatorDashboardRouteImport.update({
+  id: '/operator-dashboard',
+  path: '/operator-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProcessRoute = ProcessRouteImport.update({
+  id: '/process',
+  path: '/process',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
+  id: '/articles/',
+  path: '/articles/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
+  id: '/articles/$slug',
+  path: '/articles/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmIndexRoute = CrmIndexRouteImport.update({
@@ -120,89 +125,9 @@ const CrmIndexRoute = CrmIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CrmRoute,
 } as any)
-const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
-  id: '/articles/',
-  path: '/articles/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ServicesSlugRoute = ServicesSlugRouteImport.update({
-  id: '/services/$slug',
-  path: '/services/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmTeamRoute = CrmTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmTasksRoute = CrmTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmSendCheckRoute = CrmSendCheckRouteImport.update({
-  id: '/send-check',
-  path: '/send-check',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmSearchRoute = CrmSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmSamiRoute = CrmSamiRouteImport.update({
-  id: '/sami',
-  path: '/sami',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmReferralsRoute = CrmReferralsRouteImport.update({
-  id: '/referrals',
-  path: '/referrals',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmPlaybookRoute = CrmPlaybookRouteImport.update({
-  id: '/playbook',
-  path: '/playbook',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmPipelineRoute = CrmPipelineRouteImport.update({
-  id: '/pipeline',
-  path: '/pipeline',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmMarketingRoute = CrmMarketingRouteImport.update({
-  id: '/marketing',
-  path: '/marketing',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmLoginRoute = CrmLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmLeadsRoute = CrmLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmDocumentsRoute = CrmDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmDealsRoute = CrmDealsRouteImport.update({
-  id: '/deals',
-  path: '/deals',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmContactsRoute = CrmContactsRouteImport.update({
-  id: '/contacts',
-  path: '/contacts',
-  getParentRoute: () => CrmRoute,
-} as any)
-const CrmCompaniesRoute = CrmCompaniesRouteImport.update({
-  id: '/companies',
-  path: '/companies',
+const CrmApprovalsRoute = CrmApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmClientsRoute = CrmClientsRouteImport.update({
@@ -210,45 +135,120 @@ const CrmClientsRoute = CrmClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => CrmRoute,
 } as any)
-const CrmApprovalsRoute = CrmApprovalsRouteImport.update({
-  id: '/approvals',
-  path: '/approvals',
+const CrmCompaniesRoute = CrmCompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
   getParentRoute: () => CrmRoute,
 } as any)
-const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
-  id: '/articles/$slug',
-  path: '/articles/$slug',
+const CrmContactsRoute = CrmContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmDealsRoute = CrmDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmDocumentsRoute = CrmDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmLeadsRoute = CrmLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmLoginRoute = CrmLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmMarketingRoute = CrmMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmPipelineRoute = CrmPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmPlaybookRoute = CrmPlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmReferralsRoute = CrmReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmSamiRoute = CrmSamiRouteImport.update({
+  id: '/sami',
+  path: '/sami',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmSearchRoute = CrmSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmSendCheckRoute = CrmSendCheckRouteImport.update({
+  id: '/send-check',
+  path: '/send-check',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmTasksRoute = CrmTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmTeamRoute = CrmTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => CrmRoute,
+} as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrmLeadsIdRoute = CrmLeadsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CrmLeadsRoute,
+const ServicesSlugRoute = ServicesSlugRouteImport.update({
+  id: '/services/$slug',
+  path: '/services/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const CrmDealsIdRoute = CrmDealsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CrmDealsRoute,
-} as any)
-const CrmContactsIdRoute = CrmContactsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CrmContactsRoute,
-} as any)
-const CrmCompaniesIdRoute = CrmCompaniesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CrmCompaniesRoute,
+const CrmAuthCallbackRoute = CrmAuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => CrmRoute,
 } as any)
 const CrmAuthGoogleRoute = CrmAuthGoogleRouteImport.update({
   id: '/auth/google',
   path: '/auth/google',
   getParentRoute: () => CrmRoute,
 } as any)
-const CrmAuthCallbackRoute = CrmAuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => CrmRoute,
+const CrmCompaniesIdRoute = CrmCompaniesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmCompaniesRoute,
+} as any)
+const CrmContactsIdRoute = CrmContactsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmContactsRoute,
+} as any)
+const CrmDealsIdRoute = CrmDealsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmDealsRoute,
+} as any)
+const CrmLeadsIdRoute = CrmLeadsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CrmLeadsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -526,74 +526,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/process': {
-      id: '/process'
-      path: '/process'
-      fullPath: '/process'
-      preLoaderRoute: typeof ProcessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/operator-dashboard': {
-      id: '/operator-dashboard'
-      path: '/operator-dashboard'
-      fullPath: '/operator-dashboard'
-      preLoaderRoute: typeof OperatorDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/how-we-use-ai': {
-      id: '/how-we-use-ai'
-      path: '/how-we-use-ai'
-      fullPath: '/how-we-use-ai'
-      preLoaderRoute: typeof HowWeUseAiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/do-not-sell': {
-      id: '/do-not-sell'
-      path: '/do-not-sell'
-      fullPath: '/do-not-sell'
-      preLoaderRoute: typeof DoNotSellRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/data-request': {
-      id: '/data-request'
-      path: '/data-request'
-      fullPath: '/data-request'
-      preLoaderRoute: typeof DataRequestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm': {
-      id: '/crm'
-      path: '/crm'
-      fullPath: '/crm'
-      preLoaderRoute: typeof CrmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookies': {
-      id: '/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof CookiesRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compliance': {
@@ -603,18 +540,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/services/': {
-      id: '/services/'
-      path: '/services'
-      fullPath: '/services/'
-      preLoaderRoute: typeof ServicesIndexRouteImport
+    '/crm': {
+      id: '/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof CrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-request': {
+      id: '/data-request'
+      path: '/data-request'
+      fullPath: '/data-request'
+      preLoaderRoute: typeof DataRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/do-not-sell': {
+      id: '/do-not-sell'
+      path: '/do-not-sell'
+      fullPath: '/do-not-sell'
+      preLoaderRoute: typeof DoNotSellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-we-use-ai': {
+      id: '/how-we-use-ai'
+      path: '/how-we-use-ai'
+      fullPath: '/how-we-use-ai'
+      preLoaderRoute: typeof HowWeUseAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operator-dashboard': {
+      id: '/operator-dashboard'
+      path: '/operator-dashboard'
+      fullPath: '/operator-dashboard'
+      preLoaderRoute: typeof OperatorDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/process': {
+      id: '/process'
+      path: '/process'
+      fullPath: '/process'
+      preLoaderRoute: typeof ProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/articles/': {
+      id: '/articles/'
+      path: '/articles'
+      fullPath: '/articles/'
+      preLoaderRoute: typeof ArticlesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/articles/$slug': {
+      id: '/articles/$slug'
+      path: '/articles/$slug'
+      fullPath: '/articles/$slug'
+      preLoaderRoute: typeof ArticlesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/': {
@@ -624,123 +631,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIndexRouteImport
       parentRoute: typeof CrmRoute
     }
-    '/articles/': {
-      id: '/articles/'
-      path: '/articles'
-      fullPath: '/articles/'
-      preLoaderRoute: typeof ArticlesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/services/$slug': {
-      id: '/services/$slug'
-      path: '/services/$slug'
-      fullPath: '/services/$slug'
-      preLoaderRoute: typeof ServicesSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm/team': {
-      id: '/crm/team'
-      path: '/team'
-      fullPath: '/crm/team'
-      preLoaderRoute: typeof CrmTeamRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/tasks': {
-      id: '/crm/tasks'
-      path: '/tasks'
-      fullPath: '/crm/tasks'
-      preLoaderRoute: typeof CrmTasksRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/send-check': {
-      id: '/crm/send-check'
-      path: '/send-check'
-      fullPath: '/crm/send-check'
-      preLoaderRoute: typeof CrmSendCheckRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/search': {
-      id: '/crm/search'
-      path: '/search'
-      fullPath: '/crm/search'
-      preLoaderRoute: typeof CrmSearchRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/sami': {
-      id: '/crm/sami'
-      path: '/sami'
-      fullPath: '/crm/sami'
-      preLoaderRoute: typeof CrmSamiRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/referrals': {
-      id: '/crm/referrals'
-      path: '/referrals'
-      fullPath: '/crm/referrals'
-      preLoaderRoute: typeof CrmReferralsRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/playbook': {
-      id: '/crm/playbook'
-      path: '/playbook'
-      fullPath: '/crm/playbook'
-      preLoaderRoute: typeof CrmPlaybookRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/pipeline': {
-      id: '/crm/pipeline'
-      path: '/pipeline'
-      fullPath: '/crm/pipeline'
-      preLoaderRoute: typeof CrmPipelineRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/marketing': {
-      id: '/crm/marketing'
-      path: '/marketing'
-      fullPath: '/crm/marketing'
-      preLoaderRoute: typeof CrmMarketingRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/login': {
-      id: '/crm/login'
-      path: '/login'
-      fullPath: '/crm/login'
-      preLoaderRoute: typeof CrmLoginRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/leads': {
-      id: '/crm/leads'
-      path: '/leads'
-      fullPath: '/crm/leads'
-      preLoaderRoute: typeof CrmLeadsRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/documents': {
-      id: '/crm/documents'
-      path: '/documents'
-      fullPath: '/crm/documents'
-      preLoaderRoute: typeof CrmDocumentsRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/deals': {
-      id: '/crm/deals'
-      path: '/deals'
-      fullPath: '/crm/deals'
-      preLoaderRoute: typeof CrmDealsRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/contacts': {
-      id: '/crm/contacts'
-      path: '/contacts'
-      fullPath: '/crm/contacts'
-      preLoaderRoute: typeof CrmContactsRouteImport
-      parentRoute: typeof CrmRoute
-    }
-    '/crm/companies': {
-      id: '/crm/companies'
-      path: '/companies'
-      fullPath: '/crm/companies'
-      preLoaderRoute: typeof CrmCompaniesRouteImport
+    '/crm/approvals': {
+      id: '/crm/approvals'
+      path: '/approvals'
+      fullPath: '/crm/approvals'
+      preLoaderRoute: typeof CrmApprovalsRouteImport
       parentRoute: typeof CrmRoute
     }
     '/crm/clients': {
@@ -750,47 +645,131 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmClientsRouteImport
       parentRoute: typeof CrmRoute
     }
-    '/crm/approvals': {
-      id: '/crm/approvals'
-      path: '/approvals'
-      fullPath: '/crm/approvals'
-      preLoaderRoute: typeof CrmApprovalsRouteImport
+    '/crm/companies': {
+      id: '/crm/companies'
+      path: '/companies'
+      fullPath: '/crm/companies'
+      preLoaderRoute: typeof CrmCompaniesRouteImport
       parentRoute: typeof CrmRoute
     }
-    '/articles/$slug': {
-      id: '/articles/$slug'
-      path: '/articles/$slug'
-      fullPath: '/articles/$slug'
-      preLoaderRoute: typeof ArticlesSlugRouteImport
+    '/crm/contacts': {
+      id: '/crm/contacts'
+      path: '/contacts'
+      fullPath: '/crm/contacts'
+      preLoaderRoute: typeof CrmContactsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/deals': {
+      id: '/crm/deals'
+      path: '/deals'
+      fullPath: '/crm/deals'
+      preLoaderRoute: typeof CrmDealsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/documents': {
+      id: '/crm/documents'
+      path: '/documents'
+      fullPath: '/crm/documents'
+      preLoaderRoute: typeof CrmDocumentsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/leads': {
+      id: '/crm/leads'
+      path: '/leads'
+      fullPath: '/crm/leads'
+      preLoaderRoute: typeof CrmLeadsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/login': {
+      id: '/crm/login'
+      path: '/login'
+      fullPath: '/crm/login'
+      preLoaderRoute: typeof CrmLoginRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/marketing': {
+      id: '/crm/marketing'
+      path: '/marketing'
+      fullPath: '/crm/marketing'
+      preLoaderRoute: typeof CrmMarketingRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/pipeline': {
+      id: '/crm/pipeline'
+      path: '/pipeline'
+      fullPath: '/crm/pipeline'
+      preLoaderRoute: typeof CrmPipelineRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/playbook': {
+      id: '/crm/playbook'
+      path: '/playbook'
+      fullPath: '/crm/playbook'
+      preLoaderRoute: typeof CrmPlaybookRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/referrals': {
+      id: '/crm/referrals'
+      path: '/referrals'
+      fullPath: '/crm/referrals'
+      preLoaderRoute: typeof CrmReferralsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/sami': {
+      id: '/crm/sami'
+      path: '/sami'
+      fullPath: '/crm/sami'
+      preLoaderRoute: typeof CrmSamiRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/search': {
+      id: '/crm/search'
+      path: '/search'
+      fullPath: '/crm/search'
+      preLoaderRoute: typeof CrmSearchRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/send-check': {
+      id: '/crm/send-check'
+      path: '/send-check'
+      fullPath: '/crm/send-check'
+      preLoaderRoute: typeof CrmSendCheckRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/tasks': {
+      id: '/crm/tasks'
+      path: '/tasks'
+      fullPath: '/crm/tasks'
+      preLoaderRoute: typeof CrmTasksRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/team': {
+      id: '/crm/team'
+      path: '/team'
+      fullPath: '/crm/team'
+      preLoaderRoute: typeof CrmTeamRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/services/': {
+      id: '/services/'
+      path: '/services'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crm/leads/$id': {
-      id: '/crm/leads/$id'
-      path: '/$id'
-      fullPath: '/crm/leads/$id'
-      preLoaderRoute: typeof CrmLeadsIdRouteImport
-      parentRoute: typeof CrmLeadsRoute
+    '/services/$slug': {
+      id: '/services/$slug'
+      path: '/services/$slug'
+      fullPath: '/services/$slug'
+      preLoaderRoute: typeof ServicesSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/crm/deals/$id': {
-      id: '/crm/deals/$id'
-      path: '/$id'
-      fullPath: '/crm/deals/$id'
-      preLoaderRoute: typeof CrmDealsIdRouteImport
-      parentRoute: typeof CrmDealsRoute
-    }
-    '/crm/contacts/$id': {
-      id: '/crm/contacts/$id'
-      path: '/$id'
-      fullPath: '/crm/contacts/$id'
-      preLoaderRoute: typeof CrmContactsIdRouteImport
-      parentRoute: typeof CrmContactsRoute
-    }
-    '/crm/companies/$id': {
-      id: '/crm/companies/$id'
-      path: '/$id'
-      fullPath: '/crm/companies/$id'
-      preLoaderRoute: typeof CrmCompaniesIdRouteImport
-      parentRoute: typeof CrmCompaniesRoute
+    '/crm/auth/callback': {
+      id: '/crm/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/crm/auth/callback'
+      preLoaderRoute: typeof CrmAuthCallbackRouteImport
+      parentRoute: typeof CrmRoute
     }
     '/crm/auth/google': {
       id: '/crm/auth/google'
@@ -799,12 +778,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmAuthGoogleRouteImport
       parentRoute: typeof CrmRoute
     }
-    '/crm/auth/callback': {
-      id: '/crm/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/crm/auth/callback'
-      preLoaderRoute: typeof CrmAuthCallbackRouteImport
-      parentRoute: typeof CrmRoute
+    '/crm/companies/$id': {
+      id: '/crm/companies/$id'
+      path: '/$id'
+      fullPath: '/crm/companies/$id'
+      preLoaderRoute: typeof CrmCompaniesIdRouteImport
+      parentRoute: typeof CrmCompaniesRoute
+    }
+    '/crm/contacts/$id': {
+      id: '/crm/contacts/$id'
+      path: '/$id'
+      fullPath: '/crm/contacts/$id'
+      preLoaderRoute: typeof CrmContactsIdRouteImport
+      parentRoute: typeof CrmContactsRoute
+    }
+    '/crm/deals/$id': {
+      id: '/crm/deals/$id'
+      path: '/$id'
+      fullPath: '/crm/deals/$id'
+      preLoaderRoute: typeof CrmDealsIdRouteImport
+      parentRoute: typeof CrmDealsRoute
+    }
+    '/crm/leads/$id': {
+      id: '/crm/leads/$id'
+      path: '/$id'
+      fullPath: '/crm/leads/$id'
+      preLoaderRoute: typeof CrmLeadsIdRouteImport
+      parentRoute: typeof CrmLeadsRoute
     }
   }
 }

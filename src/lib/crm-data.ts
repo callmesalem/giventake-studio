@@ -56,6 +56,10 @@ export interface ContactRow {
   phone: string | null;
   job_title: string | null;
   company: string | null;
+  lifecycle_stage: string;
+  assigned_to: string | null;
+  next_action: string | null;
+  next_action_due: string | null;
 }
 export interface DealRow {
   id: string;
@@ -178,6 +182,10 @@ export const crmContacts = createServerFn({ method: "GET" }).handler(
       phone: str(r.phone),
       job_title: str(r.job_title),
       company: r.company_id ? (nameById.get(String(r.company_id)) ?? null) : null,
+      lifecycle_stage: str(r.lifecycle_stage) ?? "lead",
+      assigned_to: str(r.assigned_to),
+      next_action: str(r.next_action),
+      next_action_due: str(r.next_action_due),
     }));
   },
 );
@@ -558,14 +566,22 @@ export const crmDeal = createServerFn({ method: "GET" })
         ? read.getById<Record<string, unknown>>("leads", leadId, "id,name,email")
         : Promise.resolve(null),
       read
-        .relatedBy<
-          Record<string, unknown>
-        >("pipeline_stages", "name", String(row.stage ?? ""), "name,artifact,gate", "name.asc", 1)
+        .relatedBy<Record<string, unknown>>(
+          "pipeline_stages",
+          "name",
+          String(row.stage ?? ""),
+          "name,artifact,gate",
+          "name.asc",
+          1,
+        )
         .catch(() => []),
       read
-        .relatedBy<
-          Record<string, unknown>
-        >("deal_stage_events", "deal_id", data.id, "id,from_stage,to_stage,actor,note,created_at")
+        .relatedBy<Record<string, unknown>>(
+          "deal_stage_events",
+          "deal_id",
+          data.id,
+          "id,from_stage,to_stage,actor,note,created_at",
+        )
         .catch(() => []),
       companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
     ]);
