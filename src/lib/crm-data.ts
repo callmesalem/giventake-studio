@@ -20,6 +20,7 @@ import {
   canAssign,
   type Gate,
 } from "@/lib/crm-guards";
+import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
 
 function config() {
   const url = process.env.SUPABASE_URL;
@@ -56,6 +57,10 @@ export interface ContactRow {
   phone: string | null;
   job_title: string | null;
   company: string | null;
+  lifecycle_stage: string;
+  assigned_to: string | null;
+  next_action: string | null;
+  next_action_due: string | null;
 }
 export interface DealRow {
   id: string;
@@ -178,6 +183,10 @@ export const crmContacts = createServerFn({ method: "GET" }).handler(
       phone: str(r.phone),
       job_title: str(r.job_title),
       company: r.company_id ? (nameById.get(String(r.company_id)) ?? null) : null,
+      lifecycle_stage: str(r.lifecycle_stage) ?? "lead",
+      assigned_to: str(r.assigned_to),
+      next_action: str(r.next_action),
+      next_action_due: str(r.next_action_due),
     }));
   },
 );
@@ -285,25 +294,6 @@ function notFound(record: unknown): asserts record is Record<string, unknown> {
 }
 
 /** A single thing that happened, from whichever table recorded it. */
-export interface TimelineEvent {
-  id: string;
-  at: string | null;
-  kind: "touchpoint" | "agent" | "note" | "stage" | "task";
-  title: string;
-  detail: string | null;
-  actor: string | null;
-}
-
-const byNewestFirst = (a: TimelineEvent, b: TimelineEvent) =>
-  (b.at ?? "").localeCompare(a.at ?? "");
-
-/** Human label for a touchpoint kind: website_contact_form -> Website contact form. */
-function humanise(value: string | null): string {
-  if (!value) return "Activity";
-  const spaced = value.replace(/[_-]+/g, " ").trim();
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-}
-
 /** jsonb columns arrive as objects; render something readable without dumping
  *  the whole blob at the user. */
 function summarise(content: unknown, keys: string[]): string | null {
@@ -606,6 +596,7 @@ export interface ContactDetail {
   job_title: string | null;
   created_at: string | null;
   company: { id: string; name: string } | null;
+  deals: { id: string; name: string; stage: string | null; value_usd: number | null }[];
   events: TimelineEvent[];
 }
 
@@ -616,12 +607,33 @@ export const crmContact = createServerFn({ method: "GET" })
     const row = await read.getById<Record<string, unknown>>("contacts", data.id);
     notFound(row);
     const companyId = row.company_id ? String(row.company_id) : null;
-    const [company, events] = await Promise.all([
+    // A contact folded from a lead in Phase 1 carries source='lead_migration' and
+    // source_record_id=<lead id>. That lead's capture history (touchpoints, notes,
+    // agent log) is still keyed by lead_id, so we can pull it in at read time —
+    // no migration needed — and the timeline shows the whole story of the person.
+    const leadId =
+      str(row.source) === "lead_migration" && isUuid(row.source_record_id)
+        ? String(row.source_record_id)
+        : null;
+    // The contact's OWN deals (Phase 1 linked deals to contacts), the folded
+    // lead's history, and the wider company activity. Merged so the timeline is
+    // about this person, not just the account they belong to.
+    const [company, companyEvents, deals, leadEvents] = await Promise.all([
       companyId
         ? read.getById<Record<string, unknown>>("companies", companyId, "id,name")
         : Promise.resolve(null),
       companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
+      read.relatedBy<Record<string, unknown>>(
+        "deals",
+        "contact_id",
+        data.id,
+        "id,name,stage,value_usd,created_at",
+      ),
+      leadId ? leadTimeline(read, leadId) : Promise.resolve([]),
     ]);
+    const events = [...companyEvents, ...contactDealEvents(deals), ...leadEvents].sort(
+      byNewestFirst,
+    );
     return {
       id: String(row.id),
       name: str(row.name) ?? "(unnamed)",
@@ -630,6 +642,12 @@ export const crmContact = createServerFn({ method: "GET" })
       job_title: str(row.job_title),
       created_at: str(row.created_at),
       company: company ? { id: String(company.id), name: str(company.name) ?? "(unnamed)" } : null,
+      deals: deals.map((d) => ({
+        id: String(d.id),
+        name: str(d.name) ?? "(unnamed)",
+        stage: str(d.stage),
+        value_usd: num(d.value_usd),
+      })),
       events,
     };
   });

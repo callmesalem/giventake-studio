@@ -90,7 +90,7 @@ export class CrmRead {
   listContacts<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "contacts",
-      "select=id,name,email,phone,job_title,company_id,owner_id&order=name.asc&limit=500",
+      "select=id,name,email,phone,job_title,company_id,owner_id,lifecycle_stage,assigned_to,next_action,next_action_due&order=name.asc&limit=500",
     );
   }
   listPendingApprovals<T = Record<string, unknown>>(): Promise<T[]> {

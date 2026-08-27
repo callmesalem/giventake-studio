@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   LayoutDashboard,
   Inbox,
@@ -46,20 +46,26 @@ export const Route = createFileRoute("/crm")({
 
 const NAV = [
   { to: "/crm", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/crm/leads", label: "Leads", icon: Inbox, exact: false },
   { to: "/crm/companies", label: "Companies", icon: Building2, exact: false },
   { to: "/crm/contacts", label: "Contacts", icon: Users, exact: false },
   { to: "/crm/deals", label: "Deals", icon: Handshake, exact: false },
   { to: "/crm/pipeline", label: "Pipeline", icon: KanbanSquare, exact: false },
   { to: "/crm/tasks", label: "Tasks", icon: CheckSquare, exact: false },
   { to: "/crm/referrals", label: "Referrals", icon: Share2, exact: false },
-  { to: "/crm/clients", label: "Clients", icon: Briefcase, exact: false },
   { to: "/crm/marketing", label: "Marketing", icon: Megaphone, exact: false },
   { to: "/crm/playbook", label: "Playbook", icon: BookOpen, exact: false },
   { to: "/crm/documents", label: "Documents", icon: Files, exact: false },
   { to: "/crm/sami", label: "Sami", icon: Sparkles, exact: false },
   { to: "/crm/approvals", label: "Approvals", icon: ShieldCheck, exact: false },
   { to: "/crm/send-check", label: "Send check", icon: SendHorizonal, exact: false },
+] as const;
+
+// Leads / Prospects / Clients are lifecycle stages of Contacts, rendered as
+// indented views under the Contacts nav item (see SidebarContent).
+const STAGE_LINKS = [
+  { stage: "lead", label: "Leads", icon: Inbox },
+  { stage: "qualified", label: "Prospects", icon: Users },
+  { stage: "customer", label: "Customers", icon: Briefcase },
 ] as const;
 
 const navLinkClass =
@@ -112,16 +118,31 @@ function SidebarContent({ session, onNavigate }: { session: CrmSession; onNaviga
       </form>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {NAV.map(({ to, label, icon: Icon, exact }) => (
-          <Link
-            key={to}
-            to={to}
-            activeOptions={{ exact }}
-            onClick={onNavigate}
-            className={navLinkClass}
-          >
-            <Icon className="size-4" />
-            {label}
-          </Link>
+          <Fragment key={to}>
+            <Link
+              to={to}
+              activeOptions={{ exact, includeSearch: false }}
+              onClick={onNavigate}
+              className={navLinkClass}
+            >
+              <Icon className="size-4" />
+              {label}
+            </Link>
+            {to === "/crm/contacts" &&
+              STAGE_LINKS.map(({ stage, label: sLabel, icon: SIcon }) => (
+                <Link
+                  key={stage}
+                  to="/crm/contacts"
+                  search={{ stage }}
+                  activeOptions={{ exact: false, includeSearch: true }}
+                  onClick={onNavigate}
+                  className={navLinkClass + " ml-4 text-xs"}
+                >
+                  <SIcon className="size-4" />
+                  {sLabel}
+                </Link>
+              ))}
+          </Fragment>
         ))}
         {session.role === "admin" && (
           <Link
