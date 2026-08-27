@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmCompanies, saveCompany } from "@/lib/crm-data";
-import { PageHeader, LinkedTable, Badge, EntityForm, Disclosure, useListFilter } from "@/components/crm/ui";
+import {
+  PageHeader,
+  LinkedTable,
+  Badge,
+  EntityForm,
+  Disclosure,
+  useListFilter,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/companies")({
   loader: () => crmCompanies(),
@@ -18,7 +25,10 @@ function Companies() {
   );
   return (
     <div>
-      <PageHeader title="Companies" subtitle={`${rows.length} companies`} action={
+      <PageHeader
+        title="Companies"
+        subtitle={`${rows.length} companies`}
+        action={
           <Disclosure label="New company" openLabel="New company">
             <EntityForm
               fields={[
@@ -37,24 +47,31 @@ function Companies() {
       {control}
       <LinkedTable
         columns={["Name", "Domain", "Location", "Size", "Source"]}
-        rows={filtered.map((c) => ({ href: `/crm/companies/${c.id}`, cells: [
-          <span className="font-medium">{c.name}</span>,
-          c.domain ? (
-            <a
-              href={`https://${c.domain}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary hover:underline"
-            >
-              {c.domain}
-            </a>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          ),
-          c.location ?? <span className="text-muted-foreground">—</span>,
-          c.employee_range ?? <span className="text-muted-foreground">—</span>,
-          c.source ? <Badge value={c.source} /> : <span className="text-muted-foreground">—</span>,
-        ] }))}
+        rows={filtered.map((c) => ({
+          href: `/crm/companies/${c.id}`,
+          cells: [
+            <span className="font-medium">{c.name}</span>,
+            c.domain ? (
+              <a
+                href={`https://${c.domain}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline"
+              >
+                {c.domain}
+              </a>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            ),
+            c.location ?? <span className="text-muted-foreground">—</span>,
+            c.employee_range ?? <span className="text-muted-foreground">—</span>,
+            c.source ? (
+              <Badge value={c.source} />
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            ),
+          ],
+        }))}
       />
     </div>
   );

@@ -209,7 +209,6 @@ export class CrmActions {
     });
   }
 
-
   /* ── Phase 06: referrals ──────────────────────────────────────────────── */
 
   upsertReferralPartner(input: {
@@ -244,18 +243,12 @@ export class CrmActions {
     return this.#rpc<unknown>("referral_set_status", { p_id: id, p_status: status });
   }
 
-
   /* ── Phase 07: assignment ─────────────────────────────────────────────── */
 
   /** The *_upsert RPCs do not carry ownership, so this writes through PostgREST
    *  directly. Both table and column are checked against the allowlist first,
    *  and the id is a validated UUID by the time it arrives. */
-  async assign(
-    table: string,
-    column: string,
-    id: string,
-    userId: string | null,
-  ): Promise<void> {
+  async assign(table: string, column: string, id: string, userId: string | null): Promise<void> {
     // canAssign lives in crm-guards and is tested there. The previous inline
     // lookup indexed the record directly, so a table named "constructor" would
     // have returned a function and thrown on .includes rather than being
@@ -263,24 +256,20 @@ export class CrmActions {
     if (!canAssign(table, column)) {
       throw new Response("That record cannot be assigned", { status: 400 });
     }
-    const response = await this.#fetch(
-      `${this.#url}/rest/v1/${table}?id=eq.${id}`,
-      {
-        method: "PATCH",
-        headers: {
-          apikey: this.#key,
-          Authorization: `Bearer ${this.#key}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify({ [column]: userId }),
+    const response = await this.#fetch(`${this.#url}/rest/v1/${table}?id=eq.${id}`, {
+      method: "PATCH",
+      headers: {
+        apikey: this.#key,
+        Authorization: `Bearer ${this.#key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
       },
-    );
+      body: JSON.stringify({ [column]: userId }),
+    });
     if (!response.ok) {
       throw new Error(`assign ${table}.${column} failed: ${response.status}`);
     }
   }
-
 
   /** Lead intake. origin distinguishes a hand-typed lead from a website
    *  submission so the audit trail is not a polite fiction. */
@@ -303,7 +292,6 @@ export class CrmActions {
       },
     });
   }
-
 
   /* ── Phase 12: lead conversion ────────────────────────────────────────── */
 
@@ -338,7 +326,6 @@ export class CrmActions {
     });
     if (!response.ok) throw new Error(`set lead status failed: ${response.status}`);
   }
-
 
   /* ── Phase 13: deal becomes client ────────────────────────────────────── */
 
@@ -386,7 +373,6 @@ export class CrmActions {
     });
     if (!response.ok) throw new Error(`create project failed: ${response.status}`);
   }
-
 
   /* ── Phase 14: reviews, campaigns, invoices ───────────────────────────── */
 
@@ -464,5 +450,4 @@ export class CrmActions {
     });
     if (!response.ok) throw new Error(`create invoice failed: ${response.status}`);
   }
-
 }

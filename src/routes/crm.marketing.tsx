@@ -1,11 +1,21 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
-  crmMarketing, saveReview, setReviewStatus, saveCampaign,
-  REVIEW_STATUSES, CAMPAIGN_STATUSES,
+  crmMarketing,
+  saveReview,
+  setReviewStatus,
+  saveCampaign,
+  REVIEW_STATUSES,
+  CAMPAIGN_STATUSES,
 } from "@/lib/crm-data";
 import {
-  PageHeader, Card, EmptyState, StatCard, Badge, EntityForm, Disclosure,
+  PageHeader,
+  Card,
+  EmptyState,
+  StatCard,
+  Badge,
+  EntityForm,
+  Disclosure,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/marketing")({
@@ -22,10 +32,7 @@ function Marketing() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Marketing"
-        subtitle="Campaigns, newsletter and reputation."
-      />
+      <PageHeader title="Marketing" subtitle="Campaigns, newsletter and reputation." />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Campaigns" value={campaigns.length} />
@@ -68,8 +75,8 @@ function Marketing() {
         </div>
         {campaigns.length === 0 ? (
           <EmptyState>
-            No campaigns. Nothing sends from the CRM today - drafts stop at
-            approval, and Salem sends.
+            No campaigns. Nothing sends from the CRM today - drafts stop at approval, and Salem
+            sends.
           </EmptyState>
         ) : (
           <ul className="divide-y divide-border">
@@ -92,8 +99,8 @@ function Marketing() {
       <Card title="Newsletter">
         {subscribers.total === 0 ? (
           <EmptyState>
-            No subscribers. Every subscriber carries consent_source and
-            consent_at, so the list can prove how each address arrived.
+            No subscribers. Every subscriber carries consent_source and consent_at, so the list can
+            prove how each address arrived.
           </EmptyState>
         ) : (
           <ul className="space-y-1.5 text-sm">
@@ -111,14 +118,18 @@ function Marketing() {
         <div className="mb-4">
           <Disclosure label="Record review" openLabel="Record a review">
             <p className="mb-3 text-xs text-muted-foreground">
-              Permission is what decides whether a quote can ever be published.
-              The database refuses to publish a review without it, so this is not
-              a formality.
+              Permission is what decides whether a quote can ever be published. The database refuses
+              to publish a review without it, so this is not a formality.
             </p>
             <EntityForm
               fields={[
                 { name: "authorName", label: "Author", required: true },
-                { name: "source", label: "Source", required: true, placeholder: "email, call, Google" },
+                {
+                  name: "source",
+                  label: "Source",
+                  required: true,
+                  placeholder: "email, call, Google",
+                },
                 { name: "subject", label: "Subject" },
                 { name: "rating", label: "Rating (1-5)", type: "number" as const },
                 { name: "quote", label: "Quote", type: "textarea" as const, rows: 3 },
@@ -137,8 +148,8 @@ function Marketing() {
         </div>
         {reviews.length === 0 ? (
           <EmptyState>
-            None yet. The site refuses to display proof it does not have, so this
-            is the table that unblocks case studies.
+            None yet. The site refuses to display proof it does not have, so this is the table that
+            unblocks case studies.
           </EmptyState>
         ) : (
           <ul className="space-y-3">
@@ -176,7 +187,9 @@ function Marketing() {
                       className="rounded border border-border bg-background px-2 py-0.5 text-[11px]"
                     >
                       {REVIEW_STATUSES.map((v) => (
-                        <option key={v} value={v}>{v}</option>
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
                       ))}
                     </select>
                     {r.permission_obtained === true ? (
@@ -191,7 +204,9 @@ function Marketing() {
                   </div>
                 </div>
                 {r.quote && (
-                  <p className="mt-2 text-sm italic text-muted-foreground">&ldquo;{r.quote}&rdquo;</p>
+                  <p className="mt-2 text-sm italic text-muted-foreground">
+                    &ldquo;{r.quote}&rdquo;
+                  </p>
                 )}
               </li>
             ))}

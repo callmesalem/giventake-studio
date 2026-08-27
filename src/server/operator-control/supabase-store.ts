@@ -8,7 +8,12 @@ export interface SupabaseStoreOptions {
 }
 
 export type OperatorJson =
-  null | string | number | boolean | OperatorJson[] | { [key: string]: OperatorJson };
+  | null
+  | string
+  | number
+  | boolean
+  | OperatorJson[]
+  | { [key: string]: OperatorJson };
 
 export interface SyntheticRunRecord {
   runId: string;

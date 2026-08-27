@@ -62,10 +62,7 @@ function Pipeline() {
       />
 
       {pending && (
-        <form
-          onSubmit={confirmMove}
-          className="mb-5 rounded-lg border border-border bg-card p-4"
-        >
+        <form onSubmit={confirmMove} className="mb-5 rounded-lg border border-border bg-card p-4">
           <p className="text-sm font-medium text-foreground">
             Move &ldquo;{pending.deal.name}&rdquo;
             {pending.to ? ` to ${pending.to}` : ""}
@@ -194,7 +191,9 @@ function Pipeline() {
                       {deal.name}
                     </a>
                     {deal.company && (
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{deal.company}</p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {deal.company}
+                      </p>
                     )}
                     {deal.value_usd != null && (
                       <p className="mt-1 text-xs font-medium tabular-nums text-foreground">

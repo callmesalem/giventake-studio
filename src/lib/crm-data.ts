@@ -557,20 +557,16 @@ export const crmDeal = createServerFn({ method: "GET" })
       leadId
         ? read.getById<Record<string, unknown>>("leads", leadId, "id,name,email")
         : Promise.resolve(null),
-      read.relatedBy<Record<string, unknown>>(
-        "pipeline_stages",
-        "name",
-        String(row.stage ?? ""),
-        "name,artifact,gate",
-        "name.asc",
-        1,
-      ).catch(() => []),
-      read.relatedBy<Record<string, unknown>>(
-        "deal_stage_events",
-        "deal_id",
-        data.id,
-        "id,from_stage,to_stage,actor,note,created_at",
-      ).catch(() => []),
+      read
+        .relatedBy<
+          Record<string, unknown>
+        >("pipeline_stages", "name", String(row.stage ?? ""), "name,artifact,gate", "name.asc", 1)
+        .catch(() => []),
+      read
+        .relatedBy<
+          Record<string, unknown>
+        >("deal_stage_events", "deal_id", data.id, "id,from_stage,to_stage,actor,note,created_at")
+        .catch(() => []),
       companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
     ]);
 
@@ -594,9 +590,7 @@ export const crmDeal = createServerFn({ method: "GET" })
       created_at: str(row.created_at),
       owner_id: str(row.owner_id),
       company: company ? { id: String(company.id), name: str(company.name) ?? "(unnamed)" } : null,
-      lead: lead
-        ? { id: String(lead.id), name: str(lead.name), email: str(lead.email) }
-        : null,
+      lead: lead ? { id: String(lead.id), name: str(lead.name), email: str(lead.email) } : null,
       stageGate: stages[0]
         ? { artifact: str(stages[0].artifact), gate: str(stages[0].gate) }
         : null,
@@ -654,27 +648,25 @@ export interface TaskRow {
 
 /** Tasks had no interface at all. Piper's escalations land here — until now they
  *  were only visible by querying Postgres directly. */
-export const crmTasks = createServerFn({ method: "GET" }).handler(
-  async (): Promise<TaskRow[]> => {
-    const read = await reader();
-    const [tasks, companies] = await Promise.all([
-      read.listTasks<Record<string, unknown>>(),
-      read.listCompanies<Record<string, unknown>>(),
-    ]);
-    const nameById = new Map(companies.map((c) => [String(c.id), str(c.name)]));
-    return tasks.map((t) => ({
-      id: String(t.id),
-      owner_id: str(t.owner_id),
-      assigned_to: str(t.assigned_to),
-      content: str(t.content) ?? "",
-      is_completed: Boolean(t.is_completed),
-      deadline_at: str(t.deadline_at),
-      source: str(t.source),
-      company: t.company_id ? (nameById.get(String(t.company_id)) ?? null) : null,
-      created_at: str(t.created_at),
-    }));
-  },
-);
+export const crmTasks = createServerFn({ method: "GET" }).handler(async (): Promise<TaskRow[]> => {
+  const read = await reader();
+  const [tasks, companies] = await Promise.all([
+    read.listTasks<Record<string, unknown>>(),
+    read.listCompanies<Record<string, unknown>>(),
+  ]);
+  const nameById = new Map(companies.map((c) => [String(c.id), str(c.name)]));
+  return tasks.map((t) => ({
+    id: String(t.id),
+    owner_id: str(t.owner_id),
+    assigned_to: str(t.assigned_to),
+    content: str(t.content) ?? "",
+    is_completed: Boolean(t.is_completed),
+    deadline_at: str(t.deadline_at),
+    source: str(t.source),
+    company: t.company_id ? (nameById.get(String(t.company_id)) ?? null) : null,
+    created_at: str(t.created_at),
+  }));
+});
 
 /* ── Phase 02: writes ───────────────────────────────────────────────────────
  *
@@ -767,8 +759,7 @@ export const saveContact = createServerFn({ method: "POST" })
 export const saveDeal = createServerFn({ method: "POST" })
   .validator((d: Record<string, unknown>) => {
     const raw = d?.valueUsd;
-    const valueUsd =
-      raw === null || raw === undefined || raw === "" ? null : Number(raw);
+    const valueUsd = raw === null || raw === undefined || raw === "" ? null : Number(raw);
     if (valueUsd !== null && (!Number.isFinite(valueUsd) || valueUsd < 0)) {
       throw new Response("Value must be a positive number", { status: 400 });
     }
@@ -852,7 +843,9 @@ export const advanceStage = createServerFn({ method: "POST" })
 /** Stage options for the board and the advance control, straight from the
  *  seeded table so the UI cannot drift from the documented process. */
 export const crmStages = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ name: string; sort_order: number; artifact: string | null; gate: string | null }[]> => {
+  async (): Promise<
+    { name: string; sort_order: number; artifact: string | null; gate: string | null }[]
+  > => {
     const read = await reader();
     const rows = await read.listStages<Record<string, unknown>>().catch(() => []);
     return rows.map((r) => ({
@@ -933,10 +926,25 @@ export const crmSearch = createServerFn({ method: "GET" })
     if (data.q.length < 2) return [];
     const read = await reader();
     const [companies, contacts, deals, leads] = await Promise.all([
-      read.searchIn<Record<string, unknown>>("companies", ["name", "domain"], data.q, "id,name,domain"),
-      read.searchIn<Record<string, unknown>>("contacts", ["name", "email"], data.q, "id,name,email,job_title"),
+      read.searchIn<Record<string, unknown>>(
+        "companies",
+        ["name", "domain"],
+        data.q,
+        "id,name,domain",
+      ),
+      read.searchIn<Record<string, unknown>>(
+        "contacts",
+        ["name", "email"],
+        data.q,
+        "id,name,email,job_title",
+      ),
       read.searchIn<Record<string, unknown>>("deals", ["name"], data.q, "id,name,stage"),
-      read.searchIn<Record<string, unknown>>("leads", ["name", "email", "company"], data.q, "id,name,email,company"),
+      read.searchIn<Record<string, unknown>>(
+        "leads",
+        ["name", "email", "company"],
+        data.q,
+        "id,name,email,company",
+      ),
     ]);
     return [
       ...companies.map((r) => ({
@@ -979,7 +987,13 @@ export interface DashboardVM {
     staleDeals: { id: string; name: string; stage: string | null; days: number }[];
   };
   pipeline: { name: string; count: number; total_usd: number }[];
-  attribution: { source: string; leads: number; deals: number; clients: number; valueWonUsd: number }[];
+  attribution: {
+    source: string;
+    leads: number;
+    deals: number;
+    clients: number;
+    valueWonUsd: number;
+  }[];
   totals: { deals: number; pipelineUsd: number; companies: number; leads: number };
 }
 
@@ -1075,7 +1089,13 @@ export const crmDashboard = createServerFn({ method: "GET" }).handler(
 /* ── Phase 06: referrals and the post-sale half ─────────────────────────── */
 
 export interface ReferralsVM {
-  partners: { id: string; name: string; kind: string | null; contact_email: string | null; notes: string | null }[];
+  partners: {
+    id: string;
+    name: string;
+    kind: string | null;
+    contact_email: string | null;
+    notes: string | null;
+  }[];
   referrals: {
     id: string;
     company_name: string | null;
@@ -1091,8 +1111,16 @@ export const crmReferrals = createServerFn({ method: "GET" }).handler(
   async (): Promise<ReferralsVM> => {
     const read = await reader();
     const [partners, referrals] = await Promise.all([
-      read.relatedByAll<Record<string, unknown>>("referral_partners", "id,name,kind,contact_email,notes", "name.asc"),
-      read.relatedByAll<Record<string, unknown>>("referrals", "id,partner_id,company_name,status,amount,paid_at,created_at", "created_at.desc"),
+      read.relatedByAll<Record<string, unknown>>(
+        "referral_partners",
+        "id,name,kind,contact_email,notes",
+        "name.asc",
+      ),
+      read.relatedByAll<Record<string, unknown>>(
+        "referrals",
+        "id,partner_id,company_name,status,amount,paid_at,created_at",
+        "created_at.desc",
+      ),
     ]);
     const partnerName = new Map(partners.map((p) => [String(p.id), str(p.name)]));
     return {
@@ -1159,7 +1187,12 @@ export interface ClientsVM {
     name: string;
     created_at: string | null;
     projects: { id: string; name: string }[];
-    invoices: { id: string; status: string | null; amount_cents: number | null; paid_at: string | null }[];
+    invoices: {
+      id: string;
+      status: string | null;
+      amount_cents: number | null;
+      paid_at: string | null;
+    }[];
   }[];
   invoicedCents: number;
   paidCents: number;
@@ -1170,9 +1203,21 @@ export const crmClients = createServerFn({ method: "GET" }).handler(
   async (): Promise<ClientsVM> => {
     const read = await reader();
     const [clients, projects, invoices] = await Promise.all([
-      read.relatedByAll<Record<string, unknown>>("clients", "id,name,created_at", "created_at.desc"),
-      read.relatedByAll<Record<string, unknown>>("projects", "id,client_id,name", "created_at.desc"),
-      read.relatedByAll<Record<string, unknown>>("invoices", "id,project_id,status,amount_cents,paid_at", "created_at.desc"),
+      read.relatedByAll<Record<string, unknown>>(
+        "clients",
+        "id,name,created_at",
+        "created_at.desc",
+      ),
+      read.relatedByAll<Record<string, unknown>>(
+        "projects",
+        "id,client_id,name",
+        "created_at.desc",
+      ),
+      read.relatedByAll<Record<string, unknown>>(
+        "invoices",
+        "id,project_id,status,amount_cents,paid_at",
+        "created_at.desc",
+      ),
     ]);
     const invoicesByProject = new Map<string, Record<string, unknown>[]>();
     for (const i of invoices) {
@@ -1213,8 +1258,6 @@ export const crmClients = createServerFn({ method: "GET" }).handler(
 
 /* ── Phase 07: assignment ───────────────────────────────────────────────── */
 
-
-
 export const assignRecord = createServerFn({ method: "POST" })
   .validator((d: Record<string, unknown>) => {
     const table = typeof d?.table === "string" ? d.table : "";
@@ -1243,7 +1286,13 @@ export const assignRecord = createServerFn({ method: "POST" })
 /* ── Phase 09: marketing surfaces ───────────────────────────────────────── */
 
 export interface MarketingVM {
-  campaigns: { id: string; name: string; goal: string | null; channel: string | null; status: string | null }[];
+  campaigns: {
+    id: string;
+    name: string;
+    goal: string | null;
+    channel: string | null;
+    status: string | null;
+  }[];
   subscribers: { total: number; byStatus: Record<string, number> };
   reviews: {
     id: string;
@@ -1492,7 +1541,11 @@ export const convertDealToClient = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }): Promise<{ ok: true; clientId: string; existed: boolean }> => {
     const read = await reader();
-    const deal = await read.getById<Record<string, unknown>>("deals", data.dealId, "id,lead_id,owner_id");
+    const deal = await read.getById<Record<string, unknown>>(
+      "deals",
+      data.dealId,
+      "id,lead_id,owner_id",
+    );
     notFound(deal);
 
     // No source_record_id on clients to key on, so guard against a second click

@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crmClients, createInvoice } from "@/lib/crm-data";
 import {
-  PageHeader, Card, EmptyState, StatCard, Badge, EntityForm, Disclosure,
+  PageHeader,
+  Card,
+  EmptyState,
+  StatCard,
+  Badge,
+  EntityForm,
+  Disclosure,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/clients")({
@@ -23,7 +29,11 @@ function Clients() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Clients" value={clients.length} />
         <StatCard label="Invoiced" value={money(invoicedCents)} />
-        <StatCard label="Outstanding" value={money(outstanding)} hint={`${money(paidCents)} paid`} />
+        <StatCard
+          label="Outstanding"
+          value={money(outstanding)}
+          hint={`${money(paidCents)} paid`}
+        />
       </div>
 
       {clients.length === 0 ? (
@@ -44,7 +54,12 @@ function Clients() {
                       <Disclosure label="Invoice" openLabel={`Invoice for ${p.name}`}>
                         <EntityForm
                           fields={[
-                            { name: "amount", label: "Amount (USD)", type: "number" as const, required: true },
+                            {
+                              name: "amount",
+                              label: "Amount (USD)",
+                              type: "number" as const,
+                              required: true,
+                            },
                             { name: "dueAt", label: "Due", type: "date" as const },
                           ]}
                           submitLabel="Raise invoice"

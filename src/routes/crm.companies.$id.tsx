@@ -1,9 +1,25 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { crmCompany, addNote, saveCompany, saveContact, saveDeal, assignRecord } from "@/lib/crm-data";
+import {
+  crmCompany,
+  addNote,
+  saveCompany,
+  saveContact,
+  saveDeal,
+  assignRecord,
+} from "@/lib/crm-data";
 import { listAssignableMembers } from "@/lib/crm-auth";
 import {
-  Card, DetailHeader, DetailLayout, Field, FieldList, Timeline, LinkedTable, Badge,
-  EntityForm, Disclosure, OwnerPicker,
+  Card,
+  DetailHeader,
+  DetailLayout,
+  Field,
+  FieldList,
+  Timeline,
+  LinkedTable,
+  Badge,
+  EntityForm,
+  Disclosure,
+  OwnerPicker,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/companies/$id")({
@@ -14,7 +30,11 @@ export const Route = createFileRoute("/crm/companies/$id")({
   component: Company,
 });
 
-const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const usd = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
 
 const COMPANY_FIELDS = [
   { name: "name", label: "Name", required: true },
@@ -97,7 +117,11 @@ function Company() {
                 columns={["Deal", "Stage", "Value"]}
                 rows={company.deals.map((d) => ({
                   href: `/crm/deals/${d.id}`,
-                  cells: [d.name, d.stage ?? "—", d.value_usd != null ? usd.format(d.value_usd) : "—"],
+                  cells: [
+                    d.name,
+                    d.stage ?? "—",
+                    d.value_usd != null ? usd.format(d.value_usd) : "—",
+                  ],
                 }))}
               />
             </Card>
@@ -121,39 +145,44 @@ function Company() {
         }
         aside={
           <>
-          <Card title="Assignment">
-            <OwnerPicker
-              members={members}
-              value={company.owner_id}
-              onChange={(userId) =>
-                assignRecord({
-                  data: { table: "companies", column: "owner_id", id: company.id, userId: userId ?? "" },
-                }).then(() => router.invalidate())
-              }
-            />
-          </Card>
-          <Card title="Details">
-            <FieldList>
-              <Field label="Domain">
-                {company.domain ? (
-                  <a
-                    href={`https://${company.domain.replace(/^https?:\/\//, "")}`}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="underline underline-offset-2"
-                  >
-                    {company.domain}
-                  </a>
-                ) : null}
-              </Field>
-              <Field label="Location">{company.location}</Field>
-              <Field label="Size">{company.employee_range}</Field>
-              <Field label="Source">{company.source}</Field>
-              <Field label="Added">
-                {company.created_at ? new Date(company.created_at).toLocaleDateString() : null}
-              </Field>
-            </FieldList>
-          </Card>
+            <Card title="Assignment">
+              <OwnerPicker
+                members={members}
+                value={company.owner_id}
+                onChange={(userId) =>
+                  assignRecord({
+                    data: {
+                      table: "companies",
+                      column: "owner_id",
+                      id: company.id,
+                      userId: userId ?? "",
+                    },
+                  }).then(() => router.invalidate())
+                }
+              />
+            </Card>
+            <Card title="Details">
+              <FieldList>
+                <Field label="Domain">
+                  {company.domain ? (
+                    <a
+                      href={`https://${company.domain.replace(/^https?:\/\//, "")}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="underline underline-offset-2"
+                    >
+                      {company.domain}
+                    </a>
+                  ) : null}
+                </Field>
+                <Field label="Location">{company.location}</Field>
+                <Field label="Size">{company.employee_range}</Field>
+                <Field label="Source">{company.source}</Field>
+                <Field label="Added">
+                  {company.created_at ? new Date(company.created_at).toLocaleDateString() : null}
+                </Field>
+              </FieldList>
+            </Card>
           </>
         }
       />

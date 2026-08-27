@@ -24,8 +24,8 @@ test("isUuid rejects anything that could carry PostgREST syntax", () => {
   for (const value of [
     "1",
     "not-a-uuid",
-    "033947ad-a0e7-44d3-bea1-1f070c54f5e",       // one char short
-    "033947ad-a0e7-44d3-bea1-1f070c54f5e6x",     // one char long
+    "033947ad-a0e7-44d3-bea1-1f070c54f5e", // one char short
+    "033947ad-a0e7-44d3-bea1-1f070c54f5e6x", // one char long
     "033947ad-a0e7-44d3-bea1-1f070c54f5e6&or=(id.neq.0)",
     "*",
     "",
@@ -47,11 +47,7 @@ test("searchTerm keeps what is needed to find a person or company", () => {
 
 test("searchTerm strips every PostgREST metacharacter", () => {
   for (const ch of [",", "(", ")", "&", "=", "*", ".", "'", '"', "\\", ";", "|", "!", "<", ">"]) {
-    assert.equal(
-      searchTerm(`a${ch}b`).includes(ch),
-      false,
-      `${ch} must not survive sanitising`,
-    );
+    assert.equal(searchTerm(`a${ch}b`).includes(ch), false, `${ch} must not survive sanitising`);
   }
 });
 
@@ -90,8 +86,9 @@ test("hasDisclosureFooter rejects anything less than exact", () => {
     "hyphen for em dash": DISCLOSURE_FOOTER.replace("—", "-"),
     "changed capitalisation": DISCLOSURE_FOOTER.replace("GivenTake", "Giventake"),
     "second line only": "This message was sent automatically by GivenTake Devs.",
-    "reworded": "This message was sent automatically by GivenTake Devs. Reply and someone will read it.",
-    "absent": "Kind regards,\nSalem",
+    reworded:
+      "This message was sent automatically by GivenTake Devs. Reply and someone will read it.",
+    absent: "Kind regards,\nSalem",
   };
   for (const [why, body] of Object.entries(cases)) {
     assert.equal(hasDisclosureFooter(body), false, `must reject: ${why}`);
@@ -107,12 +104,7 @@ test("hasPostalAddress accepts a real address", () => {
 });
 
 test("hasPostalAddress rejects things that are not addresses", () => {
-  for (const body of [
-    "Cleveland, Ohio",
-    "Call us on 216 555 0100",
-    "Reply to this email",
-    "",
-  ]) {
+  for (const body of ["Cleveland, Ohio", "Call us on 216 555 0100", "Reply to this email", ""]) {
     assert.equal(hasPostalAddress(body), false, `must reject: ${body || "(empty)"}`);
   }
 });
@@ -184,7 +176,10 @@ test("blank and whitespace-only queries match everything", () => {
 test("both filters apply together", () => {
   const row = { owner_id: ME };
   assert.equal(passesListFilter(row, "Butterfly", opts({ query: "butter", mineOnly: true })), true);
-  assert.equal(passesListFilter(row, "Butterfly", opts({ query: "mosquito", mineOnly: true })), false);
+  assert.equal(
+    passesListFilter(row, "Butterfly", opts({ query: "mosquito", mineOnly: true })),
+    false,
+  );
   assert.equal(
     passesListFilter({ owner_id: OTHER }, "Butterfly", opts({ query: "butter", mineOnly: true })),
     false,

@@ -88,14 +88,20 @@ test.describe("contact form", () => {
     // The original failure: click submit, nothing happens, no explanation.
     const getRequest = await interceptSubmit(page);
     await fillValidForm(page);
-    await page.getByRole("button", { name: /send|submit/i }).first().click();
+    await page
+      .getByRole("button", { name: /send|submit/i })
+      .first()
+      .click();
     await page.waitForTimeout(800);
 
     const request = getRequest();
     if (request) {
       // If it did submit, an empty budget must never have reached the server.
       const body = JSON.parse(request.postData() ?? "{}");
-      expect(String(body?.data?.budget ?? ""), "an empty budget must not reach the server").not.toBe("");
+      expect(
+        String(body?.data?.budget ?? ""),
+        "an empty budget must not reach the server",
+      ).not.toBe("");
     } else {
       // If it did not submit, the visitor must be able to see why - either a
       // native validation bubble on a required field, or a visible message.
@@ -133,7 +139,10 @@ test.describe("contact form", () => {
     await chooseFirstOption(page, /budget/i);
     await chooseFirstOption(page, /timeline/i);
     await page.locator('input[name="consent"]').check();
-    await page.getByRole("button", { name: /send|submit/i }).first().click();
+    await page
+      .getByRole("button", { name: /send|submit/i })
+      .first()
+      .click();
 
     // If nothing was submitted, say WHY rather than just "expected true".
     // A test that reports "false" sends you to the trace viewer; one that
@@ -141,9 +150,14 @@ test.describe("contact form", () => {
     try {
       await expect.poll(() => Boolean(getRequest()), { timeout: 10_000 }).toBe(true);
     } catch {
-      const invalid = await page.locator(":invalid").evaluateAll((els) =>
-        els.map((el) => `${el.getAttribute("name") ?? el.tagName}: ${(el as HTMLInputElement).validationMessage}`),
-      );
+      const invalid = await page
+        .locator(":invalid")
+        .evaluateAll((els) =>
+          els.map(
+            (el) =>
+              `${el.getAttribute("name") ?? el.tagName}: ${(el as HTMLInputElement).validationMessage}`,
+          ),
+        );
       const alerts = await page.getByRole("alert").allTextContents();
       const toasts = await page.locator("[data-sonner-toast]").allTextContents();
       throw new Error(
