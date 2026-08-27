@@ -29,11 +29,14 @@ import { Route as CrmTeamRouteImport } from './routes/crm.team'
 import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
 import { Route as CrmSendCheckRouteImport } from './routes/crm.send-check'
 import { Route as CrmSearchRouteImport } from './routes/crm.search'
+import { Route as CrmSamiRouteImport } from './routes/crm.sami'
 import { Route as CrmReferralsRouteImport } from './routes/crm.referrals'
+import { Route as CrmPlaybookRouteImport } from './routes/crm.playbook'
 import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
 import { Route as CrmMarketingRouteImport } from './routes/crm.marketing'
 import { Route as CrmLoginRouteImport } from './routes/crm.login'
 import { Route as CrmLeadsRouteImport } from './routes/crm.leads'
+import { Route as CrmDocumentsRouteImport } from './routes/crm.documents'
 import { Route as CrmDealsRouteImport } from './routes/crm.deals'
 import { Route as CrmContactsRouteImport } from './routes/crm.contacts'
 import { Route as CrmCompaniesRouteImport } from './routes/crm.companies'
@@ -147,9 +150,19 @@ const CrmSearchRoute = CrmSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmSamiRoute = CrmSamiRouteImport.update({
+  id: '/sami',
+  path: '/sami',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmReferralsRoute = CrmReferralsRouteImport.update({
   id: '/referrals',
   path: '/referrals',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmPlaybookRoute = CrmPlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmPipelineRoute = CrmPipelineRouteImport.update({
@@ -170,6 +183,11 @@ const CrmLoginRoute = CrmLoginRouteImport.update({
 const CrmLeadsRoute = CrmLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmDocumentsRoute = CrmDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmDealsRoute = CrmDealsRouteImport.update({
@@ -252,11 +270,14 @@ export interface FileRoutesByFullPath {
   '/crm/companies': typeof CrmCompaniesRouteWithChildren
   '/crm/contacts': typeof CrmContactsRouteWithChildren
   '/crm/deals': typeof CrmDealsRouteWithChildren
+  '/crm/documents': typeof CrmDocumentsRoute
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
   '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
+  '/crm/playbook': typeof CrmPlaybookRoute
   '/crm/referrals': typeof CrmReferralsRoute
+  '/crm/sami': typeof CrmSamiRoute
   '/crm/search': typeof CrmSearchRoute
   '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
@@ -290,11 +311,14 @@ export interface FileRoutesByTo {
   '/crm/companies': typeof CrmCompaniesRouteWithChildren
   '/crm/contacts': typeof CrmContactsRouteWithChildren
   '/crm/deals': typeof CrmDealsRouteWithChildren
+  '/crm/documents': typeof CrmDocumentsRoute
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
   '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
+  '/crm/playbook': typeof CrmPlaybookRoute
   '/crm/referrals': typeof CrmReferralsRoute
+  '/crm/sami': typeof CrmSamiRoute
   '/crm/search': typeof CrmSearchRoute
   '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
@@ -330,11 +354,14 @@ export interface FileRoutesById {
   '/crm/companies': typeof CrmCompaniesRouteWithChildren
   '/crm/contacts': typeof CrmContactsRouteWithChildren
   '/crm/deals': typeof CrmDealsRouteWithChildren
+  '/crm/documents': typeof CrmDocumentsRoute
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
   '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
+  '/crm/playbook': typeof CrmPlaybookRoute
   '/crm/referrals': typeof CrmReferralsRoute
+  '/crm/sami': typeof CrmSamiRoute
   '/crm/search': typeof CrmSearchRoute
   '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
@@ -371,11 +398,14 @@ export interface FileRouteTypes {
     | '/crm/companies'
     | '/crm/contacts'
     | '/crm/deals'
+    | '/crm/documents'
     | '/crm/leads'
     | '/crm/login'
     | '/crm/marketing'
     | '/crm/pipeline'
+    | '/crm/playbook'
     | '/crm/referrals'
+    | '/crm/sami'
     | '/crm/search'
     | '/crm/send-check'
     | '/crm/tasks'
@@ -409,11 +439,14 @@ export interface FileRouteTypes {
     | '/crm/companies'
     | '/crm/contacts'
     | '/crm/deals'
+    | '/crm/documents'
     | '/crm/leads'
     | '/crm/login'
     | '/crm/marketing'
     | '/crm/pipeline'
+    | '/crm/playbook'
     | '/crm/referrals'
+    | '/crm/sami'
     | '/crm/search'
     | '/crm/send-check'
     | '/crm/tasks'
@@ -448,11 +481,14 @@ export interface FileRouteTypes {
     | '/crm/companies'
     | '/crm/contacts'
     | '/crm/deals'
+    | '/crm/documents'
     | '/crm/leads'
     | '/crm/login'
     | '/crm/marketing'
     | '/crm/pipeline'
+    | '/crm/playbook'
     | '/crm/referrals'
+    | '/crm/sami'
     | '/crm/search'
     | '/crm/send-check'
     | '/crm/tasks'
@@ -630,11 +666,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmSearchRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/crm/sami': {
+      id: '/crm/sami'
+      path: '/sami'
+      fullPath: '/crm/sami'
+      preLoaderRoute: typeof CrmSamiRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/crm/referrals': {
       id: '/crm/referrals'
       path: '/referrals'
       fullPath: '/crm/referrals'
       preLoaderRoute: typeof CrmReferralsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/playbook': {
+      id: '/crm/playbook'
+      path: '/playbook'
+      fullPath: '/crm/playbook'
+      preLoaderRoute: typeof CrmPlaybookRouteImport
       parentRoute: typeof CrmRoute
     }
     '/crm/pipeline': {
@@ -663,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/leads'
       fullPath: '/crm/leads'
       preLoaderRoute: typeof CrmLeadsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/crm/documents': {
+      id: '/crm/documents'
+      path: '/documents'
+      fullPath: '/crm/documents'
+      preLoaderRoute: typeof CrmDocumentsRouteImport
       parentRoute: typeof CrmRoute
     }
     '/crm/deals': {
@@ -806,11 +863,14 @@ interface CrmRouteChildren {
   CrmCompaniesRoute: typeof CrmCompaniesRouteWithChildren
   CrmContactsRoute: typeof CrmContactsRouteWithChildren
   CrmDealsRoute: typeof CrmDealsRouteWithChildren
+  CrmDocumentsRoute: typeof CrmDocumentsRoute
   CrmLeadsRoute: typeof CrmLeadsRouteWithChildren
   CrmLoginRoute: typeof CrmLoginRoute
   CrmMarketingRoute: typeof CrmMarketingRoute
   CrmPipelineRoute: typeof CrmPipelineRoute
+  CrmPlaybookRoute: typeof CrmPlaybookRoute
   CrmReferralsRoute: typeof CrmReferralsRoute
+  CrmSamiRoute: typeof CrmSamiRoute
   CrmSearchRoute: typeof CrmSearchRoute
   CrmSendCheckRoute: typeof CrmSendCheckRoute
   CrmTasksRoute: typeof CrmTasksRoute
@@ -826,11 +886,14 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmCompaniesRoute: CrmCompaniesRouteWithChildren,
   CrmContactsRoute: CrmContactsRouteWithChildren,
   CrmDealsRoute: CrmDealsRouteWithChildren,
+  CrmDocumentsRoute: CrmDocumentsRoute,
   CrmLeadsRoute: CrmLeadsRouteWithChildren,
   CrmLoginRoute: CrmLoginRoute,
   CrmMarketingRoute: CrmMarketingRoute,
   CrmPipelineRoute: CrmPipelineRoute,
+  CrmPlaybookRoute: CrmPlaybookRoute,
   CrmReferralsRoute: CrmReferralsRoute,
+  CrmSamiRoute: CrmSamiRoute,
   CrmSearchRoute: CrmSearchRoute,
   CrmSendCheckRoute: CrmSendCheckRoute,
   CrmTasksRoute: CrmTasksRoute,

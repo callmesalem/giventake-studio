@@ -40,9 +40,17 @@ export function StatCard({
   );
 }
 
-export function Card({ title, children }: { title?: string; children: ReactNode }) {
+export function Card({
+  title,
+  children,
+  className,
+}: {
+  title?: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <section className="rounded-lg border border-border bg-card">
+    <section className={cn("rounded-lg border border-border bg-card", className)}>
       {title && (
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
@@ -146,9 +154,7 @@ export function DetailHeader({
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{title}</h1>
-          {subtitle && (
-            <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div>
-          )}
+          {subtitle && <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div>}
         </div>
         <div className="flex items-center gap-2">
           {badge}
@@ -217,10 +223,7 @@ export function Timeline({ events }: { events: TimelineItem[] }) {
       {events.map((e, i) => (
         <li key={e.id} className="relative flex gap-3 pb-5 last:pb-0">
           {i < events.length - 1 && (
-            <span
-              aria-hidden="true"
-              className="absolute left-[5px] top-4 h-full w-px bg-border"
-            />
+            <span aria-hidden="true" className="absolute left-[5px] top-4 h-full w-px bg-border" />
           )}
           <span
             aria-hidden="true"
