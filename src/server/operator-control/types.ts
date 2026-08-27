@@ -1,13 +1,6 @@
 export type OperatorMode = "synthetic" | "shadow";
 export type OperatorAction =
-  | "draft"
-  | "queue_approval"
-  | "send"
-  | "deploy"
-  | "set_price"
-  | "change_scope"
-  | "sign"
-  | "refund";
+  "draft" | "queue_approval" | "send" | "deploy" | "set_price" | "change_scope" | "sign" | "refund";
 export interface ControlState {
   globalEnabled: boolean;
   enabled: boolean;

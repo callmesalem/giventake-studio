@@ -21,23 +21,19 @@ export const Route = createFileRoute("/sitemap.xml")({
           // they rank above the legal pages here. Both derive from the same
           // source as the routes themselves, so new entries are listed
           // automatically.
-          ...offers.map(
-            (o): SitemapEntry => ({
-              path: `/services/${o.slug}`,
-              changefreq: "monthly",
-              priority: "0.8",
-            }),
-          ),
+          ...offers.map((o): SitemapEntry => ({
+            path: `/services/${o.slug}`,
+            changefreq: "monthly",
+            priority: "0.8",
+          })),
           { path: "/process", changefreq: "monthly", priority: "0.8" },
           { path: "/how-we-use-ai", changefreq: "monthly", priority: "0.7" },
           { path: "/articles", changefreq: "weekly", priority: "0.7" },
-          ...articles.map(
-            (a): SitemapEntry => ({
-              path: `/articles/${a.slug}`,
-              changefreq: "yearly",
-              priority: "0.6",
-            }),
-          ),
+          ...articles.map((a): SitemapEntry => ({
+            path: `/articles/${a.slug}`,
+            changefreq: "yearly",
+            priority: "0.6",
+          })),
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
           { path: "/compliance", changefreq: "yearly", priority: "0.3" },
           { path: "/terms", changefreq: "yearly", priority: "0.3" },

@@ -23,9 +23,7 @@ import { isContactBudget, isContactSource, isContactTimeline } from "./contact-o
 type Loaded = Record<string, boolean>;
 
 type LeadEventName =
-  | "lead_form_submit_success"
-  | "lead_form_mailto_fallback"
-  | "lead_form_submit_error";
+  "lead_form_submit_success" | "lead_form_mailto_fallback" | "lead_form_submit_error";
 
 type LeadEventProperties = {
   budget?: string;
