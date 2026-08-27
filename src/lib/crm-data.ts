@@ -615,10 +615,18 @@ export const crmContact = createServerFn({ method: "GET" })
     const row = await read.getById<Record<string, unknown>>("contacts", data.id);
     notFound(row);
     const companyId = row.company_id ? String(row.company_id) : null;
-    // The contact's OWN deals (Phase 1 linked deals to contacts) plus the wider
-    // company activity. Merged so the timeline is about this person, not just the
-    // account they belong to.
-    const [company, companyEvents, deals] = await Promise.all([
+    // A contact folded from a lead in Phase 1 carries source='lead_migration' and
+    // source_record_id=<lead id>. That lead's capture history (touchpoints, notes,
+    // agent log) is still keyed by lead_id, so we can pull it in at read time —
+    // no migration needed — and the timeline shows the whole story of the person.
+    const leadId =
+      str(row.source) === "lead_migration" && isUuid(row.source_record_id)
+        ? String(row.source_record_id)
+        : null;
+    // The contact's OWN deals (Phase 1 linked deals to contacts), the folded
+    // lead's history, and the wider company activity. Merged so the timeline is
+    // about this person, not just the account they belong to.
+    const [company, companyEvents, deals, leadEvents] = await Promise.all([
       companyId
         ? read.getById<Record<string, unknown>>("companies", companyId, "id,name")
         : Promise.resolve(null),
@@ -629,8 +637,11 @@ export const crmContact = createServerFn({ method: "GET" })
         data.id,
         "id,name,stage,value_usd,created_at",
       ),
+      leadId ? leadTimeline(read, leadId) : Promise.resolve([]),
     ]);
-    const events = [...companyEvents, ...contactDealEvents(deals)].sort(byNewestFirst);
+    const events = [...companyEvents, ...contactDealEvents(deals), ...leadEvents].sort(
+      byNewestFirst,
+    );
     return {
       id: String(row.id),
       name: str(row.name) ?? "(unnamed)",
