@@ -56,6 +56,28 @@ describe("Timeline", () => {
     expect(container.querySelector("time")).toBeNull();
     expect(container.textContent).not.toMatch(/invalid date/i);
   });
+
+  // Phase 2: a contact's own deals now appear on the timeline as a distinct kind,
+  // so a hire sees the person's pipeline. This proves the deal event renders and
+  // is visually distinguishable (its own dot tone), not just that the shaper runs.
+  test("renders a deal event with its own dot tone so pipeline stands apart", () => {
+    const { container } = render(
+      <Timeline
+        events={[
+          event({
+            id: "dl-1",
+            kind: "deal",
+            title: "Website rebuild",
+            detail: "Stage: Proposal sent · $12,000",
+            actor: null,
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText("Website rebuild")).toBeTruthy();
+    expect(screen.getByText("Stage: Proposal sent · $12,000")).toBeTruthy();
+    expect(container.querySelector(".bg-fuchsia-500")).toBeTruthy();
+  });
 });
 
 describe("Field", () => {
