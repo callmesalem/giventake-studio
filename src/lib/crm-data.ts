@@ -20,6 +20,7 @@ import {
   canAssign,
   type Gate,
 } from "@/lib/crm-guards";
+import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
 
 function config() {
   const url = process.env.SUPABASE_URL;
@@ -293,25 +294,6 @@ function notFound(record: unknown): asserts record is Record<string, unknown> {
 }
 
 /** A single thing that happened, from whichever table recorded it. */
-export interface TimelineEvent {
-  id: string;
-  at: string | null;
-  kind: "touchpoint" | "agent" | "note" | "stage" | "task";
-  title: string;
-  detail: string | null;
-  actor: string | null;
-}
-
-const byNewestFirst = (a: TimelineEvent, b: TimelineEvent) =>
-  (b.at ?? "").localeCompare(a.at ?? "");
-
-/** Human label for a touchpoint kind: website_contact_form -> Website contact form. */
-function humanise(value: string | null): string {
-  if (!value) return "Activity";
-  const spaced = value.replace(/[_-]+/g, " ").trim();
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-}
-
 /** jsonb columns arrive as objects; render something readable without dumping
  *  the whole blob at the user. */
 function summarise(content: unknown, keys: string[]): string | null {
@@ -622,6 +604,7 @@ export interface ContactDetail {
   job_title: string | null;
   created_at: string | null;
   company: { id: string; name: string } | null;
+  deals: { id: string; name: string; stage: string | null; value_usd: number | null }[];
   events: TimelineEvent[];
 }
 
@@ -632,12 +615,22 @@ export const crmContact = createServerFn({ method: "GET" })
     const row = await read.getById<Record<string, unknown>>("contacts", data.id);
     notFound(row);
     const companyId = row.company_id ? String(row.company_id) : null;
-    const [company, events] = await Promise.all([
+    // The contact's OWN deals (Phase 1 linked deals to contacts) plus the wider
+    // company activity. Merged so the timeline is about this person, not just the
+    // account they belong to.
+    const [company, companyEvents, deals] = await Promise.all([
       companyId
         ? read.getById<Record<string, unknown>>("companies", companyId, "id,name")
         : Promise.resolve(null),
       companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
+      read.relatedBy<Record<string, unknown>>(
+        "deals",
+        "contact_id",
+        data.id,
+        "id,name,stage,value_usd,created_at",
+      ),
     ]);
+    const events = [...companyEvents, ...contactDealEvents(deals)].sort(byNewestFirst);
     return {
       id: String(row.id),
       name: str(row.name) ?? "(unnamed)",
@@ -646,6 +639,12 @@ export const crmContact = createServerFn({ method: "GET" })
       job_title: str(row.job_title),
       created_at: str(row.created_at),
       company: company ? { id: String(company.id), name: str(company.name) ?? "(unnamed)" } : null,
+      deals: deals.map((d) => ({
+        id: String(d.id),
+        name: str(d.name) ?? "(unnamed)",
+        stage: str(d.stage),
+        value_usd: num(d.value_usd),
+      })),
       events,
     };
   });

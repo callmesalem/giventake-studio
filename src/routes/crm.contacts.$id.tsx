@@ -9,6 +9,7 @@ import {
   Timeline,
   EntityForm,
   Disclosure,
+  Badge,
 } from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/contacts/$id")({
@@ -64,27 +65,50 @@ function Contact() {
       />
       <DetailLayout
         main={
-          <Card title="Activity at this company">
+          <Card title="Activity">
             <Timeline events={contact.events} />
           </Card>
         }
         aside={
-          <Card title="Details">
-            <FieldList>
-              <Field label="Role">{contact.job_title}</Field>
-              <Field label="Email">
-                {contact.email ? (
-                  <a href={`mailto:${contact.email}`} className="underline underline-offset-2">
-                    {contact.email}
-                  </a>
-                ) : null}
-              </Field>
-              <Field label="Phone">{contact.phone}</Field>
-              <Field label="Added">
-                {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : null}
-              </Field>
-            </FieldList>
-          </Card>
+          <>
+            <Card title="Details">
+              <FieldList>
+                <Field label="Role">{contact.job_title}</Field>
+                <Field label="Email">
+                  {contact.email ? (
+                    <a href={`mailto:${contact.email}`} className="underline underline-offset-2">
+                      {contact.email}
+                    </a>
+                  ) : null}
+                </Field>
+                <Field label="Phone">{contact.phone}</Field>
+                <Field label="Added">
+                  {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : null}
+                </Field>
+              </FieldList>
+            </Card>
+            <Card title={`Deals (${contact.deals.length})`}>
+              {contact.deals.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No deals linked to this contact yet.
+                </p>
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {contact.deals.map((d) => (
+                    <li key={d.id} className="flex items-center justify-between gap-2">
+                      <a
+                        href={`/crm/deals/${d.id}`}
+                        className="min-w-0 truncate font-medium underline underline-offset-2"
+                      >
+                        {d.name}
+                      </a>
+                      {d.stage ? <Badge value={d.stage} /> : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </>
         }
       />
     </div>
