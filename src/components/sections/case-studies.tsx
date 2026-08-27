@@ -1,5 +1,6 @@
 import { Reveal } from "@/components/reveal";
 import { IconArrowRight } from "@/components/marks";
+import { assetAvailable } from "@/lib/asset-availability";
 import intakeAsset from "@/assets/case-intake.png.asset.json";
 import bookingAsset from "@/assets/case-booking.png.asset.json";
 import dashboardAsset from "@/assets/case-dashboard.png.asset.json";
@@ -174,16 +175,18 @@ export function CaseStudies() {
                       Illustrative, not a client screenshot
                     </span>
                   </div>
-                  <div className="overflow-hidden rounded-xl border border-hairline bg-white shadow-soft">
-                    <img
-                      src={s.image}
-                      alt={s.alt}
-                      width={1280}
-                      height={800}
-                      loading="lazy"
-                      className="block w-full"
-                    />
-                  </div>
+                  {assetAvailable(s.image) && (
+                    <div className="overflow-hidden rounded-xl border border-hairline bg-white shadow-soft">
+                      <img
+                        src={s.image}
+                        alt={s.alt}
+                        width={1280}
+                        height={800}
+                        loading="lazy"
+                        className="block w-full"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </article>

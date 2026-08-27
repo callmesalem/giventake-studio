@@ -5,7 +5,13 @@ import {
   Inbox,
   Building2,
   Users,
+  KanbanSquare,
   Handshake,
+  Megaphone,
+  Briefcase,
+  Share2,
+  CheckSquare,
+  SendHorizonal,
   ShieldCheck,
   UserCog,
   LogOut,
@@ -44,10 +50,16 @@ const NAV = [
   { to: "/crm/companies", label: "Companies", icon: Building2, exact: false },
   { to: "/crm/contacts", label: "Contacts", icon: Users, exact: false },
   { to: "/crm/deals", label: "Deals", icon: Handshake, exact: false },
+  { to: "/crm/pipeline", label: "Pipeline", icon: KanbanSquare, exact: false },
+  { to: "/crm/tasks", label: "Tasks", icon: CheckSquare, exact: false },
+  { to: "/crm/referrals", label: "Referrals", icon: Share2, exact: false },
+  { to: "/crm/clients", label: "Clients", icon: Briefcase, exact: false },
+  { to: "/crm/marketing", label: "Marketing", icon: Megaphone, exact: false },
   { to: "/crm/playbook", label: "Playbook", icon: BookOpen, exact: false },
   { to: "/crm/documents", label: "Documents", icon: Files, exact: false },
   { to: "/crm/sami", label: "Sami", icon: Sparkles, exact: false },
   { to: "/crm/approvals", label: "Approvals", icon: ShieldCheck, exact: false },
+  { to: "/crm/send-check", label: "Send check", icon: SendHorizonal, exact: false },
 ] as const;
 
 const navLinkClass =
@@ -80,6 +92,24 @@ function SidebarContent({ session, onNavigate }: { session: CrmSession; onNaviga
         <p className="text-sm font-semibold tracking-tight text-foreground">GivenTake CRM</p>
         <p className="text-xs text-muted-foreground">Team workspace</p>
       </div>
+      <form
+        role="search"
+        className="px-3 pt-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const value = new FormData(event.currentTarget).get("q");
+          void router.navigate({ to: "/crm/search", search: { q: String(value ?? "") } });
+        }}
+      >
+        <input
+          name="q"
+          type="search"
+          placeholder="Search…"
+          aria-label="Search the CRM"
+          data-testid="crm-search-box"
+          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary"
+        />
+      </form>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {NAV.map(({ to, label, icon: Icon, exact }) => (
           <Link

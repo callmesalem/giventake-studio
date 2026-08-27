@@ -61,6 +61,10 @@ export const addTeamMember = createServerFn({ method: "POST" })
   .validator(validateAddMember)
   .handler(async ({ data }) => (await import("./crm-auth.server")).addTeamMemberImpl(data));
 
+export const listAssignableMembers = createServerFn({ method: "GET" }).handler(async () =>
+  (await import("./crm-auth.server")).listAssignableMembersImpl(),
+);
+
 export const listTeamMembers = createServerFn({ method: "GET" }).handler(async () =>
   (await import("./crm-auth.server")).listTeamMembersImpl(),
 );

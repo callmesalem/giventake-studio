@@ -78,19 +78,19 @@ export class CrmRead {
   listCompanies<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "companies",
-      "select=id,name,domain,description,employee_range,location,source&order=name.asc&limit=500",
+      "select=id,name,domain,description,employee_range,location,source,owner_id&order=name.asc&limit=500",
     );
   }
   listDeals<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "deals",
-      "select=id,name,stage,value_usd,company_id,source&order=created_at.desc&limit=500",
+      "select=id,name,stage,value_usd,company_id,source,owner_id,assigned_to&order=created_at.desc&limit=500",
     );
   }
   listContacts<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "contacts",
-      "select=id,name,email,phone,job_title,company_id&order=name.asc&limit=500",
+      "select=id,name,email,phone,job_title,company_id,owner_id&order=name.asc&limit=500",
     );
   }
   listPendingApprovals<T = Record<string, unknown>>(): Promise<T[]> {
@@ -130,5 +130,101 @@ export class CrmRead {
       activity,
       pendingApprovals: Array.isArray(pending) ? pending.length : 0,
     };
+  }
+
+  // ── Phase 01: single records and their history ────────────────────────────
+  //
+  // PostgREST filters are built from an id we validate as a UUID before it gets
+  // here (see crm-data.ts). Anything that reaches this layer is already shaped.
+
+  /** One row by id, or null. Uses limit=1 rather than .single() so a missing
+   *  record is an empty result to handle, not a thrown error to catch. */
+  async getById<T = Record<string, unknown>>(
+    table: string,
+    id: string,
+    select = "*",
+  ): Promise<T | null> {
+    const rows = await this.#select<T>(table, `select=${select}&id=eq.${id}&limit=1`);
+    return rows[0] ?? null;
+  }
+
+  /** Rows of `table` whose `column` matches `value`. The building block for
+   *  every "what is attached to this record" query. */
+  relatedBy<T = Record<string, unknown>>(
+    table: string,
+    column: string,
+    value: string,
+    select = "*",
+    order = "created_at.desc",
+    limit = 200,
+  ): Promise<T[]> {
+    return this.#select<T>(
+      table,
+      `select=${select}&${column}=eq.${value}&order=${order}&limit=${limit}`,
+    );
+  }
+
+  /** Whole small table, ordered. relatedBy needs a filter column; these tables
+   *  are read in full. */
+  relatedByAll<T = Record<string, unknown>>(
+    table: string,
+    select = "*",
+    order = "created_at.desc",
+    limit = 300,
+  ): Promise<T[]> {
+    return this.#select<T>(table, `select=${select}&order=${order}&limit=${limit}`);
+  }
+
+  /** Charter §10 kill switch. */
+  systemControl<T = unknown>(): Promise<T> {
+    return this.#rpc<T>("operator_get_system_control");
+  }
+
+  /** do_not_contact. A hit is final. */
+  isSuppressed(address: string): Promise<boolean> {
+    return this.#rpc<boolean>("operator_is_suppressed", { p_address: address });
+  }
+
+  /** Charter §3.8 positive allowlist, per SOP. A clean suppression check is not
+   *  a substitute: absence from this list is a no. */
+  isApprovedRecipient(address: string, sop: string): Promise<boolean> {
+    return this.#rpc<boolean>("is_approved_recipient", { p_address: address, p_sop: sop });
+  }
+
+  /** Which channel produced paying clients. Built this morning and displayed
+   *  nowhere until now. */
+  attribution<T = unknown>(): Promise<T> {
+    return this.#rpc<T>("attribution_snapshot");
+  }
+
+  /** Case-insensitive contains-match across the given columns.
+   *
+   *  The term is sanitised by the caller before it gets here. PostgREST parses
+   *  commas and parentheses as syntax inside or=(), so an unsanitised term is
+   *  not merely a bad search, it is a query-injection surface. */
+  searchIn<T = Record<string, unknown>>(
+    table: string,
+    columns: string[],
+    term: string,
+    select: string,
+    limit = 25,
+  ): Promise<T[]> {
+    const or = columns.map((c) => `${c}.ilike.*${term}*`).join(",");
+    return this.#select<T>(table, `select=${select}&or=(${or})&limit=${limit}`);
+  }
+
+  /** The 12 seeded stages, in process order. */
+  listStages<T = Record<string, unknown>>(): Promise<T[]> {
+    return this.#select<T>(
+      "pipeline_stages",
+      "select=name,sort_order,artifact,gate&order=sort_order.asc&limit=50",
+    );
+  }
+
+  listTasks<T = Record<string, unknown>>(): Promise<T[]> {
+    return this.#select<T>(
+      "tasks",
+      "select=id,content,is_completed,deadline_at,source,company_id,owner_id,assigned_to,created_at&order=created_at.desc&limit=500",
+    );
   }
 }

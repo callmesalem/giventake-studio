@@ -7,7 +7,7 @@
  * regardless of utility-class churn in the components.
  */
 export const criticalCss = `
-@font-face{font-family:"Inter Tight";font-style:normal;font-weight:300 800;font-display:swap;src:url("/__l5e/assets-v1/95d1fcbb-84a4-490f-9fb7-fc4940056c0d/inter-tight-latin.woff2") format("woff2")}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:300 800;font-display:swap;src:url("/fonts/inter-tight-latin.woff2") format("woff2")}
 @font-face{font-family:"Inter Tight Fallback";src:local("Arial"),local("Helvetica Neue"),local("Liberation Sans"),local("Roboto"),local("DejaVu Sans");size-adjust:97%;ascent-override:96%;descent-override:24%;line-gap-override:0%}
 :root{--crit-ink:#0a0a0a;--crit-paper:#f7f7f5;--crit-hairline:#eaeaea;--crit-muted:#565656}
 *,*::before,*::after{box-sizing:border-box}

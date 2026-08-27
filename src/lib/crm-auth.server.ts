@@ -190,6 +190,27 @@ export async function addTeamMemberImpl(
   return { id: created.id, email: data.email, tempPassword: password };
 }
 
+/** Who a record can be assigned to.
+ *
+ * Deliberately NOT admin-gated, unlike listTeamMembersImpl: a member has to be
+ * able to see colleagues in order to hand work to them. It returns only
+ * identity - id, email, name - and never role or anything from the admin API
+ * beyond that, so widening the audience does not widen what is disclosed. */
+export async function listAssignableMembersImpl(): Promise<{
+  members: { userId: string; email: string; fullName: string }[];
+}> {
+  await requireCrmSession();
+  const auth = await authClient();
+  const members = await auth.listTeamMembers();
+  return {
+    members: members.map((m) => ({
+      userId: m.userId,
+      email: m.email,
+      fullName: m.fullName,
+    })),
+  };
+}
+
 export async function listTeamMembersImpl(): Promise<{ members: CrmSession[] }> {
   await requireAdmin();
   const auth = await authClient();

@@ -1,4 +1,5 @@
 import ogImageAsset from "@/assets/giventake-og.png.asset.json";
+import { assetAvailable } from "@/lib/asset-availability";
 
 /**
  * Single source of truth for the production origin. Canonical links, Open Graph
@@ -9,7 +10,11 @@ import ogImageAsset from "@/assets/giventake-og.png.asset.json";
  * Sitemap: line by hand at the same time.
  */
 export const BASE_URL = "https://giventakedevs.com";
-export const OG_IMAGE_URL = `${BASE_URL}${ogImageAsset.url}`;
+/** Null when the underlying file is missing, so callers omit the tag rather
+ *  than advertising a 404 to every scraper that reads the page. */
+export const OG_IMAGE_URL = assetAvailable(ogImageAsset.url)
+  ? `${BASE_URL}${ogImageAsset.url}`
+  : null;
 export const SITE_NAME = "GivenTake Devs";
 
 /**
@@ -61,14 +66,28 @@ export function pageHead({ path, title, description, ogType = "website" }: PageH
       { property: "og:type", content: ogType },
       { property: "og:url", content: url },
       { property: "og:site_name", content: SITE_NAME },
-      { property: "og:image", content: OG_IMAGE_URL },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: `${SITE_NAME} — Your On-Demand Development Team` },
-      { name: "twitter:card", content: "summary_large_image" },
+      ...(OG_IMAGE_URL ? [{ property: "og:image", content: OG_IMAGE_URL }] : []),
+      ...(OG_IMAGE_URL
+        ? [
+            { property: "og:image:width", content: "1200" },
+            { property: "og:image:height", content: "630" },
+          ]
+        : []),
+      ...(OG_IMAGE_URL
+        ? [
+            {
+              property: "og:image:alt",
+              content: `${SITE_NAME} — Your On-Demand Development Team`,
+            },
+          ]
+        : []),
+      {
+        name: "twitter:card",
+        content: OG_IMAGE_URL ? "summary_large_image" : "summary",
+      },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
-      { name: "twitter:image", content: OG_IMAGE_URL },
+      ...(OG_IMAGE_URL ? [{ name: "twitter:image", content: OG_IMAGE_URL }] : []),
     ],
     links: [{ rel: "canonical", href: url }],
   };
