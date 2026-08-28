@@ -19,7 +19,7 @@ export function TrustedPartner() {
       {/* Ambient global-network backdrop — muted autoplay loop, reduced-motion
           safe (the poster paints and the file is preload="none"). */}
       <video
-        className="absolute inset-0 h-full w-full object-cover opacity-70"
+        className="absolute inset-0 h-full w-full object-cover opacity-95"
         autoPlay
         muted
         loop
@@ -32,7 +32,7 @@ export function TrustedPartner() {
       </video>
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,13,.9),rgba(6,7,13,.55)_50%,rgba(6,7,13,.9))]"
+        className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,13,.78),rgba(6,7,13,.3)_50%,rgba(6,7,13,.78))]"
       />
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-14">
         <Reveal>
