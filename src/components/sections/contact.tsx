@@ -141,6 +141,24 @@ export function ContactCTA() {
 
   return (
     <section id="contact" className="border-b border-hairline bg-paper/60 backdrop-blur-[2px]">
+      <div className="mx-auto max-w-7xl px-6 pt-24 md:pt-28">
+        <Reveal>
+          <div className="aspect-[1904/480] overflow-hidden rounded-2xl border border-hairline shadow-soft">
+            <video
+              className="block h-full w-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              poster="/hero/giventake-cta-poster.jpg"
+              aria-label="GivenTake Devs — you give us the problem, we take it from there."
+            >
+              <source src="/hero/giventake-cta.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </Reveal>
+      </div>
       <div className="mx-auto grid max-w-7xl gap-12 px-6 py-24 md:py-28 lg:grid-cols-[1fr_1.15fr]">
         <Reveal>
           <div>
