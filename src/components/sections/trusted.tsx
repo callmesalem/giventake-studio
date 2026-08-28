@@ -15,10 +15,28 @@ const facts = [
 
 export function TrustedPartner() {
   return (
-    <section className="border-b border-hairline bg-paper/60 backdrop-blur-[2px]">
-      <div className="mx-auto max-w-7xl px-6 py-14">
+    <section className="relative overflow-hidden border-b border-white/10 bg-[#06070d]">
+      {/* Ambient global-network backdrop — muted autoplay loop, reduced-motion
+          safe (the poster paints and the file is preload="none"). */}
+      <video
+        className="absolute inset-0 h-full w-full object-cover opacity-70"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="none"
+        poster="/hero/globe-poster.jpg"
+        aria-hidden="true"
+      >
+        <source src="/hero/globe.mp4" type="video/mp4" />
+      </video>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,13,.9),rgba(6,7,13,.55)_50%,rgba(6,7,13,.9))]"
+      />
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-14">
         <Reveal>
-          <p className="text-center text-[12px] font-medium uppercase tracking-[0.18em] text-muted-ink">
+          <p className="text-center text-[12px] font-medium uppercase tracking-[0.18em] text-white/55">
             What working with us actually looks like
           </p>
         </Reveal>
@@ -26,8 +44,8 @@ export function TrustedPartner() {
           {facts.map((f, i) => (
             <Reveal key={f.k} delay={i * 60}>
               <div className="flex flex-col items-center text-center">
-                <div className="text-[18px] font-semibold tracking-tight text-ink">{f.k}</div>
-                <div className="mt-1 text-[12px] text-muted-ink">{f.v}</div>
+                <div className="text-[18px] font-semibold tracking-tight text-white">{f.k}</div>
+                <div className="mt-1 text-[12px] text-white/60">{f.v}</div>
               </div>
             </Reveal>
           ))}

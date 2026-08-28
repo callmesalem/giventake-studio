@@ -92,6 +92,12 @@
   --violet: #4f46e5;
   --violet-soft: #eef2ff;
 
+  /* elite gradient system — reusable vivid accents for hero + future sections */
+  --e-1: #6d5cff; /* electric violet */
+  --e-2: #4f46e5; /* indigo */
+  --e-3: #22d3ee; /* cyan */
+  --e-4: #c9a24c; /* brand gold */
+
   --background: var(--paper);
   --foreground: var(--ink);
   --card: #ffffff;
@@ -757,5 +763,200 @@ body::after {
     transform: none;
     opacity: 1;
     will-change: auto;
+  }
+}
+
+/* ==================================================================
+   ELITE HERO — a self-contained dark cinematic stage.
+
+   Scoped under .hero-elite so none of the light-on-dark treatment leaks
+   into the rest of the (light) site. Every animated layer is gated behind
+   :root[data-motion="on"] (set post-paint) so it never competes with the
+   LCP headline, and every one is switched off under prefers-reduced-motion,
+   matching the conventions used elsewhere in this file.
+   ================================================================== */
+.hero-elite {
+  position: relative;
+  isolation: isolate;
+  color: #f5f6fb;
+  background: radial-gradient(125% 90% at 50% -12%, #12142e 0%, #080912 55%, #06070d 100%);
+}
+
+/* Living colour mesh — four brand-accent blooms that slowly drift. */
+.hero-elite .elite-mesh {
+  position: absolute;
+  inset: -22% -12% -12% -12%;
+  z-index: -3;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      38rem 30rem at 18% 12%,
+      color-mix(in oklab, var(--e-1) 60%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      34rem 28rem at 84% 6%,
+      color-mix(in oklab, var(--e-2) 55%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      30rem 26rem at 72% 90%,
+      color-mix(in oklab, var(--e-3) 42%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      26rem 22rem at 24% 92%,
+      color-mix(in oklab, var(--e-4) 32%, transparent),
+      transparent 72%
+    );
+  filter: blur(6px) saturate(130%);
+  opacity: 0.6;
+}
+:root[data-motion="on"] .hero-elite .elite-mesh {
+  will-change: transform;
+  animation: elite-mesh-drift 24s ease-in-out infinite alternate;
+}
+
+/* Slow conic sheen sweeping over the stage. */
+.hero-elite .elite-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: conic-gradient(
+    from 210deg at 50% 28%,
+    transparent 0deg,
+    color-mix(in oklab, var(--e-1) 20%, transparent) 70deg,
+    transparent 150deg,
+    color-mix(in oklab, var(--e-3) 16%, transparent) 250deg,
+    transparent 360deg
+  );
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+:root[data-motion="on"] .hero-elite .elite-sheen {
+  will-change: transform;
+  animation: elite-spin 46s linear infinite;
+}
+
+/* Fine grid, faded toward the edges. */
+.hero-elite .elite-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, #fff 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, #fff 6%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(120% 78% at 50% 0%, #000 28%, transparent 78%);
+  mask-image: radial-gradient(120% 78% at 50% 0%, #000 28%, transparent 78%);
+  opacity: 0.5;
+}
+
+/* Top edge light + bottom fade so the dark stage melts into the light body. */
+.hero-elite .elite-veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 30% at 50% -2%, color-mix(in oklab, #fff 12%, transparent), transparent 60%),
+    linear-gradient(to bottom, transparent 74%, var(--paper) 100%);
+}
+
+@keyframes elite-mesh-drift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(2%, 1.5%, 0) scale(1.06);
+  }
+}
+@keyframes elite-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes elite-textsweep {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Animated gradient headline accent. */
+@utility text-elite-gradient {
+  background: linear-gradient(100deg, #ffffff 0%, var(--e-1) 32%, var(--e-3) 56%, #ffffff 92%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  :root[data-motion="on"] & {
+    animation: elite-textsweep 9s ease-in-out infinite;
+  }
+}
+
+/* Gradient primary CTA with a sheen wipe on hover. */
+@utility btn-elite {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, var(--e-1), var(--e-2) 55%, var(--e-3));
+  color: #ffffff;
+  box-shadow: 0 12px 34px -12px color-mix(in oklab, var(--e-1) 70%, transparent);
+}
+.btn-elite::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    color-mix(in oklab, #fff 38%, transparent) 50%,
+    transparent 80%
+  );
+  transform: translateX(-130%);
+}
+:root[data-motion="on"] .btn-elite:hover::after {
+  transition: transform 0.7s ease;
+  transform: translateX(130%);
+}
+
+/* Cinematic video frame. */
+.video-frame {
+  position: relative;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, #fff 12%, transparent);
+  background: linear-gradient(160deg, #0e1022, #070812);
+  box-shadow:
+    0 44px 120px -44px color-mix(in oklab, var(--e-1) 60%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #fff 10%, transparent);
+}
+.video-frame .vf-glow {
+  position: absolute;
+  inset: -2px;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(from 0deg, var(--e-1), var(--e-3), var(--e-4), var(--e-1));
+  filter: blur(24px);
+  opacity: 0.35;
+}
+:root[data-motion="on"] .video-frame .vf-glow {
+  will-change: transform;
+  animation: elite-spin 20s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-elite .elite-mesh,
+  .hero-elite .elite-sheen,
+  .video-frame .vf-glow {
+    animation: none;
+  }
+  .text-elite-gradient {
+    animation: none;
   }
 }
