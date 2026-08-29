@@ -9,12 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkRouteImport } from './routes/work'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProcessRouteImport } from './routes/process'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OperatorDashboardRouteImport } from './routes/operator-dashboard'
 import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
+import { Route as GuardrailsRouteImport } from './routes/guardrails'
 import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
 import { Route as DataRequestRouteImport } from './routes/data-request'
 import { Route as CrmRouteImport } from './routes/crm'
@@ -50,6 +53,11 @@ import { Route as CrmCompaniesIdRouteImport } from './routes/crm.companies.$id'
 import { Route as CrmAuthGoogleRouteImport } from './routes/crm.auth.google'
 import { Route as CrmAuthCallbackRouteImport } from './routes/crm.auth.callback'
 
+const WorkRoute = WorkRouteImport.update({
+  id: '/work',
+  path: '/work',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -70,6 +78,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OperatorDashboardRoute = OperatorDashboardRouteImport.update({
   id: '/operator-dashboard',
   path: '/operator-dashboard',
@@ -78,6 +91,11 @@ const OperatorDashboardRoute = OperatorDashboardRouteImport.update({
 const HowWeUseAiRoute = HowWeUseAiRouteImport.update({
   id: '/how-we-use-ai',
   path: '/how-we-use-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuardrailsRoute = GuardrailsRouteImport.update({
+  id: '/guardrails',
+  path: '/guardrails',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DoNotSellRoute = DoNotSellRouteImport.update({
@@ -258,12 +276,15 @@ export interface FileRoutesByFullPath {
   '/crm': typeof CrmRouteWithChildren
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
+  '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/work': typeof WorkRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -299,12 +320,15 @@ export interface FileRoutesByTo {
   '/cookies': typeof CookiesRoute
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
+  '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/work': typeof WorkRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -342,12 +366,15 @@ export interface FileRoutesById {
   '/crm': typeof CrmRouteWithChildren
   '/data-request': typeof DataRequestRoute
   '/do-not-sell': typeof DoNotSellRoute
+  '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/work': typeof WorkRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -386,12 +413,15 @@ export interface FileRouteTypes {
     | '/crm'
     | '/data-request'
     | '/do-not-sell'
+    | '/guardrails'
     | '/how-we-use-ai'
     | '/operator-dashboard'
+    | '/pricing'
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
     | '/terms'
+    | '/work'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -427,12 +457,15 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/data-request'
     | '/do-not-sell'
+    | '/guardrails'
     | '/how-we-use-ai'
     | '/operator-dashboard'
+    | '/pricing'
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
     | '/terms'
+    | '/work'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -469,12 +502,15 @@ export interface FileRouteTypes {
     | '/crm'
     | '/data-request'
     | '/do-not-sell'
+    | '/guardrails'
     | '/how-we-use-ai'
     | '/operator-dashboard'
+    | '/pricing'
     | '/privacy'
     | '/process'
     | '/sitemap.xml'
     | '/terms'
+    | '/work'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -512,12 +548,15 @@ export interface RootRouteChildren {
   CrmRoute: typeof CrmRouteWithChildren
   DataRequestRoute: typeof DataRequestRoute
   DoNotSellRoute: typeof DoNotSellRoute
+  GuardrailsRoute: typeof GuardrailsRoute
   HowWeUseAiRoute: typeof HowWeUseAiRoute
   OperatorDashboardRoute: typeof OperatorDashboardRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ProcessRoute: typeof ProcessRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  WorkRoute: typeof WorkRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
   ArticlesIndexRoute: typeof ArticlesIndexRoute
@@ -526,6 +565,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/work': {
+      id: '/work'
+      path: '/work'
+      fullPath: '/work'
+      preLoaderRoute: typeof WorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -554,6 +600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/operator-dashboard': {
       id: '/operator-dashboard'
       path: '/operator-dashboard'
@@ -566,6 +619,13 @@ declare module '@tanstack/react-router' {
       path: '/how-we-use-ai'
       fullPath: '/how-we-use-ai'
       preLoaderRoute: typeof HowWeUseAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guardrails': {
+      id: '/guardrails'
+      path: '/guardrails'
+      fullPath: '/guardrails'
+      preLoaderRoute: typeof GuardrailsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/do-not-sell': {
@@ -912,12 +972,15 @@ const rootRouteChildren: RootRouteChildren = {
   CrmRoute: CrmRouteWithChildren,
   DataRequestRoute: DataRequestRoute,
   DoNotSellRoute: DoNotSellRoute,
+  GuardrailsRoute: GuardrailsRoute,
   HowWeUseAiRoute: HowWeUseAiRoute,
   OperatorDashboardRoute: OperatorDashboardRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ProcessRoute: ProcessRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  WorkRoute: WorkRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,
   ArticlesIndexRoute: ArticlesIndexRoute,
