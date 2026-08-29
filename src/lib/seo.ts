@@ -77,7 +77,7 @@ export function pageHead({ path, title, description, ogType = "website" }: PageH
         ? [
             {
               property: "og:image:alt",
-              content: `${SITE_NAME} — Your On-Demand Development Team`,
+              content: `${SITE_NAME}, Your On-Demand Development Team`,
             },
           ]
         : []),

@@ -27,17 +27,17 @@ function CookieSettingsLink() {
 
 const nav = [
   { label: "Services", href: "/services" },
-  { label: "Work", href: "/#work" },
+  { label: "Work", href: "/work" },
   { label: "Process", href: "/process" },
-  { label: "Guardrails", href: "/#guardrails" },
-  { label: "Pricing", href: "/#pricing" },
+  { label: "Guardrails", href: "/guardrails" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
 /** Links shown only in the mobile panel, where there's room for more. */
 const navMobileExtra = [
   { label: "How we use AI", href: "/how-we-use-ai" },
   { label: "Articles", href: "/articles" },
-  { label: "FAQ", href: "/#faq" },
+  { label: "FAQ", href: "/pricing#faq" },
 ];
 
 /**
@@ -183,13 +183,13 @@ export function SiteFooter() {
     {
       title: "Studio",
       items: [
-        { label: "Work", href: "/#work" },
-        { label: "Pricing", href: "/#pricing" },
+        { label: "Work", href: "/work" },
+        { label: "Pricing", href: "/pricing" },
         { label: "Our process", href: "/process" },
         { label: "How we use AI", href: "/how-we-use-ai" },
         { label: "Articles", href: "/articles" },
-        { label: "Guardrails", href: "/#guardrails" },
-        { label: "FAQ", href: "/#faq" },
+        { label: "Guardrails", href: "/guardrails" },
+        { label: "FAQ", href: "/pricing#faq" },
       ],
     },
     {
@@ -225,7 +225,7 @@ export function SiteFooter() {
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 pulse-dot" />
               </span>
-              Booking projects for {new Date().getFullYear() + 1}
+              Booking projects for {new Date().getFullYear()}
             </div>
           </div>
 

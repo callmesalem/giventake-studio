@@ -57,7 +57,7 @@ export function Hero() {
               <IconArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="#work"
+              href="/work"
               data-crit="hero-cta-secondary"
               className="btn-icon-nudge inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3.5 text-[14px] font-medium text-white backdrop-blur transition hover:border-white/40"
             >
