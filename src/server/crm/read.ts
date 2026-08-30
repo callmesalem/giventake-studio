@@ -12,11 +12,43 @@
 
 type Fetch = typeof globalThis.fetch;
 
+export interface CrmActor {
+  /** The signed-in user's id, or null for a system/no-actor context. */
+  id: string | null;
+  /** Admins see everything; members are scoped to what they own or are assigned. */
+  isAdmin: boolean;
+}
+
 export interface CrmReadOptions {
   url: string;
   serviceRoleKey: string;
   fetch?: Fetch;
+  /** Who is reading. Omitted => full access (admin), so existing server callers
+   *  and tests that construct CrmRead without an actor are unaffected. */
+  actor?: CrmActor;
 }
+
+/** Per-table visibility for a MEMBER (non-admin). Admins bypass all of this.
+ *  - "shared": every member sees the whole table (reference/directory data).
+ *  - "owned": a member sees only rows they own or are assigned (plus, for
+ *    leads, the unassigned inbound pool they may claim).
+ *  - "admin_only": members see nothing (financial / governance data).
+ *  Any table not listed defaults to "owned" (fail closed). */
+type MemberVisibility = "shared" | "owned" | "admin_only";
+const MEMBER_TABLE_POLICY: Record<string, MemberVisibility> = {
+  companies: "shared",
+  contacts: "shared",
+  pipeline_stages: "shared",
+  leads: "owned",
+  deals: "owned",
+  tasks: "owned",
+  notes: "owned",
+  clients: "admin_only",
+  invoices: "admin_only",
+  projects: "admin_only",
+  referrals: "admin_only",
+  approval_queue: "admin_only",
+};
 
 export interface CrmOverview {
   prospecting: { companies: number; contacts: number; deals: number };
@@ -32,6 +64,7 @@ export class CrmRead {
   readonly #url: string;
   readonly #key: string;
   readonly #fetch: Fetch;
+  readonly #actor: CrmActor;
 
   constructor(options: CrmReadOptions) {
     if (!options.url || !options.serviceRoleKey) {
@@ -40,6 +73,29 @@ export class CrmRead {
     this.#url = options.url.replace(/\/$/, "");
     this.#key = options.serviceRoleKey;
     this.#fetch = options.fetch ?? ((input, init) => fetch(input, init));
+    // Default to admin (full access) when no actor is supplied, so existing
+    // server callers and tests are unaffected. crm-data.ts passes the real actor.
+    this.#actor = options.actor ?? { id: null, isAdmin: true };
+  }
+
+  /** Apply member row-visibility. Admins get everything; members are filtered
+   *  to their owned/assigned rows per MEMBER_TABLE_POLICY. Filtering happens
+   *  here, server-side, after the service-role read: PostgREST cannot see the
+   *  app-level user, so this app layer is the correct place to scope. */
+  #scope<T>(table: string, rows: T[]): T[] {
+    if (this.#actor.isAdmin) return rows;
+    const visibility = MEMBER_TABLE_POLICY[table] ?? "owned";
+    if (visibility === "shared") return rows;
+    if (visibility === "admin_only") return [];
+    const me = this.#actor.id;
+    if (!me) return [];
+    return rows.filter((row) => {
+      const rec = row as Record<string, unknown>;
+      if (rec.owner_id === me || rec.assigned_to === me) return true;
+      // Unassigned inbound leads form a claimable pool visible to members.
+      if (table === "leads" && rec.owner_id === null && rec.assigned_to === null) return true;
+      return false;
+    });
   }
 
   async #rpc<T>(name: string, body: Record<string, unknown> = {}): Promise<T> {
@@ -72,7 +128,8 @@ export class CrmRead {
       headers: { apikey: this.#key, Authorization: `Bearer ${this.#key}` },
     });
     if (!response.ok) throw new Error(`CRM read ${table} failed: ${response.status}`);
-    return (await response.json()) as T[];
+    const rows = (await response.json()) as T[];
+    return this.#scope(table, rows);
   }
 
   listCompanies<T = Record<string, unknown>>(): Promise<T[]> {
@@ -105,12 +162,28 @@ export class CrmRead {
    * security-hardening migration), so it is read through the leads_list
    * security-definer function, which returns real (non-synthetic) leads.
    */
-  listLeads<T = Record<string, unknown>>(): Promise<T[]> {
-    return this.#rpc<T[]>("leads_list", { p_limit: 200 });
+  async listLeads<T = Record<string, unknown>>(): Promise<T[]> {
+    // leads is RPC-only; the RPC returns owner_id/assigned_to (see the
+    // leads_list owner-fields migration) so member visibility applies here too.
+    const rows = await this.#rpc<T[]>("leads_list", { p_limit: 200 });
+    return this.#scope("leads", Array.isArray(rows) ? rows : []);
   }
 
   /** Everything the dashboard home needs, in one round of parallel reads. */
   async getOverview(): Promise<CrmOverview> {
+    if (!this.#actor.isAdmin) {
+      // Members do not see company-wide aggregates. A member-scoped home (their
+      // own counts) is a fast follow (H1b); until then, no aggregates leak.
+      return {
+        prospecting: { companies: 0, contacts: 0, deals: 0 },
+        campaigns: { campaigns: [], enrollmentsByStatus: {} },
+        newsletter: { subscribersByStatus: {}, issues: [] },
+        reputation: { reviewsByStatus: {}, requestsByStatus: {} },
+        referral: { partners: [], referralsByStatus: {} },
+        activity: { notes: 0, tasks: 0, openTasks: 0 },
+        pendingApprovals: 0,
+      };
+    }
     const [prospecting, campaigns, newsletter, reputation, referral, activity, pending] =
       await Promise.all([
         this.#rpc<CrmOverview["prospecting"]>("prospecting_snapshot"),
