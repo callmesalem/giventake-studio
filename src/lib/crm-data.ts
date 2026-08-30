@@ -34,9 +34,14 @@ function config() {
  * cookie access live in the .server module so this file stays client-safe. */
 async function reader() {
   const { requireCrmSession } = await import("./crm-auth.server");
-  await requireCrmSession();
+  const session = await requireCrmSession();
   const { CrmRead } = await import("@/server/crm/read");
-  return new CrmRead(config());
+  // Scope reads to the signed-in user: admins see everything, members see only
+  // what they own or are assigned (plus the unassigned lead pool). See CrmRead.
+  return new CrmRead({
+    ...config(),
+    actor: { id: session.userId, isAdmin: session.role === "admin" },
+  });
 }
 
 export interface CompanyRow {
@@ -699,7 +704,20 @@ async function writer() {
   const { requireCrmSession } = await import("./crm-auth.server");
   const session = await requireCrmSession();
   const { CrmActions } = await import("@/server/crm/actions");
-  return { actions: new CrmActions(config()), actor: `crm:${session.email}` };
+  return { actions: new CrmActions(config()), actor: `crm:${session.email}`, session };
+}
+
+/** Financial and governance writes (clients, projects, invoices, referral
+ *  partners, referral records, and record assignment) are admin-only. Members
+ *  operate their own pipeline; they do not create money records, manage
+ *  referral partners, or reassign ownership. Owned-record EDITS are already
+ *  blocked for members by the scoped reader: identityFor()/getById run through
+ *  the member-scoped read layer, so an unowned deal/task/lead resolves to
+ *  notFound before any write happens. */
+function assertAdmin(session: { role: "admin" | "member" }): void {
+  if (session.role !== "admin") {
+    throw new Response("This action is restricted to admins", { status: 403 });
+  }
 }
 
 /** The upserts key on (source, source_record_id). For an EDIT we must reuse the
@@ -1153,7 +1171,8 @@ export const savePartner = createServerFn({ method: "POST" })
     notes: text(d?.notes, "Notes", 2000),
   }))
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { actions } = await writer();
+    const { actions, session } = await writer();
+    assertAdmin(session);
     await actions.upsertReferralPartner(data);
     return { ok: true };
   });
@@ -1165,7 +1184,8 @@ export const recordReferral = createServerFn({ method: "POST" })
     leadId: optionalUuid(d?.leadId),
   }))
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { actions } = await writer();
+    const { actions, session } = await writer();
+    assertAdmin(session);
     await actions.recordReferral(data);
     return { ok: true };
   });
@@ -1176,7 +1196,8 @@ export const setReferralStatus = createServerFn({ method: "POST" })
     status: text(d?.status, "Status", 40, true) as string,
   }))
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { actions } = await writer();
+    const { actions, session } = await writer();
+    assertAdmin(session);
     await actions.setReferralStatus(data.id, data.status);
     return { ok: true };
   });
@@ -1278,7 +1299,11 @@ export const assignRecord = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { actions } = await writer();
+    const { actions, session } = await writer();
+    // Reassigning ownership is an admin action. (Letting a member self-claim an
+    // unassigned pool lead is a small, safe follow-up; admins distribute leads
+    // for now.)
+    assertAdmin(session);
     await actions.assign(data.table, data.column, data.id, data.userId);
     return { ok: true };
   });
@@ -1562,7 +1587,8 @@ export const convertDealToClient = createServerFn({ method: "POST" })
       return { ok: true, clientId: String(existing[0].id), existed: true };
     }
 
-    const { actions } = await writer();
+    const { actions, session } = await writer();
+    assertAdmin(session);
     const clientId = await actions.createClient({
       name: data.name,
       leadId: str(deal.lead_id),
@@ -1653,7 +1679,8 @@ export const createInvoice = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { actions } = await writer();
+    const { actions, session } = await writer();
+    assertAdmin(session);
     await actions.createInvoice(data);
     return { ok: true };
   });
