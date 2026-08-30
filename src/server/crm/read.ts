@@ -264,9 +264,11 @@ export class CrmRead {
     return this.#rpc<boolean>("is_approved_recipient", { p_address: address, p_sop: sop });
   }
 
-  /** Which channel produced paying clients. Built this morning and displayed
-   *  nowhere until now. */
+  /** Which channel produced paying clients. Company-wide revenue attribution is
+   *  admin-only: a member must not see the business's channel/revenue mix. The
+   *  dashboard consumer treats an empty `bySource` as "no attribution rows". */
   attribution<T = unknown>(): Promise<T> {
+    if (!this.#actor.isAdmin) return Promise.resolve({ bySource: [] } as T);
     return this.#rpc<T>("attribution_snapshot");
   }
 
