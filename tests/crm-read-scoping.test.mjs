@@ -77,3 +77,10 @@ test("member overview leaks no company-wide aggregates", async () => {
   assert.equal(o.activity.tasks, 0);
   assert.equal(o.pendingApprovals, 0);
 });
+
+test("member cannot see company-wide revenue attribution", async () => {
+  const r = reader({ id: "u-me", isAdmin: false });
+  // The dashboard home calls attribution(); a member must get an empty result,
+  // never the business's channel/revenue mix.
+  assert.deepEqual(await r.attribution(), { bySource: [] });
+});
