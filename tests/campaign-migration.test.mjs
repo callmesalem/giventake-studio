@@ -97,6 +97,20 @@ test("an enrollment past its last step is not claimable", () => {
   assert.match(sql, /exists\s*\(\s*select\s+1\s+from\s+campaign_steps\s+s[\s\S]*?delay_hours[\s\S]*?<=\s*now\(\)/i);
 });
 
+test("a converted lead is not sequenced further", () => {
+  // convertLead records conversion as leads.status = 'converted'. Continuing to
+  // send after that is cold outreach arriving at someone who already signed.
+  assert.match(sql, /exists\s*\(\s*select\s+1\s+from\s+leads\s+l[\s\S]*?<>\s*'converted'/i);
+});
+
+test("the lead check does not join, so the row lock stays on enrollments", () => {
+  // Three EXISTS checks (campaign active, step due, lead not converted) and
+  // campaign_enrollments still the only table in the due CTE's FROM list.
+  const due = sql.slice(sql.indexOf("with due as"), sql.indexOf("claimed as"));
+  assert.equal((due.match(/\bfrom\s+campaign_enrollments\b/gi) ?? []).length, 1);
+  assert.match(due, /for update skip locked/i);
+});
+
 test("the inbound paths can reach an enrollment from a provider message id", () => {
   // A bounce event and a reply both arrive knowing only the message id.
   // campaign_sends is the only place that maps one to an enrollment.

@@ -76,6 +76,20 @@ begin
           and s.step_order = e.current_step
           and e.last_advanced_at + make_interval(hours => s.delay_hours) <= now()
       )
+      -- Stop sequencing anyone who is no longer a prospect. convertLead records
+      -- a conversion as leads.status = 'converted' (src/lib/crm-data.ts), and a
+      -- converted lead is already a client — continuing to send them cold
+      -- outreach is the sequence arriving after they have signed.
+      --
+      -- EXISTS rather than a join, for the same reason as the checks above:
+      -- campaign_enrollments must stay the only table in this FROM list so
+      -- FOR UPDATE SKIP LOCKED locks enrollment rows alone. It also covers a
+      -- missing lead row defensively.
+      and exists (
+        select 1 from leads l
+        where l.id = e.lead_id
+          and coalesce(l.status, '') <> 'converted'
+      )
     order by e.last_advanced_at
     limit greatest(1, least(coalesce(p_limit, 25), 200))
     for update skip locked
