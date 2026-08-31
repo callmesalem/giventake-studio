@@ -1798,3 +1798,83 @@ that." It retries the write twice and logs loudly, which helps only if someone i
 reading the logs. This engine's `unique (enrollment_id, step_order)` plus the
 four-state claim makes that class of double-send structurally impossible, and the
 same shape would port back.
+
+---
+
+## Corrections applied during implementation
+
+Seven defects in this plan were found while executing it. The code in the task
+bodies above is the ORIGINAL plan text; where it differs from what shipped, the
+shipped version is correct. Recorded here so the difference is visible rather
+than discovered.
+
+### 1. The claim query contradicted its own test (Task 1)
+
+The SQL said `for update of e skip locked`; the test demanded the contiguous
+phrase `for update skip locked`. Following the plan literally failed the plan's
+own test. Fixed by restructuring the CTE so `campaign_enrollments` is the only
+table in the FROM list — which also tightened the lock scope.
+
+### 2. A defaulted step delay made finished enrollments due forever (Task 1)
+
+The restructure initially used `coalesce((select delay_hours …), 0)`. An
+enrollment past its final step has no step row, so the default made it due on
+every tick — churning writes and consuming the claim batch real sends need. The
+step check is now an EXISTS requiring both existence and elapsed delay.
+
+### 3. The unsubscribe verifier failed open on an empty secret (Task 6)
+
+`verifyUnsubscribeToken` did not check whether the secret was empty. An empty
+HMAC key is public knowledge, so an unset `CAMPAIGN_TOKEN_SECRET` made every
+token forgeable. It now rejects an empty secret outright, and the runner
+requires a secret before claiming any rows.
+
+### 4. The transient-retry path was unreachable (Task 5)
+
+`campaign_record_send` returned true only on a genuine INSERT, and its update
+guard matched only `status='sending'` — so a `failed` row could never be
+re-claimed. Transient failures never retried, `MAX_ATTEMPTS` was dead code, and
+wedged rows were re-claimed every tick until they starved the batch. Replaced by
+`campaign_claim_step`, a four-state machine (`claimed` / `already_sent` /
+`in_flight` / `exhausted`), plus a staleness sweep so a row left `sending` by a
+crashed tick resolves instead of stalling forever.
+
+### 5. Unsubscribe mutated on GET (Task 9)
+
+Mail clients and security scanners prefetch links, so a mutating GET would
+silently unsubscribe recipients who never clicked. GET now renders a
+confirmation form and POST performs the change — which is also what RFC 8058
+one-click requires. ATC's `outreach-unsubscribe` reached the same design
+independently, for the same stated reason.
+
+### 6. The reply handler was dead code (Task 10)
+
+An `email()` on `src/server.ts`'s default export never runs: nitro's
+cloudflare-module preset builds the Worker's exported object itself and drops
+extra properties. Verified by building and finding no trace of it in
+`.output/server/index.mjs`. The handler is now a nitro plugin on the
+`cloudflare:email` hook, in `src/nitro/campaign-email.ts`.
+
+**The same applied to Task 11's `scheduled()`** — `_module-handler.mjs` exports
+`scheduled`, `email`, `queue`, `tail` and `trace`, each firing a hook. The cron
+is a `cloudflare:scheduled` plugin for the same reason. Verify after any nitro
+upgrade:
+
+```
+npx vite build
+grep -c "cloudflare:scheduled" .output/server/index.mjs
+grep -c "cloudflare:email"     .output/server/index.mjs
+```
+
+### 7. Reply matching could never match (Task 10)
+
+`campaign_sends.provider_message_id` holds Resend's bare uuid;
+`extractReferencedMessageIds` returns the RFC-822 form `uuid@sending-domain`.
+Equality alone meant zero replies would ever match — the feature would have been
+silently inert. `campaign_mark_by_message` now also tries
+`split_part(p_provider_message_id, '@', 1)`.
+
+Also in Task 10: the bounce endpoint swallowed failures and returned 200, so a
+transient outage discarded the bounce permanently and left the sequence mailing
+a dead address. It now returns 500 so Resend redelivers, which is safe because
+the RPC is a status write plus an append-only event.
