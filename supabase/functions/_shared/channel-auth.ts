@@ -54,22 +54,37 @@ export function timingSafeEqual(a: string, b: string): boolean {
 /**
  * The caller's IP, as far as the edge can tell.
  *
- * Spoofable, and treated as a hint rather than an identity: `x-forwarded-for` is
- * a header, and a proxy that appends to it leaves whatever the client sent in
- * front. So this attributes a log row and keys a brake on guessing; it is never
- * a gate on its own, and nothing here should be read as proof of who called.
+ * `cf-connecting-ip` first. The edge sets it to the peer that actually opened
+ * the connection and overwrites anything the client sent under that name, so it
+ * is the one value here a caller cannot choose for itself.
+ *
+ * Then `x-forwarded-for` — and the LAST entry, which is the opposite of the
+ * snippet you will find everywhere. Each hop APPENDS as it forwards, so the
+ * rightmost entry is the one our own trusted proxy wrote and everything to its
+ * left is whatever the client invented before the request arrived. Taking the
+ * leftmost is correct only when every hop in the chain is trusted; here the
+ * client is one of the hops. Keying a brake on guessing to a value the guesser
+ * picks is not a brake at all — he sends a different X-Forwarded-For on each
+ * attempt and every attempt is his first.
+ *
+ * An empty rightmost entry yields null rather than reaching further left. An
+ * unidentified caller is allowed through by tooManyFailures, which is a better
+ * failure than confidently limiting the wrong person on a value they supplied.
  *
  * Capped at 64 characters because the value lands in an unbounded text column
  * and in an index key.
  */
 export function clientIp(req: Request): string | null {
+  const direct = req.headers.get("cf-connecting-ip")?.trim().slice(0, 64) ?? "";
+  if (direct) return direct;
+
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim().slice(0, 64) ?? "";
-    if (first) return first;
+    const hops = forwarded.split(",");
+    const nearest = hops[hops.length - 1]?.trim().slice(0, 64) ?? "";
+    if (nearest) return nearest;
   }
-  const direct = req.headers.get("cf-connecting-ip")?.trim().slice(0, 64) ?? "";
-  return direct || null;
+  return null;
 }
 
 /**

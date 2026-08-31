@@ -40,22 +40,37 @@ test("timingSafeEqual matches on content and length, not on prefix", () => {
   assert.equal(timingSafeEqual("", ""), true);
 });
 
-test("clientIp prefers the first forwarded entry, falls back, and stays bounded", () => {
-  assert.equal(
-    clientIp(req({ "x-forwarded-for": "203.0.113.7, 70.41.3.18, 150.172.238.178" })),
-    "203.0.113.7",
-  );
-  assert.equal(clientIp(req({ "x-forwarded-for": "  203.0.113.7  " })), "203.0.113.7");
+test("clientIp trusts the edge over anything the caller can write", () => {
+  // cf-connecting-ip wins outright. The edge overwrites it, so it is the one
+  // value here the caller cannot pick.
   assert.equal(clientIp(req({ "cf-connecting-ip": "198.51.100.4" })), "198.51.100.4");
-  // The header wins when both are present; that is the documented order.
   assert.equal(
     clientIp(req({ "x-forwarded-for": "203.0.113.7", "cf-connecting-ip": "198.51.100.4" })),
-    "203.0.113.7",
+    "198.51.100.4",
   );
+
+  // Falling back to x-forwarded-for, the LAST entry is used, not the first.
+  // Everything left of it is what the client sent before our proxy appended, so
+  // "150.172.238.178" here is the only entry we did not let a stranger choose.
+  assert.equal(
+    clientIp(req({ "x-forwarded-for": "203.0.113.7, 70.41.3.18, 150.172.238.178" })),
+    "150.172.238.178",
+  );
+  // The evasion this closes: a guesser prepending a fresh value per attempt to
+  // land in a fresh rate-limit bucket. Both of these resolve to the same ip.
+  assert.equal(clientIp(req({ "x-forwarded-for": "fake-1, 150.172.238.178" })), "150.172.238.178");
+  assert.equal(clientIp(req({ "x-forwarded-for": "fake-2, 150.172.238.178" })), "150.172.238.178");
+
+  assert.equal(clientIp(req({ "x-forwarded-for": "  203.0.113.7  " })), "203.0.113.7");
   assert.equal(clientIp(req()), null);
+  // A blank rightmost entry yields null rather than reaching further left into
+  // client-supplied territory. Unidentified is allowed through; misattributed
+  // to a value the caller chose is worse.
+  assert.equal(clientIp(req({ "x-forwarded-for": "203.0.113.7, " })), null);
+
   // It lands in an unbounded text column and an index key, so it is capped.
-  const long = clientIp(req({ "x-forwarded-for": "a".repeat(200) }));
-  assert.equal(long.length, 64);
+  assert.equal(clientIp(req({ "cf-connecting-ip": "a".repeat(200) })).length, 64);
+  assert.equal(clientIp(req({ "x-forwarded-for": `1.2.3.4, ${"b".repeat(200)}` })).length, 64);
 });
 
 test("presentedVia distinguishes header, query and nothing at all", () => {
