@@ -12,7 +12,7 @@ import {
 } from "@/components/crm/ui";
 import { SALES_STAGES } from "@/lib/sales-playbook";
 
-export const Route = createFileRoute("/crm/deals")({
+export const Route = createFileRoute("/crm/deals/")({
   loader: async () => ({
     rows: await crmDeals(),
     companies: await crmCompanyOptions(),

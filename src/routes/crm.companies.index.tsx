@@ -9,7 +9,7 @@ import {
   useListFilter,
 } from "@/components/crm/ui";
 
-export const Route = createFileRoute("/crm/companies")({
+export const Route = createFileRoute("/crm/companies/")({
   loader: () => crmCompanies(),
   component: Companies,
 });
