@@ -43,7 +43,10 @@ export function createResendMailer(config: {
         const body = (await response.json()) as { id?: string };
         return { status: "sent", providerMessageId: body.id };
       } catch {
-        return { status: "failed", error: "resend_network" };
+        // A throw means no response was received, so the request may well have
+        // reached Resend and been accepted. Treat it as ambiguous rather than
+        // as a clean failure: the caller must not retry into a duplicate.
+        return { status: "failed", error: "resend_network", ambiguous: true };
       }
     },
   };

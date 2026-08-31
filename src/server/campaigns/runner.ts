@@ -1,11 +1,10 @@
 import { evaluateGates } from "./policy.ts";
-import { MAX_ATTEMPTS, type CampaignStore, type Clock, type Mailer, type DueSend } from "./types.ts";
+import { type CampaignStore, type Mailer, type DueSend } from "./types.ts";
 import { unsubscribeToken } from "./tokens.ts";
 
 export interface RunnerDeps {
   store: CampaignStore;
   mailer: Mailer;
-  clock: Clock;
   replyTo: string;
   unsubscribeBase: string;
   secret: string;
@@ -55,11 +54,30 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
         continue;
       }
 
-      // Claim the step before sending. A false return means this (enrollment,
-      // step) was already recorded, so another tick has it — never send again.
-      const claimed = await deps.store.recordSend(row.enrollmentId, row.stepOrder, "sending");
-      if (!claimed) {
+      // Claim the step before sending. The claim is a state machine, not a
+      // boolean: a boolean could not say "this failed and may be retried", so
+      // a failed step was re-claimed by claim_due every tick and skipped forever.
+      const claim = await deps.store.claimStep(row.enrollmentId, row.stepOrder);
+
+      if (claim === "already_sent") {
+        // A previous tick sent this and died before advancing. Advance now
+        // rather than re-sending, and leave a trace so it is not invisible.
         skipped++;
+        await deps.store.markStatus(row.enrollmentId, "active", true, "recovered", {
+          step: row.stepOrder,
+        });
+        continue;
+      }
+      if (claim === "in_flight") {
+        skipped++;
+        continue;
+      }
+      if (claim === "exhausted") {
+        skipped++;
+        await deps.store.markStatus(row.enrollmentId, "stopped", false, "send_failed", {
+          step: row.stepOrder,
+          reason: "max_attempts",
+        });
         continue;
       }
 
@@ -74,25 +92,42 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
       });
 
       if (outcome.status === "sent") {
-        sent++;
-        await deps.store.recordSend(row.enrollmentId, row.stepOrder, "sent", outcome.providerMessageId);
+        // Counted only after both writes land. Incrementing first meant a throw
+        // in either await counted the row as sent AND again as skipped by the
+        // catch below, so the two counters were not a partition of the batch.
+        await deps.store.recordResult(row.enrollmentId, row.stepOrder, "sent", outcome.providerMessageId);
         await deps.store.markStatus(row.enrollmentId, "active", true, "sent", {
           step: row.stepOrder,
           messageId: outcome.providerMessageId,
+        });
+        sent++;
+        continue;
+      }
+
+      if (outcome.ambiguous) {
+        // No response came back, so this may have been delivered. The house
+        // rule is that ambiguity resolves to sent: advance rather than risk a
+        // duplicate, and record that we are not certain.
+        skipped++;
+        await deps.store.recordResult(row.enrollmentId, row.stepOrder, "sent", undefined, outcome.error);
+        await deps.store.markStatus(row.enrollmentId, "active", true, "sent_ambiguous", {
+          step: row.stepOrder,
+          error: outcome.error,
         });
         continue;
       }
 
       skipped++;
-      await deps.store.recordSend(row.enrollmentId, row.stepOrder, "failed", undefined, outcome.error);
-      const attempts = await deps.store.attemptsFor(row.enrollmentId, row.stepOrder);
-      if (outcome.permanent || attempts >= MAX_ATTEMPTS) {
+      await deps.store.recordResult(row.enrollmentId, row.stepOrder, "failed", undefined, outcome.error);
+      if (outcome.permanent) {
         await deps.store.markStatus(row.enrollmentId, "stopped", false, "send_failed", {
           step: row.stepOrder,
           error: outcome.error,
-          permanent: Boolean(outcome.permanent),
+          permanent: true,
         });
       }
+      // A non-permanent failure is left for the next tick; campaign_claim_step
+      // re-claims it until attempts are exhausted.
     } catch (error) {
       // Contained per enrollment so one bad row cannot abort the batch. The
       // enrollment id is an internal uuid, not personal data, and without it a

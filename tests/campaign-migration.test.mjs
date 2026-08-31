@@ -22,10 +22,37 @@ test("claim RPC uses SKIP LOCKED so concurrent ticks cannot claim the same row",
 });
 
 test("RPCs are service_role only, matching the rest of this schema", () => {
-  for (const fn of ["campaign_claim_due", "campaign_record_send", "campaign_mark_status"]) {
+  for (const fn of [
+    "campaign_claim_due",
+    "campaign_claim_step",
+    "campaign_record_result",
+    "campaign_mark_status",
+  ]) {
     assert.match(sql, new RegExp(`revoke all on function public\\.${fn}[^;]*from public`, "i"));
     assert.match(sql, new RegExp(`grant execute on function public\\.${fn}[^;]*to service_role`, "i"));
   }
+});
+
+test("the claim step RPC can express all four states, not just a boolean", () => {
+  // The boolean it replaces could not say "this failed and may be retried", so
+  // a failed step was re-claimed every tick and skipped forever. Each of these
+  // four is a distinct instruction to the runner, so all four must exist.
+  assert.match(sql, /create or replace function public\.campaign_claim_step/i);
+  assert.match(sql, /return 'claimed'/i);
+  assert.match(sql, /return 'already_sent'/i);
+  assert.match(sql, /return 'in_flight'/i);
+  assert.match(sql, /return 'exhausted'/i);
+});
+
+test("the retry path is alive - a failed step raises attempts and re-claims", () => {
+  // Attempts are counted here and nowhere else. Without this update a failed
+  // step could never be re-claimed, which is the wedge being removed.
+  assert.match(sql, /set status = 'sending', attempts = attempts \+ 1, error = null/i);
+  assert.match(sql, /if v_attempts >= p_max_attempts then/i);
+});
+
+test("campaign_record_send is gone - a boolean could not express the retry state", () => {
+  assert.doesNotMatch(sql, /campaign_record_send/i);
 });
 
 test("the migration is additive - no destructive statements", () => {

@@ -10,20 +10,27 @@ const due = (over = {}) => ({
 });
 
 const harness = (over = {}) => {
-  const calls = { sends: [], statuses: [], records: [] };
+  const calls = { sends: [], statuses: [], records: [], claims: [] };
   const store = {
     async claimDue() { return over.dueRows ?? [due()]; },
-    async isSuppressed() { return over.suppressed ?? false; },
-    async isApprovedRecipient() { return over.approved ?? true; },
-    async recordSend(id, step, status, msgId, error) {
+    async isSuppressed(address) {
+      return typeof over.suppressed === "function" ? over.suppressed(address) : (over.suppressed ?? false);
+    },
+    async isApprovedRecipient(address) {
+      return typeof over.approved === "function" ? over.approved(address) : (over.approved ?? true);
+    },
+    async claimStep(id, step) {
+      calls.claims.push({ id, step });
+      return typeof over.claimResult === "function"
+        ? over.claimResult(id, step)
+        : (over.claimResult ?? "claimed");
+    },
+    async recordResult(id, step, status, msgId, error) {
       calls.records.push({ id, step, status, msgId, error });
-      if (status === "sending") return over.recordSendResult ?? true;
-      return true;
     },
     async markStatus(id, status, advance, eventType, details) {
       calls.statuses.push({ id, status, advance, eventType, details });
     },
-    async attemptsFor() { return over.attempts ?? 0; },
   };
   const mailer = {
     async send(input) {
@@ -33,7 +40,6 @@ const harness = (over = {}) => {
   };
   return { calls, deps: {
     store, mailer,
-    clock: { now: () => new Date("2026-08-31T12:00:00Z") },
     replyTo: "reply@giventakedevs.com",
     unsubscribeBase: "https://giventakedevs.com/api/unsubscribe",
     secret: "test-secret",
@@ -67,9 +73,44 @@ test("an unapproved address is never mailed and records why", async () => {
 });
 
 test("a replayed step does not send twice", async () => {
-  const h = harness({ recordSendResult: false });
+  const h = harness({ claimResult: "in_flight" });
   await runSendTick(h.deps);
-  assert.equal(h.calls.sends.length, 0, "must not send when the step is already recorded");
+  assert.equal(h.calls.sends.length, 0, "must not send when the step is already claimed");
+});
+
+test("an in-flight step changes nothing - another tick owns it", async () => {
+  // 'sending' is ambiguous: another tick may hold it, or one may have died
+  // mid-send. Either way this tick must not touch the enrollment, or it would
+  // race the owner or resolve an ambiguity that is not its to resolve.
+  const h = harness({ claimResult: "in_flight" });
+  const result = await runSendTick(h.deps);
+  assert.equal(h.calls.sends.length, 0);
+  assert.equal(h.calls.statuses.length, 0, "must not change status behind the owning tick");
+  assert.equal(h.calls.records.length, 0);
+  assert.equal(result.skipped, 1);
+});
+
+test("an already-sent step advances without re-sending", async () => {
+  // The prospect already has this mail: a previous tick sent it and died
+  // before advancing. Re-sending would duplicate; not advancing would wedge.
+  const h = harness({ claimResult: "already_sent" });
+  await runSendTick(h.deps);
+  assert.equal(h.calls.sends.length, 0, "the mail already went out - never send it twice");
+  const advanced = h.calls.statuses.find((s) => s.advance);
+  assert.ok(advanced, "expected the enrollment to advance past the delivered step");
+  assert.equal(advanced.eventType, "recovered");
+  assert.equal(advanced.status, "active");
+});
+
+test("an exhausted step stops the enrollment instead of retrying forever", async () => {
+  // MAX_ATTEMPTS is enforced in SQL and surfaced as this claim state. Before
+  // the four-state claim it was unreachable, because a failed row was never
+  // re-claimed at all.
+  const h = harness({ claimResult: "exhausted" });
+  await runSendTick(h.deps);
+  assert.equal(h.calls.sends.length, 0);
+  assert.equal(h.calls.statuses.at(-1).status, "stopped");
+  assert.equal(h.calls.statuses.at(-1).details.reason, "max_attempts");
 });
 
 test("a permanent failure stops immediately without burning retries", async () => {
@@ -79,15 +120,36 @@ test("a permanent failure stops immediately without burning retries", async () =
 });
 
 test("a transient failure leaves the enrollment retryable", async () => {
-  const h = harness({ sendOutcome: { status: "failed", error: "resend_429" }, attempts: 0 });
+  const h = harness({ sendOutcome: { status: "failed", error: "resend_429" } });
   await runSendTick(h.deps);
   assert.notEqual(h.calls.statuses.at(-1)?.status, "stopped");
 });
 
-test("a transient failure stops after MAX_ATTEMPTS", async () => {
-  const h = harness({ sendOutcome: { status: "failed", error: "resend_429" }, attempts: 3 });
+test("a transient failure is recorded as failed so the next tick can re-claim it", async () => {
+  // This is the wedge that was fixed: the failure must land in campaign_sends
+  // as 'failed', because that is the only state campaign_claim_step will
+  // increment attempts on and hand back as 'claimed' again.
+  const h = harness({ sendOutcome: { status: "failed", error: "resend_429" } });
   await runSendTick(h.deps);
-  assert.equal(h.calls.statuses.at(-1).status, "stopped");
+  const recorded = h.calls.records.at(-1);
+  assert.equal(recorded.status, "failed");
+  assert.equal(recorded.error, "resend_429");
+  assert.equal(h.calls.statuses.length, 0, "a retryable failure must not touch the enrollment status");
+});
+
+test("an ambiguous failure advances and is recorded as sent, never re-sent", async () => {
+  // No response came back, so the mail may be in the prospect's inbox. The
+  // house rule is that ambiguity resolves to sent: a duplicate is the worse
+  // outcome than a missed step.
+  const h = harness({
+    sendOutcome: { status: "failed", error: "resend_network", ambiguous: true },
+  });
+  await runSendTick(h.deps);
+  assert.equal(h.calls.sends.length, 1, "sent once, and only once");
+  assert.equal(h.calls.records.at(-1).status, "sent");
+  const advanced = h.calls.statuses.find((s) => s.advance);
+  assert.ok(advanced, "expected the enrollment to advance rather than retry into a duplicate");
+  assert.equal(advanced.eventType, "sent_ambiguous");
 });
 
 test("every message carries a List-Unsubscribe header", async () => {
@@ -122,4 +184,23 @@ test("returns counts of what it did", async () => {
   const result = await runSendTick(h.deps);
   assert.equal(result.sent, 1);
   assert.equal(result.skipped, 0);
+});
+
+test("sent and skipped partition the batch - every row is counted exactly once", async () => {
+  // sent++ used to run before the two writes that follow it, so a throw in
+  // either counted the row as sent AND again as skipped by the catch.
+  const rows = [due({ enrollmentId: "e1" }), due({ enrollmentId: "e2", email: "blocked@y.com" })];
+  const h = harness({ dueRows: rows, suppressed: (address) => address === "blocked@y.com" });
+  const result = await runSendTick(h.deps);
+  assert.equal(result.sent, 1);
+  assert.equal(result.skipped, 1);
+  assert.equal(result.sent + result.skipped, rows.length);
+});
+
+test("a throw while recording a send is not double-counted", async () => {
+  const h = harness();
+  h.deps.store.recordResult = async () => { throw new Error("db down"); };
+  const result = await runSendTick(h.deps);
+  assert.equal(result.sent, 0, "the write failed, so the row is not a success");
+  assert.equal(result.skipped, 1);
 });

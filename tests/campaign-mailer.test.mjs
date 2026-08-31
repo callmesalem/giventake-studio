@@ -48,6 +48,25 @@ test("a thrown network error is not permanent", async () => {
   assert.notEqual(out.permanent, true);
 });
 
+test("a thrown fetch is ambiguous - no response means the mail may have gone out", async () => {
+  const mailer = createResendMailer({
+    apiKey: "k", from: "a@b.com",
+    fetch: async () => { throw new Error("boom"); },
+  });
+  const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
+  assert.equal(out.ambiguous, true);
+});
+
+test("an error RESPONSE is not ambiguous - the provider answered, and it said no", async () => {
+  const mailer = createResendMailer({
+    apiKey: "k", from: "a@b.com",
+    fetch: async () => ({ ok: false, status: 500, async json() { return {}; } }),
+  });
+  const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
+  assert.equal(out.status, "failed");
+  assert.notEqual(out.ambiguous, true);
+});
+
 test("a 500 is not permanent - the provider may recover", async () => {
   const mailer = createResendMailer({
     apiKey: "k", from: "a@b.com",

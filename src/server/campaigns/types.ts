@@ -9,12 +9,17 @@ export interface DueSend {
   template: { subject?: string; text?: string };
 }
 
+/** The four states campaign_claim_step can resolve a (enrollment, step) to. */
+export type StepClaim = "claimed" | "already_sent" | "in_flight" | "exhausted";
+
 export interface SendOutcome {
   status: "sent" | "failed";
   providerMessageId?: string;
   error?: string;
   /** True when the provider rejected the address outright — retrying cannot help. */
   permanent?: boolean;
+  /** No response was received, so the send MAY have happened. Never retry. */
+  ambiguous?: boolean;
 }
 
 export interface Mailer {
@@ -31,13 +36,14 @@ export interface CampaignStore {
   claimDue(limit: number, leaseSeconds: number): Promise<DueSend[]>;
   isSuppressed(address: string): Promise<boolean>;
   isApprovedRecipient(address: string, sop: string): Promise<boolean>;
-  recordSend(
+  claimStep(enrollmentId: string, stepOrder: number): Promise<StepClaim>;
+  recordResult(
     enrollmentId: string,
     stepOrder: number,
-    status: "sending" | "sent" | "failed",
+    status: "sent" | "failed",
     providerMessageId?: string,
     error?: string,
-  ): Promise<boolean>;
+  ): Promise<void>;
   markStatus(
     enrollmentId: string,
     status: string,
@@ -45,11 +51,11 @@ export interface CampaignStore {
     eventType: string,
     details: Record<string, unknown>,
   ): Promise<void>;
-  attemptsFor(enrollmentId: string, stepOrder: number): Promise<number>;
 }
 
-export interface Clock {
-  now(): Date;
-}
-
+/**
+ * Passed to campaign_claim_step as p_max_attempts. Attempt COUNTING lives in
+ * SQL and only in SQL — the runner never counts, it reads the claim state — so
+ * this is a knob for the store adapter, not a second tally.
+ */
 export const MAX_ATTEMPTS = 3;

@@ -103,39 +103,74 @@ begin
 end;
 $$;
 
--- 4. Record a send attempt. Returns false when the (enrollment, step) row
---    already exists, which is how a replay is refused.
-create or replace function public.campaign_record_send(
-  p_enrollment_id uuid, p_step_order int, p_status text,
-  p_provider_message_id text default null, p_error text default null
+-- 4. Claim one step for sending, as a state machine. The boolean this replaces
+--    could not express "this failed and may be retried", so a failed step was
+--    re-claimed by claim_due every tick and skipped forever.
+create or replace function public.campaign_claim_step(
+  p_enrollment_id uuid, p_step_order int, p_max_attempts int default 3
 )
-returns boolean
+returns text
 language plpgsql
 security definer
 set search_path = public, pg_temp
 as $$
 declare
-  inserted boolean;
+  v_status text;
+  v_attempts int;
 begin
-  insert into campaign_sends (enrollment_id, step_order, status, provider_message_id, error, attempts, sent_at)
-  values (p_enrollment_id, p_step_order, p_status, p_provider_message_id, p_error, 1,
-          case when p_status = 'sent' then now() else null end)
+  insert into campaign_sends (enrollment_id, step_order, status, attempts)
+  values (p_enrollment_id, p_step_order, 'sending', 1)
   on conflict (enrollment_id, step_order) do nothing;
 
-  get diagnostics inserted = row_count;
-  if not inserted then
-    update campaign_sends
-      set status = p_status,
-          provider_message_id = coalesce(p_provider_message_id, provider_message_id),
-          error = p_error,
-          attempts = attempts + 1,
-          sent_at = case when p_status = 'sent' then now() else sent_at end
-      where enrollment_id = p_enrollment_id and step_order = p_step_order
-        and status = 'sending';
-    return false;
+  if found then
+    return 'claimed';
   end if;
-  return true;
+
+  select status, attempts into v_status, v_attempts
+    from campaign_sends
+   where enrollment_id = p_enrollment_id and step_order = p_step_order
+     for update;
+
+  -- Already delivered: a previous tick sent it and then crashed before
+  -- advancing. The caller must advance WITHOUT sending again.
+  if v_status = 'sent' then
+    return 'already_sent';
+  end if;
+
+  -- Still 'sending': either another tick holds it right now, or a tick died
+  -- mid-send. Ambiguous, and the house rule is that ambiguity resolves to
+  -- sent, so it is never re-sent from here.
+  if v_status = 'sending' then
+    return 'in_flight';
+  end if;
+
+  if v_attempts >= p_max_attempts then
+    return 'exhausted';
+  end if;
+
+  update campaign_sends
+     set status = 'sending', attempts = attempts + 1, error = null
+   where enrollment_id = p_enrollment_id and step_order = p_step_order;
+  return 'claimed';
 end;
+$$;
+
+-- Record the outcome of a claimed step.
+create or replace function public.campaign_record_result(
+  p_enrollment_id uuid, p_step_order int, p_status text,
+  p_provider_message_id text default null, p_error text default null
+)
+returns void
+language sql
+security definer
+set search_path = public, pg_temp
+as $$
+  update campaign_sends
+     set status = p_status,
+         provider_message_id = coalesce(p_provider_message_id, provider_message_id),
+         error = p_error,
+         sent_at = case when p_status = 'sent' then now() else sent_at end
+   where enrollment_id = p_enrollment_id and step_order = p_step_order;
 $$;
 
 -- 5. Move an enrollment to a terminal or advanced state, with an audit event.
@@ -163,7 +198,9 @@ $$;
 
 revoke all on function public.campaign_claim_due(int, int) from public;
 grant execute on function public.campaign_claim_due(int, int) to service_role;
-revoke all on function public.campaign_record_send(uuid, int, text, text, text) from public;
-grant execute on function public.campaign_record_send(uuid, int, text, text, text) to service_role;
+revoke all on function public.campaign_claim_step(uuid, int, int) from public;
+grant execute on function public.campaign_claim_step(uuid, int, int) to service_role;
+revoke all on function public.campaign_record_result(uuid, int, text, text, text) from public;
+grant execute on function public.campaign_record_result(uuid, int, text, text, text) to service_role;
 revoke all on function public.campaign_mark_status(uuid, text, boolean, text, jsonb) from public;
 grant execute on function public.campaign_mark_status(uuid, text, boolean, text, jsonb) to service_role;
