@@ -52,6 +52,7 @@ import { Route as CrmContactsIdRouteImport } from './routes/crm.contacts.$id'
 import { Route as CrmCompaniesIdRouteImport } from './routes/crm.companies.$id'
 import { Route as CrmAuthGoogleRouteImport } from './routes/crm.auth.google'
 import { Route as CrmAuthCallbackRouteImport } from './routes/crm.auth.callback'
+import { Route as ApiUnsubscribeTokenRouteImport } from './routes/api.unsubscribe.$token'
 
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
@@ -268,6 +269,11 @@ const CrmAuthCallbackRoute = CrmAuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => CrmRoute,
 } as any)
+const ApiUnsubscribeTokenRoute = ApiUnsubscribeTokenRouteImport.update({
+  id: '/api/unsubscribe/$token',
+  path: '/api/unsubscribe/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -304,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
+  '/api/unsubscribe/$token': typeof ApiUnsubscribeTokenRoute
   '/crm/auth/callback': typeof CrmAuthCallbackRoute
   '/crm/auth/google': typeof CrmAuthGoogleRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
@@ -348,6 +355,7 @@ export interface FileRoutesByTo {
   '/articles': typeof ArticlesIndexRoute
   '/crm': typeof CrmIndexRoute
   '/services': typeof ServicesIndexRoute
+  '/api/unsubscribe/$token': typeof ApiUnsubscribeTokenRoute
   '/crm/auth/callback': typeof CrmAuthCallbackRoute
   '/crm/auth/google': typeof CrmAuthGoogleRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
+  '/api/unsubscribe/$token': typeof ApiUnsubscribeTokenRoute
   '/crm/auth/callback': typeof CrmAuthCallbackRoute
   '/crm/auth/google': typeof CrmAuthGoogleRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/articles/'
     | '/crm/'
     | '/services/'
+    | '/api/unsubscribe/$token'
     | '/crm/auth/callback'
     | '/crm/auth/google'
     | '/crm/companies/$id'
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/articles'
     | '/crm'
     | '/services'
+    | '/api/unsubscribe/$token'
     | '/crm/auth/callback'
     | '/crm/auth/google'
     | '/crm/companies/$id'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/articles/'
     | '/crm/'
     | '/services/'
+    | '/api/unsubscribe/$token'
     | '/crm/auth/callback'
     | '/crm/auth/google'
     | '/crm/companies/$id'
@@ -561,6 +573,7 @@ export interface RootRouteChildren {
   ServicesSlugRoute: typeof ServicesSlugRoute
   ArticlesIndexRoute: typeof ArticlesIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
+  ApiUnsubscribeTokenRoute: typeof ApiUnsubscribeTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -866,6 +879,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmAuthCallbackRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/api/unsubscribe/$token': {
+      id: '/api/unsubscribe/$token'
+      path: '/api/unsubscribe/$token'
+      fullPath: '/api/unsubscribe/$token'
+      preLoaderRoute: typeof ApiUnsubscribeTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -955,6 +975,7 @@ const rootRouteChildren: RootRouteChildren = {
   ServicesSlugRoute: ServicesSlugRoute,
   ArticlesIndexRoute: ArticlesIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
+  ApiUnsubscribeTokenRoute: ApiUnsubscribeTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
