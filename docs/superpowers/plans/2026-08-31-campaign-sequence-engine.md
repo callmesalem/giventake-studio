@@ -27,6 +27,7 @@
 | `src/server/campaigns/runner.ts` | Send-tick orchestration (pure) |
 | `src/server/campaigns/reply.ts` | Reply header matching (pure) |
 | `src/server/campaigns/tokens.ts` | HMAC unsubscribe tokens |
+| `src/server/campaigns/webhook.ts` | Svix signature verification for Resend webhooks |
 | `src/server/campaigns/supabase-store.ts` | RPC adapter |
 | `src/server/campaigns/index.ts` | Barrel export |
 | `src/routes/api.unsubscribe.$token.ts` | Unsubscribe endpoint |
@@ -1154,6 +1155,7 @@ export * from "./runner.ts";
 export * from "./mailer.ts";
 export * from "./tokens.ts";
 export * from "./reply.ts";
+export * from "./webhook.ts";
 export * from "./supabase-store.ts";
 ```
 
@@ -1235,16 +1237,194 @@ git commit -m "feat(campaigns): one-click unsubscribe endpoint"
 - Create: `src/routes/api.webhooks.resend.ts`
 - Modify: `src/server.ts`
 
-- [ ] **Step 1: Write the bounce webhook**
+- [ ] **Step 1: Write the failing test for signature verification**
+
+An unauthenticated webhook lets anyone POST a fake bounce and silently kill a live
+sequence. Resend signs with Svix. Test file: `tests/campaign-webhook.test.mjs`
+
+```js
+import test from "node:test";
+import assert from "node:assert/strict";
+import { verifyResendSignature } from "../src/server/campaigns/webhook.ts";
+
+const SECRET = "whsec_" + btoa("super-secret-key");
+const BODY = JSON.stringify({ type: "email.bounced" });
+const ID = "msg_1";
+
+async function signed(body, id, timestamp, secret = SECRET) {
+  const raw = secret.startsWith("whsec_") ? secret.slice(6) : secret;
+  const keyBytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    "raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const mac = await crypto.subtle.sign(
+    "HMAC", key, new TextEncoder().encode(`${id}.${timestamp}.${body}`),
+  );
+  return btoa(String.fromCharCode(...new Uint8Array(mac)));
+}
+
+const NOW = new Date("2026-08-31T12:00:00Z");
+const TS = String(Math.floor(NOW.getTime() / 1000));
+
+test("accepts a correctly signed payload", async () => {
+  const sig = await signed(BODY, ID, TS);
+  const ok = await verifyResendSignature({
+    body: BODY, secret: SECRET, now: NOW,
+    headers: { "svix-id": ID, "svix-timestamp": TS, "svix-signature": `v1,${sig}` },
+  });
+  assert.equal(ok, true);
+});
+
+test("accepts when several signatures are offered and one matches", async () => {
+  const sig = await signed(BODY, ID, TS);
+  const ok = await verifyResendSignature({
+    body: BODY, secret: SECRET, now: NOW,
+    headers: { "svix-id": ID, "svix-timestamp": TS, "svix-signature": `v1,bogus v1,${sig}` },
+  });
+  assert.equal(ok, true);
+});
+
+test("rejects a forged signature", async () => {
+  const ok = await verifyResendSignature({
+    body: BODY, secret: SECRET, now: NOW,
+    headers: { "svix-id": ID, "svix-timestamp": TS, "svix-signature": "v1,ZmFrZQ==" },
+  });
+  assert.equal(ok, false);
+});
+
+test("rejects a tampered body - the signature covers the payload", async () => {
+  const sig = await signed(BODY, ID, TS);
+  const ok = await verifyResendSignature({
+    body: JSON.stringify({ type: "email.delivered" }), secret: SECRET, now: NOW,
+    headers: { "svix-id": ID, "svix-timestamp": TS, "svix-signature": `v1,${sig}` },
+  });
+  assert.equal(ok, false);
+});
+
+test("rejects a replayed request outside the tolerance window", async () => {
+  const oldTs = String(Math.floor(NOW.getTime() / 1000) - 3600);
+  const sig = await signed(BODY, ID, oldTs);
+  const ok = await verifyResendSignature({
+    body: BODY, secret: SECRET, now: NOW,
+    headers: { "svix-id": ID, "svix-timestamp": oldTs, "svix-signature": `v1,${sig}` },
+  });
+  assert.equal(ok, false);
+});
+
+test("rejects missing headers rather than throwing", async () => {
+  for (const headers of [{}, { "svix-id": ID }, { "svix-timestamp": TS }]) {
+    assert.equal(
+      await verifyResendSignature({ body: BODY, secret: SECRET, now: NOW, headers }),
+      false,
+    );
+  }
+});
+
+test("rejects when no secret is configured - never fail open", async () => {
+  const sig = await signed(BODY, ID, TS);
+  const ok = await verifyResendSignature({
+    body: BODY, secret: "", now: NOW,
+    headers: { "svix-id": ID, "svix-timestamp": TS, "svix-signature": `v1,${sig}` },
+  });
+  assert.equal(ok, false);
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --experimental-strip-types tests/campaign-webhook.test.mjs`
+Expected: FAIL — cannot find module `webhook.ts`.
+
+- [ ] **Step 3: Write the verifier**
+
+Create `src/server/campaigns/webhook.ts`:
+
+```ts
+/**
+ * Svix signature verification for Resend webhooks.
+ *
+ * Without this the endpoint accepts anything, and a forged bounce event would
+ * silently stop a live sequence. Signature alone is not enough either: a
+ * captured-and-replayed request stays valid forever, so the timestamp is
+ * checked against a tolerance window too.
+ *
+ * WebCrypto rather than node:crypto — this runs on Cloudflare Workers.
+ */
+const encoder = new TextEncoder();
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+export async function verifyResendSignature(input: {
+  body: string;
+  headers: Record<string, string>;
+  secret: string;
+  now?: Date;
+  toleranceSeconds?: number;
+}): Promise<boolean> {
+  if (!input.secret) return false;
+
+  const headers: Record<string, string> = {};
+  for (const [k, v] of Object.entries(input.headers)) headers[k.toLowerCase()] = v;
+
+  const id = headers["svix-id"];
+  const timestamp = headers["svix-timestamp"];
+  const signature = headers["svix-signature"];
+  if (!id || !timestamp || !signature) return false;
+
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts)) return false;
+  const now = Math.floor((input.now ?? new Date()).getTime() / 1000);
+  if (Math.abs(now - ts) > (input.toleranceSeconds ?? 300)) return false;
+
+  const raw = input.secret.startsWith("whsec_") ? input.secret.slice(6) : input.secret;
+  let keyBytes: Uint8Array;
+  try {
+    keyBytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+  } catch {
+    return false;
+  }
+
+  const key = await crypto.subtle.importKey(
+    "raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const mac = await crypto.subtle.sign(
+    "HMAC", key, encoder.encode(`${id}.${timestamp}.${input.body}`),
+  );
+  const expected = btoa(String.fromCharCode(...new Uint8Array(mac)));
+
+  // Header format: "v1,<sig> v1,<sig>" — any matching v1 signature is enough.
+  return signature.split(" ").some((part) => {
+    const [version, value] = part.split(",");
+    return version === "v1" && value !== undefined && timingSafeEqual(expected, value);
+  });
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `node --experimental-strip-types tests/campaign-webhook.test.mjs`
+Expected: PASS, 7 tests.
+
+- [ ] **Step 5: Write the bounce webhook, verifying before acting**
 
 ```ts
 import { createFileRoute } from "@tanstack/react-router";
 import { createSupabaseCampaignStore } from "@/server/campaigns/supabase-store.ts";
+import { verifyResendSignature } from "@/server/campaigns/webhook.ts";
 
 /**
  * Resend delivery events. Only bounces and complaints matter here: both are
  * terminal for an enrollment, and a complaint is the strongest possible signal
  * to stop.
+ *
+ * The signature is verified before anything is read from the payload. An
+ * unverified request is refused, never acted on — a forged bounce would kill a
+ * live sequence silently.
  */
 export const Route = createFileRoute("/api/webhooks/resend")({
   server: {
@@ -1252,11 +1432,26 @@ export const Route = createFileRoute("/api/webhooks/resend")({
       POST: async ({ request }) => {
         const url = process.env.SUPABASE_URL;
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        if (!url || !key) return new Response("unconfigured", { status: 503 });
+        const secret = process.env.RESEND_WEBHOOK_SECRET;
+        if (!url || !key || !secret) return new Response("unconfigured", { status: 503 });
 
-        const payload = (await request.json().catch(() => null)) as
-          | { type?: string; data?: { email_id?: string } }
-          | null;
+        // Read the raw body: the signature covers the exact bytes sent.
+        const body = await request.text();
+        const headers: Record<string, string> = {};
+        request.headers.forEach((value, name) => { headers[name] = value; });
+
+        if (!(await verifyResendSignature({ body, headers, secret }))) {
+          return new Response("bad signature", { status: 401 });
+        }
+
+        const payload = (() => {
+          try {
+            return JSON.parse(body) as { type?: string; data?: { email_id?: string } };
+          } catch {
+            return null;
+          }
+        })();
+
         const type = payload?.type ?? "";
         if (!/bounced|complained/.test(type)) return new Response("ignored", { status: 200 });
 
@@ -1275,7 +1470,7 @@ export const Route = createFileRoute("/api/webhooks/resend")({
 });
 ```
 
-- [ ] **Step 2: Add `markStatusByMessageId` to the store and a matching RPC**
+- [ ] **Step 6: Add `markStatusByMessageId` to the store and a matching RPC**
 
 Add to `CampaignStore` in `src/server/campaigns/types.ts`:
 
@@ -1328,7 +1523,7 @@ revoke all on function public.campaign_mark_by_message(text, text, text, jsonb) 
 grant execute on function public.campaign_mark_by_message(text, text, text, jsonb) to service_role;
 ```
 
-- [ ] **Step 3: Add the `email` handler to `src/server.ts`**
+- [ ] **Step 7: Add the `email` handler to `src/server.ts`**
 
 Add this export inside the default object, after `fetch`:
 
@@ -1368,16 +1563,16 @@ Add this export inside the default object, after `fetch`:
   },
 ```
 
-- [ ] **Step 4: Regenerate, typecheck, run the suite**
+- [ ] **Step 8: Regenerate, typecheck, run the suite**
 
 Run: `npx vite build && npx tsc --noEmit && bun run test`
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add src/routes/api.webhooks.resend.ts src/server.ts src/server/campaigns/ src/routeTree.gen.ts supabase/migrations/20260831120000_campaign_engine.sql
-git commit -m "feat(campaigns): bounce webhook and reply detection"
+git add src/routes/api.webhooks.resend.ts src/server.ts src/server/campaigns/ src/routeTree.gen.ts supabase/migrations/20260831120000_campaign_engine.sql tests/campaign-webhook.test.mjs
+git commit -m "feat(campaigns): signed bounce webhook and reply detection"
 ```
 
 ---
@@ -1449,6 +1644,8 @@ git commit -m "feat(campaigns): arm the send tick on a 5-minute cron"
 ---
 
 ## Self-review
+
+**Webhook authentication:** Task 10 Steps 1–5. The endpoint verifies the Svix signature over the raw body *and* rejects requests outside a 300-second window, so a captured request cannot be replayed indefinitely. A missing `RESEND_WEBHOOK_SECRET` returns 503 rather than accepting unverified events — it never fails open.
 
 **Spec coverage:** `campaigns.sop` → Task 1. `campaign_sends` uniqueness → Task 1. Claim RPCs with `SKIP LOCKED` → Task 1. Ports mirroring operator-control → Task 2. Fail-closed gates at send time → Tasks 3, 5. Resend adapter → Task 4. Send tick + ambiguity-as-sent → Task 5. Unsubscribe tokens → Task 6. Reply header matching → Task 7. Store adapter → Task 8. Unsubscribe endpoint → Task 9. Bounce webhook + reply handler + forwarding → Task 10. Cron → Task 11. Every test named in the spec's testing table appears in Tasks 3–8.
 
