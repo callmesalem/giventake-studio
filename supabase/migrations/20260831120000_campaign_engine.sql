@@ -21,6 +21,11 @@ create table if not exists public.campaign_sends (
   attempts int not null default 0 check (attempts >= 0),
   error text,
   created_at timestamptz not null default now(),
+  -- When this row was last claimed for sending. Distinct from created_at on
+  -- purpose: a re-claim rewrites status and attempts but leaves created_at at
+  -- the first attempt, so created_at cannot tell a freshly re-claimed row from
+  -- one abandoned hours ago. Staleness is measured from here.
+  claimed_at timestamptz not null default now(),
   sent_at timestamptz,
   unique (enrollment_id, step_order)
 );
@@ -107,7 +112,8 @@ $$;
 --    could not express "this failed and may be retried", so a failed step was
 --    re-claimed by claim_due every tick and skipped forever.
 create or replace function public.campaign_claim_step(
-  p_enrollment_id uuid, p_step_order int, p_max_attempts int default 3
+  p_enrollment_id uuid, p_step_order int, p_max_attempts int default 3,
+  p_stale_seconds int default 900
 )
 returns text
 language plpgsql
@@ -117,16 +123,17 @@ as $$
 declare
   v_status text;
   v_attempts int;
+  v_claimed_at timestamptz;
 begin
-  insert into campaign_sends (enrollment_id, step_order, status, attempts)
-  values (p_enrollment_id, p_step_order, 'sending', 1)
+  insert into campaign_sends (enrollment_id, step_order, status, attempts, claimed_at)
+  values (p_enrollment_id, p_step_order, 'sending', 1, now())
   on conflict (enrollment_id, step_order) do nothing;
 
   if found then
     return 'claimed';
   end if;
 
-  select status, attempts into v_status, v_attempts
+  select status, attempts, claimed_at into v_status, v_attempts, v_claimed_at
     from campaign_sends
    where enrollment_id = p_enrollment_id and step_order = p_step_order
      for update;
@@ -137,10 +144,24 @@ begin
     return 'already_sent';
   end if;
 
-  -- Still 'sending': either another tick holds it right now, or a tick died
-  -- mid-send. Ambiguous, and the house rule is that ambiguity resolves to
-  -- sent, so it is never re-sent from here.
   if v_status = 'sending' then
+    -- Still 'sending' long after it was claimed means the tick holding it died
+    -- between claiming and recording. We cannot know whether Resend accepted
+    -- it, and the house rule is that ambiguity resolves to sent — the same rule
+    -- the runner applies to a network throw. Resolve it the same way rather
+    -- than leaving the enrollment stalled here forever.
+    --
+    -- The default window is well beyond the 300s claim lease and any plausible
+    -- tick duration, and the greatest(60, ...) floor stops a caller shrinking
+    -- it far enough to mistake a live concurrent tick for a dead one.
+    if v_claimed_at < now() - make_interval(secs => greatest(60, p_stale_seconds)) then
+      update campaign_sends
+         set status = 'sent', error = coalesce(error, 'stale_sending')
+       where enrollment_id = p_enrollment_id and step_order = p_step_order;
+      return 'already_sent';
+    end if;
+    -- Claimed recently: another tick almost certainly holds it right now.
+    -- Leave it alone; it resolves itself, or goes stale and is swept above.
     return 'in_flight';
   end if;
 
@@ -149,7 +170,7 @@ begin
   end if;
 
   update campaign_sends
-     set status = 'sending', attempts = attempts + 1, error = null
+     set status = 'sending', attempts = attempts + 1, error = null, claimed_at = now()
    where enrollment_id = p_enrollment_id and step_order = p_step_order;
   return 'claimed';
 end;
@@ -198,8 +219,8 @@ $$;
 
 revoke all on function public.campaign_claim_due(int, int) from public;
 grant execute on function public.campaign_claim_due(int, int) to service_role;
-revoke all on function public.campaign_claim_step(uuid, int, int) from public;
-grant execute on function public.campaign_claim_step(uuid, int, int) to service_role;
+revoke all on function public.campaign_claim_step(uuid, int, int, int) from public;
+grant execute on function public.campaign_claim_step(uuid, int, int, int) to service_role;
 revoke all on function public.campaign_record_result(uuid, int, text, text, text) from public;
 grant execute on function public.campaign_record_result(uuid, int, text, text, text) to service_role;
 revoke all on function public.campaign_mark_status(uuid, text, boolean, text, jsonb) from public;

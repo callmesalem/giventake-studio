@@ -102,6 +102,22 @@ test("an already-sent step advances without re-sending", async () => {
   assert.equal(advanced.status, "active");
 });
 
+test("a stale claim from a crashed tick is recovered without re-sending", async () => {
+  // A tick that died between claiming and recording leaves the row at
+  // 'sending'. campaign_claim_step sweeps it once it goes stale and hands back
+  // 'already_sent', because we cannot know whether the mail went out and the
+  // house rule resolves that ambiguity to sent. This is now the ordinary
+  // recovery path for a crashed tick, not just a rare race - so the enrollment
+  // must move forward here rather than stall on the same step forever.
+  const h = harness({ claimResult: "already_sent" });
+  const result = await runSendTick(h.deps);
+  assert.equal(h.calls.sends.length, 0, "the mail may already be in the inbox - never risk a duplicate");
+  const advanced = h.calls.statuses.find((s) => s.advance);
+  assert.ok(advanced, "a recovered stale claim must advance, not stall on the step");
+  assert.equal(advanced.eventType, "recovered");
+  assert.equal(result.sent + result.skipped, 1);
+});
+
 test("an exhausted step stops the enrollment instead of retrying forever", async () => {
   // MAX_ATTEMPTS is enforced in SQL and surfaced as this claim state. Before
   // the four-state claim it was unreachable, because a failed row was never

@@ -51,6 +51,36 @@ test("the retry path is alive - a failed step raises attempts and re-claims", ()
   assert.match(sql, /if v_attempts >= p_max_attempts then/i);
 });
 
+test("campaign_sends records when it was claimed, not just when it was created", () => {
+  // Staleness cannot be measured from created_at: a re-claim rewrites status
+  // and attempts but leaves created_at at the first attempt, so a row
+  // re-claimed seconds ago would look abandoned since the first tick.
+  assert.ok(sql.includes("claimed_at timestamptz not null default now()"));
+  assert.ok(
+    sql.includes("insert into campaign_sends (enrollment_id, step_order, status, attempts, claimed_at)"),
+    "the first claim must stamp claimed_at",
+  );
+  assert.ok(
+    sql.includes("attempts = attempts + 1, error = null, claimed_at = now()"),
+    "a re-claim must restamp claimed_at, or a retried row inherits the first attempt's clock",
+  );
+});
+
+test("a stale 'sending' row resolves to already_sent rather than stalling forever", () => {
+  // The tick holding it died between claiming and recording. Whether the mail
+  // went out is unknowable, and the house rule is that ambiguity resolves to
+  // sent - the same rule the runner applies to a network throw. Without this
+  // the enrollment is re-claimed and skipped as in_flight on every tick.
+  assert.ok(sql.includes("p_stale_seconds int default 900"));
+  assert.ok(
+    sql.includes("v_claimed_at < now() - make_interval(secs => greatest(60, p_stale_seconds))"),
+    "the floor stops a caller shrinking the window enough to sweep a live tick",
+  );
+  assert.ok(sql.includes("set status = 'sent', error = coalesce(error, 'stale_sending')"));
+  // and it must hand the runner the state that advances the enrollment
+  assert.match(sql, /'stale_sending'[\s\S]*?return 'already_sent'/i);
+});
+
 test("campaign_record_send is gone - a boolean could not express the retry state", () => {
   assert.doesNotMatch(sql, /campaign_record_send/i);
 });
