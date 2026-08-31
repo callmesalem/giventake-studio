@@ -17,6 +17,19 @@
     { "pattern": "crm.giventakedevs.com", "custom_domain": true },
   ],
 
+  // Drives the campaign send tick. The cron reaches the engine through nitro's
+  // `cloudflare:scheduled` hook (src/nitro/campaign-cron.ts) - a `scheduled()`
+  // on src/server.ts would be stripped from the generated Worker, so BOTH this
+  // trigger and that plugin are required for a single send to happen.
+  //
+  // Five minutes pairs with the runner's 300s claim lease: a tick that dies
+  // mid-batch has its rows re-claimable by roughly the time the next one runs.
+  // A duplicate claim is still safe - campaign_claim_step, not this schedule,
+  // is what prevents a second send.
+  "triggers": {
+    "crons": ["*/5 * * * *"],
+  },
+
   // Plain-text vars MUST live here, not only in the dashboard.
   //
   // Secrets survive a deploy because Cloudflare stores them separately, but
@@ -36,5 +49,19 @@
     // to hello@giventakedevs.com (src/lib/intake.ts), which is not a mailbox
     // Salem reads - so notifications sent successfully and went nowhere.
     "INTAKE_TO_EMAIL": "build@giventakedevs.com",
+
+    // NOT YET SET - the send tick is a no-op until they are. CAMPAIGN_REPLY_TO
+    // and CAMPAIGN_UNSUBSCRIBE_BASE are plain values, so per the warning above
+    // they belong in this block: setting them only in the dashboard means the
+    // next deploy drops them and the cron goes quiet again. Deliberately left
+    // unset rather than guessed - the reply address must be one Cloudflare
+    // Email Routing actually delivers to, or replies stop being detected and
+    // the sequence keeps mailing someone who already answered.
+    //
+    //   "CAMPAIGN_REPLY_TO": "<a mailbox routed to this Worker>",
+    //   "CAMPAIGN_UNSUBSCRIBE_BASE": "https://giventakedevs.com/api/unsubscribe",
+    //
+    // CAMPAIGN_TOKEN_SECRET, RESEND_API_KEY and the SUPABASE_* values are
+    // secrets and stay in the dashboard, where a deploy cannot clear them.
   },
 }
