@@ -27,7 +27,7 @@ const STAGE_LABEL: Record<string, string> = {
   lost: "Lost",
 };
 
-export const Route = createFileRoute("/crm/contacts")({
+export const Route = createFileRoute("/crm/contacts/")({
   validateSearch: (search: Record<string, unknown>) => ({
     stage: typeof search.stage === "string" ? search.stage : "",
   }),
