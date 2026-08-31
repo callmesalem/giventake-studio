@@ -16,11 +16,27 @@
 // is why the token is the only gate and it must be long and rotatable.
 //
 // Auth: x-sami-token header, or ?token= for clients that cannot set headers.
-// Both checked against SAMI_CHANNEL_TOKEN.
+// Both checked against SAMI_CHANNEL_TOKEN, in constant time, and every
+// presentation is written to channel_auth_log. The token itself is unchanged —
+// one static string is still the whole boundary — but a leak used to be
+// undetectable and unattributable, and guessing used to be free. See
+// ../_shared/channel-auth.ts for what that does and does not fix.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+import {
+  presentedVia,
+  recordChannelAuth,
+  timingSafeEqual,
+  tooManyFailures,
+} from "../_shared/channel-auth.ts";
 
 const PROTOCOL_VERSION = "2025-06-18";
 const SERVER_INFO = { name: "giventake-crm", version: "1.0.0" };
+
+const SURFACE = "giventake-mcp" as const;
+const AUTH_HEADER = "x-sami-token";
+const AUTH_QUERY = "token";
+const MAX_FAILURES = 10;
+const FAIL_WINDOW_SECONDS = 300;
 
 const INSTRUCTIONS =
   "Live READ-ONLY access to the GivenTake Devs CRM. GivenTake Devs is Salem's solo AI-assisted " +
@@ -58,6 +74,9 @@ function cors(req: Request): Record<string, string> {
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type, x-sami-token, mcp-protocol-version",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    // Retry-After is useless to a browser client that cannot read it, and the
+    // 429 below is the only place we ask a caller to back off.
+    "Access-Control-Expose-Headers": "Retry-After",
   };
 }
 
@@ -335,22 +354,69 @@ Deno.serve(async (req) => {
   const headers = cors(req);
   if (req.method === "OPTIONS") return new Response(null, { headers });
 
-  const token = Deno.env.get("SAMI_CHANNEL_TOKEN") ?? "";
+  const json = (body: unknown, status: number, extra: Record<string, string> = {}) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...headers, "Content-Type": "application/json", ...extra },
+    });
+
+  // Methods we never serve are refused before the token is looked at, exactly as
+  // before. Keeping it here rather than after the auth block also means a
+  // scanner spraying PUTs cannot fill the audit log or the rate limiter.
+  if (req.method !== "GET" && req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
+
+  // The client used to be built after the token check. It has to come first now,
+  // because the check is what we want to log. A missing env is NOT an auth
+  // failure and must not crash the auth path: db goes null, the log writes turn
+  // into no-ops, and the POST path below still returns the same 500 it always
+  // did — after the token check, so a stranger still cannot tell a misconfigured
+  // server from a configured one.
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const db: Db = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+
+  const configured = Deno.env.get("SAMI_CHANNEL_TOKEN") ?? "";
   const url = new URL(req.url);
-  const presented = req.headers.get("x-sami-token") ?? url.searchParams.get("token") ?? "";
-  const authorized = token !== "" && presented !== "" && presented === token;
+  const presented = req.headers.get(AUTH_HEADER) ?? url.searchParams.get(AUTH_QUERY) ?? "";
+  const via = presentedVia(req, AUTH_HEADER, AUTH_QUERY);
+
+  // Nothing presented at all is the internet knocking, not an attempt at the
+  // token, and it is the overwhelming majority of hostile traffic. Answer it
+  // without the rate-limit round trip, and let the audit write happen behind the
+  // response rather than in front of it.
+  if (presented === "") {
+    void recordChannelAuth(db, req, { surface: SURFACE, outcome: "denied", presentedVia: via });
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  // An unset SAMI_CHANNEL_TOKEN must authorise nobody. timingSafeEqual("", "")
+  // is true by definition, so the empty-configured case is refused here rather
+  // than left to the comparison to get right.
+  const authorized = configured !== "" && timingSafeEqual(presented, configured);
+
+  if (!authorized) {
+    // Recorded before the count is taken, so this attempt is part of it.
+    await recordChannelAuth(db, req, { surface: SURFACE, outcome: "denied", presentedVia: via });
+    if (await tooManyFailures(db, req, SURFACE, MAX_FAILURES, FAIL_WINDOW_SECONDS)) {
+      return json({ error: "Too many failed attempts" }, 429, {
+        "Retry-After": String(FAIL_WINDOW_SECONDS),
+      });
+    }
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  // Granted. One write, not awaited: it collapses to a row an hour on the
+  // partial unique index, and Sami's polling must never queue behind the audit
+  // table. recordChannelAuth cannot reject, so nothing is floating here.
+  void recordChannelAuth(db, req, { surface: SURFACE, outcome: "granted", presentedVia: via });
 
   // MCP Streamable HTTP: a client may open a GET event-stream before the POST
   // handshake. We are stateless and never push, but OpenClaw treats a 405 here
   // as fatal and then refuses to connect at all, so answer with a token-gated
   // keep-alive stream rather than declining.
   if (req.method === "GET") {
-    if (!authorized) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...headers, "Content-Type": "application/json" },
-      });
-    }
     const enc = new TextEncoder();
     let keepAlive: ReturnType<typeof setInterval> | undefined;
     const stream = new ReadableStream<Uint8Array>({
@@ -378,37 +444,17 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...headers, "Content-Type": "application/json" },
-    });
-  }
-
   try {
-    if (!authorized) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...headers, "Content-Type": "application/json" },
-      });
+    // Unchanged in effect: an authorised caller on a server with no service-role
+    // env gets the same 500 it always got. Only the point at which the env is
+    // read moved, not who is allowed to see the answer.
+    if (!db) {
+      return json(rpcError(null, -32603, "Server env missing."), 500);
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !serviceKey) {
-      return new Response(JSON.stringify(rpcError(null, -32603, "Server env missing.")), {
-        status: 500,
-        headers: { ...headers, "Content-Type": "application/json" },
-      });
-    }
-    const db: Db = createClient(supabaseUrl, serviceKey);
 
     const body = await req.json().catch(() => null);
     if (!body) {
-      return new Response(JSON.stringify(rpcError(null, -32700, "Parse error")), {
-        status: 400,
-        headers: { ...headers, "Content-Type": "application/json" },
-      });
+      return json(rpcError(null, -32700, "Parse error"), 400);
     }
 
     const messages: Rpc[] = Array.isArray(body) ? body : [body];
@@ -424,9 +470,6 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("[giventake-mcp]", err);
-    return new Response(
-      JSON.stringify(rpcError(null, -32603, err instanceof Error ? err.message : "internal error")),
-      { status: 500, headers: { ...headers, "Content-Type": "application/json" } },
-    );
+    return json(rpcError(null, -32603, err instanceof Error ? err.message : "internal error"), 500);
   }
 });
