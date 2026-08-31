@@ -881,6 +881,17 @@ test("malformed input is rejected rather than throwing", async () => {
     assert.equal(await verifyUnsubscribeToken(bad, "secret"), null);
   }
 });
+
+test("an empty secret never verifies - it must not fail open", async () => {
+  const t = await unsubscribeToken("e1", "secret");
+  assert.equal(await verifyUnsubscribeToken(t, ""), null);
+});
+
+test("different enrollments produce different tokens", async () => {
+  const a = await unsubscribeToken("e1", "secret");
+  const b = await unsubscribeToken("e2", "secret");
+  assert.notEqual(a, b);
+});
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -918,6 +929,11 @@ export async function unsubscribeToken(enrollmentId: string, secret: string): Pr
 
 /** Returns the enrollment id, or null for anything that does not verify. */
 export async function verifyUnsubscribeToken(token: string, secret: string): Promise<string | null> {
+  // An empty secret must never verify. An empty HMAC key is public knowledge,
+  // so without this an unset CAMPAIGN_TOKEN_SECRET makes every token forgeable
+  // by anyone who knows the scheme — a fail-open, and a silent one.
+  if (!secret) return null;
+
   const parts = token.split(".");
   if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
 
