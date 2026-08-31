@@ -800,7 +800,14 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
         subject: render(row.template.subject ?? "", row),
         text: `${render(row.template.text ?? "", row)}\n\n---\nUnsubscribe: ${url}`,
         replyTo: deps.replyTo,
-        headers: { "List-Unsubscribe": `<${url}>` },
+        headers: {
+          "List-Unsubscribe": `<${url}>`,
+          // RFC 8058. Tells the client it may POST this URL directly, which is
+          // how Gmail's and Apple's native unsubscribe buttons work. Without
+          // it they fall back to opening the link in a browser, and scanners
+          // may prefetch it — which is why the route refuses to mutate on GET.
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
       });
 
       if (outcome.status === "sent") {
@@ -1232,37 +1239,66 @@ import { createFileRoute } from "@tanstack/react-router";
 import { verifyUnsubscribeToken } from "@/server/campaigns/tokens.ts";
 import { createSupabaseCampaignStore } from "@/server/campaigns/supabase-store.ts";
 
+const PAGE = (body: string) =>
+  new Response(body, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+
 /**
- * One-click unsubscribe. Always answers 200 with the same body: a different
- * response for a bad token would let someone probe which tokens are real.
+ * Unsubscribe. POST performs it; GET only offers a button.
+ *
+ * GET must never mutate. Mail clients and security scanners prefetch links —
+ * Outlook Safe Links, Gmail's proxy, corporate filters all follow URLs before a
+ * human sees them. A mutating GET would silently unsubscribe recipients who
+ * never clicked, and the first you would know is a campaign with no audience.
+ *
+ * POST is also what RFC 8058 one-click requires: the List-Unsubscribe-Post
+ * header tells the mail client it may POST this URL directly, which is how
+ * Gmail's and Apple's native unsubscribe buttons work.
+ *
+ * Both verbs answer 200 with the same shape regardless of whether the token was
+ * valid: a different response for a bad token lets someone probe which are real.
  */
+async function performUnsubscribe(token: string): Promise<void> {
+  const secret = process.env.CAMPAIGN_TOKEN_SECRET;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret || !url || !key) return;
+
+  const enrollmentId = await verifyUnsubscribeToken(token, secret);
+  if (!enrollmentId) return;
+
+  const store = createSupabaseCampaignStore({ url, serviceRoleKey: key });
+  await store
+    .markStatus(enrollmentId, "unsubscribed", false, "unsubscribed", { via: "link" })
+    .catch(() => undefined);
+}
+
 export const Route = createFileRoute("/api/unsubscribe/$token")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
-        const secret = process.env.CAMPAIGN_TOKEN_SECRET;
-        const url = process.env.SUPABASE_URL;
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      // Confirmation only. No state change, so prefetching is harmless.
+      GET: ({ params }) =>
+        PAGE(
+          `<!doctype html><meta charset="utf-8"><title>Unsubscribe</title>` +
+            `<p>Confirm you want to stop receiving these emails.</p>` +
+            `<form method="post" action="/api/unsubscribe/${encodeURIComponent(params.token)}">` +
+            `<button type="submit">Unsubscribe</button></form>`,
+        ),
 
-        if (secret && url && key) {
-          const enrollmentId = await verifyUnsubscribeToken(params.token, secret);
-          if (enrollmentId) {
-            const store = createSupabaseCampaignStore({ url, serviceRoleKey: key });
-            await store
-              .markStatus(enrollmentId, "unsubscribed", false, "unsubscribed", { via: "link" })
-              .catch(() => undefined);
-          }
-        }
-
-        return new Response("You have been unsubscribed.", {
-          status: 200,
-          headers: { "content-type": "text/plain; charset=utf-8" },
-        });
+      POST: async ({ params }) => {
+        await performUnsubscribe(params.token);
+        return PAGE(
+          `<!doctype html><meta charset="utf-8"><title>Unsubscribed</title>` +
+            `<p>You have been unsubscribed.</p>`,
+        );
       },
     },
   },
 });
 ```
+
+Note the `encodeURIComponent` on the token in the form action: the token is
+base64url so it contains no characters needing escaping today, but the value
+reaches this template from a URL path and must not be interpolated raw.
 
 - [ ] **Step 2: Regenerate the route tree and typecheck**
 
