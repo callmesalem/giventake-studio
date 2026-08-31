@@ -51,6 +51,21 @@ export interface CampaignStore {
     eventType: string,
     details: Record<string, unknown>,
   ): Promise<void>;
+  /**
+   * The inbound paths know a provider message id, never an enrollment id: a
+   * Resend delivery event carries data.email_id, and a reply carries the
+   * threading headers. Both resolve to the enrollment through campaign_sends.
+   *
+   * There is no advance flag on purpose. Everything that arrives this way -
+   * a bounce, a complaint, a reply - is terminal for the enrollment, so
+   * advancing to the next step would be exactly the wrong move.
+   */
+  markStatusByMessageId(
+    providerMessageId: string,
+    status: string,
+    eventType: string,
+    details: Record<string, unknown>,
+  ): Promise<void>;
 }
 
 /**

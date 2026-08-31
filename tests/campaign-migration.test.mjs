@@ -96,3 +96,39 @@ test("an enrollment past its last step is not claimable", () => {
   assert.doesNotMatch(sql, /coalesce\(\(\s*select\s+s\.delay_hours/i);
   assert.match(sql, /exists\s*\(\s*select\s+1\s+from\s+campaign_steps\s+s[\s\S]*?delay_hours[\s\S]*?<=\s*now\(\)/i);
 });
+
+test("the inbound paths can reach an enrollment from a provider message id", () => {
+  // A bounce event and a reply both arrive knowing only the message id.
+  // campaign_sends is the only place that maps one to an enrollment.
+  assert.match(sql, /create or replace function public\.campaign_mark_by_message/i);
+  assert.match(
+    sql,
+    /revoke all on function public\.campaign_mark_by_message[^;]*from public/i,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.campaign_mark_by_message[^;]*to service_role/i,
+  );
+});
+
+test("a reply matches even though its Message-ID carries a domain", () => {
+  // campaign_sends.provider_message_id holds Resend's API id - a bare uuid.
+  // A reply's In-Reply-To header holds the RFC-822 form of the same id,
+  // "<uuid@sending-domain>", and reply.ts hands us "uuid@sending-domain".
+  // Matching only on equality means no reply ever matches and the whole reply
+  // path is dead code. The local part is tried as well.
+  assert.match(sql, /split_part\(p_provider_message_id, '@', 1\)/i);
+});
+
+test("an inbound event never advances the enrollment to the next step", () => {
+  // Everything that arrives this way is terminal. Advancing a bounced
+  // enrollment would queue the next email to an address that just bounced.
+  const start = sql.indexOf("function public.campaign_mark_by_message");
+  assert.ok(start > 0, "campaign_mark_by_message must exist");
+  assert.doesNotMatch(sql.slice(start, sql.indexOf("$$;", start)), /current_step/i);
+});
+
+test("an unknown message id is a no-op, not an error", () => {
+  // Resend also delivers events for transactional mail this engine never sent.
+  assert.match(sql, /if v_enrollment is null then return; end if;/i);
+});

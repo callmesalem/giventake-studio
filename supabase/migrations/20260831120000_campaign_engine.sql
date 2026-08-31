@@ -225,3 +225,54 @@ revoke all on function public.campaign_record_result(uuid, int, text, text, text
 grant execute on function public.campaign_record_result(uuid, int, text, text, text) to service_role;
 revoke all on function public.campaign_mark_status(uuid, text, boolean, text, jsonb) from public;
 grant execute on function public.campaign_mark_status(uuid, text, boolean, text, jsonb) to service_role;
+
+-- 6. The inbound paths. A Resend delivery event and an inbound reply both know
+--    a provider message id and nothing else; campaign_sends is the only place
+--    that maps one back to an enrollment.
+--
+--    There is no advance flag: everything arriving this way - a bounce, a
+--    complaint, a reply - is terminal, and advancing a bounced enrollment
+--    would queue the next email straight at an address that just bounced.
+--
+--    An id we never sent is a no-op rather than an error. Resend delivers
+--    events for the transactional mail in src/lib/intake.ts too, and a reply
+--    can thread onto anything at all.
+create or replace function public.campaign_mark_by_message(
+  p_provider_message_id text, p_status text,
+  p_event_type text default 'status_changed', p_details jsonb default '{}'::jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_enrollment uuid;
+begin
+  -- Two forms of the same id. campaign_sends.provider_message_id holds the id
+  -- Resend's API returned - a bare uuid - but a reply's In-Reply-To/References
+  -- headers hold the RFC-822 form, "<uuid@sending-domain>", of which reply.ts
+  -- hands us "uuid@sending-domain". Matching on equality alone means no reply
+  -- ever matches and the entire reply path is dead. split_part returns the
+  -- whole string when there is no '@', so the bounce path (which passes the
+  -- bare id from data.email_id) is unaffected.
+  select enrollment_id into v_enrollment
+  from campaign_sends
+  where provider_message_id is not null
+    and provider_message_id in (
+      p_provider_message_id,
+      split_part(p_provider_message_id, '@', 1)
+    )
+  order by created_at desc
+  limit 1;
+  if v_enrollment is null then return; end if;
+
+  update campaign_enrollments
+    set status = p_status, updated_at = now() where id = v_enrollment;
+  insert into campaign_events (enrollment_id, event_type, details)
+  values (v_enrollment, p_event_type, coalesce(p_details, '{}'::jsonb));
+end;
+$$;
+
+revoke all on function public.campaign_mark_by_message(text, text, text, jsonb) from public;
+grant execute on function public.campaign_mark_by_message(text, text, text, jsonb) to service_role;

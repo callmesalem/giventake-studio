@@ -55,5 +55,10 @@ export function createSupabaseCampaignStore(config: {
         p_enrollment_id: enrollmentId, p_status: status, p_advance: advance,
         p_event_type: eventType, p_details: details,
       }),
+    markStatusByMessageId: (providerMessageId, status, eventType, details) =>
+      rpc<void>("campaign_mark_by_message", {
+        p_provider_message_id: providerMessageId, p_status: status,
+        p_event_type: eventType, p_details: details,
+      }),
   };
 }

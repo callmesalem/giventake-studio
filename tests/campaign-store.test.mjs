@@ -74,3 +74,22 @@ test("gate checks map to the existing RPC names", async () => {
   assert.match(urls[0], /operator_is_suppressed$/);
   assert.match(urls[1], /is_approved_recipient$/);
 });
+
+test("markStatusByMessageId posts the provider message id to the lookup RPC", async () => {
+  let seen;
+  const s = store(async (url, init) => { seen = { url, init }; return ok(null); });
+  await s.markStatusByMessageId("msg-9", "bounced", "bounced", { type: "email.bounced" });
+  assert.match(seen.url, /\/rest\/v1\/rpc\/campaign_mark_by_message$/);
+  const body = JSON.parse(seen.init.body);
+  assert.equal(body.p_provider_message_id, "msg-9");
+  assert.equal(body.p_status, "bounced");
+  assert.equal(body.p_event_type, "bounced");
+  assert.deepEqual(body.p_details, { type: "email.bounced" });
+});
+
+test("a failed markStatusByMessageId throws so the caller can retry", async () => {
+  // The bounce endpoint answers Resend with a 500 on this throw, which is what
+  // makes Resend redeliver. Swallowing here would drop the bounce for good.
+  const s = store(async () => ({ ok: false, status: 500, async json() { return {}; } }));
+  await assert.rejects(() => s.markStatusByMessageId("msg-9", "bounced", "bounced", {}));
+});
