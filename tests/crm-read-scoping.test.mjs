@@ -84,3 +84,36 @@ test("member cannot see company-wide revenue attribution", async () => {
   // never the business's channel/revenue mix.
   assert.deepEqual(await r.attribution(), { bySource: [] });
 });
+
+/**
+ * Migration 20260830210000_leads_list_owner_fields is a HARD PREREQUISITE for
+ * this code, and the failure mode if it is missing is silent.
+ *
+ * `leads` is RPC-only, so member scoping reads owner_id / assigned_to off the
+ * leads_list result rather than off the table. Before that migration the RPC
+ * does not return those fields at all. The scope filter compares strictly, and
+ * `undefined === null` is false, so the unassigned-pool branch does not rescue
+ * them either: a member sees an empty Leads view, with no error anywhere.
+ *
+ * Deploy order is therefore: migration first, then this code.
+ */
+test("without the leads_list owner-fields migration a member sees no leads at all", async () => {
+  // leads_list as it exists in production today: no owner_id, no assigned_to.
+  const legacy = LEADS.map(({ id }) => ({ id }));
+  const fetchLegacy = async () => ({ ok: true, status: 200, json: async () => legacy });
+
+  const member = new CrmRead({
+    ...CONFIG,
+    fetch: fetchLegacy,
+    actor: { id: "u-me", isAdmin: false },
+  });
+  assert.deepEqual(
+    await member.listLeads(),
+    [],
+    "fails closed rather than leaking, but the member loses their own leads too",
+  );
+
+  // An admin is unaffected, which is why this would not show up in owner testing.
+  const admin = new CrmRead({ ...CONFIG, fetch: fetchLegacy });
+  assert.deepEqual(ids(await admin.listLeads()), ["l1", "l2", "l3"]);
+});
