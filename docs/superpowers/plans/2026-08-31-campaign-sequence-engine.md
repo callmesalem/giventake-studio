@@ -1159,8 +1159,12 @@ export function createSupabaseCampaignStore(config: {
     isSuppressed: (address) => rpc<boolean>("operator_is_suppressed", { p_address: address }),
     isApprovedRecipient: (address, sop) =>
       rpc<boolean>("is_approved_recipient", { p_address: address, p_sop: sop }),
-    recordSend: (enrollmentId, stepOrder, status, providerMessageId, error) =>
-      rpc<boolean>("campaign_record_send", {
+    claimStep: (enrollmentId, stepOrder) =>
+      rpc<StepClaim>("campaign_claim_step", {
+        p_enrollment_id: enrollmentId, p_step_order: stepOrder,
+      }),
+    recordResult: (enrollmentId, stepOrder, status, providerMessageId, error) =>
+      rpc<void>("campaign_record_result", {
         p_enrollment_id: enrollmentId, p_step_order: stepOrder, p_status: status,
         p_provider_message_id: providerMessageId ?? null, p_error: error ?? null,
       }),
@@ -1169,15 +1173,16 @@ export function createSupabaseCampaignStore(config: {
         p_enrollment_id: enrollmentId, p_status: status, p_advance: advance,
         p_event_type: eventType, p_details: details,
       }),
-    async attemptsFor(enrollmentId, stepOrder) {
-      const rows = await rpc<{ attempts?: number }[]>("campaign_attempts", {
-        p_enrollment_id: enrollmentId, p_step_order: stepOrder,
-      }).catch(() => []);
-      return Array.isArray(rows) && rows[0]?.attempts ? rows[0].attempts : 0;
-    },
   };
 }
 ```
+
+`claimStep` deliberately does NOT catch. A failed claim must propagate so the
+runner's per-enrollment catch skips that row — swallowing it and returning a
+default would either send unclaimed mail or wedge the step silently. Attempt
+counting lives only in SQL now; the earlier `attemptsFor` gave the engine a
+second source of truth about how many times a step had been tried, and the two
+disagreeing is what made the retry path unreachable.
 
 - [ ] **Step 4: Add `campaign_attempts` to the migration**
 
