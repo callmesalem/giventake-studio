@@ -31,3 +31,11 @@ test("RPCs are service_role only, matching the rest of this schema", () => {
 test("the migration is additive - no destructive statements", () => {
   assert.doesNotMatch(sql, /\bdrop\s+(table|column|function)\b/i);
 });
+
+test("an enrollment past its last step is not claimable", () => {
+  // No step row at current_step must EXCLUDE the enrollment. Defaulting the
+  // delay to zero would instead make finished enrollments due on every tick,
+  // churning writes and consuming the claim batch that real sends need.
+  assert.doesNotMatch(sql, /coalesce\(\(\s*select\s+s\.delay_hours/i);
+  assert.match(sql, /exists\s*\(\s*select\s+1\s+from\s+campaign_steps\s+s[\s\S]*?delay_hours[\s\S]*?<=\s*now\(\)/i);
+});
