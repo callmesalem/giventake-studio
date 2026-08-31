@@ -1742,3 +1742,59 @@ git commit -m "feat(campaigns): arm the send tick on a 5-minute cron"
 **Type consistency:** `markStatusByMessageId` is added to `CampaignStore` in Task 10 alongside its implementation and RPC. `attemptsFor` is defined in Task 2, implemented in Task 8, backed by `campaign_attempts` added in Task 8 Step 4. `MAX_ATTEMPTS` is defined in Task 2 and used in Task 5.
 
 **Known forward reference:** Task 5 imports `tokens.ts`, created in Task 6. Task 5 Step 4 notes the stub if tasks run strictly in order.
+
+---
+
+## Follow-ups — gaps found by comparing against the ATC nurture engine
+
+ATC (`ClaimNimbus` / `ClaimsCRM`) already runs a nurture engine in production:
+`supabase/functions/run-nurture`, with `outreach-unsubscribe`, `newsletter-open`,
+`newsletter-click` and `track-open` around it. Reading it surfaced four things this
+engine should have and does not. None block Task 11; all should land before a real
+campaign sends.
+
+### 1. Stop on conversion — the important one
+
+`run-nurture` refuses to continue a sequence when the recipient is no longer a
+prospect. For leads it checks `converted_claim_id`, `deleted_at` and
+`outreach_unsubscribed_at`; for referral partners it also stops once
+`relationship_stage` reaches `active` or `vip`.
+
+This engine has no equivalent. A lead who becomes a client mid-sequence keeps
+receiving cold outreach — mail arriving after they have already signed. The
+`campaign_claim_due` CTE is the right place: add an EXISTS check that excludes
+enrollments whose lead has converted or been deleted, alongside the existing
+campaign-active and step-exists checks.
+
+### 2. Merge fields beyond `{{name}}`
+
+`render()` substitutes only `{{name}}`. Any other token — `{{company}}`,
+`{{firstName}}` — passes through into a live prospect's subject line raw. ATC has
+`_shared/nurture-merge.ts` with a real merge helper and a defined context object.
+Nothing here validates a template against the supported token set, so a campaign
+authored through a UI can ship `{{company}}` to a customer.
+
+### 3. HTML email, not plain text
+
+Messages are plain text. ATC wraps every send in `_shared/email-template.ts`
+(`wrapEmailHtml`), which carries branding, the firm name, a phone number and the
+unsubscribe link in a consistent footer. Plain text is defensible for one-to-one
+mail and weak for campaigns.
+
+### 4. Two audiences with different compliance treatment
+
+ATC distinguishes cold outreach (referral partners — must carry an unsubscribe)
+from opt-in nurture (leads who asked to hear from us). This engine treats every
+enrollment identically. That is currently safe, because charter §3.8 forces every
+recipient onto a human-approved allowlist regardless, but the distinction becomes
+necessary the moment a genuine opt-in audience exists.
+
+### Not a gap here, but worth carrying back to ATC
+
+`run-nurture` has no idempotency key. Its own comment states that a failed write
+"leaves the row active with next_run_at in the past, which makes it due again and
+re-sends the SAME email to the SAME person on the next tick, and the tick after
+that." It retries the write twice and logs loudly, which helps only if someone is
+reading the logs. This engine's `unique (enrollment_id, step_order)` plus the
+four-state claim makes that class of double-send structurally impossible, and the
+same shape would port back.
