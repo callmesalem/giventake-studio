@@ -80,6 +80,14 @@ test("RPCs are service_role only, matching the rest of this schema", () => {
 test("the migration is additive - no destructive statements", () => {
   assert.doesNotMatch(sql, /\bdrop\s+(table|column|function)\b/i);
 });
+
+test("an enrollment past its last step is not claimable", () => {
+  // No step row at current_step must EXCLUDE the enrollment. Defaulting the
+  // delay to zero would instead make finished enrollments due on every tick,
+  // churning writes and consuming the claim batch that real sends need.
+  assert.doesNotMatch(sql, /coalesce\(\(\s*select\s+s\.delay_hours/i);
+  assert.match(sql, /exists\s*\(\s*select\s+1\s+from\s+campaign_steps\s+s[\s\S]*?delay_hours[\s\S]*?<=\s*now\(\)/i);
+});
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -136,18 +144,34 @@ declare
   result jsonb;
 begin
   with due as (
+    -- campaign_enrollments is deliberately the ONLY table in this FROM list.
+    -- The campaigns/campaign_steps checks are EXISTS subqueries rather than
+    -- joins so FOR UPDATE SKIP LOCKED locks enrollment rows only: two ticks
+    -- claiming different enrollments under one campaign must not block each
+    -- other on a shared row.
+    --
+    -- The step check is an EXISTS, never a join with a defaulted delay. An
+    -- enrollment whose current_step is past the final step_order has no step
+    -- row, and that must EXCLUDE it. Defaulting the delay to zero would make
+    -- every finished enrollment due on every tick forever — rewriting its
+    -- timestamps each time and consuming the claim batch real sends need.
     select e.id
     from campaign_enrollments e
-    join campaigns c on c.id = e.campaign_id
-    join campaign_steps s
-      on s.campaign_id = e.campaign_id and s.step_order = e.current_step
     where e.status in ('enrolled','active')
-      and c.status = 'active'
       and not coalesce(e.synthetic, false)
-      and e.last_advanced_at + make_interval(hours => s.delay_hours) <= now()
+      and exists (
+        select 1 from campaigns c
+        where c.id = e.campaign_id and c.status = 'active'
+      )
+      and exists (
+        select 1 from campaign_steps s
+        where s.campaign_id = e.campaign_id
+          and s.step_order = e.current_step
+          and e.last_advanced_at + make_interval(hours => s.delay_hours) <= now()
+      )
     order by e.last_advanced_at
     limit greatest(1, least(coalesce(p_limit, 25), 200))
-    for update of e skip locked
+    for update skip locked
   ),
   claimed as (
     update campaign_enrollments e
