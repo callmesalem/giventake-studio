@@ -747,7 +747,7 @@ export interface RunnerDeps {
   clock: Clock;
   replyTo: string;
   unsubscribeBase: string;
-  secret?: string;
+  secret: string;
   limit?: number;
   leaseSeconds?: number;
 }
@@ -762,6 +762,13 @@ function render(template: string, row: DueSend): string {
  * still runs — a single bad row must not stall the queue.
  */
 export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; skipped: number }> {
+  // Every message must carry a working unsubscribe link. Without a secret the
+  // token cannot be verified when the link is followed, so the link is dead on
+  // arrival. Refuse the whole tick rather than send unopt-outable mail — and
+  // refuse BEFORE claimDue, so a misconfigured tick does not lease rows for
+  // nothing.
+  if (!deps.secret) throw new Error("campaign runner requires a signing secret");
+
   const rows = await deps.store.claimDue(deps.limit ?? 25, deps.leaseSeconds ?? 300);
   let sent = 0;
   let skipped = 0;
@@ -786,7 +793,7 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
         continue;
       }
 
-      const token = await unsubscribeToken(row.enrollmentId, deps.secret ?? "");
+      const token = await unsubscribeToken(row.enrollmentId, deps.secret);
       const url = `${deps.unsubscribeBase}/${token}`;
       const outcome = await deps.mailer.send({
         to: row.email as string,
