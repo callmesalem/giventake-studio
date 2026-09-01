@@ -174,11 +174,7 @@ const clamp = (v: unknown, def: number, max: number): number => {
 
 /** Every tool returns JSON text. Errors are returned, never thrown, so a failed
  *  read tells the agent what happened instead of dropping the whole call. */
-async function executeTool(
-  name: string,
-  args: Record<string, unknown>,
-  db: Db,
-): Promise<string> {
+async function executeTool(name: string, args: Record<string, unknown>, db: Db): Promise<string> {
   const fail = (message: string) => JSON.stringify({ error: message });
 
   if (name === "pipeline_summary") {
@@ -206,7 +202,9 @@ async function executeTool(
     return JSON.stringify({
       deals_by_stage: byStage,
       total_deal_value_usd:
-        Math.round((deals.data ?? []).reduce((s: number, d: Db) => s + Number(d.value_usd ?? 0), 0) * 100) / 100,
+        Math.round(
+          (deals.data ?? []).reduce((s: number, d: Db) => s + Number(d.value_usd ?? 0), 0) * 100,
+        ) / 100,
       leads_by_status: byStatus,
       open_tasks: (tasks.data ?? []).filter((t: Db) => !t.is_completed).length,
       note: "Counts exclude synthetic records.",
@@ -216,7 +214,9 @@ async function executeTool(
   if (name === "list_leads") {
     let q = db
       .from("leads")
-      .select("id, name, email, company, budget, timeline, source, source_detail, status, description, attribution, captured_at, created_at")
+      .select(
+        "id, name, email, company, budget, timeline, source, source_detail, status, description, attribution, captured_at, created_at",
+      )
       .eq("synthetic", false)
       .order("created_at", { ascending: false })
       .limit(clamp(args.limit, 20, 100));
@@ -237,21 +237,33 @@ async function executeTool(
     if (!lead) return JSON.stringify({ found: false, note: "No lead matches in the CRM." });
 
     const [notes, touches] = await Promise.all([
-      db.from("notes").select("title, content, created_at").eq("lead_id", lead.id).order("created_at", { ascending: false }),
-      db.from("touchpoints").select("kind, content, created_at").eq("lead_id", lead.id).order("created_at", { ascending: false }),
+      db
+        .from("notes")
+        .select("title, content, created_at")
+        .eq("lead_id", lead.id)
+        .order("created_at", { ascending: false }),
+      db
+        .from("touchpoints")
+        .select("kind, content, created_at")
+        .eq("lead_id", lead.id)
+        .order("created_at", { ascending: false }),
     ]);
     return JSON.stringify({
       found: true,
       lead,
       notes: notes.error ? `notes read failed: ${notes.error.message}` : (notes.data ?? []),
-      touchpoints: touches.error ? `touchpoints read failed: ${touches.error.message}` : (touches.data ?? []),
+      touchpoints: touches.error
+        ? `touchpoints read failed: ${touches.error.message}`
+        : (touches.data ?? []),
     });
   }
 
   if (name === "list_deals") {
     let q = db
       .from("deals")
-      .select("id, name, stage, value_usd, source, closed_at, lost_reason, created_at, companies(name, domain)")
+      .select(
+        "id, name, stage, value_usd, source, closed_at, lost_reason, created_at, companies(name, domain)",
+      )
       .eq("synthetic", false)
       .order("created_at", { ascending: false })
       .limit(clamp(args.limit, 50, 200));
@@ -264,7 +276,9 @@ async function executeTool(
   if (name === "list_companies") {
     const { data, error } = await db
       .from("companies")
-      .select("id, name, domain, description, location, source, created_at, contacts(name, email, job_title)")
+      .select(
+        "id, name, domain, description, location, source, created_at, contacts(name, email, job_title)",
+      )
       .eq("synthetic", false)
       .order("created_at", { ascending: false })
       .limit(clamp(args.limit, 50, 200));
@@ -286,22 +300,39 @@ async function executeTool(
     const today = new Date().toISOString().slice(0, 10);
     const rows = (data ?? []).map((t: Db) => ({
       ...t,
-      overdue: !t.is_completed && typeof t.deadline_at === "string" && t.deadline_at.slice(0, 10) < today,
+      overdue:
+        !t.is_completed && typeof t.deadline_at === "string" && t.deadline_at.slice(0, 10) < today,
     }));
-    return JSON.stringify({ count: rows.length, open: rows.filter((t: Db) => !t.is_completed).length, tasks: rows });
+    return JSON.stringify({
+      count: rows.length,
+      open: rows.filter((t: Db) => !t.is_completed).length,
+      tasks: rows,
+    });
   }
 
   if (name === "recent_activity") {
     const limit = clamp(args.limit, 25, 100);
     const [touches, log] = await Promise.all([
-      db.from("touchpoints").select("kind, content, lead_id, created_at").eq("synthetic", false)
-        .order("created_at", { ascending: false }).limit(limit),
-      db.from("agent_log").select("operator, sop, step, trigger, outcome, escalated, created_at")
-        .eq("synthetic", false).order("created_at", { ascending: false }).limit(limit),
+      db
+        .from("touchpoints")
+        .select("kind, content, lead_id, created_at")
+        .eq("synthetic", false)
+        .order("created_at", { ascending: false })
+        .limit(limit),
+      db
+        .from("agent_log")
+        .select("operator, sop, step, trigger, outcome, escalated, created_at")
+        .eq("synthetic", false)
+        .order("created_at", { ascending: false })
+        .limit(limit),
     ]);
     return JSON.stringify({
-      touchpoints: touches.error ? `touchpoints read failed: ${touches.error.message}` : (touches.data ?? []),
-      automation_events: log.error ? `agent_log read failed: ${log.error.message}` : (log.data ?? []),
+      touchpoints: touches.error
+        ? `touchpoints read failed: ${touches.error.message}`
+        : (touches.data ?? []),
+      automation_events: log.error
+        ? `agent_log read failed: ${log.error.message}`
+        : (log.data ?? []),
     });
   }
 
@@ -439,7 +470,7 @@ Deno.serve(async (req) => {
         ...headers,
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       },
     });
   }
