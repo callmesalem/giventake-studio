@@ -59,13 +59,29 @@ export function timingSafeEqual(a: string, b: string): boolean {
  * is the one value here a caller cannot choose for itself.
  *
  * Then `x-forwarded-for` — and the LAST entry, which is the opposite of the
- * snippet you will find everywhere. Each hop APPENDS as it forwards, so the
- * rightmost entry is the one our own trusted proxy wrote and everything to its
- * left is whatever the client invented before the request arrived. Taking the
- * leftmost is correct only when every hop in the chain is trusted; here the
- * client is one of the hops. Keying a brake on guessing to a value the guesser
- * picks is not a brake at all — he sends a different X-Forwarded-For on each
- * attempt and every attempt is his first.
+ * snippet you will find everywhere. In the general case each hop APPENDS as it
+ * forwards, so the rightmost entry is the one our own trusted proxy wrote and
+ * everything to its left is whatever the client invented. Taking the leftmost
+ * is correct only when every hop in the chain is trusted.
+ *
+ * MEASURED ON THIS DEPLOYMENT, 2026-09-01 — read this before repeating the
+ * general case as though it applied here. It does not.
+ *
+ *   curl -H 'X-Forwarded-For: 203.0.113.99'                -> logged 107.195.22.227
+ *   curl -H 'X-Forwarded-For: 198.51.100.7, 203.0.113.42'  -> logged 107.195.22.227
+ *   curl -H 'X-Forwarded-For: 192.0.2.55'                  -> logged 107.195.22.227
+ *   curl -H 'CF-Connecting-IP: 203.0.113.99'               -> 403 at the edge
+ *
+ * 107.195.22.227 was the real caller. The edge REPLACES an inbound
+ * X-Forwarded-For rather than appending to it, so the leftmost entry was
+ * already the true peer and was never caller-controlled. The same three probes
+ * were run independently against the sibling ClaimNimbus deployment with the
+ * same result.
+ *
+ * So this ordering is DEFENCE IN DEPTH, not the repair of a live hole. It costs
+ * nothing, it is the correct reading of the header in general, and it keeps
+ * holding if a custom domain, a non-proxied path or a platform change ever puts
+ * a caller-controlled hop in front. It did not close an open door.
  *
  * An empty rightmost entry yields null rather than reaching further left. An
  * unidentified caller is allowed through by tooManyFailures, which is a better
