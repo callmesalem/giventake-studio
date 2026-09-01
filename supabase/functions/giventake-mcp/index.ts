@@ -64,8 +64,11 @@ interface Rpc {
   error?: { code: number; message: string };
 }
 
+// Two linters read this file and neither understands the other's directive:
+// deno lint where it is deployed, eslint when CI lints the repo. The deno one
+// must sit immediately above the line, so eslint gets a same-line disable.
 // deno-lint-ignore no-explicit-any
-type Db = any;
+type Db = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 function cors(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "*";
