@@ -3,8 +3,12 @@ import assert from "node:assert/strict";
 import { runSendTick } from "../src/server/campaigns/runner.ts";
 
 const due = (over = {}) => ({
-  enrollmentId: "e1", campaignId: "c1", stepOrder: 0,
-  sop: "outreach", email: "x@y.com", name: "X",
+  enrollmentId: "e1",
+  campaignId: "c1",
+  stepOrder: 0,
+  sop: "outreach",
+  email: "x@y.com",
+  name: "X",
   template: { subject: "Hello {{name}}", text: "Hi {{name}}" },
   ...over,
 });
@@ -12,9 +16,13 @@ const due = (over = {}) => ({
 const harness = (over = {}) => {
   const calls = { sends: [], statuses: [], records: [], claims: [] };
   const store = {
-    async claimDue() { return over.dueRows ?? [due()]; },
+    async claimDue() {
+      return over.dueRows ?? [due()];
+    },
     async isSuppressed(address) {
-      return typeof over.suppressed === "function" ? over.suppressed(address) : (over.suppressed ?? false);
+      return typeof over.suppressed === "function"
+        ? over.suppressed(address)
+        : (over.suppressed ?? false);
     },
     async isApprovedRecipient(address) {
       return typeof over.approved === "function" ? over.approved(address) : (over.approved ?? true);
@@ -38,13 +46,17 @@ const harness = (over = {}) => {
       return over.sendOutcome ?? { status: "sent", providerMessageId: "m1" };
     },
   };
-  return { calls, deps: {
-    store, mailer,
-    replyTo: "reply@giventakedevs.com",
-    unsubscribeBase: "https://giventakedevs.com/api/unsubscribe",
-    secret: "test-secret",
-    ...over.deps,
-  } };
+  return {
+    calls,
+    deps: {
+      store,
+      mailer,
+      replyTo: "reply@giventakedevs.com",
+      unsubscribeBase: "https://giventakedevs.com/api/unsubscribe",
+      secret: "test-secret",
+      ...over.deps,
+    },
+  };
 };
 
 test("sends a due step and advances the enrollment", async () => {
@@ -111,7 +123,11 @@ test("a stale claim from a crashed tick is recovered without re-sending", async 
   // must move forward here rather than stall on the same step forever.
   const h = harness({ claimResult: "already_sent" });
   const result = await runSendTick(h.deps);
-  assert.equal(h.calls.sends.length, 0, "the mail may already be in the inbox - never risk a duplicate");
+  assert.equal(
+    h.calls.sends.length,
+    0,
+    "the mail may already be in the inbox - never risk a duplicate",
+  );
   const advanced = h.calls.statuses.find((s) => s.advance);
   assert.ok(advanced, "a recovered stale claim must advance, not stall on the step");
   assert.equal(advanced.eventType, "recovered");
@@ -150,7 +166,11 @@ test("a transient failure is recorded as failed so the next tick can re-claim it
   const recorded = h.calls.records.at(-1);
   assert.equal(recorded.status, "failed");
   assert.equal(recorded.error, "resend_429");
-  assert.equal(h.calls.statuses.length, 0, "a retryable failure must not touch the enrollment status");
+  assert.equal(
+    h.calls.statuses.length,
+    0,
+    "a retryable failure must not touch the enrollment status",
+  );
 });
 
 test("an ambiguous failure advances and is recorded as sent, never re-sent", async () => {
@@ -181,7 +201,9 @@ test("the unsubscribe link is also in the body", async () => {
 });
 
 test("one bad enrollment does not abort the rest of the tick", async () => {
-  const h = harness({ dueRows: [due({ enrollmentId: "e1", email: null }), due({ enrollmentId: "e2" })] });
+  const h = harness({
+    dueRows: [due({ enrollmentId: "e1", email: null }), due({ enrollmentId: "e2" })],
+  });
   await runSendTick(h.deps);
   assert.equal(h.calls.sends.length, 1, "the healthy enrollment must still send");
 });
@@ -215,7 +237,9 @@ test("sent and skipped partition the batch - every row is counted exactly once",
 
 test("a throw while recording a send is not double-counted", async () => {
   const h = harness();
-  h.deps.store.recordResult = async () => { throw new Error("db down"); };
+  h.deps.store.recordResult = async () => {
+    throw new Error("db down");
+  };
   const result = await runSendTick(h.deps);
   assert.equal(result.sent, 0, "the write failed, so the row is not a success");
   assert.equal(result.skipped, 1);

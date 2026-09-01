@@ -14,7 +14,11 @@ function base64url(bytes: Uint8Array): string {
 
 async function sign(payload: string, secret: string): Promise<string> {
   const key = await crypto.subtle.importKey(
-    "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
   );
   const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
   return base64url(new Uint8Array(mac));
@@ -26,7 +30,10 @@ export async function unsubscribeToken(enrollmentId: string, secret: string): Pr
 }
 
 /** Returns the enrollment id, or null for anything that does not verify. */
-export async function verifyUnsubscribeToken(token: string, secret: string): Promise<string | null> {
+export async function verifyUnsubscribeToken(
+  token: string,
+  secret: string,
+): Promise<string | null> {
   if (!secret) return null;
   if (typeof token !== "string") return null;
 

@@ -34,7 +34,8 @@ export function createSupabaseCampaignStore(config: {
   return {
     async claimDue(limit, leaseSeconds) {
       const rows = await rpc<DueSend[]>("campaign_claim_due", {
-        p_limit: limit, p_lease_seconds: leaseSeconds,
+        p_limit: limit,
+        p_lease_seconds: leaseSeconds,
       });
       return Array.isArray(rows) ? rows : [];
     },
@@ -43,22 +44,31 @@ export function createSupabaseCampaignStore(config: {
       rpc<boolean>("is_approved_recipient", { p_address: address, p_sop: sop }),
     claimStep: (enrollmentId, stepOrder) =>
       rpc<StepClaim>("campaign_claim_step", {
-        p_enrollment_id: enrollmentId, p_step_order: stepOrder,
+        p_enrollment_id: enrollmentId,
+        p_step_order: stepOrder,
       }),
     recordResult: (enrollmentId, stepOrder, status, providerMessageId, error) =>
       rpc<void>("campaign_record_result", {
-        p_enrollment_id: enrollmentId, p_step_order: stepOrder, p_status: status,
-        p_provider_message_id: providerMessageId ?? null, p_error: error ?? null,
+        p_enrollment_id: enrollmentId,
+        p_step_order: stepOrder,
+        p_status: status,
+        p_provider_message_id: providerMessageId ?? null,
+        p_error: error ?? null,
       }),
     markStatus: (enrollmentId, status, advance, eventType, details) =>
       rpc<void>("campaign_mark_status", {
-        p_enrollment_id: enrollmentId, p_status: status, p_advance: advance,
-        p_event_type: eventType, p_details: details,
+        p_enrollment_id: enrollmentId,
+        p_status: status,
+        p_advance: advance,
+        p_event_type: eventType,
+        p_details: details,
       }),
     markStatusByMessageId: (providerMessageId, status, eventType, details) =>
       rpc<void>("campaign_mark_by_message", {
-        p_provider_message_id: providerMessageId, p_status: status,
-        p_event_type: eventType, p_details: details,
+        p_provider_message_id: providerMessageId,
+        p_status: status,
+        p_event_type: eventType,
+        p_details: details,
       }),
   };
 }

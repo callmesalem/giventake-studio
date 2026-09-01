@@ -36,7 +36,8 @@ export function createResendMailer(config: {
         if (!response.ok) {
           // Never log or return the body — it echoes the message, which is personal data.
           // 4xx that is not rate limiting means the request itself is wrong; retrying cannot help.
-          const permanent = response.status >= 400 && response.status < 500 && response.status !== 429;
+          const permanent =
+            response.status >= 400 && response.status < 500 && response.status !== 429;
           return { status: "failed", error: `resend_${response.status}`, permanent };
         }
 

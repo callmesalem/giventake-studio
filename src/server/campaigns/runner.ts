@@ -47,10 +47,16 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
       const gate = await evaluateGates(deps.store, { email: row.email, sop: row.sop });
       if (!gate.allow) {
         skipped++;
-        await deps.store.markStatus(row.enrollmentId, gate.status ?? "stopped", false, "gate_refused", {
-          reason: gate.reason,
-          step: row.stepOrder,
-        });
+        await deps.store.markStatus(
+          row.enrollmentId,
+          gate.status ?? "stopped",
+          false,
+          "gate_refused",
+          {
+            reason: gate.reason,
+            step: row.stepOrder,
+          },
+        );
         continue;
       }
 
@@ -95,7 +101,12 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
         // Counted only after both writes land. Incrementing first meant a throw
         // in either await counted the row as sent AND again as skipped by the
         // catch below, so the two counters were not a partition of the batch.
-        await deps.store.recordResult(row.enrollmentId, row.stepOrder, "sent", outcome.providerMessageId);
+        await deps.store.recordResult(
+          row.enrollmentId,
+          row.stepOrder,
+          "sent",
+          outcome.providerMessageId,
+        );
         await deps.store.markStatus(row.enrollmentId, "active", true, "sent", {
           step: row.stepOrder,
           messageId: outcome.providerMessageId,
@@ -109,7 +120,13 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
         // rule is that ambiguity resolves to sent: advance rather than risk a
         // duplicate, and record that we are not certain.
         skipped++;
-        await deps.store.recordResult(row.enrollmentId, row.stepOrder, "sent", undefined, outcome.error);
+        await deps.store.recordResult(
+          row.enrollmentId,
+          row.stepOrder,
+          "sent",
+          undefined,
+          outcome.error,
+        );
         await deps.store.markStatus(row.enrollmentId, "active", true, "sent_ambiguous", {
           step: row.stepOrder,
           error: outcome.error,
@@ -118,7 +135,13 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
       }
 
       skipped++;
-      await deps.store.recordResult(row.enrollmentId, row.stepOrder, "failed", undefined, outcome.error);
+      await deps.store.recordResult(
+        row.enrollmentId,
+        row.stepOrder,
+        "failed",
+        undefined,
+        outcome.error,
+      );
       if (outcome.permanent) {
         await deps.store.markStatus(row.enrollmentId, "stopped", false, "send_failed", {
           step: row.stepOrder,

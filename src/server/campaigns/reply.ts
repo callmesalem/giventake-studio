@@ -5,9 +5,7 @@
  * Header matching rather than tagged reply-to addresses: it survives forwards
  * and clients that rewrite the envelope, and it needs no special addressing.
  */
-export function extractReferencedMessageIds(
-  headers: Record<string, string | undefined>,
-): string[] {
+export function extractReferencedMessageIds(headers: Record<string, string | undefined>): string[] {
   const lower: Record<string, string> = {};
   for (const [k, v] of Object.entries(headers)) {
     if (typeof v === "string") lower[k.toLowerCase()] = v;

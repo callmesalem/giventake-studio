@@ -29,7 +29,10 @@ test("RPCs are service_role only, matching the rest of this schema", () => {
     "campaign_mark_status",
   ]) {
     assert.match(sql, new RegExp(`revoke all on function public\\.${fn}[^;]*from public`, "i"));
-    assert.match(sql, new RegExp(`grant execute on function public\\.${fn}[^;]*to service_role`, "i"));
+    assert.match(
+      sql,
+      new RegExp(`grant execute on function public\\.${fn}[^;]*to service_role`, "i"),
+    );
   }
 });
 
@@ -57,7 +60,9 @@ test("campaign_sends records when it was claimed, not just when it was created",
   // re-claimed seconds ago would look abandoned since the first tick.
   assert.ok(sql.includes("claimed_at timestamptz not null default now()"));
   assert.ok(
-    sql.includes("insert into campaign_sends (enrollment_id, step_order, status, attempts, claimed_at)"),
+    sql.includes(
+      "insert into campaign_sends (enrollment_id, step_order, status, attempts, claimed_at)",
+    ),
     "the first claim must stamp claimed_at",
   );
   assert.ok(
@@ -94,7 +99,10 @@ test("an enrollment past its last step is not claimable", () => {
   // delay to zero would instead make finished enrollments due on every tick,
   // churning writes and consuming the claim batch that real sends need.
   assert.doesNotMatch(sql, /coalesce\(\(\s*select\s+s\.delay_hours/i);
-  assert.match(sql, /exists\s*\(\s*select\s+1\s+from\s+campaign_steps\s+s[\s\S]*?delay_hours[\s\S]*?<=\s*now\(\)/i);
+  assert.match(
+    sql,
+    /exists\s*\(\s*select\s+1\s+from\s+campaign_steps\s+s[\s\S]*?delay_hours[\s\S]*?<=\s*now\(\)/i,
+  );
 });
 
 test("a converted lead is not sequenced further", () => {
@@ -115,10 +123,7 @@ test("the inbound paths can reach an enrollment from a provider message id", () 
   // A bounce event and a reply both arrive knowing only the message id.
   // campaign_sends is the only place that maps one to an enrollment.
   assert.match(sql, /create or replace function public\.campaign_mark_by_message/i);
-  assert.match(
-    sql,
-    /revoke all on function public\.campaign_mark_by_message[^;]*from public/i,
-  );
+  assert.match(sql, /revoke all on function public\.campaign_mark_by_message[^;]*from public/i);
   assert.match(
     sql,
     /grant execute on function public\.campaign_mark_by_message[^;]*to service_role/i,

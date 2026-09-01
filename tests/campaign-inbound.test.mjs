@@ -16,13 +16,22 @@ function message(headers = {}, forward = async () => {}) {
   return {
     forwarded,
     headers: new Headers(headers),
-    async forward(to) { forwarded.push(to); return forward(to); },
+    async forward(to) {
+      forwarded.push(to);
+      return forward(to);
+    },
   };
 }
 
 function storeDouble(impl = async () => {}) {
   const calls = [];
-  return { calls, markStatusByMessageId: async (...args) => { calls.push(args); return impl(...args); } };
+  return {
+    calls,
+    markStatusByMessageId: async (...args) => {
+      calls.push(args);
+      return impl(...args);
+    },
+  };
 }
 
 test("marks the enrollment replied for the id the reply threads onto", async () => {
@@ -41,15 +50,21 @@ test("forwards BEFORE it touches the store", async () => {
   // round trip. Matching first puts the customer's mail behind all of them, and
   // a slow or hanging Supabase would burn the invocation before it forwards.
   const order = [];
-  const store = storeDouble(async () => { order.push("store"); });
-  const msg = message({ references: "<a@x> <b@x>" }, async () => { order.push("forward"); });
+  const store = storeDouble(async () => {
+    order.push("store");
+  });
+  const msg = message({ references: "<a@x> <b@x>" }, async () => {
+    order.push("forward");
+  });
   await handleInboundEmail({ message: msg, store, forwardTo: "salem@example.com" });
   assert.equal(order[0], "forward");
   assert.deepEqual(order, ["forward", "store", "store"]);
 });
 
 test("forwards even when the store throws on every id", async () => {
-  const store = storeDouble(async () => { throw new Error("supabase down"); });
+  const store = storeDouble(async () => {
+    throw new Error("supabase down");
+  });
   const msg = message({ "in-reply-to": "<abc@x>" });
   await handleInboundEmail({ message: msg, store, forwardTo: "salem@example.com" });
   assert.deepEqual(msg.forwarded, ["salem@example.com"]);
@@ -67,7 +82,9 @@ test("a forward that throws does not stop the matching, and does not escalate", 
   // A throw out of the handler makes Cloudflare reject the message, which
   // bounces the reply back at the customer. Log it and carry on instead.
   const store = storeDouble();
-  const msg = message({ "in-reply-to": "<abc@x>" }, async () => { throw new Error("not a verified destination"); });
+  const msg = message({ "in-reply-to": "<abc@x>" }, async () => {
+    throw new Error("not a verified destination");
+  });
   await handleInboundEmail({ message: msg, store, forwardTo: "salem@example.com" });
   assert.equal(store.calls.length, 1);
 });

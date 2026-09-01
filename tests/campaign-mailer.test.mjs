@@ -2,13 +2,23 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createResendMailer } from "../src/server/campaigns/mailer.ts";
 
-const ok = (body) => ({ ok: true, status: 200, async json() { return body; } });
+const ok = (body) => ({
+  ok: true,
+  status: 200,
+  async json() {
+    return body;
+  },
+});
 
 test("sends and returns the provider message id", async () => {
   let seen;
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async (url, init) => { seen = { url, init }; return ok({ id: "msg-1" }); },
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async (url, init) => {
+      seen = { url, init };
+      return ok({ id: "msg-1" });
+    },
   });
   const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
   assert.deepEqual(out, { status: "sent", providerMessageId: "msg-1" });
@@ -20,8 +30,15 @@ test("sends and returns the provider message id", async () => {
 
 test("a 422 is permanent - retrying a rejected address cannot help", async () => {
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async () => ({ ok: false, status: 422, async json() { return {}; } }),
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async () => ({
+      ok: false,
+      status: 422,
+      async json() {
+        return {};
+      },
+    }),
   });
   const out = await mailer.send({ to: "bad", subject: "S", text: "T", replyTo: "r@b.com" });
   assert.equal(out.status, "failed");
@@ -30,8 +47,15 @@ test("a 422 is permanent - retrying a rejected address cannot help", async () =>
 
 test("a 429 is not permanent - rate limiting should be retried", async () => {
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async () => ({ ok: false, status: 429, async json() { return {}; } }),
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async () => ({
+      ok: false,
+      status: 429,
+      async json() {
+        return {};
+      },
+    }),
   });
   const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
   assert.equal(out.status, "failed");
@@ -40,8 +64,11 @@ test("a 429 is not permanent - rate limiting should be retried", async () => {
 
 test("a thrown network error is not permanent", async () => {
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async () => { throw new Error("boom"); },
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async () => {
+      throw new Error("boom");
+    },
   });
   const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
   assert.equal(out.status, "failed");
@@ -50,8 +77,11 @@ test("a thrown network error is not permanent", async () => {
 
 test("a thrown fetch is ambiguous - no response means the mail may have gone out", async () => {
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async () => { throw new Error("boom"); },
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async () => {
+      throw new Error("boom");
+    },
   });
   const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
   assert.equal(out.ambiguous, true);
@@ -59,8 +89,15 @@ test("a thrown fetch is ambiguous - no response means the mail may have gone out
 
 test("an error RESPONSE is not ambiguous - the provider answered, and it said no", async () => {
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async () => ({ ok: false, status: 500, async json() { return {}; } }),
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async () => ({
+      ok: false,
+      status: 500,
+      async json() {
+        return {};
+      },
+    }),
   });
   const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
   assert.equal(out.status, "failed");
@@ -69,8 +106,15 @@ test("an error RESPONSE is not ambiguous - the provider answered, and it said no
 
 test("a 500 is not permanent - the provider may recover", async () => {
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async () => ({ ok: false, status: 500, async json() { return {}; } }),
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async () => ({
+      ok: false,
+      status: 500,
+      async json() {
+        return {};
+      },
+    }),
   });
   const out = await mailer.send({ to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com" });
   assert.notEqual(out.permanent, true);
@@ -78,21 +122,40 @@ test("a 500 is not permanent - the provider may recover", async () => {
 
 test("never puts the message body in the error - it is personal data", async () => {
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async () => ({ ok: false, status: 500, async json() { return { detail: "SECRET" }; } }),
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async () => ({
+      ok: false,
+      status: 500,
+      async json() {
+        return { detail: "SECRET" };
+      },
+    }),
   });
-  const out = await mailer.send({ to: "x@y.com", subject: "S", text: "SECRET", replyTo: "r@b.com" });
+  const out = await mailer.send({
+    to: "x@y.com",
+    subject: "S",
+    text: "SECRET",
+    replyTo: "r@b.com",
+  });
   assert.doesNotMatch(out.error ?? "", /SECRET/);
 });
 
 test("passes custom headers through - List-Unsubscribe depends on this", async () => {
   let seen;
   const mailer = createResendMailer({
-    apiKey: "k", from: "a@b.com",
-    fetch: async (url, init) => { seen = init; return ok({ id: "m" }); },
+    apiKey: "k",
+    from: "a@b.com",
+    fetch: async (url, init) => {
+      seen = init;
+      return ok({ id: "m" });
+    },
   });
   await mailer.send({
-    to: "x@y.com", subject: "S", text: "T", replyTo: "r@b.com",
+    to: "x@y.com",
+    subject: "S",
+    text: "T",
+    replyTo: "r@b.com",
     headers: { "List-Unsubscribe": "<https://example.com/u/t>" },
   });
   assert.equal(JSON.parse(seen.body).headers["List-Unsubscribe"], "<https://example.com/u/t>");

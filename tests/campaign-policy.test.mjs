@@ -3,8 +3,12 @@ import assert from "node:assert/strict";
 import { evaluateGates } from "../src/server/campaigns/policy.ts";
 
 const store = (over = {}) => ({
-  async isSuppressed() { return false; },
-  async isApprovedRecipient() { return true; },
+  async isSuppressed() {
+    return false;
+  },
+  async isApprovedRecipient() {
+    return true;
+  },
   ...over,
 });
 
@@ -14,16 +18,32 @@ test("allows a suppression-free, approved recipient", async () => {
 });
 
 test("refuses a suppressed address", async () => {
-  const d = await evaluateGates(store({ async isSuppressed() { return true; } }), {
-    email: "a@b.com", sop: "outreach",
-  });
+  const d = await evaluateGates(
+    store({
+      async isSuppressed() {
+        return true;
+      },
+    }),
+    {
+      email: "a@b.com",
+      sop: "outreach",
+    },
+  );
   assert.deepEqual(d, { allow: false, status: "suppressed", reason: "do_not_contact" });
 });
 
 test("refuses an address not on the allowlist", async () => {
-  const d = await evaluateGates(store({ async isApprovedRecipient() { return false; } }), {
-    email: "a@b.com", sop: "outreach",
-  });
+  const d = await evaluateGates(
+    store({
+      async isApprovedRecipient() {
+        return false;
+      },
+    }),
+    {
+      email: "a@b.com",
+      sop: "outreach",
+    },
+  );
   assert.deepEqual(d, { allow: false, status: "stopped", reason: "not_approved" });
 });
 
@@ -39,7 +59,11 @@ test("refuses an enrollment with no address", async () => {
 
 test("a throwing suppression check refuses, it does not send", async () => {
   const d = await evaluateGates(
-    store({ async isSuppressed() { throw new Error("network"); } }),
+    store({
+      async isSuppressed() {
+        throw new Error("network");
+      },
+    }),
     { email: "a@b.com", sop: "outreach" },
   );
   assert.equal(d.allow, false);
@@ -47,7 +71,11 @@ test("a throwing suppression check refuses, it does not send", async () => {
 
 test("a throwing allowlist check refuses, it does not send", async () => {
   const d = await evaluateGates(
-    store({ async isApprovedRecipient() { throw new Error("network"); } }),
+    store({
+      async isApprovedRecipient() {
+        throw new Error("network");
+      },
+    }),
     { email: "a@b.com", sop: "outreach" },
   );
   assert.equal(d.allow, false);
