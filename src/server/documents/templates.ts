@@ -11,8 +11,24 @@
  * So: ANY bracketed run is a merge field unless it is one of three forms that
  * were each verified to occur in the real documents. A client reading a
  * contract cannot tell a leftover blank from prose, so neither may we.
+ *
+ * The bound is on "]" and on length, and on nothing else. Two narrower limits
+ * used to be baked in without comment — no newline, and at most 80
+ * characters — and both were wrong about the real documents. Merge fields
+ * wrap and merge fields are long: sow-template.md's §1 background paragraph
+ * and its §10 personal-data field each span a line break, and both §5
+ * acceptance-criteria rows run past 80 characters. Those two rows are the
+ * standard against which material defects are assessed, and a finalised
+ * contract was able to carry them still bracketed and empty.
+ *
+ * 400 is generous enough for any field that has appeared in these documents
+ * and still small enough that a stray unclosed "[" cannot swallow a page.
+ *
+ * Note that it is the negated class, not the /s flag, that lets a match cross
+ * a line break — [^\]] already includes "\n". Do not "tidy" the class by
+ * excluding newlines again; that is the exact regression this bound replaced.
  */
-const CANDIDATE = /\[([^\]\n]{1,80})\]/g;
+const CANDIDATE = /\[([^\]]{1,400})\]/gs;
 
 /**
  * A [ ]/[x]/[X] token is a benign task-list checkbox only when everything on

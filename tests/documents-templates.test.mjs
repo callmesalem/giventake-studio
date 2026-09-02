@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { fillTemplate, findUnfilled, finalizeDocument } from "../src/server/documents/templates.ts";
+import {
+  fillTemplate,
+  findUnfilled,
+  finalizeDocument,
+  hasUnresolvedReview,
+} from "../src/server/documents/templates.ts";
 
 /**
  * Reading the real contracts in a test is a deliberate, small impurity. The
@@ -108,8 +113,26 @@ test("a bracketed label NOT followed by ( is a field, not a link", () => {
   assert.deepEqual(findUnfilled("See [MSA §4.1] for detail."), ["MSA §4.1"]);
 });
 
-test("a bracket spanning a newline is not a candidate", () => {
-  assert.deepEqual(findUnfilled("[open\nclose]"), []);
+test("a bracket spanning a newline IS a candidate", () => {
+  // This test used to assert the opposite, and asserting it is what kept a
+  // finalised contract able to carry blanks. Real merge fields wrap:
+  // sow-template.md's §1 background paragraph and its §10 personal-data
+  // field are both bracketed runs that cross a line break. Nothing about a
+  // line break makes a bracket prose, and a client reading the wrapped text
+  // cannot tell it from a blank.
+  assert.deepEqual(findUnfilled("[open\nclose]"), ["open\nclose"]);
+});
+
+test("the length bound is generous enough for a real acceptance criterion", () => {
+  // sow-template.md §5 carries a 200+ character acceptance criterion. The
+  // old {1,80} bound dropped it silently, and nothing covered the bound at
+  // all — narrowing it to {1,40} used to survive the entire suite.
+  const long = "x".repeat(300);
+  assert.deepEqual(findUnfilled("[" + long + "]"), [long]);
+});
+
+test("the length bound still exists, so a stray bracket cannot swallow a page", () => {
+  assert.deepEqual(findUnfilled("[" + "x".repeat(401) + "]"), []);
 });
 
 // --- checkbox benign form: list position only ------------------------------
@@ -297,5 +320,184 @@ test("the real delivery review checklist is not blocked by its checkboxes, but I
   // result / Cleared to ship / Signature are inline `[ ]` blanks, not
   // checkboxes, and must be reported.
   const body = doc("docs/templates/delivery-review-checklist.md");
+  assert.deepEqual(findUnfilled(body), ["CLIENT", "RELEASE", " "]);
+});
+
+// --- the cleared SOW: what the banner was hiding ---------------------------
+//
+// Every other real-file test above stops at reason === "unresolved-review".
+// The banner short-circuits finalizeDocument before the placeholder pass ever
+// runs, so on these files the detector was never exercised on a body a client
+// could actually receive. Attorney clearance is precisely the event that
+// removes the short-circuit — and it is the worst possible moment to discover
+// that a merge field was invisible. These tests simulate that clearance.
+
+/** Strip the DRAFT banner and resolve the [REVIEW …] markers, i.e. the state
+ *  the contract is in the moment counsel signs it off. Asserts the simulation
+ *  actually cleared, so it can never silently degrade back into a
+ *  "unresolved-review" test that proves nothing. */
+function attorneyCleared(body) {
+  const cleared = body
+    .split("\n")
+    .filter((line) => !/NOT FOR USE WITHOUT ATTORNEY REVIEW/i.test(line))
+    .join("\n")
+    .replace(/\[\s*REVIEW\b[^\]]*\]/gi, "confirmed with counsel");
+  assert.equal(hasUnresolvedReview(cleared), false, "the clearance simulation must actually clear");
+  return cleared;
+}
+
+/** The four genuine merge fields the {1,80}/no-newline candidate pattern could
+ *  not see. Matched by prefix rather than by exact text so the test does not
+ *  break on a rewrap of the template. */
+const SOW_PROSE_BLANKS = [
+  ["§1 Background and objective", /^Two or three sentences: what the Client does\b/],
+  ["§5 acceptance criteria, Deliverable 1", /^Objective, testable\. e\.g\. "All 6 pages render/],
+  ["§5 acceptance criteria, Deliverable 2", /^e\.g\. "Three named users can log in/],
+  ["§10 Personal or regulated data", /^none \/ describe — if yes, a DPA is\b/],
+];
+
+test("the cleared SOW's wrapped and long merge fields are detected", () => {
+  const unfilled = findUnfilled(attorneyCleared(doc("docs/contracts/sow-template.md")));
+  for (const [where, pattern] of SOW_PROSE_BLANKS) {
+    assert.ok(
+      unfilled.some((key) => pattern.test(key)),
+      `${where} is a merge field and must be reported as unfilled`,
+    );
+  }
+});
+
+test("a cleared SOW REFUSES while §1 and both §5 acceptance rows are unfilled", () => {
+  // The reproduction: clear the review, fill every OTHER field the detector
+  // reports, and the document still must not finalize. Before the candidate
+  // pattern was widened this returned ok:true on a contract that still said
+  // [Objective, testable…] in the table the template itself calls the standard
+  // against which material defects are assessed.
+  const body = attorneyCleared(doc("docs/contracts/sow-template.md"));
+  const data = {};
+  for (const key of findUnfilled(body)) {
+    if (SOW_PROSE_BLANKS.some(([, pattern]) => pattern.test(key))) continue;
+    data[key] = "FILLED";
+  }
+
+  const r = finalizeDocument(body, data);
+  assert.equal(r.ok, false, "a contract with unfilled acceptance criteria must not finalize");
+  assert.equal(r.ok === false && r.reason, "unfilled-placeholders");
+  for (const [where, pattern] of SOW_PROSE_BLANKS) {
+    assert.ok(
+      r.ok === false && r.placeholders.some((key) => pattern.test(key)),
+      `${where} must be named in the refusal`,
+    );
+  }
+});
+
+test("a cleared SOW that DOES finalize carries none of its prose blanks", () => {
+  // The other half: once every field findUnfilled reports is supplied, the
+  // finalised body must contain no leftover blank at all. Asserted against the
+  // literal prose rather than against findUnfilled, so the check is
+  // independent of the candidate pattern it is testing.
+  const body = attorneyCleared(doc("docs/contracts/sow-template.md"));
+  const data = {};
+  for (const key of findUnfilled(body)) data[key] = "FILLED";
+
+  const r = finalizeDocument(body, data);
+  assert.equal(r.ok, true, "a fully supplied, cleared SOW should finalize");
+  for (const prose of [
+    "Two or three sentences",
+    "Objective, testable",
+    "Three named users can log in",
+    "a DPA is",
+  ]) {
+    assert.ok(
+      r.ok && !r.body.includes(prose),
+      `a finalised contract must not still carry the blank "${prose}"`,
+    );
+  }
+});
+
+/** An independent, deliberately dumb sweep for anything still bracketed in a
+ *  finalised body. It does NOT share findUnfilled's candidate pattern — that
+ *  is the point: asserting "no blanks remain" with the same regex that decides
+ *  what a blank is proves nothing, which is how the {1,80} bound went
+ *  unnoticed. Only the three rendered-as-something-else forms are excused. */
+function leftoverBlanks(body) {
+  const out = [];
+  for (const m of body.matchAll(/\[([^\]]*)\]/gs)) {
+    const inner = m[1];
+    const end = (m.index ?? 0) + m[0].length;
+    if (/^![A-Z]+$/.test(inner)) continue; // GitHub callout
+    if (body[end] === "(") continue; // markdown link label
+    if (/^[ xX]$/.test(inner)) continue; // task-list checkbox
+    out.push(inner);
+  }
+  return out;
+}
+
+test("a fully supplied, cleared SOW leaves nothing bracketed behind", () => {
+  const body = attorneyCleared(doc("docs/contracts/sow-template.md"));
+  const data = {};
+  for (const key of findUnfilled(body)) data[key] = "FILLED";
+
+  const r = finalizeDocument(body, data);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.ok && leftoverBlanks(r.body), []);
+});
+
+test("a fully supplied, cleared MSA leaves nothing bracketed behind", () => {
+  // The same clearance applied to the other contract, as a guard that widening
+  // the candidate pattern covers the MSA too and did not swallow anything.
+  const body = attorneyCleared(doc("docs/contracts/msa-template.md"));
+  const data = {};
+  for (const key of findUnfilled(body)) data[key] = "FILLED";
+
+  const r = finalizeDocument(body, data);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.ok && leftoverBlanks(r.body), []);
+});
+
+test("every other contract and template still behaves after the widening", () => {
+  // The widened candidate pattern must not start swallowing markdown that is
+  // not a blank. These expectations are the pre-widening behaviour of the
+  // files on disk, pinned so a future change to the pattern has to justify
+  // itself against every real document rather than against two of them.
+  const expected = {
+    "docs/contracts/ai-use-disclosure.md": [],
+    "docs/contracts/README.md": ["BRACKETED"],
+    "docs/contracts/subprocessor-list.md": [
+      "DATE",
+      "Email provider",
+      "status",
+      "Invoicing / payments",
+      "Bookkeeping",
+    ],
+    "docs/templates/customer-1-weekly-report.md": [],
+    "docs/templates/delivery-review-checklist.md": ["CLIENT", "RELEASE", " "],
+    "docs/templates/discovery-notes.md": [
+      "CLIENT",
+      " ",
+      "B1–B5",
+      "C1–C5",
+      "none / describe",
+      "date",
+    ],
+    "docs/templates/handoff-checklist.md": ["CLIENT", "PROJECT", " "],
+    "docs/templates/README.md": [],
+    "docs/templates/weekly-update.md": [
+      "CLIENT",
+      "N",
+      "TOTAL",
+      "DATE",
+      "link or scheduled time",
+      " ",
+    ],
+  };
+  for (const [path, fields] of Object.entries(expected)) {
+    assert.deepEqual(findUnfilled(doc(path)), fields, path);
+  }
+});
+
+test("the delivery review checklist's 29 task-list checkboxes stay benign", () => {
+  const body = doc("docs/templates/delivery-review-checklist.md");
+  const listCheckboxes = body.match(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/gm) ?? [];
+  assert.equal(listCheckboxes.length, 29, "sanity check on the fixture: 29 task-list checkboxes");
   assert.deepEqual(findUnfilled(body), ["CLIENT", "RELEASE", " "]);
 });
