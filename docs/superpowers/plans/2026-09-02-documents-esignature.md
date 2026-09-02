@@ -721,6 +721,18 @@ git commit -m "feat(documents): signing guards for expiry, replay and consent"
 
 ### Task 7: Store adapter
 
+> **Superseded — do not copy the code in this task.** The listing below was
+> written against `@supabase/supabase-js`, which is not a dependency of this repo
+> (zero hits in `package.json` and `bun.lock`) and which `src/server/crm/auth.ts`
+> deliberately refuses. It also reached the tables directly, which RLS-with-no-
+> policies makes impossible. The shipped implementation is
+> `src/server/documents/store.ts`: a PostgREST adapter over the
+> `document_*` SECURITY DEFINER RPCs added to the migration in Task 4, with an
+> injectable `fetch` and tests in `tests/documents-store.test.mjs`. Two
+> signatures changed: the factory also accepts `fetch?`, and `markSigned`
+> resolves to `boolean` — whether the write applied — which later tasks must
+> read as the replay guard. Read the file, not this section.
+
 **Files:**
 - Create: `src/server/documents/store.ts`
 
