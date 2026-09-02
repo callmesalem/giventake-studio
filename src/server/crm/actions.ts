@@ -12,7 +12,15 @@
  * a recipient, and both end at a human.
  */
 
-import { canAssign } from "@/lib/crm-guards";
+import { advanceBlockedByUnsignedSow, canAssign, isCloseStage } from "@/lib/crm-guards";
+
+/** Re-exported so the stage-4 rule has one name wherever it is read from.
+ *  It is DEFINED in crm-guards.ts rather than here because this module imports
+ *  through the "@/" alias and so cannot be loaded by `node
+ *  --experimental-strip-types` — a gate whose predicate no test can import is a
+ *  comment with extra steps. tests/documents-gate.test.mjs exercises the same
+ *  function objects this file calls below. */
+export { advanceBlockedByUnsignedSow, isCloseStage, CLOSE_STAGE_NAME } from "@/lib/crm-guards";
 
 type Fetch = typeof globalThis.fetch;
 
@@ -193,14 +201,40 @@ export class CrmActions {
   }
 
   /** Advance a deal. The RPC stamps the actor and requires a note; it does NOT
-   *  assert the stage gate was satisfied, because that is a human judgement and
-   *  a function cannot witness it. */
-  advanceDealStage(input: {
+   *  assert the stage gate was satisfied, because for eleven of the twelve
+   *  stages that is a human judgement and a function cannot witness it.
+   *
+   *  Stage 4 ("Close") is the one exception, enforced here. Its gate is "Signed
+   *  and paid before any code", and a signature — unlike "Problem understood,
+   *  quantified" — is a fact with a record: document_signatures. So before the
+   *  advance is sent, deal_has_signed_sow is asked, and anything other than a
+   *  true refuses the advance. Only the SIGNATURE is asserted; payment is not,
+   *  because invoices.paid_at depends on Stripe reconciliation and a webhook
+   *  hiccup must not block work that is genuinely signed. See
+   *  advanceBlockedByUnsignedSow in crm-guards.ts for the full reasoning.
+   *
+   *  A failed or unparseable RPC throws out of #rpc rather than resolving, so
+   *  a check that cannot be made refuses the advance instead of waving it
+   *  through — the same fail-closed posture as DocumentStore.dealHasSignedSow. */
+  async advanceDealStage(input: {
     dealId: string;
     toStage: string;
     note: string;
     actor: string;
   }): Promise<unknown> {
+    // Asked first so the RPC is not paid for on the eleven advances that do not
+    // need it, and so an unrelated advance cannot be refused by a document
+    // lookup that failed.
+    if (isCloseStage(input.toStage)) {
+      const signed = await this.#rpc<boolean | null>("deal_has_signed_sow", {
+        p_deal_id: input.dealId,
+      });
+      if (advanceBlockedByUnsignedSow(input.toStage, signed)) {
+        throw new Error(
+          "Stage 4 (Close) requires a signed SOW. Generate the SOW and send it for signature first.",
+        );
+      }
+    }
     return this.#rpc<unknown>("deal_advance_stage", {
       p_deal_id: input.dealId,
       p_to_stage: input.toStage,
