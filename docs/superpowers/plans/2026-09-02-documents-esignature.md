@@ -745,6 +745,16 @@ export interface DocumentStore {
     ownerId: string | null;
   }): Promise<string>;
 
+  /** Replace an edited draft's body and re-hash it. Used by the finalise step:
+   *  the operator edits the generated draft (the SOW's pricing table cannot be
+   *  merge-filled), so the stored body and its hash both change before sending. */
+  updateDocumentBody(input: {
+    id: string;
+    body: string;
+    bodyHash: string;
+    status: "draft" | "final";
+  }): Promise<void>;
+
   createSignatureRequest(input: {
     documentId: string;
     recipientName: string;
@@ -772,6 +782,19 @@ export function createSupabaseDocumentStore(config: {
   const db = createClient(config.url, config.serviceRoleKey);
 
   return {
+    async updateDocumentBody(input) {
+      const { error } = await db
+        .from("documents")
+        .update({
+          body: input.body,
+          body_hash: input.bodyHash,
+          status: input.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.id);
+      if (error) throw new Error(`updateDocumentBody failed: ${error.message}`);
+    },
+
     async createDocument(input) {
       const { data, error } = await db
         .from("documents")
@@ -1267,13 +1290,14 @@ that here.
 ```javascript
 import test from "node:test";
 import assert from "node:assert/strict";
-import { issueDocument, requestSignature, signatureIsStale } from "../src/server/documents/issue.ts";
+import { draftDocument, finaliseDraft, requestSignature, signatureIsStale } from "../src/server/documents/issue.ts";
 
 function fakeStore() {
-  const state = { docs: [], sigs: [] };
+  const state = { docs: [], sigs: [], updates: [] };
   return {
     state,
     createDocument: async (d) => { state.docs.push(d); return `doc-${state.docs.length}`; },
+    updateDocumentBody: async (u) => { state.updates.push(u); },
     createSignatureRequest: async (r) => {
       state.sigs.push(r);
       return { id: `sig-${state.sigs.length}`, signingToken: `tok-${state.sigs.length}` };
@@ -1284,38 +1308,71 @@ function fakeStore() {
 const DEAL = { dealId: "deal-1", projectId: null, stageNumber: 3, docType: "sow",
                title: "SOW", templateId: "sow", ownerId: null };
 
-test("issuing refuses a template still carrying [REVIEW]", async () => {
+test("drafting ALLOWS unfilled placeholders — the operator fills them by editing", async () => {
   const s = fakeStore();
-  const r = await issueDocument(s, { ...DEAL, templateBody: "Indemnity [REVIEW].", data: {} });
+  const r = await draftDocument(s, { ...DEAL, templateBody: "Fee: $[X] for [PROJECT NAME]", data: { "PROJECT NAME": "Portal" } });
+  assert.equal(r.ok, true);
+  assert.equal(s.state.docs[0].body, "Fee: $[X] for Portal");
+  assert.equal(s.state.docs[0].status, "draft");
+});
+
+test("drafting still REFUSES a template carrying [REVIEW]", async () => {
+  const s = fakeStore();
+  const r = await draftDocument(s, { ...DEAL, templateBody: "Indemnity [REVIEW].", data: {} });
   assert.equal(r.ok, false);
   assert.equal(r.ok === false && r.reason, "unresolved-review");
-  assert.equal(s.state.docs.length, 0, "nothing may be stored when finalisation refuses");
+  assert.equal(s.state.docs.length, 0, "nothing may be stored when the review guard refuses");
 });
 
-test("issuing refuses an unfilled placeholder and stores nothing", async () => {
+test("drafting stores the filled body and its hash", async () => {
   const s = fakeStore();
-  const r = await issueDocument(s, { ...DEAL, templateBody: "Fee: [AMOUNT]", data: {} });
-  assert.equal(r.ok, false);
-  assert.equal(s.state.docs.length, 0);
-});
-
-test("issuing stores the filled body and its hash", async () => {
-  const s = fakeStore();
-  const r = await issueDocument(s, {
+  const r = await draftDocument(s, {
     ...DEAL, templateBody: "Client: [CLIENT LEGAL NAME]", data: { "CLIENT LEGAL NAME": "Acme LLC" },
   });
   assert.equal(r.ok, true);
-  assert.equal(s.state.docs[0].body, "Client: Acme LLC");
   assert.equal(s.state.docs[0].bodyHash.length, 64);
   assert.equal(r.ok && r.bodyHash, s.state.docs[0].bodyHash);
 });
 
+test("finalising REFUSES an edited body with placeholders still in it", async () => {
+  const s = fakeStore();
+  const r = await finaliseDraft(s, { documentId: "doc-1", body: "Fee: $[X]" });
+  assert.equal(r.ok, false);
+  assert.equal(r.ok === false && r.reason, "unfilled-placeholders");
+  assert.deepEqual(r.ok === false && r.placeholders, ["X"]);
+  assert.equal(s.state.updates.length, 0, "a refused finalise must not write");
+});
+
+test("finalising REFUSES an edited body someone pasted [REVIEW] into", async () => {
+  const s = fakeStore();
+  const r = await finaliseDraft(s, { documentId: "doc-1", body: "Indemnity [REVIEW]." });
+  assert.equal(r.ok, false);
+  assert.equal(r.ok === false && r.reason, "unresolved-review");
+});
+
+test("finalising a complete body re-hashes it and marks it final", async () => {
+  const s = fakeStore();
+  const r = await finaliseDraft(s, { documentId: "doc-1", body: "Fee: $4,250" });
+  assert.equal(r.ok, true);
+  assert.equal(s.state.updates[0].status, "final");
+  assert.equal(s.state.updates[0].body, "Fee: $4,250");
+  assert.equal(s.state.updates[0].bodyHash.length, 64);
+  assert.equal(r.ok && r.bodyHash, s.state.updates[0].bodyHash);
+});
+
+test("editing changes the hash, which is what makes a stale signature detectable", async () => {
+  const s = fakeStore();
+  const a = await finaliseDraft(s, { documentId: "doc-1", body: "Fee: $4,250" });
+  const b = await finaliseDraft(s, { documentId: "doc-1", body: "Fee: $6,000" });
+  assert.notEqual(a.ok && a.bodyHash, b.ok && b.bodyHash);
+});
+
 test("requesting a signature COPIES the document hash onto the signature row", async () => {
   const s = fakeStore();
-  const doc = await issueDocument(s, { ...DEAL, templateBody: "Body", data: {} });
+  const doc = await finaliseDraft(s, { documentId: "doc-1", body: "Complete body" });
   assert.equal(doc.ok, true);
   await requestSignature(s, {
-    documentId: doc.ok ? doc.documentId : "",
+    documentId: "doc-1",
     bodyHash: doc.ok ? doc.bodyHash : "",
     recipientName: "Ada", recipientEmail: "ada@example.com", sentBy: null,
   });
@@ -1339,7 +1396,7 @@ Expected: FAIL — module not found.
 - [ ] **Step 3: Implement**
 
 ```typescript
-import { finalizeDocument, type MergeData } from "./templates.ts";
+import { fillTemplate, finalizeDocument, type MergeData } from "./templates.ts";
 import { sha256Hex } from "./hash.ts";
 
 interface IssueStore {
@@ -1348,35 +1405,53 @@ interface IssueStore {
     docType: string; title: string; body: string; bodyHash: string;
     templateId: string | null; ownerId: string | null;
   }): Promise<string>;
+  updateDocumentBody(input: {
+    id: string; body: string; bodyHash: string; status: "draft" | "final";
+  }): Promise<void>;
   createSignatureRequest(input: {
     documentId: string; recipientName: string; recipientEmail: string;
     documentHash: string; sentBy: string | null;
   }): Promise<{ id: string; signingToken: string }>;
 }
 
-export type IssueResult =
+export type DraftResult =
   | { ok: true; documentId: string; bodyHash: string; body: string }
+  | { ok: false; reason: "unresolved-review" };
+
+export type FinaliseResult =
+  | { ok: true; bodyHash: string }
   | { ok: false; reason: "unresolved-review" }
   | { ok: false; reason: "unfilled-placeholders"; placeholders: string[] };
 
 /**
- * Fill a template, refuse anything unfit to send, hash it, store it.
+ * Generate a DRAFT. Unfilled placeholders are allowed here, deliberately.
  *
- * Nothing is written when finalisation refuses. A half-created document that
- * exists but must never be sent is a trap for whoever finds it later.
+ * The SOW's pricing table is a repeating row - `| [description] | $[X] | ... |`
+ * once per line item - and a merge field cannot express a variable-length table.
+ * A single [X] would put the same price on every line. So generation fills what
+ * the deal knows, and the operator edits the rest before finalising. [MSA DATE]
+ * works the same way: the MSA is signed outside this system, so its date is
+ * typed in rather than derived.
+ *
+ * The [REVIEW] guard still applies at draft time. There is no legitimate reason
+ * to draft from an un-reviewed template, and allowing it would mean the only
+ * thing standing between msa-template.md and a client is remembering not to
+ * press finalise.
  */
-export async function issueDocument(
+export async function draftDocument(
   store: IssueStore,
   input: {
     templateBody: string; data: MergeData;
     dealId: string | null; projectId: string | null; stageNumber: number | null;
     docType: string; title: string; templateId: string | null; ownerId: string | null;
   },
-): Promise<IssueResult> {
-  const finalized = finalizeDocument(input.templateBody, input.data);
-  if (!finalized.ok) return finalized;
+): Promise<DraftResult> {
+  if (input.templateBody.includes("[REVIEW]")) {
+    return { ok: false, reason: "unresolved-review" };
+  }
 
-  const bodyHash = await sha256Hex(finalized.body);
+  const body = fillTemplate(input.templateBody, input.data);
+  const bodyHash = await sha256Hex(body);
 
   const documentId = await store.createDocument({
     dealId: input.dealId,
@@ -1384,13 +1459,45 @@ export async function issueDocument(
     stageNumber: input.stageNumber,
     docType: input.docType,
     title: input.title,
-    body: finalized.body,
+    body,
     bodyHash,
     templateId: input.templateId,
     ownerId: input.ownerId,
   });
 
-  return { ok: true, documentId, bodyHash, body: finalized.body };
+  return { ok: true, documentId, bodyHash, body };
+}
+
+/**
+ * Finalise an edited draft. THIS is where the refusals bite.
+ *
+ * finalizeDocument is called with no merge data, so it validates rather than
+ * fills: it refuses [REVIEW] and refuses any placeholder the operator left
+ * behind. Nothing is written when it refuses - a document marked final that
+ * still says [CLIENT LEGAL NAME] is exactly the failure this feature exists to
+ * prevent.
+ *
+ * The body is re-hashed here. That hash is what a signature request will copy,
+ * so editing after sending changes documents.body_hash and leaves the
+ * signature's copy behind - which is how a stale signature stays detectable.
+ */
+export async function finaliseDraft(
+  store: IssueStore,
+  input: { documentId: string; body: string },
+): Promise<FinaliseResult> {
+  const checked = finalizeDocument(input.body, {});
+  if (!checked.ok) return checked;
+
+  const bodyHash = await sha256Hex(checked.body);
+
+  await store.updateDocumentBody({
+    id: input.documentId,
+    body: checked.body,
+    bodyHash,
+    status: "final",
+  });
+
+  return { ok: true, bodyHash };
 }
 
 /**
@@ -1429,7 +1536,7 @@ export function signatureIsStale(
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `node --experimental-strip-types tests/documents-issue.test.mjs`
-Expected: PASS, 6 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -1612,7 +1719,7 @@ Create `src/server/documents/deal-actions.ts`. Model the `createServerFn` usage 
 import { createServerFn } from "@tanstack/react-start";
 import sowTemplate from "../../../docs/contracts/sow-template.md?raw";
 import { createSupabaseDocumentStore } from "./store.ts";
-import { issueDocument, requestSignature } from "./issue.ts";
+import { draftDocument, finaliseDraft, requestSignature } from "./issue.ts";
 import { sendSignatureRequest } from "./mailer.ts";
 
 function store() {
@@ -1622,17 +1729,26 @@ function store() {
   return createSupabaseDocumentStore({ url, serviceRoleKey: key });
 }
 
-/** Fill the SOW from the deal. Returns the refusal reason unchanged so the UI
- *  can name the offending placeholders rather than saying "something failed". */
-export const generateSow = createServerFn({ method: "POST" })
-  .validator((d: { dealId: string; clientLegalName: string; projectName: string; amount: string }) => d)
+/**
+ * Generate a SOW draft from the deal.
+ *
+ * Measured against the real docs/contracts/sow-template.md, which needs TEN
+ * fields: NUMBER, MSA DATE, CLIENT LEGAL NAME, PROJECT NAME, DATE, N, AMOUNT,
+ * X, RATE, NAME.
+ *
+ * Only some can be derived. [X] is a repeating pricing-table cell — one value
+ * would price every line item identically — and [MSA DATE] refers to a Master
+ * Services Agreement signed outside this system. Both are left for the operator
+ * to edit, which is why this produces a DRAFT and finalising is a separate step.
+ */
+export const generateSowDraft = createServerFn({ method: "POST" })
+  .validator((d: { dealId: string; clientLegalName: string; projectName: string }) => d)
   .handler(async ({ data }) => {
-    const result = await issueDocument(store(), {
+    return draftDocument(store(), {
       templateBody: sowTemplate,
       data: {
         "CLIENT LEGAL NAME": data.clientLegalName,
         "PROJECT NAME": data.projectName,
-        AMOUNT: data.amount,
         DATE: new Date().toISOString().slice(0, 10),
       },
       dealId: data.dealId,
@@ -1643,7 +1759,14 @@ export const generateSow = createServerFn({ method: "POST" })
       templateId: "sow",
       ownerId: null,
     });
-    return result;
+  });
+
+/** Save the operator's edits and finalise. Refuses if any placeholder remains,
+ *  naming them, so the UI can say exactly what still needs filling. */
+export const finaliseDocument = createServerFn({ method: "POST" })
+  .validator((d: { documentId: string; body: string }) => d)
+  .handler(async ({ data }) => {
+    return finaliseDraft(store(), { documentId: data.documentId, body: data.body });
   });
 
 export const sendForSignature = createServerFn({ method: "POST" })
@@ -1675,6 +1798,18 @@ useless. Add `SITE_BASE_URL` to `wrangler.jsonc` vars rather than deriving it, i
 that reads cleaner to you — but do not leave it undefined.
 
 - [ ] **Step 2: Add the Documents section to the deal page**
+
+The section needs three states per document, because generation no longer
+produces something sendable in one shot:
+
+1. **draft** — render the body in an editable `<textarea>` with a Finalise
+   button. Placeholders the operator must still fill (the pricing table, the MSA
+   date) are visible in the text. On a refused finalise, list the named
+   placeholders returned by the server so they know exactly what is missing.
+2. **final** — read-only, with a Send for signature control taking recipient
+   name and email.
+3. **sent/signed** — the signature status, and the stale-version warning below.
+
 
 Read `src/routes/crm.deals.$id.tsx` and follow its existing loader and `Card`
 usage. Add a section rendering the deal's documents:
