@@ -112,6 +112,52 @@ test("a bracket spanning a newline is not a candidate", () => {
   assert.deepEqual(findUnfilled("[open\nclose]"), []);
 });
 
+// --- checkbox benign form: list position only ------------------------------
+//
+// A [ ]/[x]/[X] token is benign ONLY when everything before it on the line is
+// a markdown list marker. Anywhere else it is a merge field: $[X] for money,
+// **Date:** [ ] for a blank to complete, or plain inline text.
+
+test("a checkbox is benign in list position — dash, x, X, ordered, nested", () => {
+  assert.deepEqual(findUnfilled("- [ ] item"), []);
+  assert.deepEqual(findUnfilled("- [x] item"), []);
+  assert.deepEqual(findUnfilled("1. [ ] item"), []);
+  assert.deepEqual(findUnfilled("  * [X] item"), []);
+});
+
+test("$[X] is a merge field, not a benign checkbox", () => {
+  assert.deepEqual(findUnfilled("Deposit $[X] due"), ["X"]);
+});
+
+test("a labelled inline blank is a merge field, not a benign checkbox", () => {
+  assert.deepEqual(findUnfilled("**Date:** [ ]"), [" "]);
+});
+
+test("an inline [ ] mid-sentence, not in list position, is a merge field", () => {
+  assert.deepEqual(findUnfilled("text [ ] more"), [" "]);
+});
+
+test("the real SOW's $[X] money fields are now reported as unfilled", () => {
+  const unfilled = findUnfilled(doc("docs/contracts/sow-template.md"));
+  assert.ok(
+    unfilled.includes("X"),
+    "$[X] deposit/milestone/tax/change-order fields must be reported",
+  );
+});
+
+test("the real handoff checklist: task-list checkboxes stay benign, inline blanks do not", () => {
+  const body = doc("docs/templates/handoff-checklist.md");
+  const listCheckboxes = body.match(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/gm) ?? [];
+  assert.equal(listCheckboxes.length, 28, "sanity check on the fixture: 28 task-list checkboxes");
+
+  const unfilled = findUnfilled(body);
+  assert.deepEqual(unfilled, ["CLIENT", "PROJECT", " "]);
+  // The four inline blanks (Date, SOW, Handed off by, Client confirmation
+  // received) all have the same inner text " " and so dedupe to one entry —
+  // this is exactly the "templates need distinct field names" problem noted
+  // in templates.ts and is separately-tracked template work.
+});
+
 // --- the two independent review guards ------------------------------------
 
 test("finalize returns the filled body when everything resolves", () => {
@@ -221,20 +267,35 @@ test("the real SOW's genuine blanks are detected, not silently ignored", () => {
   }
 });
 
-test("the real handoff checklist is NOT blocked by its checkboxes or links", () => {
+test("the real handoff checklist is NOT blocked by its checkboxes or links, but IS blocked by its inline blanks", () => {
+  // Was ["CLIENT", "PROJECT"]. The task-list checkboxes and MSA links are
+  // still benign, but the four inline `[ ]` sign-off blanks on lines 3 and
+  // 66 (Date, SOW, Handed off by, Client confirmation received) are real,
+  // un-named blanks and must now be reported too — see the narrowed rule in
+  // src/server/documents/templates.ts.
   const body = doc("docs/templates/handoff-checklist.md");
-  assert.deepEqual(findUnfilled(body), ["CLIENT", "PROJECT"]);
+  assert.deepEqual(findUnfilled(body), ["CLIENT", "PROJECT", " "]);
 });
 
-test("the real handoff checklist finalizes once its two real fields are filled", () => {
+test("the real handoff checklist no longer finalizes on its two named fields alone — its inline blanks are genuinely unfilled", () => {
+  // Previously finalized ok:true once CLIENT and PROJECT were supplied. That
+  // was the fail-open: the checklist's four inline sign-off blanks (Date,
+  // SOW, Handed off by, Client confirmation received) were being swallowed
+  // as "checkboxes" and shipped un-filled. Correct behaviour is refusal,
+  // naming what is still missing. Giving the blanks distinct field names is
+  // separately-tracked template work, not something to fix by widening the
+  // benign rule back out.
   const body = doc("docs/templates/handoff-checklist.md");
   const r = finalizeDocument(body, { CLIENT: "Acme LLC", PROJECT: "Website rebuild" });
-  assert.equal(r.ok, true, r.ok === false ? `refused: ${r.reason}` : "");
-  assert.ok(r.ok && r.body.includes("- [ ]"), "checkboxes must survive filling untouched");
-  assert.ok(r.ok && !r.body.includes("[CLIENT]"));
+  assert.equal(r.ok, false);
+  assert.equal(r.ok === false && r.reason, "unfilled-placeholders");
+  assert.deepEqual(r.ok === false && r.placeholders, [" "]);
 });
 
-test("the real delivery review checklist is not blocked by its checkboxes", () => {
+test("the real delivery review checklist is not blocked by its checkboxes, but IS blocked by its inline blanks", () => {
+  // Was ["CLIENT", "RELEASE"]. Reviewed by / Date / Commit / Licence scan
+  // result / Cleared to ship / Signature are inline `[ ]` blanks, not
+  // checkboxes, and must be reported.
   const body = doc("docs/templates/delivery-review-checklist.md");
-  assert.deepEqual(findUnfilled(body), ["CLIENT", "RELEASE"]);
+  assert.deepEqual(findUnfilled(body), ["CLIENT", "RELEASE", " "]);
 });

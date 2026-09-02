@@ -15,11 +15,30 @@
 const CANDIDATE = /\[([^\]\n]{1,80})\]/g;
 
 /**
+ * A [ ]/[x]/[X] token is a benign task-list checkbox only when everything on
+ * its line before the "[" is a list marker — "- ", "* ", "+ ", "1. ", "12) ",
+ * with any amount of leading indentation for a nested item. That is the only
+ * position in which markdown actually renders it as a checkbox rather than
+ * literal bracketed text.
+ *
+ * Position, not content, is what makes it benign: the same "[ ]" is a real
+ * blank when it follows "$" (a money field, e.g. sow-template.md's `$[X]`
+ * deposit and milestone rows) or a label like "**Date:**" (handoff-checklist
+ * and delivery-review-checklist's inline sign-off blanks). A client reading
+ * either cannot tell it from a completed checkbox, so it must be reported.
+ */
+const LIST_MARKER = /^\s*(?:[-*+]|\d+[.)])\s+$/;
+
+function isListPosition(body: string, bracketIndex: number): boolean {
+  const lineStart = body.lastIndexOf("\n", bracketIndex - 1) + 1;
+  return LIST_MARKER.test(body.slice(lineStart, bracketIndex));
+}
+
+/**
  * The benign allowlist. Every entry is a markdown construct that renders as
  * something other than a blank, and every entry is present on disk today:
  *
- * 1. Task-list checkboxes — docs/templates/handoff-checklist.md and
- *    delivery-review-checklist.md are built out of them.
+ * 1. Task-list checkboxes in list position — see isListPosition above.
  * 2. GitHub callouts — [!WARNING], [!TIP], [!NOTE], [!IMPORTANT].
  * 3. Link labels, recognised by the "](" that must follow — [MSA §4.1](...).
  *
@@ -27,8 +46,8 @@ const CANDIDATE = /\[([^\]\n]{1,80})\]/g;
  * prose: msa-template.md says the registered entity name must be confirmed,
  * and a client cannot distinguish it from an unfilled blank either.
  */
-function isBenign(inner: string, body: string, endIndex: number): boolean {
-  if (inner === " " || inner === "x" || inner === "X") return true;
+function isBenign(inner: string, body: string, startIndex: number, endIndex: number): boolean {
+  if (inner === " " || inner === "x" || inner === "X") return isListPosition(body, startIndex);
   if (/^![A-Z]+$/.test(inner)) return true;
   return body[endIndex] === "(";
 }
@@ -48,7 +67,7 @@ function isSupplied(value: unknown): value is string {
 
 export function fillTemplate(body: string, data: MergeData): string {
   return body.replace(CANDIDATE, (whole: string, inner: string, offset: number) => {
-    if (isBenign(inner, body, offset + whole.length)) return whole;
+    if (isBenign(inner, body, offset, offset + whole.length)) return whole;
     const value = Object.prototype.hasOwnProperty.call(data, inner) ? data[inner] : undefined;
     return isSupplied(value) ? value : whole;
   });
@@ -59,7 +78,8 @@ export function findUnfilled(body: string): string[] {
   const found = new Set<string>();
   for (const m of body.matchAll(CANDIDATE)) {
     const inner = m[1];
-    if (isBenign(inner, body, (m.index ?? 0) + m[0].length)) continue;
+    const startIndex = m.index ?? 0;
+    if (isBenign(inner, body, startIndex, startIndex + m[0].length)) continue;
     found.add(inner);
   }
   return [...found];
