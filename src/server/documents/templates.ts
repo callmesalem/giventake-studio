@@ -97,6 +97,14 @@ export function findUnfilled(body: string): string[] {
 const REVIEW_MARKER = /\[\s*REVIEW\b[^\]]*\]/i;
 const DRAFT_BANNER = /NOT FOR USE WITHOUT ATTORNEY REVIEW/i;
 
+/** Whether this body is an un-reviewed draft that must never reach a client.
+ *  Exported so drafting and finalising share ONE definition — two copies of
+ *  this rule would drift, and the copy that drifts is the one that lets an
+ *  un-reviewed contract out. */
+export function hasUnresolvedReview(body: string): boolean {
+  return REVIEW_MARKER.test(body) || DRAFT_BANNER.test(body);
+}
+
 export type FinalizeResult =
   | { ok: true; body: string }
   | { ok: false; reason: "unresolved-review" }
@@ -118,14 +126,13 @@ export type FinalizeResult =
  *
  * Order matters twice over. Review is reported first because "your document is
  * unfinished" is the wrong message when the real problem is that a lawyer has
- * not seen it. And the review checks run on the RAW body, before filling,
+ * not seen it. And the review check runs on the RAW body, before filling,
  * because a marker also matches the candidate pattern — checking the filled
  * body would let a caller passing data.REVIEW substitute the marker away and
  * defeat the guard entirely.
  */
 export function finalizeDocument(body: string, data: MergeData): FinalizeResult {
-  if (REVIEW_MARKER.test(body)) return { ok: false, reason: "unresolved-review" };
-  if (DRAFT_BANNER.test(body)) return { ok: false, reason: "unresolved-review" };
+  if (hasUnresolvedReview(body)) return { ok: false, reason: "unresolved-review" };
 
   const filled = fillTemplate(body, data);
 
