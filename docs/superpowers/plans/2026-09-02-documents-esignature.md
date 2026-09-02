@@ -293,9 +293,15 @@ export type FinalizeResult =
  * is the wrong message when the real problem is that a lawyer has not seen it.
  */
 export function finalizeDocument(body: string, data: MergeData): FinalizeResult {
-  const filled = fillTemplate(body, data);
+  // Checked on the RAW template, before filling, and deliberately so.
+  //
+  // [REVIEW] matches the placeholder pattern, so checking the FILLED body would
+  // let a caller passing data.REVIEW substitute the marker away and defeat the
+  // guard. The marker is a property of the template, not of the output, and no
+  // caller-supplied data may make an un-reviewed contract sendable.
+  if (body.includes(REVIEW_MARKER)) return { ok: false, reason: "unresolved-review" };
 
-  if (filled.includes(REVIEW_MARKER)) return { ok: false, reason: "unresolved-review" };
+  const filled = fillTemplate(body, data);
 
   const placeholders = findUnfilled(filled);
   if (placeholders.length > 0) return { ok: false, reason: "unfilled-placeholders", placeholders };
@@ -304,7 +310,10 @@ export function finalizeDocument(body: string, data: MergeData): FinalizeResult 
 }
 ```
 
-Note `fillTemplate` will not replace `[REVIEW]` even when `data.REVIEW` exists, because the check runs on the filled body and `REVIEW` matches `PLACEHOLDER`. Verify with the third test — if it fails, exclude `REVIEW` explicitly in `fillTemplate`.
+**Verified against the real template before this plan was written:** `findUnfilled`
+on `docs/contracts/msa-template.md` returns 9 placeholders and `REVIEW` is one of
+them. That is exactly why the check must run on the raw body — the marker sits in
+the same namespace as the merge fields.
 
 - [ ] **Step 4: Run it and watch it pass**
 
