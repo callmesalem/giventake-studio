@@ -104,6 +104,55 @@ test("document_mark_signed exists, guards the status, and reports whether it wro
   assert.match(fn, /get diagnostics/i);
 });
 
+test("document_list_for_deal exists and carries the signatures with their documents", () => {
+  // The deal page renders a document and its signatures together. Two calls
+  // could straddle a send and show a document beside a signature raised against
+  // a different version of it, which is the exact confusion the hash snapshot
+  // exists to make visible.
+  assert.match(sql, /create or replace function public\.document_list_for_deal\b/i);
+  const fn = sql.slice(sql.search(/create or replace function public\.document_list_for_deal\b/i));
+  assert.match(fn, /where d\.deal_id = p_deal_id/i);
+  assert.match(fn, /from document_signatures sg/i);
+  // Both halves of the staleness comparison have to travel or the warning
+  // cannot be computed at all.
+  assert.match(fn, /'body_hash', d\.body_hash/i);
+  assert.match(fn, /'document_hash', sg\.document_hash/i);
+});
+
+test("the operator listing never hands out a signing token", () => {
+  // signing_token is a bearer credential: whoever holds it can sign the
+  // client's contract. document_find_by_token is the ONLY function allowed to
+  // return one, and it does so to the public sign page, which already has the
+  // token in its URL. An operator listing has no use for it and every reason
+  // not to carry it into a browser, a log, or a screenshot.
+  const fn = sql.slice(sql.search(/create or replace function public\.document_list_for_deal\b/i));
+  assert.doesNotMatch(fn, /signing_token/i);
+});
+
+test("the deposit condition is a separate function, so it cannot be mistaken for the gate", () => {
+  // Stage 4's gate asserts the SIGNATURE only. Payment is surfaced to a human
+  // and never refuses an advance, because invoices.paid_at depends on Stripe
+  // reconciliation this system does not own end to end.
+  assert.match(sql, /create or replace function public\.deal_deposit_paid\b/i);
+  const fn = sql.slice(sql.search(/create or replace function public\.deal_deposit_paid\b/i));
+  assert.match(fn, /returns boolean/i);
+  assert.match(fn, /i\.paid_at is not null/i);
+  // Either link from an invoice to a deal is evidence; both exist in the schema.
+  assert.match(fn, /i\.source_deal_id = p_deal_id/i);
+  assert.match(fn, /p\.deal_id = p_deal_id/i);
+  // Fixture money is not payment.
+  assert.match(fn, /not coalesce\(i\.synthetic, false\)/i);
+});
+
+test("the gate function does not consult payment", () => {
+  // If deal_has_signed_sow ever grew a paid_at clause, a late Stripe webhook
+  // would start blocking work that is genuinely signed. That is the failure
+  // advanceBlockedByUnsignedSow was written to design out.
+  const start = sql.search(/create or replace function public\.deal_has_signed_sow\b/i);
+  const fn = sql.slice(start, sql.indexOf("$$;", start));
+  assert.doesNotMatch(fn, /paid_at|invoices/i);
+});
+
 test("every document RPC is service_role only, like the rest of this schema", () => {
   for (const fn of [
     "document_create",
@@ -112,7 +161,9 @@ test("every document RPC is service_role only, like the rest of this schema", ()
     "document_find_by_token",
     "document_mark_viewed",
     "document_mark_signed",
+    "document_list_for_deal",
     "deal_has_signed_sow",
+    "deal_deposit_paid",
   ]) {
     const signature = String.raw`public\.${fn}\([^)]*\)`;
     assert.match(
@@ -132,6 +183,6 @@ test("every document RPC is a definer function pinned to a safe search_path", ()
   // Line-anchored so prose in the comments cannot be mistaken for a declaration.
   const definers = sql.match(/^security definer$/gim) ?? [];
   const paths = sql.match(/^set search_path = public, pg_temp$/gim) ?? [];
-  assert.equal(definers.length, 7);
-  assert.equal(paths.length, 7);
+  assert.equal(definers.length, 9);
+  assert.equal(paths.length, 9);
 });

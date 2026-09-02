@@ -1,4 +1,4 @@
-import type { SignatureRow } from "./types.ts";
+import type { DealDocumentView, DealSignatureView, SignatureRow } from "./types.ts";
 
 export interface DocumentStore {
   createDocument(input: {
@@ -45,7 +45,44 @@ export interface DocumentStore {
     userAgent: string | null;
   }): Promise<boolean>;
 
+  /** One deal's documents with every signature raised against them, for the
+   *  operator UI. Never carries a signing token - see document_list_for_deal. */
+  listDealDocuments(dealId: string): Promise<DealDocumentView[]>;
+
   dealHasSignedSow(dealId: string): Promise<boolean>;
+
+  /** Stage 4's OTHER condition, and INFORMATIONAL ONLY. Nothing may refuse an
+   *  advance on it: invoices.paid_at depends on Stripe reconciliation, and a
+   *  webhook that arrives late would block work that is genuinely signed and
+   *  genuinely paid. Unlike dealHasSignedSow below, this does NOT catch - it is
+   *  not a gate, so a failed read must not quietly become "unpaid". */
+  dealDepositPaid(dealId: string): Promise<boolean>;
+}
+
+/** The shapes document_list_for_deal builds, snake-cased for the same reason. */
+interface DealSignatureJson {
+  id: string;
+  recipient_name: string;
+  recipient_email: string;
+  status: SignatureRow["status"];
+  sent_at: string | null;
+  expires_at: string | null;
+  viewed_at: string | null;
+  signed_at: string | null;
+  signed_name: string | null;
+  document_hash: string;
+}
+
+interface DealDocumentJson {
+  id: string;
+  doc_type: string;
+  title: string;
+  body: string;
+  body_hash: string;
+  status: DealDocumentView["status"];
+  created_at: string | null;
+  updated_at: string | null;
+  signatures: DealSignatureJson[] | null;
 }
 
 /** The shape document_find_by_token builds. Snake-cased because it comes
@@ -173,6 +210,39 @@ export function createSupabaseDocumentStore(config: {
         p_user_agent: input.userAgent,
       }),
 
+    async listDealDocuments(dealId) {
+      // coalesce in the RPC means '[]' rather than null for a deal with no
+      // documents, so there is nothing to distinguish here. A failed call has
+      // already thrown out of rpc().
+      const rows = await rpc<DealDocumentJson[]>("document_list_for_deal", {
+        p_deal_id: dealId,
+      });
+      return rows.map((row) => ({
+        id: row.id,
+        docType: row.doc_type,
+        title: row.title,
+        body: row.body,
+        bodyHash: row.body_hash,
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        signatures: (row.signatures ?? []).map(
+          (signature): DealSignatureView => ({
+            id: signature.id,
+            recipientName: signature.recipient_name,
+            recipientEmail: signature.recipient_email,
+            status: signature.status,
+            sentAt: signature.sent_at,
+            expiresAt: signature.expires_at,
+            viewedAt: signature.viewed_at,
+            signedAt: signature.signed_at,
+            signedName: signature.signed_name,
+            documentHash: signature.document_hash,
+          }),
+        ),
+      }));
+    },
+
     async dealHasSignedSow(dealId) {
       // The one method that catches, and the divergence is the point.
       //
@@ -191,6 +261,16 @@ export function createSupabaseDocumentStore(config: {
       } catch {
         return false;
       }
+    },
+
+    // Does NOT catch, and the divergence from dealHasSignedSow above is
+    // deliberate in the other direction. That one is a gate, so an unanswerable
+    // check has to read as "no". This one is a status line a human reads: an
+    // unanswerable check that silently rendered "deposit not paid" would be the
+    // system asserting a financial fact it never established. Let it throw and
+    // let the caller say it could not tell.
+    async dealDepositPaid(dealId) {
+      return (await rpc<boolean | null>("deal_deposit_paid", { p_deal_id: dealId })) === true;
     },
   };
 }

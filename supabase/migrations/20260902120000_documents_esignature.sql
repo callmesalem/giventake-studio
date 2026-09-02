@@ -319,3 +319,105 @@ $$;
 
 revoke all on function public.document_mark_signed(uuid, text, text, text, text) from public;
 grant execute on function public.document_mark_signed(uuid, text, text, text, text) to service_role;
+
+-- Everything the deal page needs about one deal's documents, in one call.
+--
+-- The operator UI is the other half of the hash snapshot: document_hash is
+-- copied onto each signature at send time, and unless a human can SEE that it
+-- no longer matches the document's current body_hash, the mismatch is recorded
+-- and never read. So body_hash and every signature's document_hash both travel,
+-- and src/server/documents/issue.ts's signatureIsStale compares them.
+--
+-- signing_token is DELIBERATELY ABSENT. It is a bearer credential - whoever
+-- holds it can sign the client's contract - and document_find_by_token is the
+-- only place it is ever readable. An operator listing does not need it, and a
+-- token that reaches a browser, a log, or a screenshot is a token that has
+-- left the building.
+--
+-- Returns '[]' rather than null for a deal with no documents, so the caller
+-- never has to distinguish "none" from "not answered".
+create or replace function public.document_list_for_deal(p_deal_id uuid)
+returns jsonb
+language sql
+security definer
+set search_path = public, pg_temp
+stable
+as $$
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', d.id,
+        'doc_type', d.doc_type,
+        'title', d.title,
+        'body', d.body,
+        'body_hash', d.body_hash,
+        'status', d.status,
+        'created_at', d.created_at,
+        'updated_at', d.updated_at,
+        'signatures', coalesce(s.rows, '[]'::jsonb)
+      )
+      order by d.created_at desc
+    ),
+    '[]'::jsonb
+  )
+  from documents d
+  left join lateral (
+    select jsonb_agg(
+             jsonb_build_object(
+               'id', sg.id,
+               'recipient_name', sg.recipient_name,
+               'recipient_email', sg.recipient_email,
+               'status', sg.status,
+               'sent_at', sg.sent_at,
+               'expires_at', sg.expires_at,
+               'viewed_at', sg.viewed_at,
+               'signed_at', sg.signed_at,
+               'signed_name', sg.signed_name,
+               'document_hash', sg.document_hash
+             )
+             order by sg.sent_at desc
+           ) as rows
+    from document_signatures sg
+    where sg.document_id = d.id
+  ) s on true
+  where d.deal_id = p_deal_id;
+$$;
+
+revoke all on function public.document_list_for_deal(uuid) from public;
+grant execute on function public.document_list_for_deal(uuid) to service_role;
+
+-- Stage 4's OTHER condition, and the reason it lives here rather than in the
+-- gate: it is INFORMATIONAL ONLY.
+--
+-- The gate's wording is "Signed and paid before any code", but only the
+-- signature is asserted (see deal_has_signed_sow and advanceBlockedByUnsignedSow
+-- in src/lib/crm-guards.ts). Payment depends on Stripe reconciliation, and a
+-- webhook that arrives late, retries, or drops would block work that is
+-- genuinely signed and genuinely paid. crm-guards.ts says payment "is surfaced
+-- in the UI as an unmet condition a human can read and act on"; this function is
+-- what lets that sentence be true. NOTHING may call it to refuse an advance.
+--
+-- Two routes from an invoice to a deal, because both exist in the schema and
+-- either one is evidence: convert_won_deal stamps invoices.source_deal_id
+-- directly, and projects.deal_id links the project the invoice was raised
+-- against. Synthetic rows are excluded for the same reason deal_has_signed_sow
+-- excludes them - fixture money is not payment.
+create or replace function public.deal_deposit_paid(p_deal_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public, pg_temp
+stable
+as $$
+  select exists (
+    select 1
+    from invoices i
+    left join projects p on p.id = i.project_id
+    where i.paid_at is not null
+      and not coalesce(i.synthetic, false)
+      and (i.source_deal_id = p_deal_id or p.deal_id = p_deal_id)
+  );
+$$;
+
+revoke all on function public.deal_deposit_paid(uuid) from public;
+grant execute on function public.deal_deposit_paid(uuid) to service_role;

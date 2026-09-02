@@ -50,6 +50,19 @@
     // Salem reads - so notifications sent successfully and went nowhere.
     "INTAKE_TO_EMAIL": "build@giventakedevs.com",
 
+    // Absolute origin for links that leave this Worker and are opened later,
+    // elsewhere, by someone who never made a request to it. Today that is the
+    // signing link in a signature-request email (src/server/documents/
+    // deal-actions.ts): a relative path there is not a degraded link, it is a
+    // dead one inside a contract, so an unset value REFUSES THE SEND rather
+    // than mailing something useless. It is a plain value, so per the warning
+    // above it belongs in this file - setting it only in the dashboard means
+    // the next deploy drops it and signature sends start refusing again.
+    //
+    // The public site, not the CRM host: the signer is a client, not an
+    // operator, and /sign/$token is deliberately unauthenticated.
+    "SITE_BASE_URL": "https://giventakedevs.com",
+
     // NOT YET SET - the send tick is a no-op until they are. CAMPAIGN_REPLY_TO
     // and CAMPAIGN_UNSUBSCRIBE_BASE are plain values, so per the warning above
     // they belong in this block: setting them only in the dashboard means the
