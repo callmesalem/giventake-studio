@@ -146,3 +146,41 @@ test("a failed markStatusByMessageId throws so the caller can retry", async () =
   }));
   await assert.rejects(() => s.markStatusByMessageId("msg-9", "bounced", "bounced", {}));
 });
+
+/* A `returns void` RPC answers 204 with an empty body, and json() throws on
+ * empty. The fakes above all return 200 with parseable JSON, which is why this
+ * gap survived a green suite: the mock encoded the assumption rather than
+ * PostgREST's behaviour. This fake behaves like the real thing. */
+const noContent = () => ({
+  ok: true,
+  status: 204,
+  async json() {
+    throw new SyntaxError("Unexpected end of JSON input");
+  },
+});
+
+test("recordResult resolves on a 204, the way a void RPC really answers", async () => {
+  const s = store(async () => noContent());
+  await assert.doesNotReject(() => s.recordResult("e1", 2, "sent", "msg-9"));
+});
+
+test("markStatus resolves on a 204", async () => {
+  const s = store(async () => noContent());
+  await assert.doesNotReject(() => s.markStatus("e1", "active", true, "sent", { step: 0 }));
+});
+
+test("markStatusByMessageId resolves on a 204", async () => {
+  const s = store(async () => noContent());
+  await assert.doesNotReject(() => s.markStatusByMessageId("msg-9", "bounced", "bounced", {}));
+});
+
+test("a real failure still throws — the 204 guard must not swallow errors", async () => {
+  const s = store(async () => ({
+    ok: false,
+    status: 500,
+    async json() {
+      return {};
+    },
+  }));
+  await assert.rejects(() => s.recordResult("e1", 2, "sent", "msg-9"));
+});

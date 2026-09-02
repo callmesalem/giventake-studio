@@ -28,6 +28,22 @@ export function createSupabaseCampaignStore(config: {
       body: JSON.stringify(body),
     });
     if (!response.ok) throw new Error(`campaign rpc ${name} failed: ${response.status}`);
+
+    // PostgREST answers a `returns void` function with 204 and an EMPTY body,
+    // and response.json() throws on empty. 204 is ok, so it clears the guard
+    // above and then dies parsing nothing - turning a successful write into a
+    // thrown error. Three RPCs here return void: campaign_record_result,
+    // campaign_mark_status and campaign_mark_by_message.
+    //
+    // Nothing here catches, deliberately, so the runner sees genuine failures.
+    // That is exactly why this must not manufacture a fake one: a throw on
+    // success would make the runner treat a recorded send as unrecorded.
+    //
+    // Never fired in production because the engine has never run - the runner
+    // refuses to claim rows until CAMPAIGN_TOKEN_SECRET is set. It would have
+    // fired on the first send.
+    if (response.status === 204) return undefined as T;
+
     return (await response.json()) as T;
   }
 
