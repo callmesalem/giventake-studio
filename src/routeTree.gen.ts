@@ -27,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as CrmIndexRouteImport } from './routes/crm.index'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
+import { Route as SignTokenRouteImport } from './routes/sign.$token'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as CrmTeamRouteImport } from './routes/crm.team'
 import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
@@ -143,6 +144,11 @@ const CrmIndexRoute = CrmIndexRouteImport.update({
 const ArticlesIndexRoute = ArticlesIndexRouteImport.update({
   id: '/articles/',
   path: '/articles/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignTokenRoute = SignTokenRouteImport.update({
+  id: '/sign/$token',
+  path: '/sign/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/sign/$token': typeof SignTokenRoute
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/sign/$token': typeof SignTokenRoute
   '/articles': typeof ArticlesIndexRoute
   '/crm': typeof CrmIndexRoute
   '/services': typeof ServicesIndexRoute
@@ -407,6 +415,7 @@ export interface FileRoutesById {
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/sign/$token': typeof SignTokenRoute
   '/articles/': typeof ArticlesIndexRoute
   '/crm/': typeof CrmIndexRoute
   '/services/': typeof ServicesIndexRoute
@@ -456,6 +465,7 @@ export interface FileRouteTypes {
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
+    | '/sign/$token'
     | '/articles/'
     | '/crm/'
     | '/services/'
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
+    | '/sign/$token'
     | '/articles'
     | '/crm'
     | '/services'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/crm/tasks'
     | '/crm/team'
     | '/services/$slug'
+    | '/sign/$token'
     | '/articles/'
     | '/crm/'
     | '/services/'
@@ -583,6 +595,7 @@ export interface RootRouteChildren {
   WorkRoute: typeof WorkRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
+  SignTokenRoute: typeof SignTokenRoute
   ArticlesIndexRoute: typeof ArticlesIndexRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
   ApiUnsubscribeTokenRoute: typeof ApiUnsubscribeTokenRoute
@@ -715,6 +728,13 @@ declare module '@tanstack/react-router' {
       path: '/articles'
       fullPath: '/articles/'
       preLoaderRoute: typeof ArticlesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign/$token': {
+      id: '/sign/$token'
+      path: '/sign/$token'
+      fullPath: '/sign/$token'
+      preLoaderRoute: typeof SignTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services/$slug': {
@@ -993,6 +1013,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorkRoute: WorkRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,
+  SignTokenRoute: SignTokenRoute,
   ArticlesIndexRoute: ArticlesIndexRoute,
   ServicesIndexRoute: ServicesIndexRoute,
   ApiUnsubscribeTokenRoute: ApiUnsubscribeTokenRoute,
