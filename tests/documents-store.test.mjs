@@ -137,7 +137,7 @@ test("createSignatureRequest returns the id and the token the RPC minted", async
     documentId: "doc-1",
     recipientName: "Ada",
     recipientEmail: "ada@example.com",
-    documentHash: "h1",
+    expectedHash: "h1",
     sentBy: null,
   });
   assert.deepEqual(r, { id: "sig-1", signingToken: "tok-abc" });
@@ -300,4 +300,39 @@ test("the store imports no auth SDK and reaches no table directly", async () => 
   // for both tables with no policies, so /rest/v1/documents reads as empty
   // rather than as an error.
   assert.doesNotMatch(src, /\/rest\/v1\/(?!rpc\/)/);
+});
+
+test("createSignatureRequest sends the hash as p_expected_hash, and no body", async () => {
+  // The RPC snapshots body and body_hash off the documents row. Anything this
+  // layer sent for storage would be evidence chosen by the caller.
+  let body;
+  const s = store(async (_url, init) => {
+    body = JSON.parse(init.body);
+    return ok({ id: "sig-1", signing_token: "tok-abc" });
+  });
+  await s.createSignatureRequest({
+    documentId: "doc-1",
+    recipientName: "Ada",
+    recipientEmail: "ada@example.com",
+    expectedHash: "h1",
+    sentBy: "u1",
+  });
+  assert.equal(body.p_expected_hash, "h1");
+  assert.equal(body.p_document_id, "doc-1");
+  assert.ok(!("p_document_hash" in body), "the stored hash is not the caller to give");
+  assert.ok(!("p_body" in body) && !("p_signed_body" in body), "nor the bytes");
+});
+
+test("createSignatureRequest resolves null when the RPC refuses to write", async () => {
+  // A null jsonb is how the function reports a stale expected hash or a
+  // missing document. No row exists, so no id may be handed back.
+  const s = store(async () => ok(null));
+  const r = await s.createSignatureRequest({
+    documentId: "doc-1",
+    recipientName: "Ada",
+    recipientEmail: "ada@example.com",
+    expectedHash: "stale",
+    sentBy: null,
+  });
+  assert.equal(r, null);
 });

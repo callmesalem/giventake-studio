@@ -17,7 +17,7 @@ const doc = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 /** Records what it was given rather than persisting anything, so a test can
  *  assert on the exact shape a real store would receive. */
-function fakeStore() {
+function fakeStore({ refuse = false } = {}) {
   const documents = [];
   const bodyUpdates = [];
   const signatureRequests = [];
@@ -37,6 +37,9 @@ function fakeStore() {
       bodyUpdates.push(input);
     },
     async createSignatureRequest(input) {
+      // `refuse` is the RPC declining because the document moved on since the
+      // caller read it: nothing is written, and null comes back.
+      if (refuse) return null;
       const id = `sig-${nextSigId++}`;
       const signingToken = `token-${id}`;
       signatureRequests.push(input);
@@ -164,24 +167,20 @@ test("editing changes the hash — two different bodies produce different hashes
 
 // --- requestSignature: the hash copy is the entire point of this task ----
 
-test("requestSignature copies the document hash onto the signature row", async () => {
+test("requestSignature raises one request against the document it was given", async () => {
   const store = fakeStore();
-  const documentHash = "a".repeat(64);
 
   await requestSignature(store, {
     documentId: "doc-1",
-    bodyHash: documentHash,
+    bodyHash: "a".repeat(64),
     recipientName: "Ada Lovelace",
     recipientEmail: "ada@example.com",
     sentBy: "owner-1",
   });
 
   assert.equal(store.signatureRequests.length, 1);
-  assert.equal(
-    store.signatureRequests[0].documentHash,
-    documentHash,
-    "the signature row's documentHash must equal the document's current bodyHash",
-  );
+  assert.equal(store.signatureRequests[0].documentId, "doc-1");
+  assert.equal(store.signatureRequests[0].recipientEmail, "ada@example.com");
 });
 
 test("requestSignature returns what createSignatureRequest returns", async () => {
@@ -209,4 +208,47 @@ test("signatureIsStale is true when the document has been edited since the signa
     signatureIsStale({ bodyHash: "new-hash-after-edit" }, { documentHash: "old-hash-at-send" }),
     true,
   );
+});
+
+test("requestSignature passes the caller hash as a PRECONDITION, not as the stored evidence", async () => {
+  // What gets stored is read off the documents row by the RPC. All this
+  // layer supplies is what it BELIEVES the document hashes to, so the
+  // database can refuse if the document has moved on. A caller that could
+  // name the stored hash could name evidence that never existed.
+  const store = fakeStore();
+  await requestSignature(store, {
+    documentId: "doc-1",
+    bodyHash: "c".repeat(64),
+    recipientName: "Ada Lovelace",
+    recipientEmail: "ada@example.com",
+    sentBy: "owner-1",
+  });
+
+  const sent = store.signatureRequests[0];
+  assert.equal(sent.expectedHash, "c".repeat(64));
+  assert.ok(
+    !("documentHash" in sent),
+    "the caller must not be able to dictate the hash stored on the signature",
+  );
+  assert.ok(
+    !("signedBody" in sent) && !("body" in sent),
+    "nor the bytes - the RPC snapshots those from the document itself",
+  );
+});
+
+test("requestSignature propagates the database refusal instead of inventing a request", async () => {
+  // The RPC writes nothing and answers null when the document has been
+  // edited since this caller read it. Reporting a signature request that does
+  // not exist would leave a contract looking sent and unsigned forever.
+  const store = fakeStore({ refuse: true });
+  const result = await requestSignature(store, {
+    documentId: "doc-1",
+    bodyHash: "stale",
+    recipientName: "Ada Lovelace",
+    recipientEmail: "ada@example.com",
+    sentBy: null,
+  });
+
+  assert.equal(result, null);
+  assert.equal(store.signatureRequests.length, 0);
 });

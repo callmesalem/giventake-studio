@@ -45,13 +45,22 @@ export interface IssueStore {
     status: "draft" | "final";
   }): Promise<void>;
 
+  /** Ask the database to snapshot the document and raise a signature request
+   *  against it.
+   *
+   *  `expectedHash` is a PRECONDITION, not the hash to store. The RPC reads
+   *  body and body_hash off the documents row itself and stores both, so no
+   *  caller gets to decide what the evidence says. If the document has moved
+   *  on since this caller read it, the RPC writes nothing and this resolves to
+   *  null - which the caller must treat as a stale-hash refusal, never as a
+   *  request that was sent. */
   createSignatureRequest(input: {
     documentId: string;
     recipientName: string;
     recipientEmail: string;
-    documentHash: string;
+    expectedHash: string;
     sentBy: string | null;
-  }): Promise<{ id: string; signingToken: string }>;
+  }): Promise<{ id: string; signingToken: string } | null>;
 }
 
 export type DraftInput = {
@@ -139,10 +148,16 @@ export async function finaliseDraft(
 }
 
 /**
- * Send a finalised document out for signature. `bodyHash` is the document's
- * current hash, copied onto the signature row as `documentHash`. That copy is
- * the entire point of this module: it freezes what was actually shown to the
- * signer, independently of whatever the document row says later.
+ * Send a finalised document out for signature.
+ *
+ * `bodyHash` is what the caller believes the document currently hashes to. It
+ * is passed as a PRECONDITION and is not what gets stored: the RPC snapshots
+ * the body and the hash from the documents row itself, so the record of what
+ * was signed cannot be chosen by anything up here.
+ *
+ * Resolves to null when the database refuses - the document is gone, or it has
+ * been edited since this caller read it. Nothing was written in that case, and
+ * the caller must not report a request that does not exist.
  */
 export function requestSignature(
   store: IssueStore,
@@ -153,12 +168,12 @@ export function requestSignature(
     recipientEmail: string;
     sentBy: string | null;
   },
-): Promise<{ id: string; signingToken: string }> {
+): Promise<{ id: string; signingToken: string } | null> {
   return store.createSignatureRequest({
     documentId: input.documentId,
     recipientName: input.recipientName,
     recipientEmail: input.recipientEmail,
-    documentHash: input.bodyHash,
+    expectedHash: input.bodyHash,
     sentBy: input.sentBy,
   });
 }

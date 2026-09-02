@@ -186,3 +186,71 @@ test("every document RPC is a definer function pinned to a safe search_path", ()
   assert.equal(definers.length, 9);
   assert.equal(paths.length, 9);
 });
+
+// --- the evidentiary record ------------------------------------------------
+//
+// A hash with no preimage can only prove that what you hold is NOT what was
+// signed. It cannot produce what was, and documents.body is overwritten in
+// place with no version history. The snapshot is what makes the record mean
+// something in a dispute.
+
+test("the signature row stores the BYTES that were signed, not only their hash", () => {
+  assert.match(sql, /signed_body\s+text\s+not null/i);
+});
+
+test("document_request_signature snapshots from the documents row, not from the caller", () => {
+  const start = sql.search(/create or replace function public\.document_request_signature\b/i);
+  const fn = sql.slice(start, sql.indexOf("$$;", start));
+
+  // It reads the body and the hash off the document itself...
+  assert.match(fn, /select body, body_hash/i);
+  assert.match(fn, /from documents/i);
+  assert.match(fn, /where id = p_document_id/i);
+
+  // ...and inserts those, not anything the caller passed.
+  assert.match(fn, /insert into document_signatures\s*\([^)]*signed_body[^)]*\)/i);
+  assert.match(fn, /values\s*\([^)]*v_hash, v_body[^)]*\)/i);
+  assert.doesNotMatch(fn, /p_document_hash/i, "the caller must not name the stored hash");
+});
+
+test("the caller hash is a precondition: a stale one writes nothing", () => {
+  const start = sql.search(/create or replace function public\.document_request_signature\b/i);
+  const fn = sql.slice(start, sql.indexOf("$$;", start));
+
+  assert.match(fn, /p_expected_hash text/i, "the parameter is named for what it is");
+  // `is distinct from`, not `<>`: a null on either side must refuse rather
+  // than yield null and fall through the if as though it had matched.
+  assert.match(fn, /if v_hash is distinct from p_expected_hash then\s*return null;/i);
+  // An unknown document id is the same answer, for the same reason.
+  assert.match(fn, /if not found then\s*return null;/i);
+
+  // The refusal must come BEFORE the insert, or it refuses nothing.
+  assert.ok(
+    fn.search(/is distinct from p_expected_hash/i) < fn.search(/insert into document_signatures/i),
+    "the precondition must be checked before the row is written",
+  );
+});
+
+test("the sign page is served the snapshot, not the mutable document body", () => {
+  // Serving documents.body would show a signer one document while recording
+  // the hash of another, every time the document is edited after sending.
+  const start = sql.search(/create or replace function public\.document_find_by_token\b/i);
+  const fn = sql.slice(start, sql.indexOf("$$;", start));
+  assert.match(fn, /'body', s\.signed_body/i);
+  assert.doesNotMatch(fn, /'body', d\.body/i);
+});
+
+// --- grants ----------------------------------------------------------------
+
+test("both tables revoke the default anon/authenticated grants, not just enable RLS", () => {
+  // Postgres' default ACL grants ALL on a new table to anon and authenticated.
+  // RLS with no policies denies every row today, so this is defence in depth -
+  // but it is one permissive policy away from signed contracts being readable
+  // with the publishable key, and every sibling migration does both.
+  assert.match(sql, /alter table public\.documents enable row level security/i);
+  assert.match(sql, /alter table public\.document_signatures enable row level security/i);
+  assert.match(
+    sql,
+    /revoke all on table public\.documents, public\.document_signatures from anon, authenticated;/i,
+  );
+});

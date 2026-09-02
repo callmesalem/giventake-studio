@@ -33,11 +33,21 @@ create index if not exists documents_deal_idx on public.documents (deal_id) wher
 
 -- One row per requested signature.
 --
--- document_hash is a COPY, taken when the request is sent. It is not a
--- duplicate of documents.body_hash by accident: editing the document afterwards
--- must not retroactively change what was signed, and a mismatch between the two
--- is how a signature against a superseded version becomes detectable instead of
--- silent.
+-- signed_body and document_hash are a COPY of the document, taken when the
+-- request is sent, and together they are the evidentiary record.
+--
+-- The hash alone was not. documents.body is overwritten in place by
+-- document_update_body and there is no version history, so a stored hash with
+-- no preimage can only ever prove that what you still hold is NOT what was
+-- signed. It cannot produce what was. In a dispute that is worse than useless,
+-- because the party relying on it is the one who loses.
+--
+-- So the bytes travel with the hash. Editing the document afterwards changes
+-- neither, and a mismatch between document_hash and the document row is how a
+-- signature against a superseded version stays detectable instead of silent.
+--
+-- Both are written by document_request_signature FROM THE DOCUMENTS ROW, never
+-- from a caller-supplied value - see the note on that function.
 --
 -- consent_text is stored verbatim for the same reason. Proving somebody
 -- consented requires knowing what they were shown, and that wording will be
@@ -61,6 +71,11 @@ create table if not exists public.document_signatures (
   signed_name text,
   consent_text text,
   document_hash text not null,
+
+  -- The preimage of document_hash: the exact bytes this recipient was asked to
+  -- sign. not null because document_request_signature is the only thing that
+  -- writes this table, and it always has the body in hand.
+  signed_body text not null,
   declined_reason text,
   signature_ip text,
   signature_user_agent text,
@@ -105,6 +120,19 @@ grant execute on function public.deal_has_signed_sow(uuid) to service_role;
 
 alter table public.documents enable row level security;
 alter table public.document_signatures enable row level security;
+
+-- RLS is not the whole lock, and these were the only tables in the schema
+-- treating it as though it were.
+--
+-- Postgres' default ACL grants ALL on a new table to anon and authenticated,
+-- so on `db push` both of these would be created carrying those grants. RLS
+-- with no policies denies every row today, so nothing leaks - but that leaves
+-- one permissive policy standing between signed contracts and anybody holding
+-- the publishable key.
+--
+-- Every sibling migration revokes as well as enabling; see
+-- 20260814133600_operator_control_foundation.sql. These now match.
+revoke all on table public.documents, public.document_signatures from anon, authenticated;
 
 -- The RPC surface.
 --
@@ -188,11 +216,28 @@ grant execute on function public.document_update_body(uuid, text, text, text) to
 -- signing_token comes from the column default, never from the caller, so the
 -- token is unguessable by construction. Returning it here is the only time it
 -- is readable, which is why this returns an object rather than just an id.
+--
+-- The snapshot is taken FROM THE DOCUMENTS ROW, inside this function. The
+-- caller does not supply the bytes or the hash to store, because a caller that
+-- can choose the evidence can choose evidence that never existed - and the
+-- whole value of this record is that nothing upstream of the database picked
+-- it.
+--
+-- p_expected_hash is therefore a PRECONDITION, not data. It is what the caller
+-- believes it is sending, and if the document has moved on since the caller
+-- read it - another tab finalised an edit, the page has been open a while -
+-- this writes nothing and returns null. The TypeScript layer already refuses
+-- on a stale hash before calling; asserting it here as well closes the window
+-- between that read and this insert, and makes the guarantee a property of the
+-- table rather than of remembering to check.
+--
+-- Null is also the answer for an unknown document id, for the same reason: no
+-- row was written, and the caller must not be told one was.
 create or replace function public.document_request_signature(
   p_document_id uuid,
   p_recipient_name text,
   p_recipient_email text,
-  p_document_hash text,
+  p_expected_hash text,
   p_sent_by uuid
 )
 returns jsonb
@@ -203,12 +248,30 @@ as $$
 declare
   v_id uuid;
   v_token text;
+  v_body text;
+  v_hash text;
 begin
+  select body, body_hash
+    into v_body, v_hash
+    from documents
+   where id = p_document_id;
+
+  if not found then
+    return null;
+  end if;
+
+  -- "is distinct from" rather than "<>": a null on either side must refuse,
+  -- and "<>" would yield null, which the if treats as not-true and would fall
+  -- straight through to the insert.
+  if v_hash is distinct from p_expected_hash then
+    return null;
+  end if;
+
   insert into document_signatures (
-    document_id, recipient_name, recipient_email, document_hash, sent_by
+    document_id, recipient_name, recipient_email, document_hash, signed_body, sent_by
   )
   values (
-    p_document_id, p_recipient_name, p_recipient_email, p_document_hash, p_sent_by
+    p_document_id, p_recipient_name, p_recipient_email, v_hash, v_body, p_sent_by
   )
   returning id, signing_token into v_id, v_token;
 
@@ -221,10 +284,21 @@ grant execute on function public.document_request_signature(uuid, text, text, te
 
 -- Everything the public sign page needs, in one round trip.
 --
--- The document's title and body are joined in rather than fetched separately:
--- two calls could straddle an edit and render a body that does not match the
--- hash shown beside it. Returns null when the token is unknown - a stale link
--- is an ordinary outcome, not an error.
+-- The body served here is the SIGNATURE'S snapshot, not documents.body. They
+-- are the same bytes at send time and can diverge afterwards, because
+-- document_update_body overwrites the document in place. Serving the live body
+-- would show a signer one document while recording the hash of another;
+-- serving the snapshot means the page, the hash, and the stored preimage are
+-- all the same thing.
+--
+-- A post-send edit is surfaced to the OPERATOR instead, by signatureIsStale
+-- comparing document_hash against the document's current body_hash. The
+-- remedy for one is to send a fresh request, never to move the request
+-- already in flight under the person reading it.
+--
+-- The title still comes from the document: it is a label on the page, not part
+-- of the signed bytes. Returns null when the token is unknown - a stale link is
+-- an ordinary outcome, not an error.
 create or replace function public.document_find_by_token(p_token text)
 returns jsonb
 language sql
@@ -244,7 +318,7 @@ as $$
     'signed_name', s.signed_name,
     'document_hash', s.document_hash,
     'title', d.title,
-    'body', d.body
+    'body', s.signed_body
   )
   from document_signatures s
   join documents d on d.id = s.document_id

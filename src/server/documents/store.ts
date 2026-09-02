@@ -23,13 +23,22 @@ export interface DocumentStore {
     status: "draft" | "final";
   }): Promise<void>;
 
+  /** Ask the database to snapshot the document and raise a signature request
+   *  against it.
+   *
+   *  `expectedHash` is a PRECONDITION, not the hash to store. The RPC reads
+   *  body and body_hash off the documents row itself and stores both, so no
+   *  caller gets to decide what the evidence says. If the document has moved
+   *  on since this caller read it, the RPC writes nothing and this resolves to
+   *  null - which the caller must treat as a stale-hash refusal, never as a
+   *  request that was sent. */
   createSignatureRequest(input: {
     documentId: string;
     recipientName: string;
     recipientEmail: string;
-    documentHash: string;
+    expectedHash: string;
     sentBy: string | null;
-  }): Promise<{ id: string; signingToken: string }>;
+  }): Promise<{ id: string; signingToken: string } | null>;
 
   findByToken(token: string): Promise<(SignatureRow & { body: string; title: string }) | null>;
   markViewed(id: string): Promise<void>;
@@ -167,13 +176,20 @@ export function createSupabaseDocumentStore(config: {
       }),
 
     async createSignatureRequest(input) {
-      const row = await rpc<{ id: string; signing_token: string }>("document_request_signature", {
-        p_document_id: input.documentId,
-        p_recipient_name: input.recipientName,
-        p_recipient_email: input.recipientEmail,
-        p_document_hash: input.documentHash,
-        p_sent_by: input.sentBy,
-      });
+      const row = await rpc<{ id: string; signing_token: string } | null>(
+        "document_request_signature",
+        {
+          p_document_id: input.documentId,
+          p_recipient_name: input.recipientName,
+          p_recipient_email: input.recipientEmail,
+          p_expected_hash: input.expectedHash,
+          p_sent_by: input.sentBy,
+        },
+      );
+      // Null is the RPC refusing: no such document, or its body_hash no longer
+      // matches what this caller believed it was sending. Nothing was written,
+      // so nothing may be reported as sent.
+      if (!row) return null;
       return { id: row.id, signingToken: row.signing_token };
     },
 

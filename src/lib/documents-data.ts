@@ -252,13 +252,18 @@ export const sendForSignature = createServerFn({ method: "POST" })
     if (document.bodyHash !== data.bodyHash) return { ok: false, reason: "hash-mismatch" };
 
     const { requestSignature } = await import("@/server/documents/issue");
-    const { signingToken } = await requestSignature(store, {
+    const request = await requestSignature(store, {
       documentId: data.documentId,
       bodyHash: document.bodyHash,
       recipientName: data.recipientName,
       recipientEmail: data.recipientEmail,
       sentBy: session.userId,
     });
+    // The database re-checks the hash against the row it is about to snapshot,
+    // and refuses by writing nothing. That covers the window the check above
+    // cannot: a concurrent finalise landing between the read and this call.
+    // Same answer either way - reload and look at what you are sending.
+    if (!request) return { ok: false, reason: "hash-mismatch" };
 
     const { sendSignatureRequest } = await import("@/server/documents/mailer");
     const { sendMail } = await import("./intake");
@@ -270,7 +275,7 @@ export const sendForSignature = createServerFn({ method: "POST" })
       to: data.recipientEmail,
       recipientName: data.recipientName,
       documentTitle: document.title,
-      signUrl: `${base}/sign/${encodeURIComponent(signingToken)}`,
+      signUrl: `${base}/sign/${encodeURIComponent(request.signingToken)}`,
       // Replies go to the operator who sent it, not a shared inbox nobody
       // watches. Someone answering a contract email must reach a person.
       replyTo: session.email,
