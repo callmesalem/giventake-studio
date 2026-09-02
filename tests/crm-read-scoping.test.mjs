@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { CrmRead } from "../src/server/crm/read.ts";
 
 const CONFIG = { url: "https://example.supabase.co", serviceRoleKey: "svc-key" };
@@ -20,6 +21,21 @@ const LEADS = [
 ];
 const INVOICES = [{ id: "inv1", owner_id: "u-other" }];
 
+/** Apply the request's `select=` list to the stub rows.
+ *
+ *  Not a detail: the scope filter reads owner_id / assigned_to off the row it
+ *  is handed, so a projection that omits them silently changes the answer. A
+ *  stub that ignores `select` cannot reproduce that, which is why a caller
+ *  reading deals as "id,name" looked fine in tests and 404d in production. */
+function project(rows, url) {
+  const select = new URL(url).searchParams.get("select");
+  if (!select || select === "*") return rows;
+  const keep = select.split(",").map((c) => c.trim());
+  return rows.map((row) =>
+    Object.fromEntries(Object.entries(row).filter(([key]) => keep.includes(key))),
+  );
+}
+
 /** Stub fetch: route by table / rpc name in the url. */
 function stubFetch(url) {
   const body = url.includes("/rpc/leads_list")
@@ -31,7 +47,9 @@ function stubFetch(url) {
         : url.includes("/rest/v1/invoices")
           ? INVOICES
           : [];
-  return { ok: true, status: 200, json: async () => body };
+  // RPC results are a POST body, not a projected REST select.
+  const rows = url.includes("/rpc/") ? body : project(body, url);
+  return { ok: true, status: 200, json: async () => rows };
 }
 
 function reader(actor) {
@@ -116,4 +134,50 @@ test("without the leads_list owner-fields migration a member sees no leads at al
   // An admin is unaffected, which is why this would not show up in owner testing.
   const admin = new CrmRead({ ...CONFIG, fetch: fetchLegacy });
   assert.deepEqual(ids(await admin.listLeads()), ["l1", "l2", "l3"]);
+});
+
+/**
+ * The projection is part of the authorisation check.
+ *
+ * #scope filters on owner_id / assigned_to, and it can only read what the
+ * select asked for. Omit those columns and the predicate is `undefined === me`
+ * for every row: the filter drops everything, silently, and a member is told
+ * the record does not exist. There is no error and no log line — the read
+ * simply comes back empty, which reads exactly like "no such row".
+ *
+ * src/lib/documents-data.ts read the deal as "id,name" and every non-admin
+ * therefore 404d on a deal they owned, taking all four document server
+ * functions with it.
+ */
+test("a scoped read whose projection omits the ownership columns hides the member's own row", async () => {
+  const r = reader({ id: "u-me", isAdmin: false });
+  assert.equal(
+    await r.getById("deals", "d1", "id,name"),
+    null,
+    "d1 is owned by u-me; it disappears only because the filter cannot see owner_id",
+  );
+});
+
+test("the same read WITH the ownership columns returns the member's own deal", async () => {
+  const r = reader({ id: "u-me", isAdmin: false });
+  const deal = await r.getById("deals", "d1", "id,name,owner_id,assigned_to");
+  assert.equal(deal?.id, "d1");
+});
+
+test("an admin is unaffected by the projection, which is why this hid", async () => {
+  const admin = reader(undefined);
+  const deal = await admin.getById("deals", "d1", "id,name");
+  assert.equal(deal?.id, "d1");
+});
+
+test("documents-data.ts reads the deal with the columns the scope filter needs", () => {
+  // The behavioural tests above pin the mechanism; this pins the call site the
+  // mechanism actually broke. Reverting the projection must fail the suite.
+  const source = readFileSync(new URL("../src/lib/documents-data.ts", import.meta.url), "utf8");
+  const match = source.match(/getById<[^(]*\(\s*"deals",\s*\w+,\s*"([^"]*)"/);
+  assert.ok(match, "documents-data.ts must still read the deal by id before serving documents");
+  const columns = match[1].split(",").map((c) => c.trim());
+  for (const column of ["owner_id", "assigned_to"]) {
+    assert.ok(columns.includes(column), `the deals projection must include ${column}`);
+  }
 });

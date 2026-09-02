@@ -81,7 +81,26 @@ export class CrmRead {
   /** Apply member row-visibility. Admins get everything; members are filtered
    *  to their owned/assigned rows per MEMBER_TABLE_POLICY. Filtering happens
    *  here, server-side, after the service-role read: PostgREST cannot see the
-   *  app-level user, so this app layer is the correct place to scope. */
+   *  app-level user, so this app layer is the correct place to scope.
+   *
+   *  THE PROJECTION IS PART OF THE FILTER. This reads owner_id / assigned_to
+   *  off the row it is handed, so a caller who leaves those columns out of the
+   *  select gets `undefined === me` for every row and an empty result. There is
+   *  no error: an empty result is indistinguishable from "no such row", so the
+   *  member is simply told the record does not exist, and an admin — who never
+   *  reaches this filter — sees the page working perfectly. That is how
+   *  documents-data.ts came to 404 every non-admin on a deal they owned.
+   *
+   *  Any read of a table whose visibility is "owned" (including the unlisted
+   *  tables, which default to it) MUST select owner_id and assigned_to.
+   *
+   *  Making this throw on a projection that cannot answer its own predicate was
+   *  considered and rejected as of this change: 16 of the 21 scoped reads in
+   *  crm-data.ts omit both columns today, and one test
+   *  (crm-read-scoping.test.mjs, the leads_list owner-fields migration case)
+   *  asserts the silent-empty behaviour on purpose as a deploy-ordering hazard.
+   *  Turning it into a throw would 500 the member dashboard rather than fix it;
+   *  those call sites need auditing on their own terms first. */
   #scope<T>(table: string, rows: T[]): T[] {
     if (this.#actor.isAdmin) return rows;
     const visibility = MEMBER_TABLE_POLICY[table] ?? "owned";

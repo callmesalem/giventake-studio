@@ -80,7 +80,17 @@ async function forDeal(dealId: string) {
     ...config(),
     actor: { id: session.userId, isAdmin: session.role === "admin" },
   });
-  const deal = await read.getById<Record<string, unknown>>("deals", dealId, "id,name");
+  // The projection is part of the check, not decoration. CrmRead scopes a
+  // member to rows where owner_id or assigned_to is them, and it applies that
+  // filter to the ROW IT WAS GIVEN. Selecting only "id,name" left both columns
+  // undefined, so the predicate was false for every row and a member 404d on a
+  // deal they own — taking all four document server functions with it. Any
+  // column the scope filter reads must be in the select.
+  const deal = await read.getById<Record<string, unknown>>(
+    "deals",
+    dealId,
+    "id,name,owner_id,assigned_to",
+  );
   if (!deal) throw new Response("Not found", { status: 404 });
 
   const { createSupabaseDocumentStore } = await import("@/server/documents/store");

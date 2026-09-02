@@ -39,9 +39,12 @@ export const Route = createFileRoute("/crm/deals/$id")({
     deal: await crmDeal({ data: { id: params.id } }),
     stages: await crmStages(),
     members: (await listAssignableMembers()).members,
-    // Never throws: listDealDocuments answers { available: false } when the
-    // documents schema cannot be reached, so a deal page in daily use does not
-    // 500 on an environment where the migration has not been applied yet.
+    // Degrades, but is not exception-free. listDealDocuments answers
+    // { available: false } when the documents schema cannot be reached, so a
+    // deal page does not 500 on an environment where the migration has not
+    // been applied yet. It DOES still throw a 404 Response when the caller may
+    // not see this deal — the same authorisation check crmDeal above makes,
+    // and the loader has already thrown on it by the time this line runs.
     documents: await listDealDocuments({ data: { dealId: params.id } }),
   }),
   component: Deal,
