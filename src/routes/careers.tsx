@@ -244,9 +244,19 @@ function RoleCard({ role }: { role: Role }) {
   );
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
 function ApplyForm() {
   const [outcome, setOutcome] = useState<"idle" | "sent" | "mailto">("idle");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /** Fallback when no mail provider is configured, mirrors the contact form. */
   function mailtoFallback(d: Record<string, string>) {
@@ -271,8 +281,27 @@ function ApplyForm() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const d = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
+    const fd = new FormData(e.currentTarget);
+    const d = Object.fromEntries(fd.entries()) as Record<string, string>;
     if (!d.name?.trim() || !d.email?.trim()) return;
+    setError(null);
+
+    // Optional résumé -> read as base64 for the email attachment.
+    let resume: { filename: string; base64: string } | undefined;
+    const file = fd.get("resume");
+    if (file instanceof File && file.size > 0) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Résumé must be under 5 MB.");
+        return;
+      }
+      try {
+        resume = { filename: file.name, base64: await fileToBase64(file) };
+      } catch {
+        setError("Couldn't read that file. Try another, or leave it off.");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const result = await submitApplication({
@@ -283,6 +312,7 @@ function ApplyForm() {
           role: d.role || undefined,
           links: d.links || undefined,
           message: d.message || undefined,
+          resume,
         },
       });
       if (result.status === "sent") setOutcome("sent");
@@ -335,6 +365,19 @@ function ApplyForm() {
               placeholder="A few lines on why you're a fit"
               aria-label="Message"
             />
+            <div>
+              <label htmlFor="resume" className="mb-2 block text-[13px] font-medium text-muted-ink">
+                Résumé (PDF or Word, optional, max 5 MB)
+              </label>
+              <input
+                id="resume"
+                type="file"
+                name="resume"
+                accept=".pdf,.doc,.docx,application/pdf"
+                className="block w-full text-[14px] text-muted-ink file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-white hover:file:opacity-90"
+              />
+            </div>
+            {error && <p className="text-[13px] text-red-600">{error}</p>}
             <button
               type="submit"
               disabled={submitting}

@@ -67,7 +67,9 @@ export const dsarSchema = z.object({
 
 export type DsarInput = z.infer<typeof dsarSchema>;
 
-/** Careers / job application form. Lightweight: contact + links + a short note. */
+/** Careers / job application form. Contact + links + a short note + optional résumé.
+ *  The résumé rides along as an email attachment (base64); it is NOT stored in the
+ *  DB. ~9M base64 chars caps the file at roughly 6.5 MB. */
 export const applicationSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   email: z.string().trim().email("Enter a valid email").max(255),
@@ -75,6 +77,12 @@ export const applicationSchema = z.object({
   role: z.string().trim().max(120).optional(),
   links: z.string().trim().max(500).optional(),
   message: z.string().trim().max(4000).optional(),
+  resume: z
+    .object({
+      filename: z.string().trim().min(1).max(200),
+      base64: z.string().min(1).max(9_000_000),
+    })
+    .optional(),
 });
 
 export type ApplicationInput = z.infer<typeof applicationSchema>;

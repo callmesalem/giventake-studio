@@ -164,6 +164,7 @@ async function sendMail(
   subject: string,
   text: string,
   replyTo: string,
+  attachments?: { filename: string; content: string }[],
 ): Promise<IntakeResult> {
   const apiKey = env("RESEND_API_KEY");
   const from = env("INTAKE_FROM_EMAIL");
@@ -176,7 +177,14 @@ async function sendMail(
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to: [to], subject, text, reply_to: replyTo }),
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        text,
+        reply_to: replyTo,
+        ...(attachments && attachments.length ? { attachments } : {}),
+      }),
     });
 
     if (!response.ok) {
@@ -307,12 +315,18 @@ export const submitApplication = createServerFn({ method: "POST" })
       "Message:",
       data.message || "(none)",
       "",
+      data.resume ? `Résumé: ${data.resume.filename} (attached)` : "Résumé: none",
       "Received via the website careers form.",
     ]
       .filter(Boolean)
       .join("\n");
 
-    // Store the application (best-effort, no send), then notify the human.
+    const attachments = data.resume
+      ? [{ filename: data.resume.filename, content: data.resume.base64 }]
+      : undefined;
+
+    // Store the text fields (best-effort, no send; résumé is emailed, not stored),
+    // then notify the human with the résumé attached.
     await persistApplication(data);
-    return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);
+    return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email, attachments);
   });
