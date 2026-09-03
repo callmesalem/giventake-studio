@@ -30,7 +30,6 @@ const nav = [
   { label: "Services", href: "/services" },
   { label: "Work", href: "/work" },
   { label: "Process", href: "/process" },
-  { label: "Guardrails", href: "/guardrails" },
   { label: "Pricing", href: "/pricing" },
   { label: "Careers", href: "/careers" },
 ];
@@ -190,7 +189,6 @@ export function SiteFooter() {
         { label: "Our process", href: "/process" },
         { label: "How we use AI", href: "/how-we-use-ai" },
         { label: "Articles", href: "/articles" },
-        { label: "Guardrails", href: "/guardrails" },
         { label: "FAQ", href: "/pricing#faq" },
       ],
     },
