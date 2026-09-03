@@ -23,6 +23,7 @@ import { Route as DataRequestRouteImport } from './routes/data-request'
 import { Route as CrmRouteImport } from './routes/crm'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ComplianceRouteImport } from './routes/compliance'
+import { Route as CareersRouteImport } from './routes/careers'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as CrmIndexRouteImport } from './routes/crm.index'
@@ -123,6 +124,11 @@ const CookiesRoute = CookiesRouteImport.update({
 const ComplianceRoute = ComplianceRouteImport.update({
   id: '/compliance',
   path: '/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -283,6 +289,7 @@ const ApiUnsubscribeTokenRoute = ApiUnsubscribeTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
   '/crm': typeof CrmRouteWithChildren
@@ -330,6 +337,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
   '/data-request': typeof DataRequestRoute
@@ -377,6 +385,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
   '/crm': typeof CrmRouteWithChildren
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/careers'
     | '/compliance'
     | '/cookies'
     | '/crm'
@@ -473,6 +483,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/careers'
     | '/compliance'
     | '/cookies'
     | '/data-request'
@@ -519,6 +530,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/careers'
     | '/compliance'
     | '/cookies'
     | '/crm'
@@ -567,6 +579,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CareersRoute: typeof CareersRoute
   ComplianceRoute: typeof ComplianceRoute
   CookiesRoute: typeof CookiesRoute
   CrmRoute: typeof CrmRouteWithChildren
@@ -687,6 +700,13 @@ declare module '@tanstack/react-router' {
       path: '/compliance'
       fullPath: '/compliance'
       preLoaderRoute: typeof ComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -977,6 +997,7 @@ const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CareersRoute: CareersRoute,
   ComplianceRoute: ComplianceRoute,
   CookiesRoute: CookiesRoute,
   CrmRoute: CrmRouteWithChildren,

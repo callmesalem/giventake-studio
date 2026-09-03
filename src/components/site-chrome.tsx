@@ -31,6 +31,7 @@ const nav = [
   { label: "Process", href: "/process" },
   { label: "Guardrails", href: "/guardrails" },
   { label: "Pricing", href: "/pricing" },
+  { label: "Careers", href: "/careers" },
 ];
 
 /** Links shown only in the mobile panel, where there's room for more. */
@@ -196,6 +197,7 @@ export function SiteFooter() {
       title: "Company",
       items: [
         { label: "Contact", href: "/#contact" },
+        { label: "Careers", href: "/careers" },
         { label: "Privacy", href: "/privacy" },
         { label: "Compliance", href: "/compliance" },
         { label: "Terms", href: "/terms" },
