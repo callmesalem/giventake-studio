@@ -5,6 +5,7 @@ import { IconArrowRight } from "@/components/marks";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { pageHead } from "@/lib/seo";
+import { submitApplication } from "@/lib/intake";
 
 export const Route = createFileRoute("/careers")({
   head: () =>
@@ -243,13 +244,22 @@ function RoleCard({ role }: { role: Role }) {
   );
 }
 
-function ApplyForm() {
-  const [sent, setSent] = useState(false);
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+}
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const d = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
-    if (!d.name?.trim() || !d.email?.trim()) return;
+function ApplyForm() {
+  const [outcome, setOutcome] = useState<"idle" | "sent" | "mailto">("idle");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /** Fallback when no mail provider is configured, mirrors the contact form. */
+  function mailtoFallback(d: Record<string, string>) {
     const subject = `Application · ${d.role || "General"} · ${d.name}`;
     const body = [
       `Name: ${d.name}`,
@@ -266,7 +276,52 @@ function ApplyForm() {
     window.location.href = `mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent(
       subject,
     )}&body=${encodeURIComponent(body)}`;
-    setSent(true);
+    setOutcome("mailto");
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const d = Object.fromEntries(fd.entries()) as Record<string, string>;
+    if (!d.name?.trim() || !d.email?.trim()) return;
+    setError(null);
+
+    // Optional résumé -> read as base64 for the email attachment.
+    let resume: { filename: string; base64: string } | undefined;
+    const file = fd.get("resume");
+    if (file instanceof File && file.size > 0) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Résumé must be under 5 MB.");
+        return;
+      }
+      try {
+        resume = { filename: file.name, base64: await fileToBase64(file) };
+      } catch {
+        setError("Couldn't read that file. Try another, or leave it off.");
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await submitApplication({
+        data: {
+          name: d.name,
+          email: d.email,
+          phone: d.phone || undefined,
+          role: d.role || undefined,
+          links: d.links || undefined,
+          message: d.message || undefined,
+          resume,
+        },
+      });
+      if (result.status === "sent") setOutcome("sent");
+      else mailtoFallback(d); // unconfigured or error -> hand off to the mail client
+    } catch {
+      mailtoFallback(d);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -278,9 +333,11 @@ function ApplyForm() {
           always glad to meet strong people.
         </p>
 
-        {sent ? (
+        {outcome !== "idle" ? (
           <p className="mt-8 rounded-lg border border-hairline bg-background p-5 text-[15px] text-ink">
-            Thanks. Your email draft is ready, just hit send and we'll be in touch.
+            {outcome === "sent"
+              ? "Thanks, we've got your application and we'll be in touch."
+              : "Your email draft is ready, just hit send and we'll be in touch."}
           </p>
         ) : (
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -308,11 +365,25 @@ function ApplyForm() {
               placeholder="A few lines on why you're a fit"
               aria-label="Message"
             />
+            <div>
+              <label htmlFor="resume" className="mb-2 block text-[13px] font-medium text-muted-ink">
+                Résumé (PDF or Word, optional, max 5 MB)
+              </label>
+              <input
+                id="resume"
+                type="file"
+                name="resume"
+                accept=".pdf,.doc,.docx,application/pdf"
+                className="block w-full text-[14px] text-muted-ink file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-white hover:file:opacity-90"
+              />
+            </div>
+            {error && <p className="text-[13px] text-red-600">{error}</p>}
             <button
               type="submit"
-              className="btn-icon-nudge inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90"
+              disabled={submitting}
+              className="btn-icon-nudge inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90 disabled:opacity-60"
             >
-              Send application
+              {submitting ? "Sending…" : "Send application"}
               <IconArrowRight className="h-4 w-4" />
             </button>
           </form>

@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { LogoMark, IconMenu, IconClose } from "@/components/marks";
 import { useConsent } from "@/lib/use-consent";
 import { offers } from "@/lib/offers";
+import { SiteAssistant } from "@/components/site-assistant";
 
 /**
  * Header and footer render on every route, so section links MUST be
@@ -281,6 +282,7 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
+      <SiteAssistant />
     </footer>
   );
 }
