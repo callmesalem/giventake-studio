@@ -1,27 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { SiteHeader, SiteFooter } from "@/components/site-chrome";
-import { QualityGuardrails } from "@/components/sections/quality";
-import { pageHead } from "@/lib/seo";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// /guardrails consolidated into /how-we-use-ai — same topic (how we keep AI
+// reliable), one canonical page. Kept as a redirect so existing links and search
+// results still resolve instead of 404ing.
 export const Route = createFileRoute("/guardrails")({
-  head: () =>
-    pageHead({
-      path: "/guardrails",
-      title: "Quality & Guardrails · How We Keep AI Reliable · GivenTake Devs",
-      description:
-        "AI speeds up the work; these guardrails keep it reliable. Every AI-generated line is verified, automated tests run before review, security is built in, and a human signs off at every gate.",
-    }),
-  component: GuardrailsPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/how-we-use-ai" });
+  },
 });
-
-function GuardrailsPage() {
-  return (
-    <div className="min-h-screen text-foreground antialiased">
-      <SiteHeader />
-      <main>
-        <QualityGuardrails />
-      </main>
-      <SiteFooter />
-    </div>
-  );
-}
