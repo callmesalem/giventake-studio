@@ -5,6 +5,7 @@ import { IconArrowRight } from "@/components/marks";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { pageHead } from "@/lib/seo";
+import { submitApplication } from "@/lib/intake";
 
 export const Route = createFileRoute("/careers")({
   head: () =>
@@ -244,12 +245,11 @@ function RoleCard({ role }: { role: Role }) {
 }
 
 function ApplyForm() {
-  const [sent, setSent] = useState(false);
+  const [outcome, setOutcome] = useState<"idle" | "sent" | "mailto">("idle");
+  const [submitting, setSubmitting] = useState(false);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const d = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
-    if (!d.name?.trim() || !d.email?.trim()) return;
+  /** Fallback when no mail provider is configured, mirrors the contact form. */
+  function mailtoFallback(d: Record<string, string>) {
     const subject = `Application · ${d.role || "General"} · ${d.name}`;
     const body = [
       `Name: ${d.name}`,
@@ -266,7 +266,32 @@ function ApplyForm() {
     window.location.href = `mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent(
       subject,
     )}&body=${encodeURIComponent(body)}`;
-    setSent(true);
+    setOutcome("mailto");
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
+    if (!d.name?.trim() || !d.email?.trim()) return;
+    setSubmitting(true);
+    try {
+      const result = await submitApplication({
+        data: {
+          name: d.name,
+          email: d.email,
+          phone: d.phone || undefined,
+          role: d.role || undefined,
+          links: d.links || undefined,
+          message: d.message || undefined,
+        },
+      });
+      if (result.status === "sent") setOutcome("sent");
+      else mailtoFallback(d); // unconfigured or error -> hand off to the mail client
+    } catch {
+      mailtoFallback(d);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -278,9 +303,11 @@ function ApplyForm() {
           always glad to meet strong people.
         </p>
 
-        {sent ? (
+        {outcome !== "idle" ? (
           <p className="mt-8 rounded-lg border border-hairline bg-background p-5 text-[15px] text-ink">
-            Thanks. Your email draft is ready, just hit send and we'll be in touch.
+            {outcome === "sent"
+              ? "Thanks, we've got your application and we'll be in touch."
+              : "Your email draft is ready, just hit send and we'll be in touch."}
           </p>
         ) : (
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -310,9 +337,10 @@ function ApplyForm() {
             />
             <button
               type="submit"
-              className="btn-icon-nudge inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90"
+              disabled={submitting}
+              className="btn-icon-nudge inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition hover:opacity-90 disabled:opacity-60"
             >
-              Send application
+              {submitting ? "Sending…" : "Send application"}
               <IconArrowRight className="h-4 w-4" />
             </button>
           </form>

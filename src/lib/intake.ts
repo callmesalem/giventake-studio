@@ -2,8 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import {
   contactSchema,
   dsarSchema,
+  applicationSchema,
   type ContactInput,
   type DsarInput,
+  type ApplicationInput,
   type IntakeResult,
 } from "@/lib/intake-schema";
 import {
@@ -249,4 +251,68 @@ export const submitDsar = createServerFn({ method: "POST" })
       .join("\n");
 
     return sendMail(env("INTAKE_TO_EMAIL") ?? PRIVACY_TO, subject, text, data.email);
+  });
+
+/**
+ * Best-effort store of a job application to Supabase via the narrow
+ * `capture_job_application` SECURITY DEFINER RPC (service-role, server-only).
+ * Degrades like the lead path: unconfigured or a write failure never blocks the
+ * email notification, and the body (PII) is never logged.
+ */
+async function persistApplication(data: ApplicationInput): Promise<boolean> {
+  const url = env("SUPABASE_URL");
+  const serviceRoleKey = env("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !serviceRoleKey) return false;
+  try {
+    const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/capture_job_application`, {
+      method: "POST",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        p_payload: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          role: data.role,
+          links: data.links,
+          message: data.message,
+        },
+      }),
+    });
+    if (!response.ok) {
+      console.error(`Application persist failed: ${response.status}`);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Application persist threw", error instanceof Error ? error.message : "unknown");
+    return false;
+  }
+}
+
+export const submitApplication = createServerFn({ method: "POST" })
+  .validator((data: ApplicationInput) => applicationSchema.parse(data))
+  .handler(async ({ data }): Promise<IntakeResult> => {
+    const subject = `New application · ${data.role || "General"} · ${data.name}`;
+    const text = [
+      `Name: ${data.name}`,
+      `Email: ${data.email}`,
+      data.phone ? `Phone: ${data.phone}` : null,
+      data.role ? `Role: ${data.role}` : null,
+      data.links ? `LinkedIn / portfolio: ${data.links}` : null,
+      "",
+      "Message:",
+      data.message || "(none)",
+      "",
+      "Received via the website careers form.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // Store the application (best-effort, no send), then notify the human.
+    await persistApplication(data);
+    return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);
   });
