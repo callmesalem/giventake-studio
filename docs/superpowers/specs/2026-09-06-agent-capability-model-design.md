@@ -12,10 +12,11 @@ changed since.
 
 **It does not stop anything.**
 
-Measured 2026-09-06: none of the nine write functions granted to the `crm_agent`
+Measured 2026-09-06: none of the ten write functions granted to the `crm_agent`
 role consults it. Not `deal_upsert`, not `deal_advance_stage`, not `task_upsert`,
 `note_upsert`, `company_upsert`, `contact_upsert`, `approval_request`,
-`referral_partner_upsert` or `referral_record`. Every one writes unconditionally
+`referral_partner_upsert`, `referral_record` or `referral_set_status`. Every one
+writes unconditionally
 when called.
 
 Sami reads that switch, reports its state accurately, and chooses to respect it.
@@ -32,7 +33,28 @@ The `crm_agent` role is properly built, and this design does not disturb it:
 | Superuser / createdb / createrole | no |
 | `rolbypassrls` | **false** |
 | Direct table grants in `public` | **zero** |
-| Executable functions | 22 — 9 writes, 13 reads |
+| Executable functions | 22 — 10 writes, 12 reads |
+
+The write/read split is not a judgement call, and should not be enumerated by hand
+— a first pass at this spec counted nine writes and missed `referral_set_status`,
+which updates `referrals.status` and is granted to `crm_agent` like the rest.
+Derive it:
+
+```sql
+select p.proname,
+       (lower(p.prosrc) ~ '\minsert\M|\mupdate\M|\mdelete\M') as mutates
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+join lateral aclexplode(p.proacl) a on true
+join pg_roles r on r.oid = a.grantee
+where n.nspname = 'public' and r.rolname = 'crm_agent'
+  and a.privilege_type = 'EXECUTE'
+order by mutates desc, p.proname;
+```
+
+Measured 2026-09-06 this splits cleanly: ten mutating (all `volatile`), twelve
+not (all `stable`). A write function that escapes this list escapes the guard, so
+the count is worth re-deriving rather than trusting.
 
 Nothing that sends, deploys, spends or signs exists in that grant list at all, so
 the *hard* prohibitions hold structurally. `policy.ts` names the same set —
@@ -78,7 +100,7 @@ denies, exactly as `requireControls` raises `control_missing` today.
 |---|---|---|
 | Where enforcement lives | Inside the SQL functions | Revoking grants — coarse, and toggling means DDL. Routing Sami through the MCP endpoint — that path is read-only, so every write would need building, and it is a change on his side |
 | Agent identity | One Postgres role per agent | A shared role with a self-declared `agent_key` — identity would be a claim, not a fact, and the audit trail would record what an agent said about itself |
-| Granularity | Per agent × per function | Capability groups (recommended, not chosen) and per-agent on/off. Per-function is 9 switches per agent and more to review; it was chosen so nothing moves without a specific decision |
+| Granularity | Per agent × per function | Capability groups (recommended, not chosen) and per-agent on/off. Per-function is 10 switches per agent and more to review; it was chosen so nothing moves without a specific decision |
 | Scope | Writes only | Gating reads as well — doubles the matrix for capabilities that would sit on permanently. Reads remain bounded by the grant list |
 
 ## Identity
@@ -103,7 +125,7 @@ create table if not exists public.agent_capabilities (
 );
 ```
 
-Nine rows per agent. `capability` is the function name deliberately: the control
+Ten rows per agent. `capability` is the function name deliberately: the control
 table and the grant list then name the same things, and a reviewer comparing them
 does not have to hold a mapping in their head.
 
@@ -113,7 +135,7 @@ every agent until someone turns it on, rather than silently open.
 ## The guard
 
 One function, `agent_require(p_capability text)`, called as the first statement of
-each of the nine writes. In order:
+each of the ten writes. In order:
 
 1. Resolve the caller from `session_user`
 2. If `operator_system_control.operators_enabled` is false → raise. One flip stops
@@ -161,7 +183,7 @@ Sami connects as `crm_agent` today, so the change has an ordering hazard:
 
 1. Create `agent_sami`
 2. Grant it the 22 functions `crm_agent` holds
-3. Insert his 9 capability rows, enabled
+3. Insert his 10 capability rows, enabled
 4. **Update `.pgpw` and the connection on the VPS** — outside this repo
 5. Revoke the functions from `crm_agent`
 
@@ -182,7 +204,7 @@ The guard is SQL, so the migration test asserts on the text as
 
 - `agent_require` exists, is `security definer`, and is `revoke`d from `public`
 - it reads `session_user`, **not** `current_user` — the trap named above
-- each of the nine write functions contains a call to it
+- each of the ten write functions contains a call to it
 - `agent_capabilities` has the composite primary key and `enabled` defaults false
 - the global kill switch is consulted before the per-capability lookup
 - the guard writes to `operator_audit_events` on **both** outcomes, not only
@@ -208,8 +230,8 @@ suite, which has no database.
 
 ## Open questions
 
-1. **Which of Sami's nine writes should be enabled on day one?** The migration has
-   to insert some state. Enabling all nine reproduces today's behaviour exactly and
+1. **Which of Sami's ten writes should be enabled on day one?** The migration has
+   to insert some state. Enabling all ten reproduces today's behaviour exactly and
    changes nothing operationally; enabling fewer is a live restriction that needs
    deciding deliberately rather than defaulted.
 2. **Do Piper, Cade, nova and inbox get roles now or later?** They are configured
