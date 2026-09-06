@@ -30,7 +30,14 @@ comment on table public.agent_capabilities is
   'What each agent role may do. capability is the function name deliberately, so this table and the GRANT list name the same things. A MISSING ROW DENIES: a new write function is off for every agent until someone turns it on.';
 
 alter table public.agent_capabilities enable row level security;
-revoke all on table public.agent_capabilities from anon, authenticated;
+-- service_role is essential here, not cosmetic: Supabase's default privileges for
+-- new tables in the public schema grant it arwdDxtm, and it holds BYPASSRLS, so the RLS
+-- above stops it from nothing. Without this revoke the capability table would be a
+-- writable PostgREST endpoint — the fine-grained control would end up weaker than
+-- the coarse switch it supplements. The three sibling control tables
+-- (operator_system_control, operator_controls, operator_audit_events) are all
+-- postgres-only for the same reason.
+revoke all on table public.agent_capabilities from anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 2. The guard
@@ -71,7 +78,7 @@ begin
   --
   -- This is a closed list, not a pattern. Any other role — including one added
   -- later — falls through and needs a capability row, so it denies by default.
-  if v_caller in ('authenticator', 'postgres', 'supabase_admin') then
+  if v_caller in ('authenticator', 'postgres', 'supabase_admin', 'cli_login_postgres') then
     return;
   end if;
 
@@ -93,20 +100,31 @@ begin
     end if;
   end if;
 
-  -- Both outcomes. Denials matter most, but the allows are the trail that answers
-  -- "what did Sami change last Tuesday". Writes are low-volume enough to log whole.
-  insert into public.operator_audit_events(operator_key, event_type, details)
-  values (
-    v_caller,
-    case when v_reason is null then 'capability_allowed' else 'capability_denied' end,
-    jsonb_build_object('capability', p_capability, 'reason', v_reason)
-  );
-
-  if v_reason is not null then
-    raise exception 'agent_capability_denied: % (%, %)', v_reason, v_caller, p_capability
-      using errcode = 'check_violation';
+  if v_reason is null then
+    -- Allowed. This row commits with the write it authorised, which is what makes
+    -- it a usable trail: "what did Sami change last Tuesday".
+    insert into public.operator_audit_events(operator_key, event_type, details)
+    values (v_caller, 'capability_allowed',
+            jsonb_build_object('capability', p_capability));
+    return;
   end if;
-end $$;
+
+  -- Denied.
+  --
+  -- A refusal CANNOT be recorded in operator_audit_events. Raising aborts the
+  -- transaction and takes any row inserted here with it, so an insert placed above
+  -- the raise would look like an audit trail while always rolling back — worse
+  -- than having none, because an operator would search for denials, find zero, and
+  -- conclude nothing had been refused.
+  --
+  -- The server log is not transactional and survives the abort, so that is where
+  -- the durable record goes. See the runbook for how to query it.
+  raise warning 'agent_capability_denied caller=% capability=% reason=%',
+    v_caller, p_capability, v_reason;
+
+  raise exception 'agent_capability_denied: % (%, %)', v_reason, v_caller, p_capability
+    using errcode = 'check_violation';
+end $;
 
 comment on function public.agent_require(text) is
   'Capability guard for agent write paths. Reads session_user, checks the global kill switch, then the per-agent capability row, audits both outcomes, and raises on refusal. Callers that are not agents (authenticator, postgres, supabase_admin) pass through.';
@@ -354,7 +372,13 @@ begin
 end $$;
 
 grant usage on schema public to agent_sami;
-grant execute on function public.agent_require(text) to agent_sami;
+
+-- agent_require is deliberately NOT granted to the agent. The ten write functions
+-- are SECURITY DEFINER owned by postgres, so the nested call is checked against
+-- current_user = postgres, who owns the guard: it works with no grant to the
+-- caller. Granting it would hand the agent a direct call with an arbitrary
+-- capability string, and every call writes an audit row that UPDATE/DELETE cannot
+-- remove — an audit-forgery primitive, and a way to enumerate its own capabilities.
 
 -- The same 22 functions crm_agent holds: ten writes and twelve reads. Listed
 -- explicitly rather than looped — a grant list is a security boundary and should
@@ -384,10 +408,22 @@ grant execute on function
   public.task_upsert(text,text,uuid,text,boolean,timestamptz,jsonb)
   to agent_sami;
 
--- All ten enabled, which reproduces today's behaviour exactly. This migration
--- makes restriction POSSIBLE; it does not restrict. Changing what Sami may do is a
--- separate, deliberate decision, and bundling it here would hide a behaviour
--- change inside an infrastructure change.
+-- All ten enabled for BOTH roles, which reproduces today's behaviour exactly.
+--
+-- crm_agent is not a leftover. Sami connects as crm_agent TODAY, and the moment
+-- this migration lands the guard — not the GRANT list — becomes the gate. Since
+-- `create or replace` preserves the existing ACL, crm_agent would keep every grant
+-- and lose the ability to use any of them: seeded rows for agent_sami alone would
+-- cut Sami off the instant this applies, in exactly the live window the deploy
+-- order was designed to protect.
+--
+-- crm_agent is deliberately seeded rather than added to the guard's exemption
+-- list; exempting it would leave it permanently ungoverned. Its rows are deleted
+-- in the same step that revokes its grants — see the runbook.
+--
+-- This migration makes restriction POSSIBLE; it does not restrict. Changing what
+-- Sami may do is a separate, deliberate decision, and bundling it here would hide
+-- a behaviour change inside an infrastructure change.
 insert into public.agent_capabilities(agent_role, capability, enabled, updated_by)
 values
   ('agent_sami','approval_request',true,'migration'),
@@ -399,5 +435,45 @@ values
   ('agent_sami','referral_partner_upsert',true,'migration'),
   ('agent_sami','referral_record',true,'migration'),
   ('agent_sami','referral_set_status',true,'migration'),
-  ('agent_sami','task_upsert',true,'migration')
+  ('agent_sami','task_upsert',true,'migration'),
+  ('crm_agent','approval_request',true,'migration'),
+  ('crm_agent','company_upsert',true,'migration'),
+  ('crm_agent','contact_upsert',true,'migration'),
+  ('crm_agent','deal_advance_stage',true,'migration'),
+  ('crm_agent','deal_upsert',true,'migration'),
+  ('crm_agent','note_upsert',true,'migration'),
+  ('crm_agent','referral_partner_upsert',true,'migration'),
+  ('crm_agent','referral_record',true,'migration'),
+  ('crm_agent','referral_set_status',true,'migration'),
+  ('crm_agent','task_upsert',true,'migration')
 on conflict (agent_role, capability) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- 5. The switch this whole migration exists to make real
+-- ---------------------------------------------------------------------------
+--
+-- READ THIS BEFORE APPLYING.
+--
+-- operator_system_control.operators_enabled has read false since 2026-08-18 while
+-- enforcing nothing, so agents have been writing freely the entire time. The
+-- record and the reality disagree, and this migration is what connects them.
+--
+-- The guard consults this switch BEFORE any capability row. So if it is still
+-- false when this applies, every agent write raises operators_disabled and the ten
+-- seeded rows above are never even read — the migration would be a total outage
+-- rather than the behaviour-neutral change it is meant to be.
+--
+-- Setting it true does not grant anything new. It records what has been true in
+-- practice since 2026-08-18, and it is what makes flipping it to false a real
+-- control for the first time.
+--
+-- IF YOU WANT AGENTS OFF AT CUTOVER, DELETE THIS STATEMENT AND KNOW THAT SAMI
+-- STOPS WRITING THE MOMENT THIS MIGRATION LANDS. That is a legitimate choice; it
+-- is just not the default, because it is a behaviour change and this migration is
+-- not the place to hide one.
+update public.operator_system_control
+   set operators_enabled = true,
+       updated_at = now(),
+       reason = 'agent capability model applied; per-capability control now lives in agent_capabilities'
+ where id = 'global'
+   and operators_enabled is not true;
