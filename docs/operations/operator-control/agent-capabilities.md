@@ -109,6 +109,47 @@ transaction — `dblink` is available on this project but not installed, and
 `pg_background` is not available at all. That is a deliberate future change, not
 something to assume is already happening.
 
+## Applied: 2026-09-06, step 1 only
+
+Applied to project `qsgijpsttojutuhogbns` at 19:27 UTC on 2026-09-06, after a
+full dry run inside a rolled-back transaction. Recorded in
+`supabase_migrations.schema_migrations` as version `20260906120000` (the
+Supabase MCP stamps its own version on apply; the row was reconciled to the
+repo's so `supabase db push` does not try to apply it twice).
+
+Verified immediately afterwards, read-only:
+
+- all ten bodies md5-match their pre-apply production bodies once the guard line
+  is stripped, and the guard is the first statement in each
+- 20 capability rows, all enabled, for `agent_sami` and `crm_agent`
+- `agent_sami`: login, noinherit, no BYPASSRLS, no table privileges, and the
+  same 22 function grants as `crm_agent`, name for name
+- `agent_capabilities`: RLS on, `postgres` is the only grantee
+- `operators_enabled` is now `true`, reason recorded on the row
+- a guarded call as `postgres` (exempt) executes and writes no audit row
+
+**Steps 2 to 5 below are still open.** Nothing has been revoked from `crm_agent`
+and no password has been set for `agent_sami`.
+
+Two things learned at apply time that the smoke test section needs:
+
+- **`set session authorization` is not available.** On Supabase the `postgres`
+  login is not a superuser, so you cannot impersonate `agent_sami` from a
+  `postgres` session to exercise the guard. The smoke test genuinely needs a
+  `psql` login as the agent role, with its password.
+- **`service_role` holds EXECUTE on `agent_require`.** Supabase's default
+  privileges for functions created by `postgres` grant execute to
+  `service_role`, and the migration only revoked from `public`. This is the
+  same state `append_operator_audit_event` has always been in, so it hands
+  `service_role` nothing it did not already have, and `service_role` is
+  outside this boundary by design. If you want it gone anyway:
+  `revoke execute on function public.agent_require(text) from service_role;`
+
+One unrelated finding from the pre-flight: `20260903120000_job_applications`
+(the careers backend, PR #33) is not applied in production either, and its
+version is now lower than the latest applied one, so `supabase db push` will
+skip it unless given `--include-all`.
+
 ## Applying the migration
 
 The ordering matters, because Sami connects as `crm_agent` today.
