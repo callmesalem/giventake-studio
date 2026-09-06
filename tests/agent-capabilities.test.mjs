@@ -127,7 +127,7 @@ function guardBody() {
     -1,
     "agent_require is defined more than once; the later definition silently wins",
   );
-  const end = code.indexOf("end $$;", start);
+  const end = code.indexOf("$$;", start);
   assert.notEqual(end, -1, "agent_require has no terminator");
   return code.slice(start, end);
 }
@@ -311,9 +311,9 @@ test("the pass-through is a closed list, not a name pattern", () => {
 function functionText(fn) {
   const start = code.indexOf(`create or replace function public.${fn}(`);
   assert.notEqual(start, -1, `${fn} is not in the migration`);
-  const end = code.indexOf("end $$;", start);
+  const end = code.indexOf("$$;", start);
   assert.notEqual(end, -1, `${fn} has no terminator`);
-  return code.slice(start, end + "end $$;".length);
+  return code.slice(start, end + "$$;".length);
 }
 
 test("every write function is re-created", () => {
@@ -421,8 +421,8 @@ test("the guard is the only change — every body still matches production", () 
   for (const fn of WRITES) {
     const t = functionText(fn);
     const open = t.indexOf("as $$");
-    const close = t.indexOf("end $$;", open);
-    const withGuard = t.slice(open + "as $$".length, close) + "end";
+    const close = t.indexOf("$$;", open + "as $$".length);
+    const withGuard = t.slice(open + "as $$".length, close);
     const withoutGuard = withGuard.replace(
       new RegExp(`\\s*perform public\\.agent_require\\('${fn}'\\);`),
       "",

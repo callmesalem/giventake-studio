@@ -280,7 +280,8 @@ begin
       content=excluded.content, metadata=excluded.metadata, updated_at=now()
     returning id into v_id;
   return v_id;
-end $$;
+end
+$$;
 
 create or replace function public.referral_partner_upsert(p_id uuid, p_name text, p_kind text, p_contact_email text, p_notes text)
 returns uuid
