@@ -36,6 +36,12 @@ Creating roles for agents that never connect is speculative. The table is keyed 
 capabilities are seeded enabled, reproducing today's behaviour exactly. Deciding
 what Sami may actually do is a separate change, made deliberately, after this lands.
 
+**The dashboard shares these functions.** `src/server/crm/actions.ts` calls all
+ten write RPCs through PostgREST, which logs in as `authenticator` and SET ROLEs
+to `service_role`. `SET ROLE` does not change `session_user`, so every dashboard
+write reaches the guard as `authenticator`. The guard exempts a closed list of
+non-agent roles; without it, applying this migration stops the CRM UI writing.
+
 **Conventions:**
 - Run tests individually: `node --experimental-strip-types tests/<name>.test.mjs`.
   Do NOT run `npm test` — POSIX for-loop, fails on Windows cmd.exe.
@@ -284,6 +290,24 @@ test("the guard audits both outcomes, not only denials", () => {
 test("the guard is not callable by public", () => {
   assert.match(sql, /revoke all on function public\.agent_require\(text\) from public/);
 });
+
+test("the app's PostgREST role passes through, or the whole dashboard breaks", () => {
+  assert.match(
+    guardBody(),
+    /'authenticator'/,
+    "PostgREST logs in as authenticator; without an exemption every dashboard " +
+      "write raises capability_missing",
+  );
+});
+
+test("the pass-through is a closed list, not a name pattern", () => {
+  assert.doesNotMatch(
+    guardBody(),
+    /likes+'agent/i,
+    "matching agent roles by name prefix fails OPEN for any role that does not " +
+      "match — a new connecting role would be unguarded rather than denied",
+  );
+});
 ```
 
 - [ ] **Step 2: Run and watch the new tests fail**
@@ -307,11 +331,25 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  v_agent    text := session_user;
+  v_caller   text := session_user;
   v_global   boolean;
   v_enabled  boolean;
   v_reason   text;
 begin
+  -- Callers that are not agents.
+  --
+  -- The dashboard reaches these same functions through PostgREST, which logs in
+  -- as `authenticator` and then SET ROLEs to service_role. SET ROLE does not
+  -- change session_user, so EVERY dashboard write arrives here as
+  -- `authenticator`. Without this branch the guard refuses every write in the
+  -- CRM UI.
+  --
+  -- A closed list, not a pattern: any other role falls through and needs a
+  -- capability row, so it denies by default.
+  if v_caller in ('authenticator', 'postgres', 'supabase_admin') then
+    return;
+  end if;
+
   select operators_enabled into v_global
     from public.operator_system_control where id = 'global';
 
@@ -320,7 +358,7 @@ begin
   else
     select enabled into v_enabled
       from public.agent_capabilities
-      where agent_role = v_agent and capability = p_capability;
+      where agent_role = v_caller and capability = p_capability;
 
     if v_enabled is null then
       v_reason := 'capability_missing';
@@ -331,13 +369,13 @@ begin
 
   insert into public.operator_audit_events(operator_key, event_type, details)
   values (
-    v_agent,
+    v_caller,
     case when v_reason is null then 'capability_allowed' else 'capability_denied' end,
     jsonb_build_object('capability', p_capability, 'reason', v_reason)
   );
 
   if v_reason is not null then
-    raise exception 'agent_capability_denied: % (%, %)', v_reason, v_agent, p_capability
+    raise exception 'agent_capability_denied: % (%, %)', v_reason, v_caller, p_capability
       using errcode = 'check_violation';
   end if;
 end $$;

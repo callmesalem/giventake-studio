@@ -85,6 +85,24 @@ see the same value for every agent and either always allow or always deny. The
 guard must read **`session_user`**, which remains the role that opened the
 connection. This is the single most likely way to implement this wrong.
 
+**The dashboard shares these functions, and arrives as `authenticator`.**
+`src/server/crm/actions.ts` calls all ten write RPCs through PostgREST with the
+service-role key. PostgREST logs in as `authenticator` and then `SET ROLE`s to
+`service_role`. Measured 2026-09-06: `SET ROLE` does not change `session_user`,
+and neither does `SECURITY DEFINER` — so **every dashboard write reaches the guard
+as `authenticator`**.
+
+A guard that simply requires a capability row would therefore refuse every write in
+the CRM UI. The guard exempts a closed list — `authenticator`, `postgres`,
+`supabase_admin` — and everything else still needs a row, so an unexpected role
+denies rather than slips through. A name pattern such as `session_user like
+'agent_%'` would be the wrong shape here: it fails open.
+
+This bounds the model honestly. **It governs the direct-Postgres agent path, not
+anything holding the service-role key.** That key already bypasses RLS, so it was
+never inside the boundary; what matters is that Sami connects with a Postgres
+password for his own role and does not hold it.
+
 **Sami does not use the `giventake-mcp` endpoint.** He connects directly to
 Postgres via a password file. `channel_auth_log` contains exactly one granted row
 and it is a curl probe. The channel-auth hardening — constant-time compare, audit
@@ -138,12 +156,14 @@ One function, `agent_require(p_capability text)`, called as the first statement 
 each of the ten writes. In order:
 
 1. Resolve the caller from `session_user`
-2. If `operator_system_control.operators_enabled` is false → raise. One flip stops
+2. If the caller is not an agent — `authenticator`, `postgres`, `supabase_admin` —
+   return. This is the dashboard's path, governed at the application layer
+3. If `operator_system_control.operators_enabled` is false → raise. One flip stops
    every agent, and unlike today it will actually stop them
-3. Look up `(session_user, p_capability)` — missing → raise
-4. Not enabled → raise
-5. Record the call
-6. Return
+4. Look up `(session_user, p_capability)` — missing → raise
+5. Not enabled → raise
+6. Record the call
+7. Return
 
 One place to get right, one place to audit. Each write function gains a single
 line and is otherwise untouched.
@@ -212,6 +232,10 @@ The guard is SQL, so the migration test asserts on the text as
   happened answers the wrong question
 - the guard is granted to the agent roles but `revoke`d from `public`, so it cannot
   be probed by an unprivileged caller to enumerate capabilities
+- `authenticator` is exempt — without this the CRM dashboard stops writing, and
+  the failure would not appear until the migration was applied
+- the exemption is a closed list and **not** a name pattern, since a pattern fails
+  open for any role that does not match it
 
 Behaviour that needs a database — that a disabled capability actually raises — is
 verified by hand against a scratch role during the migration, not by the unit
