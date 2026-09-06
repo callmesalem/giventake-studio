@@ -543,3 +543,40 @@ test("the global switch is addressed, or every seeded row is unreachable", () =>
   assert.match(code, /update public\.operator_system_control/);
   assert.match(code, /set operators_enabled = true/);
 });
+
+// ---------------------------------------------------------------------------
+// Dollar quoting
+// ---------------------------------------------------------------------------
+//
+// A body closed with `$;` instead of `$$;` does not close at all: the quote runs
+// on to the NEXT function's opening `$$`, and the migration fails to parse at
+// apply time. Assertions that anchor on names cannot see this, because every
+// name is still present in the text. This escaped review once (commit 20d5bee).
+
+test("every dollar quote that opens is closed — an even number of $$ tokens", () => {
+  const tokens = code.match(/\$\$/g) ?? [];
+  assert.equal(tokens.length % 2, 0, `${tokens.length} $$ tokens: one body never closes`);
+});
+
+test("no function body is terminated with a lone dollar sign", () => {
+  assert.doesNotMatch(
+    code,
+    /(^|[^$])\$;/m,
+    "`end $;` is not a dollar-quote close; the body swallows the next definition",
+  );
+});
+
+test("each function body closes before the next definition opens", () => {
+  const defs = [...code.matchAll(/create or replace function public\.(\w+)\(/g)];
+  assert.ok(defs.length >= 11, `expected the guard plus ten writes, saw ${defs.length}`);
+  for (let i = 0; i < defs.length; i++) {
+    const span = code.slice(defs[i].index, i + 1 < defs.length ? defs[i + 1].index : code.length);
+    const open = span.indexOf("as $$");
+    assert.notEqual(open, -1, `${defs[i][1]} has no dollar-quoted body`);
+    assert.notEqual(
+      span.indexOf("$$;", open + "as $$".length),
+      -1,
+      `${defs[i][1]}'s body is not closed before ${defs[i + 1]?.[1] ?? "end of file"} begins`,
+    );
+  }
+});

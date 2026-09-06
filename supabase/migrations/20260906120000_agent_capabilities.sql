@@ -124,7 +124,7 @@ begin
 
   raise exception 'agent_capability_denied: % (%, %)', v_reason, v_caller, p_capability
     using errcode = 'check_violation';
-end $;
+end $$;
 
 comment on function public.agent_require(text) is
   'Capability guard for agent write paths. Reads session_user, checks the global kill switch, then the per-agent capability row, audits both outcomes, and raises on refusal. Callers that are not agents (authenticator, postgres, supabase_admin) pass through.';
