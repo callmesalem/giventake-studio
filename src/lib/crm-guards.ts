@@ -250,3 +250,70 @@ export const LEAD_ORIGINS = ["website_contact_form", "manual_entry", "referral_i
 export function isLeadOrigin(value: unknown): boolean {
   return (LEAD_ORIGINS as readonly string[]).includes(String(value));
 }
+
+/* ── Stage 4's gate ─────────────────────────────────────────────────────────
+ *
+ * pipeline_stages numbers this stage 4 and names it "Close", but the number
+ * never travels. deals.stage stores stage NAMES, crmStages feeds the UI those
+ * names, and crm-data.ts validates toStage as an arbitrary string, so the value
+ * that reaches the gate is "Close". A gate keyed on 4 - or on "4" - would exist,
+ * pass its tests, render in the UI, and let every real deal through unsigned.
+ *
+ * The name is a constant here rather than resolved from pipeline_stages at call
+ * time, and that is the trade being made deliberately. A lookup would follow a
+ * rename, but it would need the network, which would make this predicate
+ * impure, untestable without a database, and - worse - failable: a gate whose
+ * lookup errors has to decide whether to open, and there is no good answer. A
+ * literal cannot fail to load. If the stage is ever renamed, this constant and
+ * the test asserting it both have to change, which is the point: renaming the
+ * stage that requires a signature should be a visible act, not a silent one.
+ */
+export const CLOSE_STAGE_NAME = "Close";
+
+/**
+ * Whether a requested stage IS stage 4, by name.
+ *
+ * Trimmed and case-insensitive, because the value is a free-text field an
+ * operator can type, but otherwise EXACT: "Closed won" is a different stage and
+ * a prefix or substring match would gate it too, on evidence this feature has
+ * no claim over. Anything that is not a string is not Close — including the
+ * number 4 and the string "4", neither of which is ever what deals.stage holds.
+ *
+ * Separate from the gate below so the caller can ask "does this advance need a
+ * signature at all?" without pretending to already know the answer, and so the
+ * two questions cannot drift apart: the gate is defined in terms of this.
+ */
+export function isCloseStage(toStage: unknown): boolean {
+  if (typeof toStage !== "string") return false;
+  return toStage.trim().toLowerCase() === CLOSE_STAGE_NAME.toLowerCase();
+}
+
+/**
+ * Whether an advance into stage 4 must be refused for want of a signed SOW.
+ *
+ * This is a DELIBERATE EXCEPTION to the rule stated on advanceDealStage: the
+ * RPC does not assert stage gates, because gates like "Problem understood,
+ * quantified" or "Client saw it working each week" are human judgements and a
+ * function cannot witness them. Stage 4 differs in kind. Its gate is "Signed
+ * and paid before any code", and a signature is not a judgement - it is a fact
+ * with a record. document_signatures IS that record, so this one gate can be
+ * asserted honestly, and a gate that can be asserted honestly should be.
+ *
+ * PAYMENT IS DELIBERATELY NOT PART OF THIS. The gate's wording says "signed and
+ * paid", but invoices.paid_at depends on Stripe reconciliation: a webhook that
+ * arrives late, retries, or drops would block work that is genuinely signed and
+ * genuinely paid, and an operator staring at a gate the database is simply
+ * wrong about learns to route around gates. Payment is surfaced in the UI as an
+ * unmet condition a human can read and act on, which is the right home for a
+ * fact this system does not own end to end.
+ *
+ * Pure by construction: it takes the two facts and returns a decision, so the
+ * rule can be asserted without a database. Stage matching is isCloseStage
+ * above. Anything that is not exactly `true` is not a signature — an absent,
+ * null or unreadable answer must never read as one, the same posture
+ * DocumentStore.dealHasSignedSow takes when its own call fails.
+ */
+export function advanceBlockedByUnsignedSow(toStage: unknown, hasSignedSow: unknown): boolean {
+  if (!isCloseStage(toStage)) return false;
+  return hasSignedSow !== true;
+}

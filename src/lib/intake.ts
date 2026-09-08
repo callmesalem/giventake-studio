@@ -159,7 +159,12 @@ async function sendLeadAutoReply(
   }
 }
 
-async function sendMail(
+/** Exported for the documents feature. A signature request is transactional mail
+ *  to someone already in a commercial conversation, so it goes here and NOT
+ *  through the campaign mailer: approved_recipients is the per-SOP outbound
+ *  allowlist (charter §3.8), and gating a contract on it would both break
+ *  legitimate sends and misuse a consent mechanism built for cold outbound. */
+export async function sendMail(
   to: string,
   subject: string,
   text: string,

@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState, type ReactNode } from "react";
 import {
   crmDeal,
   crmStages,
@@ -10,11 +11,22 @@ import {
 } from "@/lib/crm-data";
 import { listAssignableMembers } from "@/lib/crm-auth";
 import {
+  generateSowDraft,
+  finaliseDocument,
+  listDealDocuments,
+  sendForSignature,
+  type DealDocumentVM,
+  type DealDocumentsVM,
+  type DealSignatureVM,
+} from "@/lib/documents-data";
+import { cn } from "@/lib/utils";
+import {
   Card,
   DetailHeader,
   DetailLayout,
   Field,
   FieldList,
+  FormControl,
   Timeline,
   Badge,
   EntityForm,
@@ -27,6 +39,13 @@ export const Route = createFileRoute("/crm/deals/$id")({
     deal: await crmDeal({ data: { id: params.id } }),
     stages: await crmStages(),
     members: (await listAssignableMembers()).members,
+    // Degrades, but is not exception-free. listDealDocuments answers
+    // { available: false } when the documents schema cannot be reached, so a
+    // deal page does not 500 on an environment where the migration has not
+    // been applied yet. It DOES still throw a 404 Response when the caller may
+    // not see this deal — the same authorisation check crmDeal above makes,
+    // and the loader has already thrown on it by the time this line runs.
+    documents: await listDealDocuments({ data: { dealId: params.id } }),
   }),
   component: Deal,
 });
@@ -38,8 +57,9 @@ const usd = new Intl.NumberFormat("en-US", {
 });
 
 function Deal() {
-  const { deal, stages, members } = Route.useLoaderData();
+  const { deal, stages, members, documents } = Route.useLoaderData();
   const router = useRouter();
+  const reload = () => router.invalidate();
   return (
     <div>
       <DetailHeader
@@ -83,6 +103,16 @@ function Deal() {
               </Card>
             )}
 
+            <Card title="Documents">
+              <Documents
+                dealId={deal.id}
+                vm={documents}
+                defaultClientName={deal.company?.name ?? deal.name}
+                defaultProjectName={deal.name}
+                onChanged={reload}
+              />
+            </Card>
+
             <Card title="Becomes a client">
               <Disclosure label="Create client" openLabel="Create a client from this deal">
                 <p className="mb-3 text-xs text-muted-foreground">
@@ -107,6 +137,7 @@ function Deal() {
             </Card>
 
             <Card title="Move stage">
+              <StageFourConditions vm={documents} />
               <Disclosure label="Advance stage" openLabel="Advance this deal">
                 <p className="mb-3 text-xs text-muted-foreground">
                   The note is required. It is the evidence that the gate was met, and it is recorded
@@ -206,6 +237,542 @@ function Deal() {
           </>
         }
       />
+    </div>
+  );
+}
+
+/* ── Documents & e-signature ────────────────────────────────────────────────
+ *
+ * The operator half of the documents feature. Everything here reads the same
+ * Card / Disclosure / FormControl kit the rest of this page uses; no new design
+ * system, and nothing here writes except through the four server functions in
+ * src/server/documents/deal-actions.ts.
+ *
+ * The workflow is four steps on purpose — DRAFT → EDIT → FINALISE → SEND —
+ * because docs/contracts/sow-template.md carries merge fields this system
+ * cannot derive: the pricing table's `$[X]` repeats per line item, and
+ * [MSA DATE] refers to an agreement signed outside this system. So a draft
+ * KEEPS its unfilled placeholders, the operator completes them in the textarea,
+ * and finalising is the step that refuses anything still open.
+ */
+
+function when(value: string | null | undefined): string {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? "—"
+    : parsed.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
+/** An inline message with the same weight as EntityForm's error box. Three
+ *  tones only, so a refusal never has to be dressed up as a crash. */
+function Notice({ tone, children }: { tone: "info" | "warn" | "error"; children: ReactNode }) {
+  const style =
+    tone === "error"
+      ? "border-red-200 bg-red-50 text-red-800"
+      : tone === "warn"
+        ? "border-amber-300 bg-amber-50 text-amber-950"
+        : "border-border bg-muted/50 text-muted-foreground";
+  return (
+    <div role="alert" className={cn("rounded-md border px-3 py-2 text-sm", style)}>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Stage 4's two conditions, on the record, beside the control that would cross
+ * them.
+ *
+ * They are NOT the same kind of thing and this must not pretend otherwise:
+ *
+ *   Signed SOW   — BLOCKING. advanceDealStage asks deal_has_signed_sow and
+ *                  throws on an advance into Close without one.
+ *   Deposit paid — INFORMATIONAL ONLY. invoices.paid_at depends on Stripe
+ *                  reconciliation, and a webhook that arrives late, retries or
+ *                  drops would block work that is genuinely signed and genuinely
+ *                  paid. See advanceBlockedByUnsignedSow in crm-guards.ts, whose
+ *                  comment promises this surface exists.
+ *
+ * Nothing here disables anything, deposit included — and the advance form is
+ * not disabled on an unsigned SOW either, because the stage picker offers all
+ * twelve stages and refusing every advance over one stage's gate would be
+ * wrong. The server enforces; this explains.
+ */
+function StageFourConditions({ vm }: { vm: DealDocumentsVM }) {
+  if (!vm.available) {
+    return (
+      <div className="mb-3">
+        <Notice tone="warn">
+          Stage 4&rsquo;s conditions cannot be read: document storage is unreachable. An advance to
+          Close will be refused until it is.
+        </Notice>
+      </div>
+    );
+  }
+  return (
+    <div className="mb-3 space-y-1 text-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Stage 4 &mdash; Close
+      </p>
+      <p className={vm.signedSow ? "text-emerald-700" : "text-red-700"}>
+        <span aria-hidden="true">{vm.signedSow ? "✓" : "✗"}</span>{" "}
+        <span className="font-medium">Signed SOW</span>{" "}
+        {vm.signedSow ? "on record" : "— required; the advance will be refused without it"}
+      </p>
+      <p className={vm.depositPaid ? "text-emerald-700" : "text-muted-foreground"}>
+        <span aria-hidden="true">{vm.depositPaid ? "✓" : "✗"}</span>{" "}
+        <span className="font-medium">Deposit paid</span>{" "}
+        {vm.depositPaid ? "on record" : "— not recorded"}{" "}
+        <span className="text-xs text-muted-foreground">
+          (informational; payment does not block the advance)
+        </span>
+      </p>
+    </div>
+  );
+}
+
+function Documents({
+  dealId,
+  vm,
+  defaultClientName,
+  defaultProjectName,
+  onChanged,
+}: {
+  dealId: string;
+  vm: DealDocumentsVM;
+  defaultClientName: string;
+  defaultProjectName: string;
+  onChanged: () => void;
+}) {
+  if (!vm.available) {
+    return (
+      <Notice tone="warn">
+        Document storage is not reachable from this environment, so documents and signature status
+        cannot be shown here. The documents migration may not be applied yet. Nothing has been lost
+        &mdash; this panel is read-only whenever it says this.
+      </Notice>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      <GenerateSow
+        dealId={dealId}
+        defaultClientName={defaultClientName}
+        defaultProjectName={defaultProjectName}
+        onGenerated={onChanged}
+      />
+      {vm.documents.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No documents on this deal yet.</p>
+      ) : (
+        <ul className="space-y-4">
+          {vm.documents.map((document) => (
+            <li key={document.id}>
+              <DocumentPanel dealId={dealId} document={document} onChanged={onChanged} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Generate a SOW draft from what the deal knows.
+ *
+ * This REFUSES TODAY, and that is the feature working rather than a fault to
+ * route around: docs/contracts/sow-template.md carries the banner
+ * "DRAFT — NOT FOR USE WITHOUT ATTORNEY REVIEW", so draftDocument declines it
+ * and writes nothing at all. The refusal is rendered in words, because the
+ * operator cannot fix it from this page and needs to know who can.
+ */
+function GenerateSow({
+  dealId,
+  defaultClientName,
+  defaultProjectName,
+  onGenerated,
+}: {
+  dealId: string;
+  defaultClientName: string;
+  defaultProjectName: string;
+  onGenerated: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [refused, setRefused] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Disclosure label="Generate SOW draft" openLabel="Generate a Statement of Work draft">
+      <p className="mb-3 text-xs text-muted-foreground">
+        This produces a <strong>draft</strong>, not a sendable contract. The pricing table and the
+        MSA date cannot be derived from the deal, so they stay as visible blanks for you to complete
+        before finalising.
+      </p>
+      <form
+        className="space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          setBusy(true);
+          setRefused(false);
+          setError(null);
+          try {
+            const result = await generateSowDraft({
+              data: {
+                dealId,
+                clientLegalName: String(form.get("clientLegalName") ?? ""),
+                projectName: String(form.get("projectName") ?? ""),
+              },
+            });
+            if (result.ok) {
+              onGenerated();
+              return;
+            }
+            setRefused(true);
+          } catch (cause) {
+            setError(cause instanceof Error && cause.message ? cause.message : "That didn't work.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormControl
+            field={{ name: "clientLegalName", label: "Client legal name", required: true }}
+            defaultValue={defaultClientName}
+          />
+          <FormControl
+            field={{ name: "projectName", label: "Project name", required: true }}
+            defaultValue={defaultProjectName}
+          />
+        </div>
+
+        {refused && (
+          <Notice tone="warn">
+            <p className="font-medium">
+              The Statement of Work template has not been through attorney review.
+            </p>
+            <p className="mt-1">
+              docs/contracts/sow-template.md still carries the banner{" "}
+              <span className="font-mono text-xs">
+                DRAFT &mdash; NOT FOR USE WITHOUT ATTORNEY REVIEW
+              </span>
+              , so nothing was created. This is deliberate: an un-reviewed contract must not reach a
+              client, even as a draft. Have the template reviewed and the banner removed, then
+              generate again.
+            </p>
+          </Notice>
+        )}
+        {error && <Notice tone="error">{error}</Notice>}
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? "Generating…" : "Generate draft"}
+        </button>
+      </form>
+    </Disclosure>
+  );
+}
+
+function DocumentPanel({
+  dealId,
+  document,
+  onChanged,
+}: {
+  dealId: string;
+  document: DealDocumentVM;
+  onChanged: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-border">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-foreground">{document.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {document.docType} &middot; updated {when(document.updatedAt ?? document.createdAt)}
+          </p>
+        </div>
+        <Badge value={document.status} />
+      </div>
+      <div className="space-y-3 p-3">
+        {document.status === "draft" ? (
+          <DraftEditor dealId={dealId} document={document} onFinalised={onChanged} />
+        ) : (
+          <>
+            <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 p-3 font-mono text-xs leading-6 text-foreground">
+              {document.body}
+            </pre>
+            {document.status === "final" && (
+              <SendForSignature dealId={dealId} document={document} onSent={onChanged} />
+            )}
+          </>
+        )}
+        <Signatures document={document} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The edit step. The body is editable because it has to be: a generated draft
+ * deliberately still contains the blanks the deal could not fill.
+ *
+ * A refused finalise NAMES the placeholders still open. Telling an operator a
+ * contract is "not ready" without saying which blanks remain is how a document
+ * gets finalised by trial and error, or worse, gets sent with [AMOUNT] in it.
+ */
+function DraftEditor({
+  dealId,
+  document,
+  onFinalised,
+}: {
+  dealId: string;
+  document: DealDocumentVM;
+  onFinalised: () => void;
+}) {
+  const [body, setBody] = useState(document.body);
+  const [busy, setBusy] = useState(false);
+  const [placeholders, setPlaceholders] = useState<string[] | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-3">
+      <label htmlFor={`body-${document.id}`} className="block text-xs font-medium text-foreground">
+        Document body
+      </label>
+      <textarea
+        id={`body-${document.id}`}
+        value={body}
+        onChange={(event) => setBody(event.target.value)}
+        rows={18}
+        spellCheck={false}
+        className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-6 text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-60"
+      />
+
+      {placeholders && placeholders.length > 0 && (
+        <Notice tone="warn">
+          <p className="font-medium">
+            Not finalised. {placeholders.length}{" "}
+            {placeholders.length === 1 ? "blank is" : "blanks are"} still unfilled:
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 font-mono text-xs">
+            {placeholders.map((name) => (
+              <li key={name}>[{name}]</li>
+            ))}
+          </ul>
+          <p className="mt-1 text-xs">
+            Fill each one in the text above, then finalise again. A repeating cell &mdash; the
+            pricing table&rsquo;s <span className="font-mono">$[X]</span> &mdash; is listed once but
+            may appear on several rows.
+          </p>
+        </Notice>
+      )}
+      {message && <Notice tone="error">{message}</Notice>}
+
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setPlaceholders(null);
+          setMessage(null);
+          try {
+            const result = await finaliseDocument({
+              data: { dealId, documentId: document.id, body },
+            });
+            if (result.ok) {
+              onFinalised();
+              return;
+            }
+            if (result.reason === "unfilled-placeholders") {
+              setPlaceholders(result.placeholders);
+            } else if (result.reason === "unresolved-review") {
+              setMessage(
+                "This document still carries an attorney-review marker or the DRAFT banner. " +
+                  "Remove it only once the review has actually happened.",
+              );
+            } else {
+              setMessage("This document is no longer a draft. Reload the page to see its state.");
+            }
+          } catch (cause) {
+            setMessage(
+              cause instanceof Error && cause.message ? cause.message : "That didn't save.",
+            );
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+      >
+        {busy ? "Finalising…" : "Finalise"}
+      </button>
+    </div>
+  );
+}
+
+/** The send step, offered only on a final document. */
+function SendForSignature({
+  dealId,
+  document,
+  onSent,
+}: {
+  dealId: string;
+  document: DealDocumentVM;
+  onSent: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ tone: "info" | "warn" | "error"; text: string } | null>(
+    null,
+  );
+
+  return (
+    <Disclosure label="Send for signature" openLabel={`Send ${document.title} for signature`}>
+      <p className="mb-3 text-xs text-muted-foreground">
+        The recipient receives a private signing link. The document&rsquo;s current hash is frozen
+        onto the request, so any later edit shows up here as a stale signature rather than silently
+        changing what was signed.
+      </p>
+      <form
+        className="space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          setBusy(true);
+          setMessage(null);
+          try {
+            const result = await sendForSignature({
+              data: {
+                dealId,
+                documentId: document.id,
+                bodyHash: document.bodyHash,
+                recipientName: String(form.get("recipientName") ?? ""),
+                recipientEmail: String(form.get("recipientEmail") ?? ""),
+              },
+            });
+            if (result.ok && result.sent) {
+              onSent();
+              return;
+            }
+            if (result.ok) {
+              // The request exists; only the mail failed. Say so precisely —
+              // "try again" would create a second signature request.
+              setMessage({
+                tone: "warn",
+                text:
+                  "The signature request was created but the email did not go out. Do not send " +
+                  "again: check the mail provider configuration, then resend the link from the " +
+                  "existing request.",
+              });
+              onSent();
+              return;
+            }
+            setMessage({
+              tone: "error",
+              text:
+                result.reason === "not-configured"
+                  ? "Nothing was sent: SITE_BASE_URL is not set, so the signing link would have " +
+                    "been a relative path and the email useless. Set it in wrangler.jsonc's vars."
+                  : result.reason === "not-final"
+                    ? "Only a finalised document can be sent. Finalise it first."
+                    : "This page is showing an older version of the document. Reload, then send.",
+            });
+          } catch (cause) {
+            setMessage({
+              tone: "error",
+              text: cause instanceof Error && cause.message ? cause.message : "That didn't send.",
+            });
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormControl field={{ name: "recipientName", label: "Recipient name", required: true }} />
+          <FormControl
+            field={{
+              name: "recipientEmail",
+              label: "Recipient email",
+              type: "email",
+              required: true,
+            }}
+          />
+        </div>
+        {message && <Notice tone={message.tone}>{message.text}</Notice>}
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? "Sending…" : "Send for signature"}
+        </button>
+      </form>
+    </Disclosure>
+  );
+}
+
+/**
+ * Every signature raised against this document, and the warning that makes the
+ * hash snapshot worth taking.
+ *
+ * signatureIsStale compares the document's CURRENT hash with the hash frozen
+ * onto the signature when it was sent. A mismatch means the document was edited
+ * afterwards, so what was signed is not what is on screen. Recording that and
+ * never showing it would be the worst of both: evidence that exists and is
+ * never read.
+ */
+function Signatures({ document }: { document: DealDocumentVM }) {
+  if (document.signatures.length === 0) {
+    return <p className="text-xs text-muted-foreground">No signature has been requested yet.</p>;
+  }
+  return (
+    <ul className="space-y-2">
+      {document.signatures.map((signature) => (
+        <li key={signature.id} className="rounded-md border border-border px-3 py-2">
+          <SignatureLine document={document} signature={signature} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SignatureLine({
+  document,
+  signature,
+}: {
+  document: DealDocumentVM;
+  signature: DealSignatureVM;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge value={signature.status} />
+        <span className="text-sm text-foreground">{signature.recipientName}</span>
+        <span className="break-all text-xs text-muted-foreground">{signature.recipientEmail}</span>
+      </div>
+      {signature.status === "signed" ? (
+        <p className="text-xs text-muted-foreground">
+          Signed by{" "}
+          <span className="font-medium text-foreground">{signature.signedName ?? "—"}</span> on{" "}
+          {when(signature.signedAt)}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Sent {when(signature.sentAt)}
+          {signature.viewedAt ? ` · opened ${when(signature.viewedAt)}` : ""} · expires{" "}
+          {when(signature.expiresAt)}
+        </p>
+      )}
+      {signature.stale && (
+        <Notice tone="error">
+          <span className="font-medium">This signature is against an earlier version.</span> The
+          document has been edited since the request was sent, so what the recipient was shown is
+          not what is above. Send a fresh request for the current version rather than relying on
+          this one.
+        </Notice>
+      )}
     </div>
   );
 }
