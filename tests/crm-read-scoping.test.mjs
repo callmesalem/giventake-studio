@@ -170,12 +170,17 @@ test("an admin is unaffected by the projection, which is why this hid", async ()
   assert.equal(deal?.id, "d1");
 });
 
-test("documents-data.ts reads the deal with the columns the scope filter needs", () => {
+test("the document deal-access read includes the columns the scope filter needs", () => {
   // The behavioural tests above pin the mechanism; this pins the call site the
-  // mechanism actually broke. Reverting the projection must fail the suite.
-  const source = readFileSync(new URL("../src/lib/documents-data.ts", import.meta.url), "utf8");
+  // mechanism actually broke. The scoped deal read now lives in the server-only
+  // deal-access module (moved out of documents-data.ts to keep server imports
+  // off the client graph); reverting the projection there must fail the suite.
+  const source = readFileSync(
+    new URL("../src/server/documents/deal-access.ts", import.meta.url),
+    "utf8",
+  );
   const match = source.match(/getById<[^(]*\(\s*"deals",\s*\w+,\s*"([^"]*)"/);
-  assert.ok(match, "documents-data.ts must still read the deal by id before serving documents");
+  assert.ok(match, "deal-access.ts must still read the deal by id before serving documents");
   const columns = match[1].split(",").map((c) => c.trim());
   for (const column of ["owner_id", "assigned_to"]) {
     assert.ok(columns.includes(column), `the deals projection must include ${column}`);
