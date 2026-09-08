@@ -2,10 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const raw = readFileSync(
-  "supabase/migrations/20260906120000_agent_capabilities.sql",
-  "utf8",
-);
+const raw = readFileSync("supabase/migrations/20260906120000_agent_capabilities.sql", "utf8");
 
 const capture = readFileSync(
   "docs/operations/operator-control/live-write-functions-2026-09-06.md",
@@ -81,8 +78,10 @@ function stripSqlComments(text) {
       i += 1;
       while (i < text.length) {
         if (text[i] === "'" && text[i + 1] === "'") i += 2;
-        else if (text[i] === "'") { i += 1; break; }
-        else i += 1;
+        else if (text[i] === "'") {
+          i += 1;
+          break;
+        } else i += 1;
       }
       out += text.slice(start, i);
       continue;
@@ -232,8 +231,7 @@ test("the capability lookup is keyed to the calling agent", () => {
   assert.match(
     guardBody(),
     /where agent_role = v_caller and capability = p_capability/,
-    "without agent_role in the predicate, any agent's row satisfies any other " +
-      "agent's call",
+    "without agent_role in the predicate, any agent's row satisfies any other " + "agent's call",
   );
 });
 
@@ -248,8 +246,7 @@ test("the guard actually refuses", () => {
   assert.match(
     guardBody(),
     /raise exception 'agent_capability_denied/,
-    "computing a reason and logging it is not refusing; without a raise every " +
-      "call proceeds",
+    "computing a reason and logging it is not refusing; without a raise every " + "call proceeds",
   );
 });
 
@@ -298,7 +295,13 @@ test("the pass-through is a closed list, not a name pattern", () => {
   );
   // Any of these spellings would decide agent-ness by name, which fails OPEN for
   // every role that does not match.
-  for (const openShape of [/like\s+'agent/i, /!~/, /~\s*'\^agent/i, /starts_with/i, /left\(v_caller/i]) {
+  for (const openShape of [
+    /like\s+'agent/i,
+    /!~/,
+    /~\s*'\^agent/i,
+    /starts_with/i,
+    /left\(v_caller/i,
+  ]) {
     assert.doesNotMatch(body, openShape, "agent-ness must not be decided by name shape");
   }
 });
@@ -339,8 +342,7 @@ test("the guard is the FIRST statement of every write function", () => {
     const firstStatement = t.slice(beginIdx + "begin".length).trim();
     assert.ok(
       firstStatement.startsWith(`perform public.agent_require('${fn}');`),
-      `${fn} does not call the guard first — it starts with: ` +
-        `${firstStatement.slice(0, 80)}`,
+      `${fn} does not call the guard first — it starts with: ` + `${firstStatement.slice(0, 80)}`,
     );
   }
 });
@@ -348,10 +350,7 @@ test("the guard is the FIRST statement of every write function", () => {
 test("exactly ten call sites exist — no more, no fewer", () => {
   const calls = code.match(/agent_require[(]'[^']*'[)]/g) ?? [];
   assert.equal(calls.length, WRITES.length, `found: ${calls.join(", ")}`);
-  assert.deepEqual(
-    [...new Set(calls)].sort(),
-    WRITES.map((f) => `agent_require('${f}')`).sort(),
-  );
+  assert.deepEqual([...new Set(calls)].sort(), WRITES.map((f) => `agent_require('${f}')`).sort());
 });
 
 // `create or replace` with a different argument list does not replace anything —
@@ -382,10 +381,7 @@ test("every signature matches production, so nothing becomes an overload", () =>
 
   for (const fn of WRITES) {
     const live = /CREATE OR REPLACE FUNCTION public\.\w+\(/.test(capture)
-      ? producedSig(
-          capture.slice(capture.indexOf(`CREATE OR REPLACE FUNCTION public.${fn}(`)),
-          fn,
-        )
+      ? producedSig(capture.slice(capture.indexOf(`CREATE OR REPLACE FUNCTION public.${fn}(`)), fn)
       : null;
     assert.ok(live, `no captured signature for ${fn}`);
     assert.equal(

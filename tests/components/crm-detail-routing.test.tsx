@@ -24,7 +24,6 @@ import { createRouter, createMemoryHistory } from "@tanstack/react-router";
  */
 
 function routesById() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return import("@/routeTree.gen").then(({ routeTree }) => {
     const router = createRouter({
       routeTree,
