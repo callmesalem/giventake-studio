@@ -52,69 +52,14 @@ function requireText(value: unknown, field: string, max: number): string {
   return s;
 }
 
-function config() {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRoleKey) {
-    throw new Response("CRM database is not configured", { status: 503 });
-  }
-  return { url, serviceRoleKey };
-}
-
-/**
- * Session + a document store, plus proof that this operator may see this deal.
- *
- * The deal lookup is not decoration. crm-data.ts's reader() scopes reads to the
- * signed-in user — an admin sees everything, a member sees only what they own
- * or are assigned — and a member asking for someone else's deal gets a 404
- * before any document is touched. Without this, a document id would be a way
- * around that scoping, because the documents RPCs are keyed by document id and
- * know nothing about who is asking.
+/*
+ * The per-deal access helpers (forDeal, documentOnDeal) live in the server-only
+ * module src/server/documents/deal-access.ts and are reached by dynamic
+ * import() from the handlers below. They cannot live here: a plain helper in
+ * this client-reachable file that reaches src/server/* is part of the client
+ * module graph, and the import-protection plugin denies it even when the reach
+ * is a dynamic import(). See deal-access.ts.
  */
-async function forDeal(dealId: string) {
-  const { requireCrmSession } = await import("./crm-auth.server");
-  const session = await requireCrmSession();
-
-  const { CrmRead } = await import("@/server/crm/read");
-  const read = new CrmRead({
-    ...config(),
-    actor: { id: session.userId, isAdmin: session.role === "admin" },
-  });
-  // The projection is part of the check, not decoration. CrmRead scopes a
-  // member to rows where owner_id or assigned_to is them, and it applies that
-  // filter to the ROW IT WAS GIVEN. Selecting only "id,name" left both columns
-  // undefined, so the predicate was false for every row and a member 404d on a
-  // deal they own — taking all four document server functions with it. Any
-  // column the scope filter reads must be in the select.
-  const deal = await read.getById<Record<string, unknown>>(
-    "deals",
-    dealId,
-    "id,name,owner_id,assigned_to",
-  );
-  if (!deal) throw new Response("Not found", { status: 404 });
-
-  const { createSupabaseDocumentStore } = await import("@/server/documents/store");
-  return { session, store: createSupabaseDocumentStore(config()) };
-}
-
-type DocumentStoreFor = Awaited<ReturnType<typeof forDeal>>["store"];
-
-/**
- * Resolve one document on a deal the caller may see, or refuse.
- *
- * Reading the whole list to find one document is a round trip a `document_get`
- * RPC would save, and it is the right trade anyway: the write paths below need
- * the document's CURRENT status and body_hash to decide whether the action is
- * even legal, and reading them here means those decisions are made against the
- * database rather than against whatever the browser believed when the page was
- * rendered.
- */
-async function documentOnDeal(store: DocumentStoreFor, dealId: string, documentId: string) {
-  const documents = await store.listDealDocuments(dealId);
-  const document = documents.find((d) => d.id === documentId);
-  if (!document) throw new Response("Not found", { status: 404 });
-  return document;
-}
 
 /* ── generate ───────────────────────────────────────────────────────────── */
 
@@ -131,6 +76,7 @@ export const generateSowDraft = createServerFn({ method: "POST" })
     projectName: requireText(d?.projectName, "Project name", 200),
   }))
   .handler(async ({ data }): Promise<GenerateSowResult> => {
+    const { forDeal } = await import("@/server/documents/deal-access");
     const { session, store } = await forDeal(data.dealId);
     const { draftDocument } = await import("@/server/documents/issue");
 
@@ -177,6 +123,7 @@ export const finaliseDocument = createServerFn({ method: "POST" })
     body: requireText(d?.body, "Document body", 200_000),
   }))
   .handler(async ({ data }): Promise<FinaliseDocumentResult> => {
+    const { forDeal, documentOnDeal } = await import("@/server/documents/deal-access");
     const { store } = await forDeal(data.dealId);
     const document = await documentOnDeal(store, data.dealId, data.documentId);
 
@@ -235,6 +182,7 @@ export const sendForSignature = createServerFn({ method: "POST" })
     const base = siteBaseUrl();
     if (!base) return { ok: false, reason: "not-configured" };
 
+    const { forDeal, documentOnDeal } = await import("@/server/documents/deal-access");
     const { session, store } = await forDeal(data.dealId);
     const document = await documentOnDeal(store, data.dealId, data.documentId);
 
@@ -354,6 +302,7 @@ export interface DealDocumentsVM {
 export const listDealDocuments = createServerFn({ method: "GET" })
   .validator((d: { dealId: string }) => ({ dealId: requireUuid(d?.dealId, "Deal") }))
   .handler(async ({ data }): Promise<DealDocumentsVM> => {
+    const { forDeal } = await import("@/server/documents/deal-access");
     const { store } = await forDeal(data.dealId);
     const { signatureIsStale } = await import("@/server/documents/issue");
     try {
