@@ -52,8 +52,10 @@ bump is a deliberate change reviewed like any other. Nitro merges this file
 over its generated defaults (`defu(overrides, ctxConfig, userConfig,
 defaults)` in the cloudflare preset), so the value wins.
 
-`2026-09-06` is what the most recent builds emitted, including the production
-build of 2026-09-09, so pinning it changes nothing in production. It is also
+`2026-09-06` is what the 2026-09-09 local build of `main` emitted, and the
+production build of the same day ran the same nitro logic, so by inference it
+carries the same date and pinning it changes nothing in production. (Cloudflare
+access is not available from this machine to read the deployed value.) It is also
 within what wrangler 4.130.0's bundled runtime supports, so CI and local runs
 honour it rather than silently falling back.
 
