@@ -476,7 +476,7 @@ node scripts/worker-smoke.mjs; echo "exit $?"
 git checkout -- 'src/routes/sign.$token.tsx'
 ```
 
-Expected: `/ -> 500 FAIL` (and the same for /careers, /crm/login, /sign/smoke-probe), `FAIL: 4 of 5 expectations failed`, then the wrangler output containing `Disallowed operation called within global scope`, then `exit 1`. The 404 path still passes, which is fine: it never reaches the broken chunk.
+Expected: `/ -> 500 FAIL` and the same for every other path, including the unknown one (routing lives in the chunk that fails to import, so nothing gets as far as a 404), `FAIL: 5 of 5 expectations failed`, then the wrangler output containing `Disallowed operation called within global scope`, then `exit 1`.
 
 - [ ] **Step 5: Verify it passes on the current code (green)**
 

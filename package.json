@@ -14,7 +14,8 @@
     "test": "for test in tests/*.test.mjs; do case \"$test\" in *integration*) continue;; esac; node --experimental-strip-types \"$test\" || exit 1; done",
     "test:integration": "node tests/operator-postgres.integration.test.mjs",
     "test:components": "vitest run --config vitest.config.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "smoke:worker": "node scripts/worker-smoke.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
