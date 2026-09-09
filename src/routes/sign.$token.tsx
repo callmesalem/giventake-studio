@@ -34,11 +34,25 @@ function store(): SignFlowStore | null {
   return createSupabaseDocumentStore({ url, serviceRoleKey: key });
 }
 
-const UNAVAILABLE_PAGE = PAGE(
-  `<!doctype html><meta charset="utf-8"><title>Link unavailable</title>` +
-    `<p>This signing link is not available. It may be invalid, expired, or already ` +
-    `responded to. Please contact the sender for a new link.</p>`,
-);
+/**
+ * Built per request, never at module scope. The Workers runtime refuses to
+ * construct a Response body outside a request ("Disallowed operation called
+ * within global scope"), and this route is bundled into the router chunk the
+ * SSR entry imports for every request - so a module-scope Response here
+ * rejected that import and answered 500 on every page of every domain from
+ * 2026-09-08 until it was found. Node allows it, which is why CI stayed green.
+ *
+ * A shared Response is also wrong on its own terms: a body can be sent once,
+ * so the second refused visitor would have received an already-used body.
+ * tests/components/sign-route-refusal.test.tsx guards both.
+ */
+function unavailablePage(): Response {
+  return PAGE(
+    `<!doctype html><meta charset="utf-8"><title>Link unavailable</title>` +
+      `<p>This signing link is not available. It may be invalid, expired, or already ` +
+      `responded to. Please contact the sender for a new link.</p>`,
+  );
+}
 
 function alreadySignedPage(signedAt: string | null | undefined): Response {
   const when = signedAt ? ` on ${escape(new Date(signedAt).toLocaleString())}` : "";
@@ -73,7 +87,7 @@ export const Route = createFileRoute("/sign/$token")({
        */
       GET: async ({ params }) => {
         const documentStore = store();
-        if (!documentStore) return UNAVAILABLE_PAGE;
+        if (!documentStore) return unavailablePage();
 
         const result = await viewSigningRequest(documentStore, params.token, new Date());
 
@@ -83,7 +97,7 @@ export const Route = createFileRoute("/sign/$token")({
           // distinct message per case would let someone probe which tokens
           // are real, and there is nothing a legitimate signer can do about
           // any of them anyway.
-          return UNAVAILABLE_PAGE;
+          return unavailablePage();
         }
 
         const { view } = result;
@@ -103,7 +117,7 @@ export const Route = createFileRoute("/sign/$token")({
 
       POST: async ({ params, request }) => {
         const documentStore = store();
-        if (!documentStore) return UNAVAILABLE_PAGE;
+        if (!documentStore) return unavailablePage();
 
         const form = await request.formData();
         const result = await performSignature(
@@ -145,7 +159,7 @@ export const Route = createFileRoute("/sign/$token")({
 
         // not-found and unavailable render identically to GET's refusal, for
         // the same reason: no distinct message per case.
-        return UNAVAILABLE_PAGE;
+        return unavailablePage();
       },
     },
   },
