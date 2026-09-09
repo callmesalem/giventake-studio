@@ -205,7 +205,12 @@ export const EXPECTATIONS = Object.freeze([
   { path: "/", status: 200, mustNotContain: ERROR_PAGE_MARKER },
   { path: "/careers", status: 200, mustNotContain: ERROR_PAGE_MARKER },
   { path: "/crm/login", status: 200, mustNotContain: ERROR_PAGE_MARKER },
-  { path: "/sign/smoke-probe", status: 200, mustContain: "Link unavailable" },
+  {
+    path: "/sign/smoke-probe",
+    status: 200,
+    mustContain: "Link unavailable",
+    mustNotContain: ERROR_PAGE_MARKER,
+  },
   { path: "/definitely-not-a-page", status: 404 },
 ]);
 
