@@ -105,6 +105,32 @@ jobs:
             test-results/
           retention-days: 7
 
+  # The only job that runs the Cloudflare Workers runtime. Everything above
+  # runs under Node, and Node allows what Workers forbids: on 2026-09-08 a
+  # Response built at module scope passed every job here and took every page
+  # on every domain to 500 for a day. This boots the built Worker under a
+  # pinned wrangler and asks it for five pages (scripts/worker-smoke.mjs). It
+  # gates, because a green pipeline that production rejects is worse than a
+  # red one.
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install
+
+      - name: Build
+        run: bun run build
+
+      - name: Smoke the built Worker under the Workers runtime
+        run: bun run smoke:worker
   # The consent accessibility suite (20 axe-core + keyboard checks) needs a dev
   # server on :8080 and Playwright. Separate job so a flake here never blocks a
   # copy change, and continue-on-error until it has proved stable on CI.

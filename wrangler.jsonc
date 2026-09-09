@@ -11,6 +11,17 @@
   // a worker name, so a rename of the directory or package would deploy to a
   // different Worker than the one serving traffic.
   "name": "callmesalem-giventake-studio",
+
+  // Pinned on purpose. nitro leaves compatibilityDate at "latest", which
+  // writes a recent date into the generated wrangler.json on every build - so
+  // each rebuild silently opted into whatever runtime behaviour Cloudflare had
+  // gated behind a newer date (a 2026-09-02 build got 2026-08-30, a 2026-09-09
+  // build got 2026-09-06). This file wins over that default (defu in nitro's
+  // cloudflare preset), so runtime behaviour now changes only when this line
+  // does. Bump deliberately: edit it, run the build and `bun run smoke:worker`,
+  // and review the change like code. scripts/worker-smoke.mjs refuses a build
+  // whose emitted date differs from this one.
+  "compatibility_date": "2026-09-06",
   "routes": [
     { "pattern": "giventakedevs.com", "custom_domain": true },
     { "pattern": "www.giventakedevs.com", "custom_domain": true },
