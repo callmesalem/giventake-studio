@@ -317,3 +317,107 @@ export function advanceBlockedByUnsignedSow(toStage: unknown, hasSignedSow: unkn
   if (!isCloseStage(toStage)) return false;
   return hasSignedSow !== true;
 }
+
+/* ── Demo sites ─────────────────────────────────────────────────────────────
+ *
+ * Requesting a demo site queues a PUBLIC WEBSITE to be built and deployed for
+ * a business that has not signed anything. That is an external action in the
+ * charter's sense — it puts something on the internet under a prospect's name
+ * — so it gates on the §10 kill switch exactly as sending does, and for the
+ * same reason: when outbound is off, nothing may reach the outside world.
+ *
+ * supabase/migrations/20260911223000_demo_sites.sql says so directly: "the app
+ * layer is responsible for logging it and honouring the kill switch before
+ * calling this". The database cannot do it — demo_site_request is a definer
+ * function with no view of operator_system_control, and wiring one in would
+ * put the kill switch behind the same service_role that is trying to bypass
+ * it. It belongs here, where it is pure and testable.
+ *
+ * Every gate is evaluated and reported rather than returning on the first
+ * failure, for the reason sendPreflight gives: being told one reason, fixing
+ * it, and discovering a second is how people conclude a system is broken.
+ */
+
+/** Statuses that mean a build is already queued or running for this record.
+ *
+ *  'live' is deliberately NOT here. A demo that exists is a reason a human
+ *  might want a rebuild — the business changed hands, the photos are stale —
+ *  and refusing that is a judgement this gate has no standing to make. 'failed'
+ *  is likewise absent: a failed build is precisely when a retry is wanted. */
+export const DEMO_SITE_IN_FLIGHT = ["requested", "building"] as const;
+
+export function demoSiteInFlight(status: unknown): boolean {
+  return (DEMO_SITE_IN_FLIGHT as readonly string[]).includes(String(status));
+}
+
+export interface DemoSiteGateFacts {
+  outboundEnabled: boolean | undefined;
+  outboundReason?: string | undefined;
+  /** True when the request carries a company_id or a deal_id. Mirrors the
+   *  table's own check constraint; a demo attached to neither belongs to
+   *  nothing and could never be surfaced again. */
+  hasTarget: boolean;
+  businessName: string;
+  /** Statuses of the demo sites already on this record. */
+  existingStatuses: readonly string[];
+}
+
+export function buildDemoSiteGates(facts: DemoSiteGateFacts): Gate[] {
+  const name = facts.businessName.trim();
+  const inFlight = facts.existingStatuses.filter(demoSiteInFlight).length;
+
+  return [
+    {
+      id: "kill-switch",
+      label: "Outbound enabled",
+      // Anything other than an explicit true is off, same as the send gate. An
+      // undefined control — unreadable, absent, malformed — must never read as
+      // permission to publish a site.
+      pass: facts.outboundEnabled === true,
+      blocking: true,
+      detail:
+        facts.outboundEnabled === true
+          ? "operator_system_control.outbound_enabled is on."
+          : `Off${facts.outboundReason ? ` — "${facts.outboundReason}"` : ""}. Deploying a public demo is an external action; nothing can be queued while this is false.`,
+    },
+    {
+      id: "target",
+      label: "Attached to a record",
+      pass: facts.hasTarget,
+      blocking: true,
+      detail: facts.hasTarget
+        ? "Request is attached to a company or a deal."
+        : "A demo must be attached to a company or a deal, or it can never be surfaced again.",
+    },
+    {
+      id: "business-name",
+      label: "Business name",
+      pass: name.length > 0,
+      blocking: true,
+      detail: name
+        ? `The builder will be told to build for "${name}".`
+        : "The builder has nothing to search Google Places for without a business name.",
+    },
+    {
+      id: "no-duplicate",
+      label: "Nothing already building",
+      pass: inFlight === 0,
+      blocking: true,
+      // Not a constraint the database carries. It is here because the action is
+      // external and not idempotent: a second click while the first build is
+      // still running deploys a second public site, and nothing downstream
+      // would ever notice the pair.
+      detail:
+        inFlight === 0
+          ? "No demo is queued or building for this record."
+          : `${inFlight} demo${inFlight === 1 ? " is" : "s are"} already queued or building. Wait for it to finish or fail.`,
+    },
+  ];
+}
+
+/** Whether a demo may be queued. Same rule as isSendable — a blocking gate that
+ *  did not pass refuses — kept as its own name so a reader of the demo path is
+ *  not sent to a function about email to find out what it does. */
+export function isDemoSiteRequestable(gates: Gate[]): boolean {
+  return isSendable(gates);
+}
