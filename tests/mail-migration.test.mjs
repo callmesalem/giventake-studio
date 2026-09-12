@@ -11,6 +11,7 @@ const statusSql = readFileSync(
   "supabase/migrations/20260912100000_mail_account_status.sql",
   "utf8",
 );
+const writeSql = readFileSync("supabase/migrations/20260912110000_mail_account_write.sql", "utf8");
 
 /** SQL with `-- ...` comment text removed, so prose about what the code does
  *  NOT do cannot satisfy a doesNotMatch asking about executable SQL. */
@@ -134,4 +135,141 @@ test("mail_account_status never selects a token column", () => {
 
 test("mail_account_status pins search_path", () => {
   assert.match(statusSql, /set search_path = public, pg_temp/);
+});
+
+test("mail_account_connect and mail_account_set_status exist", () => {
+  assert.match(writeSql, /create or replace function public\.mail_account_connect\(/);
+  assert.match(writeSql, /create or replace function public\.mail_account_set_status\(/);
+});
+
+test("mail_account_connect upserts on the email conflict rather than plain-inserting", () => {
+  const body = code(writeSql);
+  const start = body.indexOf("function public.mail_account_connect");
+  const end = body.indexOf("$$;", start);
+  const fnBody = body.slice(start, end);
+  // A plain `insert into mail_accounts (...) values (...)` with no conflict
+  // clause would fail outright on a reconnect, since email is unique. The
+  // conflict target must be the email column specifically — conflicting on
+  // some other column (or none) would not protect the one-row-per-mailbox
+  // invariant a reconnect depends on.
+  assert.match(fnBody, /on conflict\s*\(\s*email\s*\)\s*do update/i);
+});
+
+test("mail_account_connect sets status to connected on both insert and reconnect", () => {
+  const body = code(writeSql);
+  const start = body.indexOf("function public.mail_account_connect");
+  const end = body.indexOf("$$;", start);
+  const fnBody = body.slice(start, end);
+
+  const valuesMatch = fnBody.match(/values\s*\(([\s\S]*?)\)/);
+  assert.ok(valuesMatch, "mail_account_connect must have an insert values list");
+  assert.match(
+    valuesMatch[1],
+    /'connected'/,
+    "the inserted row must be created with status connected, not left to a default",
+  );
+
+  const updateMatch = fnBody.match(/do update\s+set([\s\S]*?)returning/);
+  assert.ok(updateMatch, "mail_account_connect must have an on conflict do update clause");
+  assert.match(
+    updateMatch[1],
+    /status\s*=\s*'connected'/,
+    "a reconnect must set status back to connected even if the row was reauth_required or disabled",
+  );
+});
+
+test("mail_account_connect never touches history_id", () => {
+  // The cursor stays valid across a reconnect; clearing it would force a
+  // needless backfill. Checked over the whole file, not just this function,
+  // so a stray reference anywhere in mail_account_connect or
+  // mail_account_set_status is caught.
+  assert.doesNotMatch(code(writeSql), /history_id/);
+});
+
+test("mail_account_connect refuses a blank email and a blank refresh token", () => {
+  const body = code(writeSql);
+  const start = body.indexOf("function public.mail_account_connect");
+  const end = body.indexOf("$$;", start);
+  const fnBody = body.slice(start, end);
+  const raises = fnBody.match(/raise exception/g) ?? [];
+  assert.ok(
+    raises.length >= 2,
+    "must raise separately for a blank email and a blank refresh token, not skip either guard",
+  );
+  assert.match(fnBody, /p_email/, "the email guard must reference p_email");
+  assert.match(
+    fnBody,
+    /p_refresh_token_enc/,
+    "the refresh-token guard must reference p_refresh_token_enc",
+  );
+});
+
+test("mail_account_set_status validates all three status values in the database", () => {
+  const body = code(writeSql);
+  const start = body.indexOf("function public.mail_account_set_status");
+  const end = body.indexOf("$$;", start);
+  const fnBody = body.slice(start, end);
+
+  // Anchored on the actual allow-list, not just on any raise anywhere in the
+  // function — a check that validated against only one or two of the three
+  // values would let a bad string land the row in an impossible status, and a
+  // looser regex (e.g. just `/raise exception/`) would not notice that.
+  const allowList = fnBody.match(/p_status\s+not in\s*\(([^)]*)\)/i);
+  assert.ok(allowList, "mail_account_set_status must validate p_status against an allow-list");
+  for (const status of ["connected", "reauth_required", "disabled"]) {
+    assert.match(allowList[1], new RegExp(`'${status}'`), `allow-list must include ${status}`);
+  }
+  assert.match(fnBody, /raise exception/, "an invalid status must raise, not pass through");
+
+  // The other half of the contract: raise if no row matched, same as
+  // mail_account_set_history_id.
+  assert.match(fnBody, /if not found then/i);
+});
+
+test("both write functions are granted to crm_agent and agent_sami, and NOT to service_role, anon, or authenticated", () => {
+  // This is the important one. The Worker holds no encryption key and could
+  // only ever write a garbage token through mail_account_connect, and it has
+  // no legitimate reason to flip a mailbox's status — so service_role must be
+  // absent here even though it is granted on every other function in this
+  // schema. A regex that only checked for crm_agent/agent_sami presence would
+  // pass even if someone "fixed" this by adding service_role back in; the
+  // doesNotMatch clause is what actually polices that.
+  const fnNames = ["mail_account_connect", "mail_account_set_status"];
+  for (const name of fnNames) {
+    // Both the create and the revoke must exist for this function, so the
+    // grant match below is provably about a real, guarded function and not a
+    // typo that happens to match nothing.
+    assert.match(code(writeSql), new RegExp(`create or replace function public\\.${name}\\(`));
+    assert.match(
+      code(writeSql),
+      new RegExp(`revoke all on function public\\.${name}\\([^)]*\\) from public;`),
+    );
+
+    const grant = code(writeSql).match(
+      new RegExp(`grant execute on function public\\.${name}\\([^)]*\\)[^;]*;`),
+    );
+    assert.ok(grant, `${name} has no grant at all`);
+    assert.match(grant[0], /crm_agent/, `${name} must be granted to crm_agent`);
+    assert.match(grant[0], /agent_sami/, `${name} must be granted to agent_sami`);
+    assert.doesNotMatch(
+      grant[0],
+      /service_role|anon|authenticated/,
+      `${name} must not be granted to service_role, anon, or authenticated`,
+    );
+  }
+});
+
+test("both write functions revoke PUBLIC before granting", () => {
+  const revokes = code(writeSql).match(/revoke all on function/g) ?? [];
+  const grants = code(writeSql).match(/grant execute on function/g) ?? [];
+  assert.equal(revokes.length, 2, "one revoke per function");
+  assert.equal(grants.length, 2, "one grant per function");
+});
+
+test("both write functions pin search_path and are security definer", () => {
+  const definers = code(writeSql).match(/security definer/g) ?? [];
+  const paths = code(writeSql).match(/set search_path = public, pg_temp/g) ?? [];
+  assert.equal(definers.length, 2);
+  assert.equal(paths.length, 2);
+  assert.equal(definers.length, paths.length);
 });

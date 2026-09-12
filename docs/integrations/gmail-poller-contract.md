@@ -9,10 +9,13 @@ more than reading it once here. Match that document's register: this is a
 contract, not a tutorial, and it says what the system cannot do as plainly as
 what it can.
 
-The four functions this document is mostly about are already deployed. Two
-gaps below are not: sections 2 and 8 each describe a write that no function in
-this schema currently performs. They are called out where they occur rather
-than smoothed over.
+The six functions this document is mostly about — the four sync functions in
+section 3, plus `mail_account_connect` and `mail_account_set_status` covered
+in sections 2 and 8 — are all deployed as of
+`20260912110000_mail_account_write.sql`. Earlier revisions of this document
+described the connect insert and the status write as gaps no function in the
+schema could perform; both are closed, and the sections below describe the
+functions that closed them rather than their absence.
 
 ## 1. Why this runs on the VPS
 
@@ -45,33 +48,48 @@ different OAuth flow entirely — Workspace SSO for CRM operator login via
 GoTrue — and has nothing to do with the mailbox.) When an operator authorizes
 the mailbox, Google redirects to the VPS with a code. The VPS exchanges that
 code with Google directly, encrypts the resulting refresh token with its local
-key, and inserts the `mail_accounts` row. The Worker is not involved at any
-point in this exchange and cannot be, for the reason in section 1.
+key, and calls `mail_account_connect` to record the account. The Worker is not
+involved at any point in this exchange and cannot be, for the reason in
+section 1.
 
-**No function in this schema performs that insert.** The four functions
-granted for sync (section 3) are the entire agent-half surface, and none of
-them creates an account row: `mail_sync_upsert_thread` and
-`mail_sync_upsert_messages` write child tables that reference an existing
-`account_id`, and `mail_account_set_history_id` updates one column of an
-existing row. Creating the row itself is a write outside all four grants. The
-only credential that reaches `mail_accounts` without going through one of
-those functions is one that bypasses RLS on the table directly — today, the
-service-role key, the same key `docs/operations/operator-control/agent-capabilities.md`
-already treats as outside its guard boundary ("already bypasses RLS, so it was
-never inside it"). The password the poller uses for the sync loop in section 3
-(`crm_agent` today) cannot perform this insert; the connect flow needs the
-service-role key instead.
+**`mail_account_connect`, defined in `20260912110000_mail_account_write.sql`,
+is that call:**
 
-**Precondition the connect flow must honour: at most one row in
-`mail_accounts`, for the whole of Phase 1.** Nothing in the schema enforces
-this. `mail_account_status()` — the app-facing function described in section 3
-below — always returns the single oldest row by `created_at`; `mail_inbox_list`
-has no account filter at all and lists every thread in the table regardless of
-which account it belongs to. If a second mailbox were ever connected, its threads would appear
-in the one inbox everybody sees, merged in silently under whichever account
-happens to be older, with no way for anyone looking at the CRM to tell the two
-mailboxes apart. The connect flow must check for an existing connected row and
-refuse — or require an explicit override — before inserting a second one.
+| Function | Signature | Returns |
+|---|---|---|
+| `mail_account_connect` | `(p_email text, p_google_sub text, p_refresh_token_enc text, p_access_token_enc text, p_token_expires_at timestamptz, p_connected_by uuid)` | `uuid` — the account's `id` |
+
+It refuses a blank `p_email` or a blank `p_refresh_token_enc` outright — a
+connect with no refresh token would produce an account that can never sync,
+which is worse than no account. It upserts **on `email`**, since
+`mail_accounts.email` is `not null unique`: reconnecting the same mailbox
+updates the existing row rather than failing or creating a second one, and on
+both the insert and the reconnect it sets `status = 'connected'` — a
+successful OAuth exchange is by definition a connected mailbox. Reconnect does
+**not** touch `history_id`; the cursor stays valid across a reconnect, so
+clearing it would force a needless backfill. It is called once, at the end of
+the exchange described above — never from the poll loop in section 3.
+
+It is granted to `crm_agent` and `agent_sami`, the same poller credential used
+in section 3, and **deliberately not to `service_role`**: the connect flow no
+longer needs the service-role key for this write. `service_role` still
+bypasses RLS on `mail_accounts` directly and nothing here changes that — this
+function just gives the poller's own credential a narrow, validated door
+instead of requiring the wider key for this one write.
+
+**Precondition the connect flow must still honour: at most one row in
+`mail_accounts`, for the whole of Phase 1.** `mail_account_connect`'s
+upsert-on-email only protects against the *same* mailbox being connected
+twice; it does nothing to stop two *different* email addresses from producing
+two rows. `mail_account_status()` — the app-facing function described in
+section 3 below — always returns the single oldest row by `created_at`;
+`mail_inbox_list` has no account filter at all and lists every thread in the
+table regardless of which account it belongs to. If a second mailbox were ever
+connected, its threads would appear in the one inbox everybody sees, merged in
+silently under whichever account happens to be older, with no way for anyone
+looking at the CRM to tell the two mailboxes apart. The connect flow must
+check for an existing connected row and refuse — or require an explicit
+override — before calling `mail_account_connect` with a different email.
 Multi-mailbox is a later phase, and both `mail_account_status` and
 `mail_inbox_list` will need to be revisited before a second row is safe.
 
@@ -253,38 +271,42 @@ data, they are read by more people than the CRM itself is.
 
 When Google rejects a refresh token outright — an `invalid_grant` response at
 step 1 of the poll loop, meaning the operator revoked access, changed their
-password, or the token lapsed from disuse — set the account's `status` to
-`reauth_required`. That is what lets `mail_account_status()` and the inbox UI
-tell an operator the mailbox needs attention, instead of silently continuing
-to serve whatever synced last, which is the same class of failure as section
-5's expired cursor except with no backfill available: an invalid refresh
-token cannot be exchanged for anything, bounded window or not, so there is
-nothing to retry into. Reconnecting the mailbox through the flow in section 2
-is the only way out of `reauth_required`.
+password, or the token lapsed from disuse — call `mail_account_set_status` to
+set the account's `status` to `reauth_required`. That is what lets
+`mail_account_status()` and the inbox UI tell an operator the mailbox needs
+attention, instead of silently continuing to serve whatever synced last, which
+is the same class of failure as section 5's expired cursor except with no
+backfill available: an invalid refresh token cannot be exchanged for anything,
+bounded window or not, so there is nothing to retry into. Reconnecting the
+mailbox through the flow in section 2 is the only way out of
+`reauth_required`.
 
-**No function in this schema can make that write.** `mail_account_set_history_id`
-is the only agent-half function that touches `mail_accounts`, and it writes
-exactly one column (`history_id`) of a row that already exists. Setting
-`status` is a write outside all four grants in section 3 — the same shape of
-gap as the account insert in section 2, and it has the same consequence: as
-things stand, only a credential that bypasses RLS on the table directly (the
-service-role key) can make this change, not the `crm_agent` / `agent_sami`
-password the poll loop uses. Until a function such as
-`mail_account_set_status(p_account_id uuid, p_status text)` is added and
-granted the same way as the other four, this section describes the behaviour
-the poller must eventually produce, not an RPC it can call today to produce
-it.
+**`mail_account_set_status`, defined alongside `mail_account_connect` in
+`20260912110000_mail_account_write.sql`:**
+
+| Function | Signature | Returns |
+|---|---|---|
+| `mail_account_set_status` | `(p_account_id uuid, p_status text)` | `void` |
+
+It validates `p_status` against `('connected', 'reauth_required', 'disabled')`
+in the database and raises, naming the bad value, on anything else — so a bad
+string from the poller cannot land a row in an impossible status. It raises if
+`p_account_id` does not match an existing row, the same as
+`mail_account_set_history_id`. It is granted to `crm_agent` and `agent_sami`,
+the same poller credential as the rest of section 3, and **deliberately not to
+`service_role`**: the Worker has no legitimate reason to disable a mailbox or
+flag it for reauth, and granting it that capability would have no
+corresponding need. Call it from the same place step 1 detects
+`invalid_grant`, with `p_status = 'reauth_required'`.
 
 ## Known gaps in this contract
 
 Collected here so they are not lost inside the sections above:
 
-- **No RPC creates a `mail_accounts` row** (section 2). The connect flow needs
-  the service-role key or a new function; none of the four sync grants reach
-  this table's `insert`.
-- **No RPC sets `mail_accounts.status`** (section 8). Same shape of gap,
-  same consequence: today, only the service-role key can flip an account to
-  `reauth_required`.
+- **Neither `mail_account_connect` nor `mail_account_set_status` enforces the
+  single-mailbox precondition** (section 2). Either can be called with a
+  second, different email and nothing in the database stops it — the connect
+  flow itself is the only thing standing between Phase 1 and a second row.
 - **`mail_account_for_sync()` returns up to five rows**, not one. Phase 1's
   single-mailbox precondition (section 2) is what keeps that at one in
   practice; the function itself does not enforce it.
