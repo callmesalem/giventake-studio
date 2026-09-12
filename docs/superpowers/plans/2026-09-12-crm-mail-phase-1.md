@@ -61,7 +61,11 @@ Tasks 1 through 6 can be built and tested without any of these. Only the end-to-
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: RPCs `mail_inbox_list(p_limit int, p_offset int)`, `mail_threads_for_deal(p_deal_id uuid)`, `mail_threads_for_contact(p_contact_id uuid)` for `service_role`; `mail_account_for_sync()`, `mail_sync_upsert_thread(...)`, `mail_sync_upsert_messages(p_thread_gmail_id text, p_messages jsonb)`, `mail_account_set_history_id(p_account_id uuid, p_history_id text)` for `agent_sami`.
+- Produces: RPCs `mail_inbox_list(p_limit int, p_offset int)`, `mail_threads_for_deal(p_deal_id uuid)`, `mail_threads_for_contact(p_contact_id uuid)` for `service_role`; `mail_account_for_sync()`, `mail_sync_upsert_thread(...)`, `mail_sync_upsert_messages(p_thread_id uuid, p_messages jsonb)`, `mail_account_set_history_id(p_account_id uuid, p_history_id text)` for `agent_sami`.
+
+  `mail_sync_upsert_messages` takes the **internal** `mail_threads.id`, not the
+  Gmail thread id: `mail_sync_upsert_thread` already returns that uuid, so the
+  poller holds it and keying on the Gmail id would force a second lookup.
 
 - [ ] **Step 1: Write the failing migration test**
 
@@ -472,7 +476,7 @@ grant execute on function public.mail_account_set_history_id(uuid, text) to serv
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `node --experimental-strip-types tests/mail-migration.test.mjs`
-Expected: PASS, 9 tests.
+Expected: PASS, 10 tests.
 
 - [ ] **Step 5: Normalize line endings and commit**
 
