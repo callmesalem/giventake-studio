@@ -54,10 +54,7 @@ export const listInbox = createServerFn({ method: "GET" }).handler(async (): Pro
   const { store } = await forInbox();
 
   try {
-    const [account, threads] = await Promise.all([
-      store.accountStatus(),
-      store.listInbox(50, 0),
-    ]);
+    const [account, threads] = await Promise.all([store.accountStatus(), store.listInbox(50, 0)]);
 
     return {
       available: true,
@@ -72,6 +69,12 @@ export const listInbox = createServerFn({ method: "GET" }).handler(async (): Pro
     // Nothing is logged: these rows carry client names and subject lines.
     // The UI says the mail store is unreachable, which is all an operator can
     // act on anyway.
-    return { available: false, connected: false, accountStatus: null, accountEmail: "", threads: [] };
+    return {
+      available: false,
+      connected: false,
+      accountStatus: null,
+      accountEmail: "",
+      threads: [],
+    };
   }
 });

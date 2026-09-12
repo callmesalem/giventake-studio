@@ -29,7 +29,7 @@ test("there is no body column anywhere, under any name", () => {
   // Matching /\bbody\b/ would be useless here: `_` is a word character, so the
   // word boundary never fires at message_body, raw_body or body_html, and the
   // test would pass against the exact column it exists to forbid.
-  assert.doesNotMatch(code(sql), /^\s*[a-z_]*body[a-z_]*\s+\w/mi);
+  assert.doesNotMatch(code(sql), /^\s*[a-z_]*body[a-z_]*\s+\w/im);
 });
 
 test("RLS is on for every table and no policy is created", () => {
@@ -40,7 +40,10 @@ test("RLS is on for every table and no policy is created", () => {
 });
 
 test("the default anon/authenticated grant is revoked", () => {
-  assert.match(sql, /revoke all on table public\.mail_accounts, public\.mail_threads, public\.mail_messages from anon, authenticated/);
+  assert.match(
+    sql,
+    /revoke all on table public\.mail_accounts, public\.mail_threads, public\.mail_messages from anon, authenticated/,
+  );
 });
 
 test("no app-facing function can read a token column", () => {
@@ -50,7 +53,11 @@ test("no app-facing function can read a token column", () => {
   for (const fn of appFns) {
     const body = sql.slice(sql.indexOf(`function public.${fn}`));
     const end = body.indexOf("$$;");
-    assert.doesNotMatch(body.slice(0, end), /refresh_token_enc|access_token_enc/, `${fn} must not read tokens`);
+    assert.doesNotMatch(
+      body.slice(0, end),
+      /refresh_token_enc|access_token_enc/,
+      `${fn} must not read tokens`,
+    );
   }
 });
 
@@ -65,7 +72,9 @@ test("every agent-half function is granted to both transition roles", () => {
     "mail_account_set_history_id",
   ];
   for (const fn of agentFns) {
-    const grant = code(sql).match(new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\)[^;]*;`));
+    const grant = code(sql).match(
+      new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\)[^;]*;`),
+    );
     assert.ok(grant, `${fn} has no grant at all`);
     assert.match(grant[0], /crm_agent/, `${fn} must be granted to crm_agent`);
     assert.match(grant[0], /agent_sami/, `${fn} must be granted to agent_sami`);
@@ -77,10 +86,16 @@ test("every app-facing function is granted to service_role and nothing else", ()
   // agent that can list inboxes is outside the contract this migration draws.
   const appFns = ["mail_inbox_list", "mail_threads_for_deal", "mail_threads_for_contact"];
   for (const fn of appFns) {
-    const grant = code(sql).match(new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\)[^;]*;`));
+    const grant = code(sql).match(
+      new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\)[^;]*;`),
+    );
     assert.ok(grant, `${fn} has no grant at all`);
     assert.match(grant[0], /to service_role;/, `${fn} must be service_role only`);
-    assert.doesNotMatch(grant[0], /anon|authenticated|crm_agent|agent_sami/, `${fn} must not reach any other role`);
+    assert.doesNotMatch(
+      grant[0],
+      /anon|authenticated|crm_agent|agent_sami/,
+      `${fn} must not reach any other role`,
+    );
   }
 });
 
@@ -104,7 +119,10 @@ test("the inbox list is bounded", () => {
 test("mail_account_status is app-facing and service_role only", () => {
   assert.match(statusSql, /create or replace function public\.mail_account_status\(\)/);
   assert.match(statusSql, /revoke all on function public\.mail_account_status\(\) from public;/);
-  assert.match(statusSql, /grant execute on function public\.mail_account_status\(\) to service_role;/);
+  assert.match(
+    statusSql,
+    /grant execute on function public\.mail_account_status\(\) to service_role;/,
+  );
   assert.doesNotMatch(code(statusSql), /crm_agent|agent_sami|anon|authenticated/);
 });
 
