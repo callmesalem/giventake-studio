@@ -41,6 +41,7 @@ import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
 import { Route as CrmMarketingRouteImport } from './routes/crm.marketing'
 import { Route as CrmLoginRouteImport } from './routes/crm.login'
 import { Route as CrmLeadsRouteImport } from './routes/crm.leads'
+import { Route as CrmInboxRouteImport } from './routes/crm.inbox'
 import { Route as CrmDocumentsRouteImport } from './routes/crm.documents'
 import { Route as CrmClientsRouteImport } from './routes/crm.clients'
 import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
@@ -217,6 +218,11 @@ const CrmLeadsRoute = CrmLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmInboxRoute = CrmInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmDocumentsRoute = CrmDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
   '/crm/documents': typeof CrmDocumentsRoute
+  '/crm/inbox': typeof CrmInboxRoute
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
   '/crm/marketing': typeof CrmMarketingRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
   '/crm/documents': typeof CrmDocumentsRoute
+  '/crm/inbox': typeof CrmInboxRoute
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
   '/crm/marketing': typeof CrmMarketingRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
   '/crm/documents': typeof CrmDocumentsRoute
+  '/crm/inbox': typeof CrmInboxRoute
   '/crm/leads': typeof CrmLeadsRouteWithChildren
   '/crm/login': typeof CrmLoginRoute
   '/crm/marketing': typeof CrmMarketingRoute
@@ -463,6 +472,7 @@ export interface FileRouteTypes {
     | '/crm/approvals'
     | '/crm/clients'
     | '/crm/documents'
+    | '/crm/inbox'
     | '/crm/leads'
     | '/crm/login'
     | '/crm/marketing'
@@ -511,6 +521,7 @@ export interface FileRouteTypes {
     | '/crm/approvals'
     | '/crm/clients'
     | '/crm/documents'
+    | '/crm/inbox'
     | '/crm/leads'
     | '/crm/login'
     | '/crm/marketing'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/crm/approvals'
     | '/crm/clients'
     | '/crm/documents'
+    | '/crm/inbox'
     | '/crm/leads'
     | '/crm/login'
     | '/crm/marketing'
@@ -841,6 +853,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmLeadsRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/crm/inbox': {
+      id: '/crm/inbox'
+      path: '/inbox'
+      fullPath: '/crm/inbox'
+      preLoaderRoute: typeof CrmInboxRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/crm/documents': {
       id: '/crm/documents'
       path: '/documents'
@@ -965,6 +984,7 @@ interface CrmRouteChildren {
   CrmApprovalsRoute: typeof CrmApprovalsRoute
   CrmClientsRoute: typeof CrmClientsRoute
   CrmDocumentsRoute: typeof CrmDocumentsRoute
+  CrmInboxRoute: typeof CrmInboxRoute
   CrmLeadsRoute: typeof CrmLeadsRouteWithChildren
   CrmLoginRoute: typeof CrmLoginRoute
   CrmMarketingRoute: typeof CrmMarketingRoute
@@ -991,6 +1011,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmApprovalsRoute: CrmApprovalsRoute,
   CrmClientsRoute: CrmClientsRoute,
   CrmDocumentsRoute: CrmDocumentsRoute,
+  CrmInboxRoute: CrmInboxRoute,
   CrmLeadsRoute: CrmLeadsRouteWithChildren,
   CrmLoginRoute: CrmLoginRoute,
   CrmMarketingRoute: CrmMarketingRoute,
