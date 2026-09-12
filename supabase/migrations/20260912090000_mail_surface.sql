@@ -304,7 +304,13 @@ revoke all on function public.mail_account_for_sync() from public;
 revoke all on function public.mail_sync_upsert_thread(uuid, text, text, text, text[], timestamptz, boolean, text[]) from public;
 revoke all on function public.mail_sync_upsert_messages(uuid, jsonb) from public;
 revoke all on function public.mail_account_set_history_id(uuid, text) from public;
-grant execute on function public.mail_account_for_sync() to service_role, agent_sami;
-grant execute on function public.mail_sync_upsert_thread(uuid, text, text, text, text[], timestamptz, boolean, text[]) to service_role, agent_sami;
-grant execute on function public.mail_sync_upsert_messages(uuid, jsonb) to service_role, agent_sami;
-grant execute on function public.mail_account_set_history_id(uuid, text) to service_role, agent_sami;
+
+-- Both roles, deliberately. agent-capabilities.md:155: "Sami connects as
+-- crm_agent today", and setting agent_sami's password is step 2 of a cutover
+-- that has not happened. Granting only agent_sami would leave the poller
+-- unable to call any of these. Step 5 of that cutover revokes crm_agent from
+-- the guarded functions; these four join that list.
+grant execute on function public.mail_account_for_sync() to service_role, crm_agent, agent_sami;
+grant execute on function public.mail_sync_upsert_thread(uuid, text, text, text, text[], timestamptz, boolean, text[]) to service_role, crm_agent, agent_sami;
+grant execute on function public.mail_sync_upsert_messages(uuid, jsonb) to service_role, crm_agent, agent_sami;
+grant execute on function public.mail_account_set_history_id(uuid, text) to service_role, crm_agent, agent_sami;

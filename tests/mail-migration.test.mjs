@@ -18,10 +18,14 @@ test("all three tables are created idempotently", () => {
   }
 });
 
-test("there is no body column anywhere", () => {
+test("there is no body column anywhere, under any name", () => {
   // The absence of the column is the enforcement. With nowhere to put a body,
   // nobody adds a cache "just for now".
-  assert.doesNotMatch(code(sql), /\bbody\b/);
+  //
+  // Matching /\bbody\b/ would be useless here: `_` is a word character, so the
+  // word boundary never fires at message_body, raw_body or body_html, and the
+  // test would pass against the exact column it exists to forbid.
+  assert.doesNotMatch(code(sql), /^\s*[a-z_]*body[a-z_]*\s+\w/mi);
 });
 
 test("RLS is on for every table and no policy is created", () => {
@@ -46,17 +50,34 @@ test("no app-facing function can read a token column", () => {
   }
 });
 
-test("the sync functions are granted to agent_sami, not only crm_agent", () => {
-  // agent-capabilities.md:165 retires crm_agent. Granting to it alone breaks
-  // mail at cutover, which is the mistake the demo_sites migration made.
-  for (const fn of ["mail_account_for_sync", "mail_account_set_history_id"]) {
-    assert.match(sql, new RegExp(`grant execute on function public\\.${fn}[^;]*to [^;]*agent_sami`));
+test("every agent-half function is granted to both transition roles", () => {
+  // Both, not either: agent_sami has no password yet (capability cutover step 2)
+  // and Sami connects as crm_agent today. Dropping crm_agent breaks the poller
+  // now; dropping agent_sami breaks it at cutover.
+  const agentFns = [
+    "mail_account_for_sync",
+    "mail_sync_upsert_thread",
+    "mail_sync_upsert_messages",
+    "mail_account_set_history_id",
+  ];
+  for (const fn of agentFns) {
+    const grant = code(sql).match(new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\)[^;]*;`));
+    assert.ok(grant, `${fn} has no grant at all`);
+    assert.match(grant[0], /crm_agent/, `${fn} must be granted to crm_agent`);
+    assert.match(grant[0], /agent_sami/, `${fn} must be granted to agent_sami`);
   }
 });
 
-test("app functions are granted to service_role only", () => {
-  assert.match(sql, /grant execute on function public\.mail_inbox_list\(integer, integer\) to service_role;/);
-  assert.doesNotMatch(code(sql), /mail_inbox_list[^;]*to (anon|authenticated|agent_sami)/);
+test("every app-facing function is granted to service_role and nothing else", () => {
+  // The browser must never reach these, and neither must the VPS agent: an
+  // agent that can list inboxes is outside the contract this migration draws.
+  const appFns = ["mail_inbox_list", "mail_threads_for_deal", "mail_threads_for_contact"];
+  for (const fn of appFns) {
+    const grant = code(sql).match(new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\)[^;]*;`));
+    assert.ok(grant, `${fn} has no grant at all`);
+    assert.match(grant[0], /to service_role;/, `${fn} must be service_role only`);
+    assert.doesNotMatch(grant[0], /anon|authenticated|crm_agent|agent_sami/, `${fn} must not reach any other role`);
+  }
 });
 
 test("every function revokes PUBLIC before granting", () => {
