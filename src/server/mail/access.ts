@@ -33,10 +33,3 @@ export async function forInbox() {
   const session = await requireCrmSession();
   return { session, store: createSupabaseMailStore(config()) };
 }
-
-/** The connected mailbox address, for the sender column. Read from the
- *  environment rather than the database because the list view needs it on
- *  every render and it does not change. */
-export function accountEmail(): string {
-  return process.env.MAIL_ACCOUNT_EMAIL ?? "";
-}

@@ -4,6 +4,9 @@ export interface MailStore {
   listInbox(limit: number, offset: number): Promise<InboxThread[]>;
   threadsForDeal(dealId: string): Promise<MailThreadRow[]>;
   threadsForContact(contactId: string): Promise<MailThreadRow[]>;
+  /** The connected mailbox's identity and health, or null when none is
+   *  connected. Deliberately returns no token: this is the app's half. */
+  accountStatus(): Promise<{ email: string; status: string } | null>;
 }
 
 interface InboxJson {
@@ -127,6 +130,11 @@ export function createSupabaseMailStore(config: {
         p_contact_id: contactId,
       });
       return (rows ?? []).map(toThread);
+    },
+
+    async accountStatus() {
+      const rows = await rpc<{ email: string; status: string }[]>("mail_account_status");
+      return rows?.[0] ?? null;
     },
   };
 }

@@ -41,27 +41,37 @@ export interface InboxVM {
   available: boolean;
   /** False when the schema is reachable but no mailbox has been connected. */
   connected: boolean;
+  /** The connected mailbox's status, or null when none is connected.
+   *  'reauth_required' means a mailbox exists but its token was rejected,
+   *  which is not the same as having no mailbox. */
+  accountStatus: string | null;
   accountEmail: string;
   threads: InboxThreadVM[];
 }
 
 export const listInbox = createServerFn({ method: "GET" }).handler(async (): Promise<InboxVM> => {
-  const { forInbox, accountEmail } = await import("@/server/mail/access");
+  const { forInbox } = await import("@/server/mail/access");
   const { store } = await forInbox();
-  const email = accountEmail();
 
   try {
-    const threads = await store.listInbox(50, 0);
+    const [account, threads] = await Promise.all([
+      store.accountStatus(),
+      store.listInbox(50, 0),
+    ]);
+
     return {
       available: true,
-      connected: Boolean(email),
-      accountEmail: email,
+      // From the database, not the environment. An env var can say "connected"
+      // while mail_accounts holds no row, or holds one whose token was rejected.
+      connected: account?.status === "connected",
+      accountStatus: account?.status ?? null,
+      accountEmail: account?.email ?? "",
       threads,
     };
   } catch {
     // Nothing is logged: these rows carry client names and subject lines.
     // The UI says the mail store is unreachable, which is all an operator can
     // act on anyway.
-    return { available: false, connected: false, accountEmail: email, threads: [] };
+    return { available: false, connected: false, accountStatus: null, accountEmail: "", threads: [] };
   }
 });

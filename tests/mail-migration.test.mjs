@@ -7,6 +7,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const sql = readFileSync("supabase/migrations/20260912090000_mail_surface.sql", "utf8");
+const statusSql = readFileSync(
+  "supabase/migrations/20260912100000_mail_account_status.sql",
+  "utf8",
+);
 
 /** SQL with `-- ...` comment text removed, so prose about what the code does
  *  NOT do cannot satisfy a doesNotMatch asking about executable SQL. */
@@ -95,4 +99,21 @@ test("every definer pins search_path", () => {
 
 test("the inbox list is bounded", () => {
   assert.match(sql, /least\(coalesce\(p_limit, 50\), 200\)/);
+});
+
+test("mail_account_status is app-facing and service_role only", () => {
+  assert.match(statusSql, /create or replace function public\.mail_account_status\(\)/);
+  assert.match(statusSql, /revoke all on function public\.mail_account_status\(\) from public;/);
+  assert.match(statusSql, /grant execute on function public\.mail_account_status\(\) to service_role;/);
+  assert.doesNotMatch(code(statusSql), /crm_agent|agent_sami|anon|authenticated/);
+});
+
+test("mail_account_status never selects a token column", () => {
+  // It is the one app-facing function that touches mail_accounts, the table
+  // holding the ciphertext. Selecting a token here would hand it to the Worker.
+  assert.doesNotMatch(code(statusSql), /refresh_token_enc|access_token_enc/);
+});
+
+test("mail_account_status pins search_path", () => {
+  assert.match(statusSql, /set search_path = public, pg_temp/);
 });
