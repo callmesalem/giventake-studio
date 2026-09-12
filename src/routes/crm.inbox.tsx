@@ -21,14 +21,15 @@ function Inbox() {
 }
 
 /**
- * Four states, deliberately distinct. "The migration is not applied", "a
- * mailbox is connected but its token was rejected", "no mailbox is connected"
- * and "no mail yet" all look identical as an empty list, and an operator has
- * to be able to tell which one they are looking at.
+ * Five states, deliberately distinct. "The migration is not applied", "a
+ * mailbox is connected but its token was rejected", "a mailbox is connected
+ * but switched off", "no mailbox is connected" and "no mail yet" all look
+ * identical as an empty list, and an operator has to be able to tell which
+ * one they are looking at.
  *
- * `reauth_required` is checked before `!vm.connected`: a mailbox whose token
- * was rejected has `connected: false` too, so the reauth message would be
- * unreachable if the order were swapped.
+ * `reauth_required` and `disabled` are both checked before `!vm.connected`:
+ * a mailbox in either state has `connected: false` too, so those messages
+ * would be unreachable if the order were swapped.
  */
 function InboxBody({ vm }: { vm: InboxVM }) {
   if (!vm.available) {
@@ -44,6 +45,14 @@ function InboxBody({ vm }: { vm: InboxVM }) {
       <p className="text-sm" style={{ color: "var(--gt-secondary)" }}>
         Mail is connected to {vm.accountEmail || "this mailbox"}, but the connection needs renewing.
         Nothing has synced since it lapsed. Reconnect on the VPS to resume.
+      </p>
+    );
+  }
+  if (vm.accountStatus === "disabled") {
+    return (
+      <p className="text-sm" style={{ color: "var(--gt-secondary)" }}>
+        Mail for {vm.accountEmail || "this mailbox"} is switched off. Nothing is syncing. Turn it
+        back on from the VPS to resume.
       </p>
     );
   }
