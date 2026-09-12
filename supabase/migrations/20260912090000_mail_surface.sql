@@ -105,7 +105,14 @@ alter table public.mail_messages enable row level security;
 
 -- RLS with no policies denies every row, but the default ACL grant must go too,
 -- matching every sibling migration (see 20260911223000_demo_sites.sql).
-revoke all on table public.mail_accounts, public.mail_threads, public.mail_messages from anon, authenticated;
+revoke all on table public.mail_threads, public.mail_messages from anon, authenticated;
+
+-- mail_accounts holds the encrypted refresh token, which the spec calls the most
+-- dangerous secret in this system. service_role has BYPASSRLS, so RLS alone does
+-- not stop the Worker reading the ciphertext straight off the table: the grant has
+-- to go too. Same form as 20260817120000_website_lead_capture.sql:75 for agent_log.
+-- The definer functions are unaffected; they execute as their owner.
+revoke all on table public.mail_accounts from anon, authenticated, service_role;
 
 -- ── App-facing reads. service_role only. None of these touch a token. ────────
 
@@ -161,11 +168,15 @@ grant execute on function public.mail_inbox_list(integer, integer) to service_ro
 grant execute on function public.mail_threads_for_deal(uuid) to service_role;
 grant execute on function public.mail_threads_for_contact(uuid) to service_role;
 
--- ── The VPS agent's half. agent_sami, never the browser. ────────────────────
+-- ── The VPS agent's half. crm_agent and agent_sami, never service_role. ─────
 --
--- Granted to agent_sami rather than crm_agent because
--- docs/operations/operator-control/agent-capabilities.md:165 retires
--- crm_agent. Granting to the retiring role alone breaks mail at cutover.
+-- Both transition roles, deliberately: agent_sami has no password yet
+-- (capability cutover step 2, docs/operations/operator-control/
+-- agent-capabilities.md) and Sami connects as crm_agent today. Granting only
+-- agent_sami would break mail now; granting only crm_agent would break it at
+-- cutover. service_role is deliberately absent — the app must never be able to
+-- forge mail rows, move the sync cursor, or read a token (see mail_accounts
+-- above), and none of these four functions is called from src/server/mail/store.ts.
 
 create or replace function public.mail_account_for_sync()
 returns table (id uuid, email text, refresh_token_enc text, history_id text)
@@ -305,12 +316,9 @@ revoke all on function public.mail_sync_upsert_thread(uuid, text, text, text, te
 revoke all on function public.mail_sync_upsert_messages(uuid, jsonb) from public;
 revoke all on function public.mail_account_set_history_id(uuid, text) from public;
 
--- Both roles, deliberately. agent-capabilities.md:155: "Sami connects as
--- crm_agent today", and setting agent_sami's password is step 2 of a cutover
--- that has not happened. Granting only agent_sami would leave the poller
--- unable to call any of these. Step 5 of that cutover revokes crm_agent from
--- the guarded functions; these four join that list.
-grant execute on function public.mail_account_for_sync() to service_role, crm_agent, agent_sami;
-grant execute on function public.mail_sync_upsert_thread(uuid, text, text, text, text[], timestamptz, boolean, text[]) to service_role, crm_agent, agent_sami;
-grant execute on function public.mail_sync_upsert_messages(uuid, jsonb) to service_role, crm_agent, agent_sami;
-grant execute on function public.mail_account_set_history_id(uuid, text) to service_role, crm_agent, agent_sami;
+-- Step 5 of that cutover revokes crm_agent from the guarded functions; these
+-- four join that list.
+grant execute on function public.mail_account_for_sync() to crm_agent, agent_sami;
+grant execute on function public.mail_sync_upsert_thread(uuid, text, text, text, text[], timestamptz, boolean, text[]) to crm_agent, agent_sami;
+grant execute on function public.mail_sync_upsert_messages(uuid, jsonb) to crm_agent, agent_sami;
+grant execute on function public.mail_account_set_history_id(uuid, text) to crm_agent, agent_sami;

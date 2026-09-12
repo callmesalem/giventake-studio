@@ -40,10 +40,18 @@ test("RLS is on for every table and no policy is created", () => {
   assert.doesNotMatch(code(sql), /create policy/i);
 });
 
-test("the default anon/authenticated grant is revoked", () => {
+test("the default anon/authenticated grant is revoked, and mail_accounts also loses service_role", () => {
   assert.match(
     sql,
-    /revoke all on table public\.mail_accounts, public\.mail_threads, public\.mail_messages from anon, authenticated/,
+    /revoke all on table public\.mail_threads, public\.mail_messages from anon, authenticated/,
+  );
+  // service_role has BYPASSRLS, so RLS-with-no-policies does not stop it reading
+  // a table directly — only a table-level revoke does. mail_accounts holds the
+  // encrypted refresh token, the most dangerous secret in this system, so it
+  // must lose the grant that mail_threads/mail_messages (no secret) keep.
+  assert.match(
+    sql,
+    /revoke all on table public\.mail_accounts from anon, authenticated, service_role/,
   );
 });
 
@@ -79,6 +87,10 @@ test("every agent-half function is granted to both transition roles", () => {
     assert.ok(grant, `${fn} has no grant at all`);
     assert.match(grant[0], /crm_agent/, `${fn} must be granted to crm_agent`);
     assert.match(grant[0], /agent_sami/, `${fn} must be granted to agent_sami`);
+    // The Worker holds the service-role key. mail_account_for_sync returns
+    // refresh_token_enc, and the other three let it forge mail rows and move
+    // the sync cursor — so service_role must never appear on this grant line.
+    assert.doesNotMatch(grant[0], /service_role/, `${fn} must not be granted to service_role`);
   }
 });
 

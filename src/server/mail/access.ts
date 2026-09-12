@@ -28,6 +28,14 @@ function config() {
  * here yet: every signed-in operator sees the same inbox. When the mailbox
  * model becomes per-user, this is the function that gains the scoping, which is
  * why the route goes through it rather than constructing a store itself.
+ *
+ * This also covers the CRM record names mail_inbox_list joins in: contact,
+ * deal, and company names are returned to every signed-in operator with no
+ * actor filter, same as the mail rows themselves. That means a member who
+ * would 404 on a deal in /crm/deals can still see that deal's name as a badge
+ * in the inbox. Deliberate for the same reason as the mailbox itself — there
+ * is one shared inbox in phase 1 — but per-user mailboxes will need to revisit
+ * this too, not just the mail rows.
  */
 export async function forInbox() {
   const session = await requireCrmSession();
