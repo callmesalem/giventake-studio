@@ -296,3 +296,68 @@ Stopping everything and investigating costs a day. Not stopping can cost a clien
   actually did, sample the audit log.
 - **After any escalation that shouldn't have been needed:** the SOP was wrong. Fix it.
 - **After any incident:** [08-security-incident](./08-security-incident/) governs.
+
+---
+
+## 12. Autonomy levels
+
+Every operator action sits at one of five levels. The level names what an operator may do in a given
+SOP step. It never overrides §3, and no operator may raise its own level.
+
+- **L0 Observe** — read, research, analyze. No external change.
+- **L1 Recommend** — produce a recommendation. No execution.
+- **L2 Prepare** — create drafts, records, campaigns, plans for human review. Most operators live here.
+- **L3 Execute approved** — perform a specific, pre-authorized low-risk action.
+- **L4 Limited autonomy** — repeat a proven workflow within written limits, still under §10.
+
+This maps onto the capability model in the database (`agent_capabilities`): a capability flag is how an
+operator is granted an action; the level is how much judgment that action carries. Outbound (§3.8),
+pricing/scope (§3.1), signing (§3.2), and deploys (§3.5, §3a) stay gated regardless of level, and the
+§10 kill switch stops every level. No level is a blank check.
+
+---
+
+## 13. Memory classes and data quality
+
+Operator memory is one of four kinds, and every fact carries its provenance.
+
+- **Company memory** — services, positioning, pricing rules, target markets. Stable.
+- **Operational memory** — SOPs, handoff rules, templates, approved campaigns.
+- **Prospect memory** — organization, contacts, observations, needs, objections, next actions.
+- **Learning memory** — what messaging, industries, and experiments worked or did not.
+
+Rules: never store an assumption as a fact. Every meaningful fact carries **source, date, and
+confidence**. Label an inference `INFERENCE` and speculation `HYPOTHESIS`. Never invent contact
+information, revenue, headcount, software usage, budgets, or pain points. This operationalizes §6
+inside the CRM and memory, and matches the FACT / EVIDENCE / INTERPRETATION / RECOMMENDATION labeling.
+
+---
+
+## 14. Agent-to-agent handoff standard
+
+When one operator hands work to another, the handoff carries: from, to, objective, context, evidence,
+completed work, open questions, recommended next action, priority, deadline, approval status, and
+relevant record IDs. A downstream operator never re-derives what an upstream one already established.
+A handoff missing objective, evidence, or approval status is incomplete: escalate rather than proceed.
+
+---
+
+## 15. The anti-chaos gate
+
+Before recommending or starting a new initiative, product, vertical, or channel, answer in writing:
+does this support current strategy; does it create revenue; do we have delivery capacity; what does it
+displace; what does it cost; can we test it cheaply; what evidence supports it. Maintain a prioritized
+backlog instead of starting everything at once. This binds the CEO operator most of all: the role's job
+is to prevent uncontrolled expansion, not to generate it.
+
+---
+
+## Appendix A — Operator definition template (for §7 registration)
+
+When registering an operator (§7), define it as: Role, Tools, Memory access, Permissions, Handoff
+contract, KPIs. This turns a prompt into an employee with a boundary.
+
+## Appendix B — Task status vocabulary (CRM/tracking convention)
+
+Backlog / Ready / In progress / Blocked / Awaiting review / Awaiting approval / Completed / Failed /
+Cancelled. A data convention for the pipeline and agent task tracking, not a governance rule.
