@@ -116,7 +116,7 @@ export function validateDemoSite(
   }
 
   if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
-    return { ok: false, reason: "The proposal has no payload to validate." };
+    return { ok: false, reason: "The proposal carries no payload object." };
   }
   const record = payload as Record<string, unknown>;
 
@@ -141,13 +141,26 @@ export function validateDemoSite(
     return { ok: false, reason: "The business name is too long." };
   }
 
+  // Same caps demo-sites-data.ts's requestDealDemoSite puts on the identical,
+  // unbounded text columns. Both callers reach the same gated path
+  // (src/server/demo-sites/request.ts), and a cap enforced on one of two
+  // routes in is not enforced at all.
+  const address = optional(record.address);
+  if (address && address.length > 300) {
+    return { ok: false, reason: "The address is too long." };
+  }
+  const vertical = optional(record.vertical);
+  if (vertical && vertical.length > 80) {
+    return { ok: false, reason: "The vertical is too long." };
+  }
+
   return {
     ok: true,
     value: {
       dealId,
       businessName,
-      address: optional(record.address),
-      vertical: optional(record.vertical),
+      address,
+      vertical,
     },
   };
 }

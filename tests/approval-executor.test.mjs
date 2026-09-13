@@ -255,6 +255,9 @@ test("an approved demo_site queues the build and is marked executed", async () =
   assert.equal(deps.requested[0].address, "18 Mill Street");
   assert.equal(deps.marked.length, 1);
   assert.equal(deps.marked[0].result.ok, true);
+  // The audit chain: without this, no query answers "which demo sites
+  // originated from a Sami proposal?" from the approval side.
+  assert.equal(deps.marked[0].result.demoSiteId, "demo-1");
 });
 
 test("a refused gate names itself", async () => {

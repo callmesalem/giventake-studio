@@ -152,3 +152,24 @@ test("an over-long business name is refused rather than truncated", () => {
   assert.equal(result.ok, false);
   assert.match(result.reason, /too long/i);
 });
+
+test("an over-long address is refused rather than truncated", () => {
+  // Matches the cap demo-sites-data.ts's requestDealDemoSite puts on the same
+  // unbounded column, so the identical write is capped the same way whether it
+  // arrives from the UI or through the executor.
+  const result = validateDemoSite("deal", "11111111-2222-3333-4444-555555555555", {
+    businessName: "Nino",
+    address: "x".repeat(301),
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /too long/i);
+});
+
+test("an over-long vertical is refused rather than truncated", () => {
+  const result = validateDemoSite("deal", "11111111-2222-3333-4444-555555555555", {
+    businessName: "Nino",
+    vertical: "x".repeat(81),
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /too long/i);
+});

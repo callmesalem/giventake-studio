@@ -18,8 +18,9 @@
  * Requesting is gated, and the gate is the point. Queuing a demo puts a public
  * website on the internet under a prospect's name, which is an external action
  * in the charter's sense, so it goes through the §10 kill switch the same way
- * sending does. The gates are rebuilt HERE at submit time from facts read here;
- * whatever the browser believed when it rendered the card is advisory only.
+ * sending does. The gates are rebuilt at submit time from facts read then, in
+ * src/server/demo-sites/request.ts; whatever the browser believed when it
+ * rendered the card is advisory only.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { buildDemoSiteGates, isDemoSiteRequestable, type Gate } from "@/lib/crm-guards";

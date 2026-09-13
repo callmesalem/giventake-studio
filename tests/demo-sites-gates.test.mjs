@@ -5,7 +5,8 @@
 //
 // The gate is pure by construction so it can be asserted without a database.
 // The server function rebuilds these same gates at submit time from freshly
-// read facts (src/lib/demo-sites-data.ts), so what is proved here is what runs.
+// read facts (src/server/demo-sites/request.ts), so what is proved here is
+// what runs.
 import test from "node:test";
 import assert from "node:assert/strict";
 import {

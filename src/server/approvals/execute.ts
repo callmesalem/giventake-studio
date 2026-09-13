@@ -195,7 +195,7 @@ export async function executeApproval(
       // this branch cannot tell a refusal from a failure apart from one already
       // reported as a value.
       const detail =
-        "The demo was not queued. Approving it again will not help until you check why.";
+        "The demo may not have been queued. Approving it again will not help until you check why.";
       const recorded = await record(deps, id, { ok: false, refused: "demo_site", detail });
       return recorded
         ? { ok: false, reason: "refused", detail }
@@ -211,7 +211,11 @@ export async function executeApproval(
         : { ok: false, reason: "refused", detail, recorded: false };
     }
 
-    const recorded = await record(deps, id, { ok: true, action: "demo_site" });
+    const recorded = await record(deps, id, {
+      ok: true,
+      action: "demo_site",
+      demoSiteId: queued.demoSiteId,
+    });
     return recorded
       ? { ok: true, action: "demo_site" }
       : { ok: true, action: "demo_site", recorded: false };

@@ -15,6 +15,16 @@ function when(iso: string | null) {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
 }
 
+/** What to tell the operator happened, keyed by the executor's own action
+ *  name. A committed side effect whose bookkeeping failed still needs the
+ *  right noun: a queued demo site is not a deal that advanced. send_email is
+ *  deliberately absent, since the handler does not exist yet; an unrecognised
+ *  action falls back to a generic, still-true sentence rather than guessing. */
+const ACTION_PAST_TENSE: Record<string, string> = {
+  deal_close: "The deal was advanced",
+  demo_site: "The demo site was queued",
+};
+
 function ApprovalCard({ approval }: { approval: ApprovalRow }) {
   const router = useRouter();
   const [reason, setReason] = useState("");
@@ -47,8 +57,9 @@ function ApprovalCard({ approval }: { approval: ApprovalRow }) {
       // failed to write. The approval will never appear in this queue again,
       // so silence here would leave the operator thinking it is still pending.
       if (result.execution && result.execution.ok && result.execution.recorded === false) {
+        const didWhat = ACTION_PAST_TENSE[result.execution.action] ?? "The action was carried out";
         setOutcome(
-          "The deal was advanced, but recording the approval failed. It will not appear in this queue again.",
+          `${didWhat}, but recording the approval failed. It will not appear in this queue again.`,
         );
         setBusy(null);
         return;
@@ -132,8 +143,8 @@ function Approvals() {
         subtitle="Agent-drafted actions waiting for a human decision."
       />
       <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-        Recording a decision marks it reviewed. It does not send, deploy, or take any external
-        action on its own; execution stays a separate, deliberate step.
+        Approving records your decision and, for actions the CRM can carry out, performs them now.
+        Every gate still runs: approving authorises an action, it does not skip the checks.
       </p>
       {rows.length === 0 ? (
         <EmptyState>No pending approvals. Nothing is waiting on you.</EmptyState>
