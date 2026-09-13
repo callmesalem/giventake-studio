@@ -19,7 +19,8 @@ test("demo_site has its own branch and no longer falls through to the fallback",
 
 test("the demo_site branch shows the facts being approved", () => {
   // Spec section 3: business name, address, and the record it attaches to.
-  assert.match(route, /businessName/);
+  // Pin the rendered expression to catch if the render line is deleted.
+  assert.match(route, /businessName \|\| "No business name given"/);
   assert.match(route, /payload\?\.address/);
 });
 
