@@ -8,6 +8,7 @@ import {
   EXECUTABLE_ACTIONS,
   isExecutableAction,
   validateDealClose,
+  validateDemoSite,
 } from "../src/lib/approval-actions.ts";
 
 test("the executable set is exactly the three the spec names", () => {
@@ -82,4 +83,72 @@ test("a non-object payload is refused rather than crashing", () => {
     const result = validateDealClose("deal", "11111111-2222-3333-4444-555555555555", payload);
     assert.equal(result.ok, false);
   }
+});
+
+/* demo_site proposals. Same one-source rule as deal_close: identity comes from
+ * target_id, content comes from the payload, and a payload that disagrees about
+ * identity is refused rather than resolved. */
+
+test("a valid demo_site proposal passes and carries the target deal", () => {
+  const result = validateDemoSite("deal", "11111111-2222-3333-4444-555555555555", {
+    businessName: "Trattoria Nino",
+    address: "18 Mill Street",
+    vertical: "restaurant",
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.value.dealId, "11111111-2222-3333-4444-555555555555");
+  assert.equal(result.value.businessName, "Trattoria Nino");
+  assert.equal(result.value.address, "18 Mill Street");
+  assert.equal(result.value.vertical, "restaurant");
+});
+
+test("address and vertical are optional and normalise to null", () => {
+  // The columns are nullable, and a row storing "" makes "no address given" and
+  // "address is blank" indistinguishable to the builder on the VPS.
+  for (const blank of ["", "   ", undefined, null, 7]) {
+    const result = validateDemoSite("deal", "11111111-2222-3333-4444-555555555555", {
+      businessName: "Nino",
+      address: blank,
+      vertical: blank,
+    });
+    assert.equal(result.ok, true, `${String(blank)} must be accepted`);
+    assert.equal(result.value.address, null);
+    assert.equal(result.value.vertical, null);
+  }
+});
+
+test("a demo_site payload naming a different deal is refused", () => {
+  const result = validateDemoSite("deal", "11111111-2222-3333-4444-555555555555", {
+    dealId: "99999999-9999-9999-9999-999999999999",
+    businessName: "Nino",
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /disagree/i);
+});
+
+test("a demo_site proposal must target a deal", () => {
+  const result = validateDemoSite("company", "11111111-2222-3333-4444-555555555555", {
+    businessName: "Nino",
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /deal/i);
+});
+
+test("a blank business name is refused: the builder has nothing to search for", () => {
+  for (const name of ["", "   ", null, undefined, 7]) {
+    const result = validateDemoSite("deal", "11111111-2222-3333-4444-555555555555", {
+      businessName: name,
+    });
+    assert.equal(result.ok, false, `${String(name)} must be refused`);
+  }
+});
+
+test("an over-long business name is refused rather than truncated", () => {
+  // demo_sites.business_name has no length cap, and the value reaches a Google
+  // Places search. Truncating would silently search for something else.
+  const result = validateDemoSite("deal", "11111111-2222-3333-4444-555555555555", {
+    businessName: "x".repeat(201),
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /too long/i);
 });

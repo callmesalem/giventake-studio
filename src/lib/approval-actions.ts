@@ -73,3 +73,81 @@ export function validateDealClose(
 
   return { ok: true, value: { dealId, note } };
 }
+
+export interface DemoSitePayload {
+  dealId: string;
+  businessName: string;
+  address: string | null;
+  vertical: string | null;
+}
+
+/** Absent, blank and non-string all collapse to null. The columns are nullable,
+ *  and a row storing "" would make "no address given" and "address is blank"
+ *  indistinguishable to the builder. */
+function optional(value: unknown): string | null {
+  const s = typeof value === "string" ? value.trim() : "";
+  return s.length ? s : null;
+}
+
+/**
+ * Validate a demo_site proposal.
+ *
+ * Same one-source rule as validateDealClose: the deal comes from `target_id`,
+ * never from the payload, and a payload naming a different deal is a
+ * disagreement to refuse rather than a tie to break.
+ *
+ * The payload DOES supply content: the business name the builder will search
+ * Google Places for, and optionally an address and vertical to narrow it. That
+ * is the right division. Identity is a decision and must be structured; content
+ * is what the proposal is for.
+ */
+export function validateDemoSite(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<DemoSitePayload> {
+  if (targetType !== "deal") {
+    return { ok: false, reason: "A demo_site proposal must target a deal." };
+  }
+
+  const dealId = typeof targetId === "string" ? targetId.trim() : "";
+  if (!UUID.test(dealId)) {
+    return { ok: false, reason: "The proposal does not name a valid deal." };
+  }
+
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    return { ok: false, reason: "The proposal has no payload to validate." };
+  }
+  const record = payload as Record<string, unknown>;
+
+  const claimed = record.dealId;
+  if (typeof claimed === "string" && claimed.trim() && claimed.trim() !== dealId) {
+    return {
+      ok: false,
+      reason: "The payload and the proposal target disagree about which deal this is.",
+    };
+  }
+
+  const businessName = typeof record.businessName === "string" ? record.businessName.trim() : "";
+  if (!businessName) {
+    return {
+      ok: false,
+      reason: "The builder has nothing to search Google Places for without a business name.",
+    };
+  }
+  if (businessName.length > 200) {
+    // Refused rather than truncated: a shortened name searches for a different
+    // business, and the operator approved the one they read.
+    return { ok: false, reason: "The business name is too long." };
+  }
+
+  return {
+    ok: true,
+    value: {
+      dealId,
+      businessName,
+      address: optional(record.address),
+      vertical: optional(record.vertical),
+    },
+  };
+}
