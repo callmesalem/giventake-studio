@@ -9,24 +9,18 @@
   font-style: normal;
   font-weight: 300 800;
   font-display: swap;
-  src: url("/__l5e/assets-v1/95d1fcbb-84a4-490f-9fb7-fc4940056c0d/inter-tight-latin.woff2")
-    format("woff2");
+  /* Was /__l5e/, the dead Lovable CDN: the face never loaded and every page
+     fell back to a system sans. The file has been in public/fonts all along.
+     See src/lib/asset-availability.ts. */
+  src: url("/fonts/inter-tight-latin.woff2") format("woff2");
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-@font-face {
-  font-family: "Inter Tight";
-  font-style: italic;
-  font-weight: 300 800;
-  font-display: swap;
-  src: url("/__l5e/assets-v1/93f3a40c-72fa-4669-bce5-d0efd369fc93/inter-tight-latin-italic.woff2")
-    format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
+/* No italic face is shipped: public/fonts has the roman only. Inter Tight
+   italic synthesises until a real file is added. A @font-face pointing at a
+   missing file is worse than none, per asset-availability.ts. */
 
 /* Metric-adjusted fallback so swap causes no visible layout shift. */
 @font-face {
@@ -125,6 +119,34 @@
   --hero-glow-2: #6366f1;
   --hero-glow-3: #c9a24c;
   --hero-glow-opacity: 0.07;
+
+  /* ── GivenTake Devs brand identity v6 ──────────────────────────────────
+   *
+   * Namespaced --gt-* deliberately. The unprefixed --ink / --paper / --violet
+   * above predate v6 and differ from it (--ink is #0a0a0a against v6's
+   * #17171A, --paper is #f7f7f5 against #FFFFFF, --violet is #4f46e5 against
+   * Indigo #6366F1). Those drive the public marketing site, and restyling it
+   * is not in scope for a mail phase. The CRM uses --gt-*; reconciling the two
+   * is its own piece of work.
+   *
+   * One accent system, built on Indigo. Indigo Deep is a SUPPORTING shade for
+   * gradients and hover states, not a second colour.
+   *
+   * Status colour is separate from accent. Deal stages, sync health and unread
+   * state need green/amber/red; those are semantic and are not brand accents.
+   * Indigo stays reserved for selection, focus and primary action, which is
+   * why the send button must never be green.
+   */
+  --gt-ink: #17171a;
+  --gt-paper: #ffffff;
+  --gt-surface: #f4f4f5;
+  --gt-secondary: #68686d;
+  --gt-indigo: #6366f1;
+  --gt-indigo-deep: #4338ca;
+
+  --gt-ok: #157f4a;
+  --gt-warn: #8a6a12;
+  --gt-bad: #b3261e;
 }
 
 .dark {
@@ -959,4 +981,16 @@ body::after {
   .text-elite-gradient {
     animation: none;
   }
+}
+
+/* v6 display setting: 600 at -0.03em. Inter Tight throughout means there is no
+   second typeface, so aligned digits come from font-variant-numeric rather
+   than from a mono face. */
+.gt-display {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.gt-nums {
+  font-variant-numeric: tabular-nums;
 }
