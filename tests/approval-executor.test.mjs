@@ -6,7 +6,7 @@
 // database.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { executeApproval } from "../src/server/approvals/execute.ts";
+import { executeApproval, attributedNote } from "../src/server/approvals/execute.ts";
 
 const DEAL = "11111111-2222-3333-4444-555555555555";
 
@@ -36,12 +36,16 @@ function fakeDeps({ approval, advanceThrows = null } = {}) {
 const approved = (over = {}) => ({
   id: "a1",
   actionType: "deal_close",
+  agentName: "sami",
   targetType: "deal",
   targetId: DEAL,
   status: "approved",
   payload: { note: "Signed SOW countersigned." },
   ...over,
 });
+
+/** Fixed so the recorded date is assertable. */
+const AT = new Date("2026-09-13T10:30:00Z");
 
 test("an approved deal_close advances the deal and is marked executed", () => {
   const deps = fakeDeps({ approval: approved() });
@@ -158,4 +162,45 @@ test("a bookkeeping failure after a real advance still reports the advance", asy
   assert.equal(outcome.ok, true);
   assert.equal(outcome.recorded, false);
   assert.equal(deps.advanced.length, 1);
+});
+
+/* Charter section 13: never store an assumption as a fact, and every meaningful
+ * fact carries source and date. The note is stored by deal_advance_stage as the
+ * evidence the stage gate was met, and an agent wrote it. */
+
+test("the stored note names who proposed it and who approved it", async () => {
+  const deps = fakeDeps({ approval: approved() });
+  await executeApproval(deps, "a1", "crm:salem@example.com", AT);
+  const stored = deps.advanced[0].note;
+  assert.match(stored, /^Signed SOW countersigned\./);
+  assert.match(stored, /Proposed by sami/);
+  assert.match(stored, /approved by crm:salem@example\.com/);
+  assert.match(stored, /on 2026-09-13\./);
+});
+
+test("an unnamed proposer is said to be unnamed, not silently dropped", () => {
+  // A missing agent_name must not produce a note that reads as the approver's
+  // own first-hand observation.
+  for (const name of [null, undefined, "", "   "]) {
+    const out = attributedNote("Ready.", name, "crm:salem@example.com", AT);
+    assert.match(
+      out,
+      /Proposed by an unnamed operator/,
+      `${String(name)} must be named as unnamed`,
+    );
+  }
+});
+
+test("attribution never invents a confidence value", () => {
+  // Section 13 asks for source, date AND confidence. The proposal carries no
+  // confidence, and manufacturing one would be the assumption-stored-as-fact
+  // the rule forbids. Its absence is deliberate and asserted so nobody adds a
+  // fabricated one later.
+  const out = attributedNote("Ready.", "sami", "crm:salem@example.com", AT);
+  assert.doesNotMatch(out, /confidence/i);
+});
+
+test("the operator's own text is preserved verbatim ahead of the attribution", () => {
+  const out = attributedNote("Ready to close.", "sami", "crm:x@example.com", AT);
+  assert.ok(out.startsWith("Ready to close.\n\nProposed by"));
 });

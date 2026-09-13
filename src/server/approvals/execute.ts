@@ -29,6 +29,9 @@ export const CLOSE_STAGE_FOR_APPROVAL = "Close";
 export interface StoredApproval {
   id: string;
   actionType: string | null;
+  /** Which operator proposed this. Charter section 13 requires a stored fact to
+   *  carry its source, and the note below is a claim an agent wrote. */
+  agentName: string | null;
   targetType: string | null;
   targetId: string | null;
   status: string;
@@ -97,10 +100,41 @@ async function record(
  * because proposed_payload was written by an agent that reads text strangers
  * wrote.
  */
+/**
+ * The note as it will be stored, with its source attached.
+ *
+ * Charter section 13: never store an assumption as a fact, and every meaningful
+ * fact carries source and date. `deal_advance_stage` records this note as the
+ * evidence the stage gate was met, and an unattributed note reads as the
+ * approver's own first-hand observation. It is not: an agent wrote it, and a
+ * human accepted it.
+ *
+ * Confidence is deliberately absent rather than invented. The proposal carries
+ * no confidence value, and manufacturing one here would be exactly the
+ * assumption-stored-as-fact that section 13 forbids.
+ *
+ * The advance itself does NOT rest on this text. deal_advance_stage asks
+ * deal_has_signed_sow against the database, so the note is the account of why,
+ * not the basis for it.
+ */
+export function attributedNote(
+  note: string,
+  agentName: string | null,
+  actor: string,
+  now: Date,
+): string {
+  const source = agentName?.trim() || "an unnamed operator";
+  const day = now.toISOString().slice(0, 10);
+  return `${note}
+
+Proposed by ${source}, approved by ${actor} on ${day}.`;
+}
+
 export async function executeApproval(
   deps: ExecutorDeps,
   id: string,
   actor: string,
+  now: Date = new Date(),
 ): Promise<ExecutionOutcome> {
   const approval = await deps.getApproval(id);
   if (!approval) return { ok: false, reason: "not-found" };
@@ -146,7 +180,7 @@ export async function executeApproval(
     await deps.advanceDealStage({
       dealId: validated.value.dealId,
       toStage: CLOSE_STAGE_FOR_APPROVAL,
-      note: validated.value.note,
+      note: attributedNote(validated.value.note, approval.agentName, actor, now),
       actor,
     });
   } catch {
