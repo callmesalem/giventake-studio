@@ -19,6 +19,13 @@ import {
   type DealDocumentsVM,
   type DealSignatureVM,
 } from "@/lib/documents-data";
+import {
+  listDealDemoSites,
+  requestDealDemoSite,
+  type DemoSitesVM,
+  type DemoSiteVM,
+} from "@/lib/demo-sites-data";
+import type { Gate } from "@/lib/crm-guards";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -46,6 +53,10 @@ export const Route = createFileRoute("/crm/deals/$id")({
     // not see this deal — the same authorisation check crmDeal above makes,
     // and the loader has already thrown on it by the time this line runs.
     documents: await listDealDocuments({ data: { dealId: params.id } }),
+    // Degrades the same way, and for the same reason: the demo_sites migration
+    // is not applied everywhere yet, and a missing RPC must cost one card
+    // rather than the whole record.
+    demoSites: await listDealDemoSites({ data: { dealId: params.id } }),
   }),
   component: Deal,
 });
@@ -57,7 +68,7 @@ const usd = new Intl.NumberFormat("en-US", {
 });
 
 function Deal() {
-  const { deal, stages, members, documents } = Route.useLoaderData();
+  const { deal, stages, members, documents, demoSites } = Route.useLoaderData();
   const router = useRouter();
   const reload = () => router.invalidate();
   return (
@@ -111,6 +122,10 @@ function Deal() {
                 defaultProjectName={deal.name}
                 onChanged={reload}
               />
+            </Card>
+
+            <Card title="Demo site">
+              <DemoSites dealId={deal.id} vm={demoSites} onChanged={reload} />
             </Card>
 
             <Card title="Becomes a client">
@@ -773,6 +788,224 @@ function SignatureLine({
           this one.
         </Notice>
       )}
+    </div>
+  );
+}
+
+/**
+ * The operator half of the demo-site feature.
+ *
+ * WHAT THIS CARD MUST NEVER CLAIM: that it built anything. The CRM cannot. The
+ * generator is a Python + headless pipeline on the VPS holding the Google Maps
+ * and Vercel keys, and this page only writes a row saying a demo is wanted. The
+ * gap between "queued" and "live" is real and can be minutes or forever, so
+ * every string here is written to survive it — the button says Queue, the
+ * status comes from the row, and a url appears only when the builder has
+ * actually put one there.
+ */
+function DemoSites({
+  dealId,
+  vm,
+  onChanged,
+}: {
+  dealId: string;
+  vm: DemoSitesVM;
+  onChanged: () => void;
+}) {
+  if (!vm.available) {
+    return (
+      <Notice tone="warn">
+        Demo-site storage is not reachable from this environment, so demos cannot be listed or
+        requested here. The demo_sites migration may not be applied yet. Nothing has been lost
+        &mdash; this panel is read-only whenever it says this.
+      </Notice>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      <RequestDemoSite dealId={dealId} vm={vm} onRequested={onChanged} />
+      {vm.demoSites.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No demo site requested for this deal yet.</p>
+      ) : (
+        <ul className="space-y-3">
+          {vm.demoSites.map((demo) => (
+            <li key={demo.id}>
+              <DemoSitePanel demo={demo} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** The gates, in words.
+ *
+ *  Every gate is shown, passing ones included, rather than only what is
+ *  currently wrong. An operator who can see the whole list can tell the
+ *  difference between "one thing to fix" and "this is switched off globally",
+ *  and only the second is worth escalating. */
+function GateList({ gates }: { gates: Gate[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {gates.map((gate) => (
+        <li key={gate.id} className="flex gap-2 text-sm">
+          <span aria-hidden className={gate.pass ? "text-emerald-600" : "text-amber-700"}>
+            {gate.pass ? "✓" : "✗"}
+          </span>
+          <span>
+            <span className="font-medium">{gate.label}</span>
+            <span className="sr-only">{gate.pass ? " passes" : " does not pass"}</span>
+            <span className="text-muted-foreground"> &mdash; {gate.detail}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function RequestDemoSite({
+  dealId,
+  vm,
+  onRequested,
+}: {
+  dealId: string;
+  vm: DemoSitesVM;
+  onRequested: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [refusedGates, setRefusedGates] = useState<Gate[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Disclosure label="Request demo site" openLabel="Request a demo site for this business">
+      <p className="mb-3 text-xs text-muted-foreground">
+        This <strong>queues</strong> a build; it does not build anything here. The generator runs on
+        the VPS, pulls photos and reviews from Google Places, and deploys a static site. It will
+        appear below as <span className="font-mono">requested</span>, then{" "}
+        <span className="font-mono">building</span>, then <span className="font-mono">live</span>{" "}
+        with a link.
+      </p>
+      <p className="mb-3 text-xs text-muted-foreground">
+        The business name is what gets searched on Google Places, so it should be the name on the
+        door rather than the deal name. An address narrows it when the name is ambiguous.
+      </p>
+
+      <form
+        className="space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          setBusy(true);
+          setRefusedGates(null);
+          setError(null);
+          try {
+            const result = await requestDealDemoSite({
+              data: {
+                dealId,
+                businessName: String(form.get("businessName") ?? ""),
+                address: String(form.get("address") ?? ""),
+                vertical: String(form.get("vertical") ?? ""),
+              },
+            });
+            if (result.ok) {
+              onRequested();
+              return;
+            }
+            // The server re-evaluated the gates against facts read just now.
+            // Show ITS answer, not the one the page rendered with: the kill
+            // switch may have been thrown since this card loaded.
+            setRefusedGates(result.gates);
+          } catch (cause) {
+            setError(cause instanceof Error && cause.message ? cause.message : "That didn't work.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormControl
+            field={{ name: "businessName", label: "Business name", required: true }}
+            defaultValue={vm.suggestedName}
+          />
+          <FormControl field={{ name: "address", label: "Address", placeholder: "Optional" }} />
+          <FormControl
+            field={{
+              name: "vertical",
+              label: "Vertical",
+              placeholder: "Optional, e.g. restaurant",
+            }}
+          />
+        </div>
+
+        {!vm.requestable && !refusedGates && (
+          <Notice tone="warn">
+            <p className="mb-1.5 font-medium">This cannot be queued right now.</p>
+            <GateList gates={vm.gates} />
+          </Notice>
+        )}
+
+        {refusedGates && (
+          <Notice tone="warn">
+            <p className="mb-1.5 font-medium">Refused &mdash; nothing was queued.</p>
+            <GateList gates={refusedGates} />
+          </Notice>
+        )}
+
+        {error && <Notice tone="error">{error}</Notice>}
+
+        <button
+          type="submit"
+          disabled={busy || !vm.requestable}
+          className="rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? "Queueing…" : "Queue demo build"}
+        </button>
+      </form>
+    </Disclosure>
+  );
+}
+
+function DemoSitePanel({ demo }: { demo: DemoSiteVM }) {
+  return (
+    <div className="rounded-lg border border-border px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{demo.businessName}</p>
+          {demo.address && <p className="truncate text-xs text-muted-foreground">{demo.address}</p>}
+        </div>
+        <Badge value={demo.status} />
+      </div>
+
+      {/* A link appears only when the builder wrote one. 'live' without a url
+          would be a row in an impossible state, and inventing a link for it
+          would send somebody to a page that does not exist. */}
+      {demo.url && (
+        <p className="mt-2 text-sm">
+          <a
+            href={demo.url}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline underline-offset-2"
+          >
+            {demo.url}
+          </a>
+        </p>
+      )}
+
+      {/* The builder's own message, verbatim. It is the only account of why
+          there is no demo, and paraphrasing it here would leave nobody able to
+          act on it. */}
+      {demo.status === "failed" && demo.error && (
+        <p className="mt-2 text-sm text-red-800">{demo.error}</p>
+      )}
+
+      <p className="mt-2 text-xs text-muted-foreground">
+        Requested {new Date(demo.createdAt).toLocaleString()}
+        {demo.updatedAt !== demo.createdAt && (
+          <> &middot; updated {new Date(demo.updatedAt).toLocaleString()}</>
+        )}
+      </p>
     </div>
   );
 }
