@@ -47,7 +47,7 @@ export interface ExecutorDeps {
 }
 
 export type ExecutionOutcome =
-  | { ok: true; action: string }
+  | { ok: true; action: string; recorded?: false }
   | { ok: false; reason: "not-found" }
   | { ok: false; reason: "not-approved"; status: string }
   | { ok: false; reason: "not-executable"; actionType: string }
@@ -68,6 +68,27 @@ export type ExecutionOutcome =
  * send_email handler lands, where "it was refused" and "it did not run" lead an
  * operator to do different things. Out of scope here.
  */
+
+/** Record the result, and report whether recording worked.
+ *
+ *  A bookkeeping failure after a committed side effect is the one case where
+ *  throwing would be actively harmful: the action HAS happened, the operator
+ *  would be told it failed, and no retry is possible because approval_decide
+ *  now raises "already decided". So the failure is reported alongside the real
+ *  outcome instead. Nothing is retried and nothing is rolled back: the side
+ *  effect is committed and re-running it would be worse than not recording it. */
+async function record(
+  deps: ExecutorDeps,
+  id: string,
+  result: Record<string, unknown>,
+): Promise<boolean> {
+  try {
+    await deps.markExecuted(id, result);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Run one approved proposal.
@@ -93,7 +114,7 @@ export async function executeApproval(
   const actionType = approval.actionType ?? "";
   if (!isExecutableAction(actionType)) {
     const detail = "The CRM cannot execute this kind of proposal.";
-    await deps.markExecuted(id, { ok: false, refused: "not-executable", detail });
+    await record(deps, id, { ok: false, refused: "not-executable", detail });
     return { ok: false, reason: "not-executable", actionType };
   }
 
@@ -101,13 +122,13 @@ export async function executeApproval(
     // send_email and demo_site are later phases. Recognised, deliberately not
     // yet runnable, and said so rather than failing silently.
     const detail = "This action is recognised but not implemented yet.";
-    await deps.markExecuted(id, { ok: false, refused: actionType, detail });
+    await record(deps, id, { ok: false, refused: actionType, detail });
     return { ok: false, reason: "refused", detail };
   }
 
   const validated = validateDealClose(approval.targetType, approval.targetId, approval.payload);
   if (!validated.ok) {
-    await deps.markExecuted(id, { ok: false, refused: "deal_close", detail: validated.reason });
+    await record(deps, id, { ok: false, refused: "deal_close", detail: validated.reason });
     return { ok: false, reason: "refused", detail: validated.reason };
   }
 
@@ -128,10 +149,12 @@ export async function executeApproval(
     // cannot tell the two apart - see the note on ExecutionOutcome.
     const detail =
       "The deal was not advanced. Approving it again will not help until you check why.";
-    await deps.markExecuted(id, { ok: false, refused: "deal_close", detail });
+    await record(deps, id, { ok: false, refused: "deal_close", detail });
     return { ok: false, reason: "refused", detail };
   }
 
-  await deps.markExecuted(id, { ok: true, action: "deal_close" });
-  return { ok: true, action: "deal_close" };
+  const recorded = await record(deps, id, { ok: true, action: "deal_close" });
+  return recorded
+    ? { ok: true, action: "deal_close" }
+    : { ok: true, action: "deal_close", recorded: false };
 }

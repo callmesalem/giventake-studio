@@ -131,3 +131,16 @@ test("the recorded refusal carries no client data", async () => {
   const serialised = JSON.stringify(deps.marked[0].result);
   assert.doesNotMatch(serialised, /Ana|Trattoria/);
 });
+
+test("a bookkeeping failure after a real advance still reports the advance", async () => {
+  // The deal IS closed. Telling the operator it failed would be a lie they
+  // cannot correct: approval_decide now raises on a retry.
+  const deps = fakeDeps({ approval: approved() });
+  deps.markExecuted = async () => {
+    throw new Error("rpc failed");
+  };
+  const outcome = await executeApproval(deps, "a1", "crm:salem@example.com");
+  assert.equal(outcome.ok, true);
+  assert.equal(outcome.recorded, false);
+  assert.equal(deps.advanced.length, 1);
+});

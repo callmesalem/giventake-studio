@@ -262,8 +262,12 @@ function validateDecide(data: DecideApprovalInput): DecideApprovalInput {
 export const decideCrmApproval = createServerFn({ method: "POST" })
   .validator(validateDecide)
   .handler(async ({ data }): Promise<{ ok: true; execution: ExecutionOutcome | null }> => {
-    const { requireCrmSession } = await import("./crm-auth.server");
-    const session = await requireCrmSession();
+    // Admin only, matching approval_queue's own admin_only entry in
+    // MEMBER_TABLE_POLICY. requireCrmSession would accept any member, and this
+    // function does not merely record a decision any more: it carries the
+    // action out.
+    const { requireAdmin } = await import("./crm-auth.server");
+    const session = await requireAdmin();
     const { CrmActions } = await import("@/server/crm/actions");
     const actions = new CrmActions(config());
     const actor = `crm:${session.email}`;
