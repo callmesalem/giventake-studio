@@ -183,7 +183,24 @@ export async function executeApproval(
         : { ok: false, reason: "refused", detail: validated.reason, recorded: false };
     }
 
-    const queued = await deps.requestDemoSite(validated.value);
+    let queued: Awaited<ReturnType<ExecutorDeps["requestDemoSite"]>>;
+    try {
+      queued = await deps.requestDemoSite(validated.value);
+    } catch {
+      // Same reasoning as deal_close's catch below: requestDemoSite talks to
+      // Postgres to resolve the deal and to check the gates, and can throw on a
+      // transport failure or an unresolvable deal, not only refuse. The thrown
+      // message is deliberately not recorded - it can name a deal or a business
+      // - and the wording below is deliberately NOT "gate refused", because
+      // this branch cannot tell a refusal from a failure apart from one already
+      // reported as a value.
+      const detail =
+        "The demo was not queued. Approving it again will not help until you check why.";
+      const recorded = await record(deps, id, { ok: false, refused: "demo_site", detail });
+      return recorded
+        ? { ok: false, reason: "refused", detail }
+        : { ok: false, reason: "refused", detail, recorded: false };
+    }
     if (!queued.ok) {
       // Named, because "the kill switch is off" and "a demo is already building"
       // lead an operator to do completely different things.

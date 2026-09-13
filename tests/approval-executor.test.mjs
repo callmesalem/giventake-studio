@@ -86,10 +86,11 @@ test("an unexecutable action_type never reaches a handler", async () => {
 });
 
 test("a recognised but unimplemented action refuses and records, without acting", async () => {
-  // send_email and demo_site are both in EXECUTABLE_ACTIONS, so they pass the
-  // closed-set gate and land on the not-implemented path. Sami can propose
-  // either today, and this branch writes a terminal row.
-  for (const actionType of ["send_email", "demo_site"]) {
+  // send_email is in EXECUTABLE_ACTIONS, so it passes the closed-set gate and
+  // lands on the not-implemented path, and this branch writes a terminal row.
+  // demo_site is NOT in this loop: it has its own handler now, exercised
+  // below, and no longer reaches this branch.
+  for (const actionType of ["send_email"]) {
     const deps = fakeDeps({ approval: approved({ actionType }) });
     const outcome = await executeApproval(deps, "a1", "crm:salem@example.com");
     assert.equal(outcome.ok, false, `${actionType} must refuse`);
@@ -247,20 +248,26 @@ test("an approved demo_site queues the build and is marked executed", async () =
   const deps = fakeDemoDeps({ approval: demoApproved() });
   const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
   assert.equal(outcome.ok, true);
+  assert.equal(outcome.action, "demo_site");
   assert.equal(deps.requested.length, 1);
   assert.equal(deps.requested[0].dealId, DEAL);
   assert.equal(deps.requested[0].businessName, "Trattoria Nino");
+  assert.equal(deps.requested[0].address, "18 Mill Street");
   assert.equal(deps.marked.length, 1);
   assert.equal(deps.marked[0].result.ok, true);
 });
 
-test("a refused gate names itself and nothing is queued", async () => {
+test("a refused gate names itself", async () => {
   // The kill switch being off is the case this whole feature exists to respect.
   const deps = fakeDemoDeps({ approval: demoApproved(), refusedGate: "kill-switch" });
   const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
   assert.equal(outcome.ok, false);
   assert.equal(outcome.reason, "refused");
   assert.match(outcome.detail, /kill-switch/);
+  // requestDemoSite IS called here - the gate lives inside it, not in front of
+  // it - and it is the gate's own refusal, not a skipped call, that stops a
+  // demo from being built.
+  assert.equal(deps.requested.length, 1);
   assert.equal(deps.marked.length, 1);
   assert.equal(deps.marked[0].result.ok, false);
 });
@@ -274,6 +281,7 @@ test("a demo_site payload naming a different deal is refused before anything run
   const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
   assert.equal(outcome.ok, false);
   assert.equal(outcome.reason, "refused");
+  assert.match(outcome.detail, /disagree/);
   assert.equal(deps.requested.length, 0);
 });
 
@@ -281,6 +289,7 @@ test("a demo_site with no business name is refused and recorded", async () => {
   const deps = fakeDemoDeps({ approval: demoApproved({ payload: { businessName: "  " } }) });
   const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
   assert.equal(outcome.ok, false);
+  assert.match(outcome.detail, /business name/);
   assert.equal(deps.requested.length, 0);
   assert.equal(deps.marked.length, 1);
 });
