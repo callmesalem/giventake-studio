@@ -164,40 +164,13 @@ export const requestDealDemoSite = createServerFn({ method: "POST" })
     vertical: optionalText(d?.vertical, "Vertical", 80),
   }))
   .handler(async ({ data }): Promise<RequestDemoSiteResult> => {
-    const { forDeal, outboundControl } = await import("@/server/demo-sites/access");
-    const { session, read, deal, store } = await forDeal(data.dealId);
-
-    // Read the facts the gate needs FROM THE DATABASE, now. The card computed
-    // gates when it rendered; the kill switch may have been thrown since, and a
-    // stale pass must not be what authorises a deployment.
-    const [existing, control] = await Promise.all([
-      store.listForDeal(data.dealId),
-      outboundControl(read),
-    ]);
-
-    const gates = buildDemoSiteGates({
-      outboundEnabled: control.outboundEnabled,
-      outboundReason: control.reason,
-      hasTarget: true,
-      businessName: data.businessName,
-      existingStatuses: existing.map((d) => d.status),
-    });
-
-    // Nothing is written on refusal. A demo_sites row that exists but must
-    // never be built is a trap for whoever finds it later.
-    if (!isDemoSiteRequestable(gates)) return { ok: false, reason: "refused", gates };
-
-    const demoSiteId = await store.requestDemoSite({
-      // Both ids are attached when the deal has a company, so the demo surfaces
-      // on the company record too. The table requires at least one; a deal
-      // always supplies one here.
-      companyId: typeof deal.company_id === "string" ? deal.company_id : null,
+    const { requestDemoSiteForDeal } = await import("@/server/demo-sites/request");
+    const outcome = await requestDemoSiteForDeal({
       dealId: data.dealId,
       businessName: data.businessName,
       address: data.address,
       vertical: data.vertical,
-      requestedBy: session.userId,
     });
-
-    return { ok: true, demoSiteId };
+    if (!outcome.ok) return { ok: false, reason: "refused", gates: outcome.gates };
+    return { ok: true, demoSiteId: outcome.demoSiteId };
   });
