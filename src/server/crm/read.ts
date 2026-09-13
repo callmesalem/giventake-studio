@@ -172,7 +172,7 @@ export class CrmRead {
   listPendingApprovals<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "approval_queue",
-      "select=id,agent_name,action_type,summary,risk_level,requested_at&status=eq.pending&order=requested_at.desc&limit=200",
+      "select=id,agent_name,action_type,summary,risk_level,requested_at,target_type,target_id,proposed_payload&status=eq.pending&order=requested_at.desc&limit=200",
     );
   }
 

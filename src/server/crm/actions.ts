@@ -84,6 +84,16 @@ export class CrmActions {
     });
   }
 
+  /** Record what happened to an approved proposal. The RPC raises unless the
+   *  status is exactly 'approved', so this is also the guard against marking
+   *  something twice. */
+  markApprovalExecuted(id: string, result: Record<string, unknown>): Promise<unknown> {
+    return this.#rpc<unknown>("approval_mark_executed", {
+      p_id: id,
+      p_result: result,
+    });
+  }
+
   /* ── Phase 02: human writes ────────────────────────────────────────────────
    *
    * Every one of these goes through the same *_upsert RPCs the agents use. No

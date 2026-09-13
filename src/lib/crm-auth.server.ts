@@ -141,7 +141,7 @@ export async function requireCrmSession(): Promise<CrmSession> {
   return session;
 }
 
-async function requireAdmin(): Promise<CrmSession> {
+export async function requireAdmin(): Promise<CrmSession> {
   const session = await resolveCrmSession();
   if (!session) throw new Response("Not authenticated", { status: 401 });
   if (session.role !== "admin") throw new Response("Admins only", { status: 403 });

@@ -21,6 +21,7 @@ import {
   type Gate,
 } from "@/lib/crm-guards";
 import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
+import type { ExecutionOutcome } from "@/server/approvals/execute";
 
 function config() {
   const url = process.env.SUPABASE_URL;
@@ -84,6 +85,17 @@ export interface ApprovalRow {
   summary: string | null;
   risk_level: string | null;
   requested_at: string | null;
+  /** What is actually being approved. Without this an operator approves a
+   *  summary rather than the artifact, which for an outbound message would mean
+   *  approving "Follow up with Ana" without seeing a word that reaches Ana. */
+  target_type: string | null;
+  target_id: string | null;
+  proposed_payload: unknown;
+  /** Resolved for target_type 'deal' so the operator identifies the deal by
+   *  name rather than by a UUID. Without this the only human-readable
+   *  identification is the agent's own summary and note, which is exactly the
+   *  text a steered agent controls. */
+  target_label: string | null;
 }
 export interface LeadRow {
   id: string;
@@ -254,27 +266,63 @@ function validateDecide(data: DecideApprovalInput): DecideApprovalInput {
 
 export const decideCrmApproval = createServerFn({ method: "POST" })
   .validator(validateDecide)
-  .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { requireCrmSession } = await import("./crm-auth.server");
-    const session = await requireCrmSession();
+  .handler(async ({ data }): Promise<{ ok: true; execution: ExecutionOutcome | null }> => {
+    // Admin only, matching approval_queue's own admin_only entry in
+    // MEMBER_TABLE_POLICY. requireCrmSession would accept any member, and this
+    // function does not merely record a decision any more: it carries the
+    // action out.
+    const { requireAdmin } = await import("./crm-auth.server");
+    const session = await requireAdmin();
     const { CrmActions } = await import("@/server/crm/actions");
     const actions = new CrmActions(config());
-    await actions.decideApproval(data.id, data.decision, `crm:${session.email}`, data.reason);
-    return { ok: true };
+    const actor = `crm:${session.email}`;
+
+    // decideApproval takes a row lock and raises when the status is not
+    // pending, so a double-click throws here and never reaches the executor.
+    // That raise IS the serialisation point; do not catch it.
+    await actions.decideApproval(data.id, data.decision, actor, data.reason);
+
+    if (data.decision !== "approved") return { ok: true, execution: null };
+
+    const { executeApproval } = await import("@/server/approvals/execute");
+    const { crmExecutorDeps } = await import("@/server/approvals/deps");
+    const execution = await executeApproval(crmExecutorDeps(config()), data.id, actor);
+    return { ok: true, execution };
   });
 
 export const crmApprovals = createServerFn({ method: "GET" }).handler(
   async (): Promise<ApprovalRow[]> => {
     const read = await reader();
     const rows = await read.listPendingApprovals<Record<string, unknown>>();
-    return rows.map((r) => ({
+    const mapped = rows.map((r) => ({
       id: String(r.id),
       agent_name: str(r.agent_name),
       action_type: str(r.action_type),
       summary: str(r.summary),
       risk_level: str(r.risk_level),
       requested_at: str(r.requested_at),
+      target_type: str(r.target_type),
+      target_id: str(r.target_id),
+      proposed_payload: r.proposed_payload ?? null,
+      target_label: null as string | null,
     }));
+
+    for (const row of mapped) {
+      if (row.target_type !== "deal" || !row.target_id) continue;
+      const deal = await read.getById<Record<string, unknown>>(
+        "deals",
+        row.target_id,
+        "id,name,stage,owner_id,assigned_to",
+      );
+      // The projection must carry owner_id and assigned_to: CrmRead#scope reads
+      // them off the row it is given, so omitting them makes the predicate false
+      // for every row. See src/server/documents/deal-access.ts.
+      row.target_label = deal
+        ? `${String(deal.name ?? "unnamed")} · ${String(deal.stage ?? "no stage")}`
+        : null;
+    }
+
+    return mapped;
   },
 );
 
