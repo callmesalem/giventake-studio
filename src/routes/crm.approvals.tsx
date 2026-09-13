@@ -198,6 +198,36 @@ function ProposalDetail({ approval }: { approval: ApprovalRow }) {
     );
   }
 
+  if (approval.action_type === "demo_site") {
+    const businessName = typeof payload?.businessName === "string" ? payload.businessName : "";
+    const address = typeof payload?.address === "string" ? payload.address : "";
+    const vertical = typeof payload?.vertical === "string" ? payload.vertical : "";
+    return (
+      <div className="mt-3 rounded-md border border-border p-3">
+        <p className="text-xs text-muted-foreground">Queues a public demo site for this record</p>
+        {approval.target_label && (
+          <p className="mt-1 break-words text-sm font-medium text-foreground">
+            {approval.target_label}
+          </p>
+        )}
+        <p className="mt-1 break-words font-mono text-xs text-muted-foreground">
+          {approval.target_id ?? "no deal named"}
+        </p>
+        <p className="mt-2 break-words text-sm text-foreground">
+          {businessName || "No business name given"}
+        </p>
+        {(address || vertical) && (
+          <p className="mt-1 break-words text-xs text-muted-foreground">
+            {[address, vertical].filter(Boolean).join(" · ")}
+          </p>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">
+          The kill switch and the duplicate check still apply. Approving does not skip them.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-3 rounded-md border border-border p-3">
       <p className="text-xs text-muted-foreground">
