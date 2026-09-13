@@ -91,6 +91,11 @@ export interface ApprovalRow {
   target_type: string | null;
   target_id: string | null;
   proposed_payload: unknown;
+  /** Resolved for target_type 'deal' so the operator identifies the deal by
+   *  name rather than by a UUID. Without this the only human-readable
+   *  identification is the agent's own summary and note, which is exactly the
+   *  text a steered agent controls. */
+  target_label: string | null;
 }
 export interface LeadRow {
   id: string;
@@ -289,7 +294,7 @@ export const crmApprovals = createServerFn({ method: "GET" }).handler(
   async (): Promise<ApprovalRow[]> => {
     const read = await reader();
     const rows = await read.listPendingApprovals<Record<string, unknown>>();
-    return rows.map((r) => ({
+    const mapped = rows.map((r) => ({
       id: String(r.id),
       agent_name: str(r.agent_name),
       action_type: str(r.action_type),
@@ -299,7 +304,25 @@ export const crmApprovals = createServerFn({ method: "GET" }).handler(
       target_type: str(r.target_type),
       target_id: str(r.target_id),
       proposed_payload: r.proposed_payload ?? null,
+      target_label: null as string | null,
     }));
+
+    for (const row of mapped) {
+      if (row.target_type !== "deal" || !row.target_id) continue;
+      const deal = await read.getById<Record<string, unknown>>(
+        "deals",
+        row.target_id,
+        "id,name,stage,owner_id,assigned_to",
+      );
+      // The projection must carry owner_id and assigned_to: CrmRead#scope reads
+      // them off the row it is given, so omitting them makes the predicate false
+      // for every row. See src/server/documents/deal-access.ts.
+      row.target_label = deal
+        ? `${String(deal.name ?? "unnamed")} · ${String(deal.stage ?? "no stage")}`
+        : null;
+    }
+
+    return mapped;
   },
 );
 

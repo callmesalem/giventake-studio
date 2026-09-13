@@ -77,6 +77,21 @@ test("an unexecutable action_type never reaches a handler", async () => {
   assert.equal(outcome.ok, false);
   assert.equal(outcome.reason, "not-executable");
   assert.equal(deps.advanced.length, 0);
+  assert.equal(deps.marked.length, 1);
+  assert.equal(deps.marked[0].result.ok, false);
+});
+
+test("a recognised but unimplemented action refuses and records, without acting", async () => {
+  // send_email and demo_site are both in EXECUTABLE_ACTIONS, so they pass the
+  // closed-set gate and land on the not-implemented path. Sami can propose
+  // either today, and this branch writes a terminal row.
+  for (const actionType of ["send_email", "demo_site"]) {
+    const deps = fakeDeps({ approval: approved({ actionType }) });
+    const outcome = await executeApproval(deps, "a1", "crm:salem@example.com");
+    assert.equal(outcome.ok, false, `${actionType} must refuse`);
+    assert.equal(deps.advanced.length, 0, `${actionType} must not act`);
+    assert.equal(deps.marked.length, 1, `${actionType} must be recorded`);
+  }
 });
 
 test("a proposal that is not approved is not executed", async () => {

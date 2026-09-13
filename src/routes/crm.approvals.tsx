@@ -31,11 +31,15 @@ function ApprovalCard({ approval }: { approval: ApprovalRow }) {
       // A refusal after approval is not an error and must not be silent: an
       // operator who clicked Approve and saw nothing would assume it worked.
       if (result.execution && !result.execution.ok) {
-        setOutcome(
+        const base =
           "detail" in result.execution
             ? result.execution.detail
-            : "Approved, but the CRM did not carry it out.",
-        );
+            : "Approved, but the CRM did not carry it out.";
+        const stranded =
+          "recorded" in result.execution && result.execution.recorded === false
+            ? " The decision could not be recorded, so this proposal will not appear in this queue again."
+            : "";
+        setOutcome(base + stranded);
         setBusy(null);
         return;
       }
@@ -178,7 +182,12 @@ function ProposalDetail({ approval }: { approval: ApprovalRow }) {
     return (
       <div className="mt-3 rounded-md border border-border p-3">
         <p className="text-xs text-muted-foreground">Advances this deal to Close</p>
-        <p className="mt-1 break-words font-mono text-xs">
+        {approval.target_label && (
+          <p className="mt-1 break-words text-sm font-medium text-foreground">
+            {approval.target_label}
+          </p>
+        )}
+        <p className="mt-1 break-words font-mono text-xs text-muted-foreground">
           {approval.target_id ?? "no deal named"}
         </p>
         {note && <p className="mt-2 break-words text-sm text-foreground">{note}</p>}

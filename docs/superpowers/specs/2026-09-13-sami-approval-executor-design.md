@@ -1,6 +1,6 @@
 # The approval executor — design
 
-**Status:** approved design, not yet planned or built.
+**Status:** Phase 1 built and reviewed; phases 2 and 3 outstanding.
 **Date:** 2026-09-13.
 **Scope:** making an approved proposal actually happen, so Sami can propose the
 three actions he must never take on his own.
@@ -118,8 +118,11 @@ about it. Sami supplies it on `approval_request`.
 
 ### Where it lives
 
-- `src/server/approvals/execute.ts` — the dispatcher and its outcome types
-- `src/server/approvals/handlers.ts` — the three handlers
+- `src/server/approvals/execute.ts` — the dispatcher, its outcome types, and, for
+  now, the one handler Phase 1 ships (`deal_close`), inline. A separate
+  `src/server/approvals/handlers.ts` is worth introducing once a second handler
+  lands — not before, since one handler in its own file is a file with one
+  export and nothing to share.
 
 Both server-only. `decideCrmApproval` in `src/lib/crm-data.ts` already reaches
 `src/server/*` by dynamic `import()` inside its handler; it gains one more.
@@ -256,12 +259,15 @@ column list, so surfacing `proposed_payload` means adding a column name to a
 
 | Phase | Ships | Why this order |
 |---|---|---|
-| 1 | Dispatcher, payload rendering, `demo_site` handler | Proves the machinery on the action that stays inside systems you own |
-| 2 | `deal_close` handler | Touches revenue reporting, but sends nothing |
+| 1 | Dispatcher, payload rendering, `deal_close` handler | Proves the machinery on an action that reaches nobody outside the company |
+| 2 | `demo_site` handler | Stays inside systems you own, but `demo_site_request` lives on an unmerged branch, so it could not ship first |
 | 3 | `send_email` handler | Highest value, and the only one that reaches a person |
 
-Value arrives last, which is the trade. It is still the right order: the first
-time approval-to-execution runs end to end should not be the time it emails a
+Phase 1 built `deal_close` rather than `demo_site` because `demo_site_request`
+lives on an unmerged branch and a `deal_close` reaches nobody outside the
+company, so it is what actually shipped safely first. Value still arrives last,
+which is the trade. It is still the right order: the first time
+approval-to-execution runs end to end should not be the time it emails a
 client.
 
 ---

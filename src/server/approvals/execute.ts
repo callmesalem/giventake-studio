@@ -50,8 +50,8 @@ export type ExecutionOutcome =
   | { ok: true; action: string; recorded?: false }
   | { ok: false; reason: "not-found" }
   | { ok: false; reason: "not-approved"; status: string }
-  | { ok: false; reason: "not-executable"; actionType: string }
-  | { ok: false; reason: "refused"; detail: string };
+  | { ok: false; reason: "not-executable"; actionType: string; recorded?: false }
+  | { ok: false; reason: "refused"; detail: string; recorded?: false };
 
 /*
  * There is deliberately no separate "error" variant in phase 1, though the spec
@@ -114,22 +114,32 @@ export async function executeApproval(
   const actionType = approval.actionType ?? "";
   if (!isExecutableAction(actionType)) {
     const detail = "The CRM cannot execute this kind of proposal.";
-    await record(deps, id, { ok: false, refused: "not-executable", detail });
-    return { ok: false, reason: "not-executable", actionType };
+    const recorded = await record(deps, id, { ok: false, refused: "not-executable", detail });
+    return recorded
+      ? { ok: false, reason: "not-executable", actionType }
+      : { ok: false, reason: "not-executable", actionType, recorded: false };
   }
 
   if (actionType !== "deal_close") {
     // send_email and demo_site are later phases. Recognised, deliberately not
     // yet runnable, and said so rather than failing silently.
     const detail = "This action is recognised but not implemented yet.";
-    await record(deps, id, { ok: false, refused: actionType, detail });
-    return { ok: false, reason: "refused", detail };
+    const recorded = await record(deps, id, { ok: false, refused: actionType, detail });
+    return recorded
+      ? { ok: false, reason: "refused", detail }
+      : { ok: false, reason: "refused", detail, recorded: false };
   }
 
   const validated = validateDealClose(approval.targetType, approval.targetId, approval.payload);
   if (!validated.ok) {
-    await record(deps, id, { ok: false, refused: "deal_close", detail: validated.reason });
-    return { ok: false, reason: "refused", detail: validated.reason };
+    const recorded = await record(deps, id, {
+      ok: false,
+      refused: "deal_close",
+      detail: validated.reason,
+    });
+    return recorded
+      ? { ok: false, reason: "refused", detail: validated.reason }
+      : { ok: false, reason: "refused", detail: validated.reason, recorded: false };
   }
 
   try {
@@ -149,8 +159,10 @@ export async function executeApproval(
     // cannot tell the two apart - see the note on ExecutionOutcome.
     const detail =
       "The deal was not advanced. Approving it again will not help until you check why.";
-    await record(deps, id, { ok: false, refused: "deal_close", detail });
-    return { ok: false, reason: "refused", detail };
+    const recorded = await record(deps, id, { ok: false, refused: "deal_close", detail });
+    return recorded
+      ? { ok: false, reason: "refused", detail }
+      : { ok: false, reason: "refused", detail, recorded: false };
   }
 
   const recorded = await record(deps, id, { ok: true, action: "deal_close" });

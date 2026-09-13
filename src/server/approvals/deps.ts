@@ -9,10 +9,11 @@ import { CrmActions } from "@/server/crm/actions";
 import type { ExecutorDeps, StoredApproval } from "@/server/approvals/execute";
 
 export function crmExecutorDeps(config: { url: string; serviceRoleKey: string }): ExecutorDeps {
-  // Admin actor: approval_queue is admin_only in MEMBER_TABLE_POLICY, so a
-  // member's read returns nothing and the executor refuses with not-found. That
-  // is the correct outcome - a member has no business executing an approval -
-  // and it is enforced by the same scoping every other surface uses.
+  // Admin actor by construction, and the access control is NOT here: it is
+  // requireAdmin in decideCrmApproval, which is this module's only caller.
+  // MEMBER_TABLE_POLICY does not protect this path, because this reader never
+  // carries a member actor for #scope to filter on. Do not remove that gate on
+  // the belief that scoping would catch it.
   const read = new CrmRead({ ...config, actor: { id: null, isAdmin: true } });
   const actions = new CrmActions(config);
 
