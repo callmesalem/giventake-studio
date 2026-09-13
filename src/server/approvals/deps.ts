@@ -6,6 +6,7 @@
  */
 import { CrmRead } from "@/server/crm/read";
 import { CrmActions } from "@/server/crm/actions";
+import { requestDemoSiteForDeal } from "@/server/demo-sites/request";
 import type { ExecutorDeps, StoredApproval } from "@/server/approvals/execute";
 
 export function crmExecutorDeps(config: { url: string; serviceRoleKey: string }): ExecutorDeps {
@@ -37,6 +38,15 @@ export function crmExecutorDeps(config: { url: string; serviceRoleKey: string })
     },
 
     advanceDealStage: (input) => actions.advanceDealStage(input),
+
+    requestDemoSite: async (input) => {
+      const outcome = await requestDemoSiteForDeal(input);
+      if (outcome.ok) return { ok: true, demoSiteId: outcome.demoSiteId };
+      // The first blocking gate that did not pass is the one worth naming. The
+      // gates are built in a fixed order, so this is stable.
+      const blocking = outcome.gates.find((g) => !g.pass && g.blocking);
+      return { ok: false, refusedGate: blocking ? blocking.id : "unknown" };
+    },
 
     markExecuted: async (id, result) => {
       await actions.markApprovalExecuted(id, result);

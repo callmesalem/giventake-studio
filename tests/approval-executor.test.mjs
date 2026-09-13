@@ -204,3 +204,96 @@ test("the operator's own text is preserved verbatim ahead of the attribution", (
   const out = attributedNote("Ready to close.", "sami", "crm:x@example.com", AT);
   assert.ok(out.startsWith("Ready to close.\n\nProposed by"));
 });
+
+/* demo_site. Unlike deal_close, this handler can say WHICH gate refused,
+ * because the demo-site gates are returned rather than thrown. */
+
+const demoApproved = (over = {}) => ({
+  id: "a2",
+  actionType: "demo_site",
+  agentName: "sami",
+  targetType: "deal",
+  targetId: DEAL,
+  status: "approved",
+  payload: { businessName: "Trattoria Nino", address: "18 Mill Street" },
+  ...over,
+});
+
+/** Extends fakeDeps with a demo-site queue that records what it was asked for. */
+function fakeDemoDeps({ approval, refusedGate = null } = {}) {
+  const marked = [];
+  const requested = [];
+  return {
+    marked,
+    requested,
+    async getApproval() {
+      return approval ?? null;
+    },
+    async advanceDealStage() {
+      throw new Error("advanceDealStage must not be called for a demo_site");
+    },
+    async requestDemoSite(input) {
+      requested.push(input);
+      if (refusedGate) return { ok: false, refusedGate };
+      return { ok: true, demoSiteId: "demo-1" };
+    },
+    async markExecuted(id, result) {
+      marked.push({ id, result });
+    },
+  };
+}
+
+test("an approved demo_site queues the build and is marked executed", async () => {
+  const deps = fakeDemoDeps({ approval: demoApproved() });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, true);
+  assert.equal(deps.requested.length, 1);
+  assert.equal(deps.requested[0].dealId, DEAL);
+  assert.equal(deps.requested[0].businessName, "Trattoria Nino");
+  assert.equal(deps.marked.length, 1);
+  assert.equal(deps.marked[0].result.ok, true);
+});
+
+test("a refused gate names itself and nothing is queued", async () => {
+  // The kill switch being off is the case this whole feature exists to respect.
+  const deps = fakeDemoDeps({ approval: demoApproved(), refusedGate: "kill-switch" });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.equal(outcome.reason, "refused");
+  assert.match(outcome.detail, /kill-switch/);
+  assert.equal(deps.marked.length, 1);
+  assert.equal(deps.marked[0].result.ok, false);
+});
+
+test("a demo_site payload naming a different deal is refused before anything runs", async () => {
+  const deps = fakeDemoDeps({
+    approval: demoApproved({
+      payload: { dealId: "99999999-9999-9999-9999-999999999999", businessName: "Nino" },
+    }),
+  });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.equal(outcome.reason, "refused");
+  assert.equal(deps.requested.length, 0);
+});
+
+test("a demo_site with no business name is refused and recorded", async () => {
+  const deps = fakeDemoDeps({ approval: demoApproved({ payload: { businessName: "  " } }) });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.equal(deps.requested.length, 0);
+  assert.equal(deps.marked.length, 1);
+});
+
+test("a bookkeeping failure after a real queue still reports the queue", async () => {
+  // Same rule as deal_close: the row exists, and telling the operator it failed
+  // would be a lie they cannot correct.
+  const deps = fakeDemoDeps({ approval: demoApproved() });
+  deps.markExecuted = async () => {
+    throw new Error("rpc failed");
+  };
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, true);
+  assert.equal(outcome.recorded, false);
+  assert.equal(deps.requested.length, 1);
+});

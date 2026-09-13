@@ -18,7 +18,11 @@
  * issue.ts: a narrow interface declared here rather than importing CrmActions,
  * so this module is testable with a small fake instead of a database.
  */
-import { isExecutableAction, validateDealClose } from "../../lib/approval-actions.ts";
+import {
+  isExecutableAction,
+  validateDealClose,
+  validateDemoSite,
+} from "../../lib/approval-actions.ts";
 
 /** The stage a deal_close proposal advances into. A literal rather than a
  *  lookup for the reason crm-guards.ts gives about CLOSE_STAGE_NAME: a gate
@@ -46,6 +50,18 @@ export interface ExecutorDeps {
     note: string;
     actor: string;
   }): Promise<unknown>;
+  /** Queue a demo site through the SAME gated path the deal page uses.
+   *
+   *  Returns the refusing gate rather than throwing, which is richer than
+   *  advanceDealStage can manage: the demo gates are values, not exceptions, so
+   *  the operator can be told the kill switch is off rather than only that it
+   *  did not run. */
+  requestDemoSite(input: {
+    dealId: string;
+    businessName: string;
+    address: string | null;
+    vertical: string | null;
+  }): Promise<{ ok: true; demoSiteId: string } | { ok: false; refusedGate: string }>;
   markExecuted(id: string, result: Record<string, unknown>): Promise<void>;
 }
 
@@ -154,9 +170,39 @@ export async function executeApproval(
       : { ok: false, reason: "not-executable", actionType, recorded: false };
   }
 
+  if (actionType === "demo_site") {
+    const validated = validateDemoSite(approval.targetType, approval.targetId, approval.payload);
+    if (!validated.ok) {
+      const recorded = await record(deps, id, {
+        ok: false,
+        refused: "demo_site",
+        detail: validated.reason,
+      });
+      return recorded
+        ? { ok: false, reason: "refused", detail: validated.reason }
+        : { ok: false, reason: "refused", detail: validated.reason, recorded: false };
+    }
+
+    const queued = await deps.requestDemoSite(validated.value);
+    if (!queued.ok) {
+      // Named, because "the kill switch is off" and "a demo is already building"
+      // lead an operator to do completely different things.
+      const detail = `The demo was not queued. Gate refused: ${queued.refusedGate}.`;
+      const recorded = await record(deps, id, { ok: false, refused: "demo_site", detail });
+      return recorded
+        ? { ok: false, reason: "refused", detail }
+        : { ok: false, reason: "refused", detail, recorded: false };
+    }
+
+    const recorded = await record(deps, id, { ok: true, action: "demo_site" });
+    return recorded
+      ? { ok: true, action: "demo_site" }
+      : { ok: true, action: "demo_site", recorded: false };
+  }
+
   if (actionType !== "deal_close") {
-    // send_email and demo_site are later phases. Recognised, deliberately not
-    // yet runnable, and said so rather than failing silently.
+    // send_email is a later phase. Recognised, deliberately not yet runnable,
+    // and said so rather than failing silently.
     const detail = "This action is recognised but not implemented yet.";
     const recorded = await record(deps, id, { ok: false, refused: actionType, detail });
     return recorded
