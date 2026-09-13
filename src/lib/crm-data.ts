@@ -21,6 +21,7 @@ import {
   type Gate,
 } from "@/lib/crm-guards";
 import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
+import type { ExecutionOutcome } from "@/server/approvals/execute";
 
 function config() {
   const url = process.env.SUPABASE_URL;
@@ -84,6 +85,12 @@ export interface ApprovalRow {
   summary: string | null;
   risk_level: string | null;
   requested_at: string | null;
+  /** What is actually being approved. Without this an operator approves a
+   *  summary rather than the artifact, which for an outbound message would mean
+   *  approving "Follow up with Ana" without seeing a word that reaches Ana. */
+  target_type: string | null;
+  target_id: string | null;
+  proposed_payload: unknown;
 }
 export interface LeadRow {
   id: string;
@@ -254,13 +261,24 @@ function validateDecide(data: DecideApprovalInput): DecideApprovalInput {
 
 export const decideCrmApproval = createServerFn({ method: "POST" })
   .validator(validateDecide)
-  .handler(async ({ data }): Promise<{ ok: true }> => {
+  .handler(async ({ data }): Promise<{ ok: true; execution: ExecutionOutcome | null }> => {
     const { requireCrmSession } = await import("./crm-auth.server");
     const session = await requireCrmSession();
     const { CrmActions } = await import("@/server/crm/actions");
     const actions = new CrmActions(config());
-    await actions.decideApproval(data.id, data.decision, `crm:${session.email}`, data.reason);
-    return { ok: true };
+    const actor = `crm:${session.email}`;
+
+    // decideApproval takes a row lock and raises when the status is not
+    // pending, so a double-click throws here and never reaches the executor.
+    // That raise IS the serialisation point; do not catch it.
+    await actions.decideApproval(data.id, data.decision, actor, data.reason);
+
+    if (data.decision !== "approved") return { ok: true, execution: null };
+
+    const { executeApproval } = await import("@/server/approvals/execute");
+    const { crmExecutorDeps } = await import("@/server/approvals/deps");
+    const execution = await executeApproval(crmExecutorDeps(config()), data.id, actor);
+    return { ok: true, execution };
   });
 
 export const crmApprovals = createServerFn({ method: "GET" }).handler(
@@ -274,6 +292,9 @@ export const crmApprovals = createServerFn({ method: "GET" }).handler(
       summary: str(r.summary),
       risk_level: str(r.risk_level),
       requested_at: str(r.requested_at),
+      target_type: str(r.target_type),
+      target_id: str(r.target_id),
+      proposed_payload: r.proposed_payload ?? null,
     }));
   },
 );
