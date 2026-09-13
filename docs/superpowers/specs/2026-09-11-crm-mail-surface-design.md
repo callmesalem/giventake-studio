@@ -346,19 +346,25 @@ this deal" as headers, which does not exist today.
 
 ---
 
-## 8. Open item to resolve before Phase 1
+## 8. Resolved: the OAuth scope question
 
 **`gmail.readonly` and `gmail.send` are Restricted scopes.** A public OAuth app
 using them requires Google's CASA security assessment, which is slow and costs
 real money; unverified apps are capped at 100 users and show a warning screen.
 
-If `giventakedevs.com` is a **Google Workspace** domain, publishing the OAuth
-app as **Internal** skips verification entirely for users inside the
-organisation. That is almost certainly the situation and makes this a non-issue.
+**Confirmed 2026-09-13: `giventakedevs.com` is a Google Workspace domain.**
 
-If the mailbox is a plain `@gmail.com` account rather than Workspace, there is
-no Internal option and Phase 1 meets the verification wall.
+So the OAuth app is published as **Internal**, which skips verification
+entirely for users inside the organisation. No CASA assessment, no 100-user
+cap, no warning screen. This is no longer a risk to Phase 1's timeline.
 
-This does not change the design either way. It changes whether Phase 1 ships in
-a week or a quarter, so it should be confirmed before work starts rather than
-discovered during it.
+Two things follow for whoever creates the client (prerequisite P2):
+
+- Publish the app as **Internal**, not External. External would re-introduce
+  the assessment for the same scopes.
+- The redirect URI points at the **VPS**, not the Worker. Only the VPS holds
+  the token encryption key, so only the VPS can complete the exchange and
+  write the row. See section 3.
+
+If the connected mailbox is ever moved to an address outside the Workspace
+domain, this resolution lapses and the verification wall returns.

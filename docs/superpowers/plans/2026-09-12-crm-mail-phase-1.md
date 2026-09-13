@@ -27,7 +27,7 @@
 
 These are blocking and cannot be done by an implementer inside this repo.
 
-- [ ] **P1: Confirm the Google Workspace question.** `gmail.readonly` and `gmail.send` are Restricted scopes. If `giventakedevs.com` is Google Workspace, publish the OAuth app as **Internal** and verification is skipped. If the mailbox is a plain `@gmail.com`, there is no Internal option and CASA assessment applies. Resolve before P2.
+- [x] **P1: RESOLVED 2026-09-13 — `giventakedevs.com` is Google Workspace.** Publish the OAuth app as **Internal**; verification is skipped and CASA does not apply. Original question: `gmail.readonly` and `gmail.send` are Restricted scopes. If `giventakedevs.com` is Google Workspace, publish the OAuth app as **Internal** and verification is skipped. If the mailbox is a plain `@gmail.com`, there is no Internal option and CASA assessment applies. Resolve before P2.
 - [ ] **P2: Create the Google Cloud OAuth client.** Enable the Gmail API. Authorized redirect URI points at the **VPS**, not the Worker (only the VPS can encrypt the refresh token). Record client id and secret as VPS environment variables.
 - [ ] **P3: Generate the token encryption key on the VPS.** 32 random bytes, stored only as a VPS environment variable. It must never be committed, never reach Cloudflare, and never appear in this repo.
 
