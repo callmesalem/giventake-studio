@@ -178,8 +178,10 @@ function ProposalDetail({ approval }: { approval: ApprovalRow }) {
     return (
       <div className="mt-3 rounded-md border border-border p-3">
         <p className="text-xs text-muted-foreground">Advances this deal to Close</p>
-        <p className="mt-1 font-mono text-xs">{approval.target_id ?? "no deal named"}</p>
-        {note && <p className="mt-2 text-sm text-foreground">{note}</p>}
+        <p className="mt-1 break-words font-mono text-xs">
+          {approval.target_id ?? "no deal named"}
+        </p>
+        {note && <p className="mt-2 break-words text-sm text-foreground">{note}</p>}
         <p className="mt-2 text-xs text-muted-foreground">
           Close still requires a signed SOW. Approving does not skip that check.
         </p>
@@ -190,8 +192,14 @@ function ProposalDetail({ approval }: { approval: ApprovalRow }) {
   return (
     <div className="mt-3 rounded-md border border-border p-3">
       <p className="text-xs text-muted-foreground">
-        Recognised, but the CRM cannot carry this out yet.
+        Recognised, but the CRM cannot carry this out yet. Approving records your decision; someone
+        still has to do the work.
       </p>
+      {payload && (
+        <pre className="mt-2 overflow-x-auto text-xs text-muted-foreground">
+          {JSON.stringify(payload, null, 2)}
+        </pre>
+      )}
     </div>
   );
 }
