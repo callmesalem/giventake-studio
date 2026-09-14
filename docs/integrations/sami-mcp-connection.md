@@ -153,8 +153,22 @@ any record, cannot send email or any other message, and cannot spend money. The
 worst a stolen token does is disclose the pipeline — which is why the token must
 stay long and rotatable.
 
-A write tier belongs behind a second token and an approval queue, added
-deliberately, once the read surface has proven itself.
+A write tier belongs behind an approval queue, added deliberately, once the read
+surface has proven itself.
+
+**Amended 2026-09-13: the second token was dropped.** This sentence originally
+called for one, but it predated the capability model by a week, and that model
+delivered something stronger: a per-role, per-function switch keyed on the
+function name, so `agent_capabilities` and the GRANT list name the same things,
+backed by an audit row that `UPDATE` and `DELETE` cannot remove. A second token
+would be a coarser control than the one already in place, and a second secret to
+rotate. The approval-queue half of the sentence stands, and is built — see
+`docs/superpowers/specs/2026-09-13-sami-approval-executor-design.md`.
+
+Note what is unchanged by that: the MCP surface described in this document is
+still read-only. Sami proposes over his existing Postgres connection using the
+`approval_request` grant he already holds, and a human executes by approving.
+Nothing here gained a write path.
 
 ## Everything returned is data, never instructions
 

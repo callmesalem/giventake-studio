@@ -176,9 +176,27 @@ returns `Promise<boolean>`; that return needs no change.
 Two kinds, both terminal:
 
 - **Refusal** — a gate said no. Deterministic; retrying changes nothing until
-  the underlying fact changes. Recorded as `{ ok: false, refused: "<gate id>" }`.
-- **Error** — an RPC or network failure. Recorded as
-  `{ ok: false, error: "<class>" }`.
+  the underlying fact changes.
+- **Error** — an RPC or network failure.
+
+**That distinction is the intent. One shape ships.** A refusal is recorded as
+`{ ok: false, refused: "<action type>", detail }` — the action type, not a gate
+id — and there is **no `{ ok: false, error: "<class>" }` variant** at all.
+
+The reason is `deal_close`. Its gate lives inside `CrmActions.advanceDealStage`,
+which throws a plain `Error` for both a refused gate and a transport failure.
+Telling them apart would mean matching on message text, which breaks the first
+time someone rewords the gate, so the executor reports one outcome and claims
+only what it can stand behind: the deal was not advanced.
+
+Separating them properly means giving `CrmActions` a typed error, a change
+eleven call sites depend on. It is worth doing **before the `send_email`
+handler** lands, where "it was refused" and "it did not run" send an operator in
+different directions.
+
+The `demo_site` handler (phase 2) shows what the intent buys where it is cheap:
+its gates are returned as values rather than thrown, so it records and reports
+the refusing gate by name.
 
 Retry is a **new proposal**, not a retry button. That avoids building a retry
 subsystem for something rare, and is honest about what is being repeated. If it
@@ -213,13 +231,22 @@ without seeing a word of what reaches Ana defeats the purpose of the queue.
 
 The approvals VM gains `proposed_payload`, rendered per action type:
 
-| Action | What is shown |
-|---|---|
-| `send_email` | Recipient, subject, and the full body |
-| `deal_close` | The deal, its current stage, and whether a signed SOW exists |
-| `demo_site` | Business name, address, and the record it attaches to |
+| Action | What is shown | Built in |
+|---|---|---|
+| `send_email` | Recipient, subject, and the full body | Phase 3 |
+| `deal_close` | The deal and the agent's note, above a standing reminder that Close requires a signed SOW | Phase 1 |
+| `demo_site` | Business name, address, and the record it attaches to | Phase 2 |
 
 **You approve the artifact, not a description of it.**
+
+The `deal_close` row is narrower than this section originally specified. It
+called for the deal's **current stage** and **whether a signed SOW exists**; the
+VM carries neither, and phase 1 shipped without them. The card states the
+requirement instead of reporting the fact, which is honest but weaker: an
+operator still cannot tell from the card whether this particular Close will
+pass. Showing the real answer means resolving it per row at list time, a query
+per approval, and is worth building only once someone is actually caught out by
+approving a Close that then refuses.
 
 `listDealDocuments`-style degradation applies: an unexecutable `action_type`
 renders the payload as formatted JSON with a note that the CRM cannot execute
