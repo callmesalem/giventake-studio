@@ -12,15 +12,20 @@
  * a recipient, and both end at a human.
  */
 
-import { advanceBlockedByUnsignedSow, canAssign, isCloseStage } from "@/lib/crm-guards";
+// Relative, with the extension, so that `node --experimental-strip-types` can
+// load this module: node's resolver reads "@/lib" as a package name. It is what
+// lets tests/crm-actions-rpc.test.mjs hold this class to RPC-only writes.
+import { advanceBlockedByUnsignedSow, canAssign, isCloseStage } from "../../lib/crm-guards.ts";
 
 /** Re-exported so the stage-4 rule has one name wherever it is read from.
- *  It is DEFINED in crm-guards.ts rather than here because this module imports
- *  through the "@/" alias and so cannot be loaded by `node
- *  --experimental-strip-types` — a gate whose predicate no test can import is a
- *  comment with extra steps. tests/documents-gate.test.mjs exercises the same
- *  function objects this file calls below. */
-export { advanceBlockedByUnsignedSow, isCloseStage, CLOSE_STAGE_NAME } from "@/lib/crm-guards";
+ *  It is DEFINED in crm-guards.ts rather than here so the predicate can be tested
+ *  on its own: tests/documents-gate.test.mjs exercises the same function objects
+ *  this file calls below. */
+export {
+  advanceBlockedByUnsignedSow,
+  isCloseStage,
+  CLOSE_STAGE_NAME,
+} from "../../lib/crm-guards.ts";
 
 type Fetch = typeof globalThis.fetch;
 
@@ -289,9 +294,11 @@ export class CrmActions {
 
   /* ── Phase 07: assignment ─────────────────────────────────────────────── */
 
-  /** The *_upsert RPCs do not carry ownership, so this writes through PostgREST
-   *  directly. Both table and column are checked against the allowlist first,
-   *  and the id is a validated UUID by the time it arrives. */
+  /** The *_upsert RPCs do not carry ownership, so assignment has its own:
+   *  crm_assign. service_role holds no write privilege on any table, so there is
+   *  no direct path left to take. The allowlist is enforced twice on purpose -
+   *  here, so a bad pair costs no round trip and fails as a 400, and again inside
+   *  the function, because that copy is the one a caller cannot skip. */
   async assign(table: string, column: string, id: string, userId: string | null): Promise<void> {
     // canAssign lives in crm-guards and is tested there. The previous inline
     // lookup indexed the record directly, so a table named "constructor" would
@@ -300,19 +307,12 @@ export class CrmActions {
     if (!canAssign(table, column)) {
       throw new Response("That record cannot be assigned", { status: 400 });
     }
-    const response = await this.#fetch(`${this.#url}/rest/v1/${table}?id=eq.${id}`, {
-      method: "PATCH",
-      headers: {
-        apikey: this.#key,
-        Authorization: `Bearer ${this.#key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({ [column]: userId }),
+    await this.#rpc<unknown>("crm_assign", {
+      p_table: table,
+      p_column: column,
+      p_id: id,
+      p_user_id: userId,
     });
-    if (!response.ok) {
-      throw new Error(`assign ${table}.${column} failed: ${response.status}`);
-    }
   }
 
   /** Lead intake. origin distinguishes a hand-typed lead from a website
@@ -344,78 +344,35 @@ export class CrmActions {
    *  can ever write, which is a smaller surface than a table/column allowlist
    *  and needs no validation to stay correct. */
   async linkDealToLead(dealId: string, leadId: string): Promise<void> {
-    const response = await this.#fetch(`${this.#url}/rest/v1/deals?id=eq.${dealId}`, {
-      method: "PATCH",
-      headers: {
-        apikey: this.#key,
-        Authorization: `Bearer ${this.#key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({ lead_id: leadId }),
-    });
-    if (!response.ok) throw new Error(`link deal to lead failed: ${response.status}`);
+    await this.#rpc<unknown>("deal_link_lead", { p_deal_id: dealId, p_lead_id: leadId });
   }
 
   async setLeadStatus(leadId: string, status: string): Promise<void> {
-    const response = await this.#fetch(`${this.#url}/rest/v1/leads?id=eq.${leadId}`, {
-      method: "PATCH",
-      headers: {
-        apikey: this.#key,
-        Authorization: `Bearer ${this.#key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({ status }),
-    });
-    if (!response.ok) throw new Error(`set lead status failed: ${response.status}`);
+    await this.#rpc<unknown>("lead_set_status", { p_lead_id: leadId, p_status: status });
   }
 
   /* ── Phase 13: deal becomes client ────────────────────────────────────── */
 
-  /** There is no client_upsert RPC, so this writes through PostgREST with an
-   *  explicit column list. Only these five columns are ever sent - synthetic,
-   *  created_at and id keep their defaults, and nothing here can set them. */
-  async createClient(input: {
+  /** client_create takes exactly these five values. synthetic, created_at and
+   *  id keep their defaults, and nothing here or in the function can set them. */
+  createClient(input: {
     name: string;
     leadId: string | null;
     dealId: string;
     aiProcessingAllowed: boolean;
     ownerId: string | null;
   }): Promise<string> {
-    const response = await this.#fetch(`${this.#url}/rest/v1/clients`, {
-      method: "POST",
-      headers: {
-        apikey: this.#key,
-        Authorization: `Bearer ${this.#key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify({
-        name: input.name,
-        lead_id: input.leadId,
-        deal_id: input.dealId,
-        ai_processing_allowed: input.aiProcessingAllowed,
-        owner_id: input.ownerId,
-      }),
+    return this.#rpc<string>("client_create", {
+      p_name: input.name,
+      p_lead_id: input.leadId,
+      p_deal_id: input.dealId,
+      p_ai_processing_allowed: input.aiProcessingAllowed,
+      p_owner_id: input.ownerId,
     });
-    if (!response.ok) throw new Error(`create client failed: ${response.status}`);
-    const rows = (await response.json()) as { id: string }[];
-    return rows[0]?.id ?? "";
   }
 
   async createProject(clientId: string, name: string): Promise<void> {
-    const response = await this.#fetch(`${this.#url}/rest/v1/projects`, {
-      method: "POST",
-      headers: {
-        apikey: this.#key,
-        Authorization: `Bearer ${this.#key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({ client_id: clientId, name }),
-    });
-    if (!response.ok) throw new Error(`create project failed: ${response.status}`);
+    await this.#rpc<unknown>("project_create", { p_client_id: clientId, p_name: name });
   }
 
   /* ── Phase 14: reviews, campaigns, invoices ───────────────────────────── */
@@ -466,9 +423,10 @@ export class CrmActions {
     });
   }
 
-  /** No invoice RPC exists, so an explicit column list again. Amounts are held
-   *  in CENTS - the column is amount_cents and money in floating point is how
-   *  totals drift by a penny and nobody can say why. */
+  /** Amounts are held in CENTS - the column is amount_cents and money in floating
+   *  point is how totals drift by a penny and nobody can say why. invoices is the
+   *  table 20260817120000 locked away from service_role by name; invoice_create is
+   *  how a human still raises one without reopening it. */
   async createInvoice(input: {
     projectId: string;
     amountCents: number;
@@ -476,22 +434,12 @@ export class CrmActions {
     status: string;
     dueAt: string | null;
   }): Promise<void> {
-    const response = await this.#fetch(`${this.#url}/rest/v1/invoices`, {
-      method: "POST",
-      headers: {
-        apikey: this.#key,
-        Authorization: `Bearer ${this.#key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({
-        project_id: input.projectId,
-        amount_cents: input.amountCents,
-        currency: input.currency,
-        status: input.status,
-        due_at: input.dueAt,
-      }),
+    await this.#rpc<unknown>("invoice_create", {
+      p_project_id: input.projectId,
+      p_amount_cents: input.amountCents,
+      p_currency: input.currency,
+      p_status: input.status,
+      p_due_at: input.dueAt,
     });
-    if (!response.ok) throw new Error(`create invoice failed: ${response.status}`);
   }
 }
