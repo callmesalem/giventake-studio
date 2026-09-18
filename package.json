@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "test:a11y": "python3 tests/a11y/consent_a11y.py",
     "test": "for test in tests/*.test.mjs; do case \"$test\" in *integration*) continue;; esac; node --experimental-strip-types \"$test\" || exit 1; done",
-    "test:integration": "node tests/operator-postgres.integration.test.mjs",
+    "test:integration": "node tests/operator-postgres.integration.test.mjs && node tests/crm-grants.integration.test.mjs",
     "test:components": "vitest run --config vitest.config.ts",
     "test:e2e": "playwright test",
     "smoke:worker": "node scripts/worker-smoke.mjs"
