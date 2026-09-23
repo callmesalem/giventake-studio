@@ -1,8 +1,21 @@
 # Migration reconciliation runbook
 
-Status: **rehearsed end to end on a local production-equivalent database on
-2026-09-18. Nothing has been applied to production.** Branch
-`fix/migration-reconciliation`. Background is in
+Status: **applied to production on 2026-09-23** (P1 and P2 by the CLI from this
+machine, P3 `supabase db push --linked --include-all` run by Salem in his own
+shell after the CLI was linked; all nine files applied, "Finished supabase db
+push"). Rehearsed end to end on a local production-equivalent database on
+2026-09-18. Branch `fix/migration-reconciliation`.
+
+Verified after the push: history holds 38 rows with no MCP-assigned versions
+left (the 21 pre-existing rows without stored SQL remain, as expected); the six
+write RPCs and the six new tables exist; all 45 public tables have RLS forced;
+`service_role` can SELECT exactly the 19 allowlisted tables and holds no write
+privilege on any table; `anon`, `authenticated`, `crm_agent` and `agent_sami`
+reach no table; `function_search_path_mutable` is gone from the security
+advisor; the site and the CRM answer 200. Note the app change in
+`src/server/crm/actions.ts` had already been live since 2026-09-18, because
+Cloudflare's Git integration deploys this branch on push, so the six dashboard
+writes were failing with "function does not exist" between the two dates. Background is in
 `docs/audits/2026-09-18-full-audit.md`, items 1 to 4.
 
 ## What was wrong, measured on 2026-09-18
