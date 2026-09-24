@@ -12,10 +12,15 @@ write RPCs and the six new tables exist; all 45 public tables have RLS forced;
 `service_role` can SELECT exactly the 19 allowlisted tables and holds no write
 privilege on any table; `anon`, `authenticated`, `crm_agent` and `agent_sami`
 reach no table; `function_search_path_mutable` is gone from the security
-advisor; the site and the CRM answer 200. Note the app change in
-`src/server/crm/actions.ts` had already been live since 2026-09-18, because
-Cloudflare's Git integration deploys this branch on push, so the six dashboard
-writes were failing with "function does not exist" between the two dates. Background is in
+advisor; the site and the CRM answer 200. Correction, verified in the Cloudflare dashboard on 2026-09-23: the branch push
+on 2026-09-18 only uploaded a Worker version (`fa73219a` in Version History).
+Workers Builds deploys the production branch `main` alone, and Deployment
+History shows no deployment between 2026-09-13 (`5332935c`, PR #48) and the
+merge of this branch to main on 2026-09-23. So the app change in
+`src/server/crm/actions.ts` went live only with that merge, after the RPCs
+existed. The six dashboard writes were nevertheless broken before the push, by
+the `service_role` grants problem measured below, not by a missing function.
+Background is in
 `docs/audits/2026-09-18-full-audit.md`, items 1 to 4.
 
 ## What was wrong, measured on 2026-09-18
