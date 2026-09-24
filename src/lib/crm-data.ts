@@ -7,6 +7,7 @@
  * shaped view models below.
  */
 import { createServerFn } from "@tanstack/react-start";
+import type { Json } from "@/integrations/supabase/types";
 import {
   isUuid,
   searchTerm,
@@ -90,7 +91,7 @@ export interface ApprovalRow {
    *  approving "Follow up with Ana" without seeing a word that reaches Ana. */
   target_type: string | null;
   target_id: string | null;
-  proposed_payload: unknown;
+  proposed_payload: Json | null;
   /** Resolved for target_type 'deal' so the operator identifies the deal by
    *  name rather than by a UUID. Without this the only human-readable
    *  identification is the agent's own summary and note, which is exactly the
@@ -303,7 +304,7 @@ export const crmApprovals = createServerFn({ method: "GET" }).handler(
       requested_at: str(r.requested_at),
       target_type: str(r.target_type),
       target_id: str(r.target_id),
-      proposed_payload: r.proposed_payload ?? null,
+      proposed_payload: (r.proposed_payload ?? null) as Json | null,
       target_label: null as string | null,
     }));
 
