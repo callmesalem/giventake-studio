@@ -195,7 +195,7 @@ try {
   //    the guard treats that assertion exactly like a direct agent login.
   //    session_user here is postgres (exempt), which is the same branch the app
   //    takes as authenticator.
-  const HEADER = `select set_config('request.headers', '{"x-agent-role":"agent_perplexity"}', false);`;
+  const HEADER = `set "request.headers" = '{"x-agent-role":"agent_perplexity"}';`;
   const asserting = (sql) => as("service_role", `${HEADER} ${sql}`);
   const NOTE = (key) =>
     `select public.note_upsert('agent_perplexity','${key}',null,'t','hello',null,null);`;
@@ -228,12 +228,12 @@ try {
   );
   refuses(
     "service_role",
-    `select set_config('request.headers', '{"x-agent-role":"postgres"}', false); ${NOTE("n2")}`,
+    `set "request.headers" = '{"x-agent-role":"postgres"}'; ${NOTE("n2")}`,
     /bad_assertion/,
   );
   refuses(
     "service_role",
-    `select set_config('request.headers', '{"x-agent-role":"agent_nobody"}', false); ${NOTE("n2")}`,
+    `set "request.headers" = '{"x-agent-role":"agent_nobody"}'; ${NOTE("n2")}`,
     /capability_missing \(agent_nobody, note_upsert\)/,
   );
   // Without the header the app path is untouched: allowed, and not audited as an agent.

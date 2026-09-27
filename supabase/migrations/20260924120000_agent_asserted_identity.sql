@@ -38,7 +38,7 @@ declare
 begin
   if v_caller in ('authenticator', 'postgres', 'supabase_admin', 'cli_login_postgres') then
     -- The app path. Exempt, unless the app says it is acting for an agent.
-    v_asserted := current_setting('request.headers', true)::json ->> 'x-agent-role';
+    v_asserted := nullif(current_setting('request.headers', true), '')::json ->> 'x-agent-role';
     if v_asserted is null then
       return;
     end if;
@@ -144,5 +144,5 @@ as $$
    order by c.capability
 $$;
 
-revoke all on function public.agent_capabilities_for(text) from public;
+revoke all on function public.agent_capabilities_for(text) from public, anon, authenticated;
 grant execute on function public.agent_capabilities_for(text) to service_role;

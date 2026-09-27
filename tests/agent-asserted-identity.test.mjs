@@ -22,7 +22,10 @@ const CAPABILITIES = [
 ];
 
 test("agent_require reads x-agent-role from PostgREST's request.headers", () => {
-  assert.match(sql, /current_setting\('request\.headers', true\)::json ->> 'x-agent-role'/);
+  assert.match(
+    sql,
+    /nullif\(current_setting\('request\.headers', true\), ''\)::json ->> 'x-agent-role'/,
+  );
 });
 
 test("an asserted name must look like an agent role and never an exempt login", () => {
