@@ -28,7 +28,11 @@ test("agent_require reads x-agent-role from PostgREST's request.headers", () => 
 test("an asserted name must look like an agent role and never an exempt login", () => {
   assert.match(sql, /'\^agent_\[a-z_\]\{1,40\}\$'/);
   for (const exempt of ["authenticator", "postgres", "supabase_admin", "cli_login_postgres"]) {
-    assert.match(sql, new RegExp(`bad_assertion[\\s\\S]*'${exempt}'|'${exempt}'[\\s\\S]*bad_assertion`), exempt);
+    assert.match(
+      sql,
+      new RegExp(`bad_assertion[\\s\\S]*'${exempt}'|'${exempt}'[\\s\\S]*bad_assertion`),
+      exempt,
+    );
   }
 });
 
@@ -50,6 +54,12 @@ test("agent_perplexity gets every capability row, all off", () => {
 
 test("agent_capabilities_for is service_role only", () => {
   assert.match(sql, /revoke all on function public\.agent_capabilities_for\(text\) from public/);
-  assert.match(sql, /grant execute on function public\.agent_capabilities_for\(text\) to service_role/);
-  assert.doesNotMatch(sql, /agent_capabilities_for\(text\) to (anon|authenticated|crm_agent|agent_sami)/);
+  assert.match(
+    sql,
+    /grant execute on function public\.agent_capabilities_for\(text\) to service_role/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /agent_capabilities_for\(text\) to (anon|authenticated|crm_agent|agent_sami)/,
+  );
 });

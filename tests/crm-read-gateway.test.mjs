@@ -6,7 +6,10 @@ import assert from "node:assert/strict";
 import { CrmRead } from "../src/server/crm/read.ts";
 
 const json = (body) =>
-  new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
 
 function harness(reply = () => json([])) {
   const calls = [];
@@ -30,7 +33,13 @@ function harness(reply = () => json([])) {
 
 test("listWhere encodes each filter as column=expression and appends order and limit", async () => {
   const { read, calls } = harness();
-  await read.listWhere("tasks", { synthetic: "eq.false", is_completed: "eq.false" }, "id,content", "deadline_at.asc", 50);
+  await read.listWhere(
+    "tasks",
+    { synthetic: "eq.false", is_completed: "eq.false" },
+    "id,content",
+    "deadline_at.asc",
+    50,
+  );
   assert.equal(calls[0].path, "/rest/v1/tasks");
   assert.equal(
     calls[0].search,
@@ -40,7 +49,13 @@ test("listWhere encodes each filter as column=expression and appends order and l
 
 test("listWhere URL-encodes a filter value with spaces and colons", async () => {
   const { read, calls } = harness();
-  await read.listWhere("approval_queue", { decided_by: "eq.crm:salem@x.com via agent_perplexity" }, "id", "decided_at.desc", 21);
+  await read.listWhere(
+    "approval_queue",
+    { decided_by: "eq.crm:salem@x.com via agent_perplexity" },
+    "id",
+    "decided_at.desc",
+    21,
+  );
   assert.match(calls[0].search, /decided_by=eq\.crm%3Asalem%40x\.com%20via%20agent_perplexity/);
 });
 
@@ -61,7 +76,10 @@ test("listApprovals, dealDocuments and capabilitiesFor are RPC calls", async () 
     calls.map((c) => [c.path, c.body]),
     [
       ["/rest/v1/rpc/approval_queue_list", { p_status: "pending" }],
-      ["/rest/v1/rpc/document_list_for_deal", { p_deal_id: "22222222-2222-4222-8222-222222222222" }],
+      [
+        "/rest/v1/rpc/document_list_for_deal",
+        { p_deal_id: "22222222-2222-4222-8222-222222222222" },
+      ],
       ["/rest/v1/rpc/agent_capabilities_for", { p_agent: "agent_perplexity" }],
     ],
   );

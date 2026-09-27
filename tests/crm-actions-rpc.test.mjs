@@ -63,7 +63,12 @@ test("assign goes through the crm_assign RPC", async () => {
   assert.equal(calls.length, 1);
   assert.equal(calls[0].path, "/rest/v1/rpc/crm_assign");
   assert.equal(calls[0].method, "POST");
-  assert.deepEqual(calls[0].body, { p_table: "deals", p_column: "assigned_to", p_id: DEAL, p_user_id: USER });
+  assert.deepEqual(calls[0].body, {
+    p_table: "deals",
+    p_column: "assigned_to",
+    p_id: DEAL,
+    p_user_id: USER,
+  });
 });
 
 test("assign can clear an owner by sending null", async () => {
