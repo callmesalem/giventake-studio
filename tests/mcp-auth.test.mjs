@@ -158,3 +158,13 @@ test("postgrestAuditClient posts the RPC with the service key and never throws",
   assert.equal(failed.data, null);
   assert.ok(failed.error);
 });
+
+test("postgrestAuditClient treats 204 No Content as success for void RPCs", async () => {
+  const client = postgrestAuditClient({
+    url: "https://db.example",
+    serviceRoleKey: "svc",
+    fetch: async () => new Response(null, { status: 204 }),
+  });
+  const result = await client.rpc("channel_auth_record", {});
+  assert.deepEqual(result, { data: null, error: null });
+});

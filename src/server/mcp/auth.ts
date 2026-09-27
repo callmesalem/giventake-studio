@@ -96,6 +96,9 @@ export function postgrestAuditClient(config: {
           body: JSON.stringify(args),
         });
         if (!response.ok) return { data: null, error: `${fn} failed: ${response.status}` };
+        // PostgREST answers a `returns void` function with 204 and an empty body.
+        // response.json() throws on empty, so we must guard: 204 means success with no data.
+        if (response.status === 204) return { data: null, error: null };
         return { data: await response.json(), error: null };
       } catch (error) {
         return { data: null, error };
