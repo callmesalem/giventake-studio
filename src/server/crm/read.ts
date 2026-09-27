@@ -321,4 +321,47 @@ export class CrmRead {
       "select=id,content,is_completed,deadline_at,source,company_id,owner_id,assigned_to,created_at&order=created_at.desc&limit=500",
     );
   }
+
+  /* ── Reads added for the MCP gateway (2026-09-24) ─────────────────────── */
+
+  /**
+   * Rows matching PostgREST filter expressions, e.g. `{ synthetic: "eq.false" }`
+   * or `{ decided_at: "gte.2026-09-24T00:00:00Z" }`. Column names are checked
+   * to be plain identifiers and values are URL-encoded, so a caller cannot
+   * smuggle a second parameter into the query string.
+   */
+  listWhere<T = Record<string, unknown>>(
+    table: string,
+    filters: Record<string, string>,
+    select: string,
+    order: string,
+    limit: number,
+  ): Promise<T[]> {
+    const parts = [`select=${select}`];
+    for (const [column, expression] of Object.entries(filters)) {
+      if (!/^[a-z_][a-z0-9_]*$/.test(column)) {
+        return Promise.reject(new Error(`CRM read: bad filter column ${JSON.stringify(column)}`));
+      }
+      parts.push(`${column}=${encodeURIComponent(expression)}`);
+    }
+    parts.push(`order=${order}`, `limit=${Math.max(1, Math.floor(limit))}`);
+    return this.#select<T>(table, parts.join("&"));
+  }
+
+  /** approval_queue_list(p_status): up to 200 rows, newest first; null = all. */
+  listApprovals<T = Record<string, unknown>>(status: string | null): Promise<T[]> {
+    return this.#rpc<T[]>("approval_queue_list", { p_status: status });
+  }
+
+  dealDocuments<T = Record<string, unknown>>(dealId: string): Promise<T[]> {
+    return this.#rpc<T[]>("document_list_for_deal", { p_deal_id: dealId });
+  }
+
+  /** Which capabilities an agent holds, from agent_capabilities_for (migration
+   *  20260924120000). service_role cannot read the table directly. */
+  capabilitiesFor(agent: string): Promise<Array<{ capability: string; enabled: boolean }>> {
+    return this.#rpc<Array<{ capability: string; enabled: boolean }>>("agent_capabilities_for", {
+      p_agent: agent,
+    });
+  }
 }
