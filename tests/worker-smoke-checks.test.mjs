@@ -10,6 +10,8 @@ import assert from "node:assert/strict";
 import {
   ERROR_PAGE_MARKER,
   EXPECTATIONS,
+  MCP_EXPECTATIONS,
+  MCP_SMOKE_KEY,
   evaluate,
   pinnedCompatibilityDate,
 } from "../scripts/worker-smoke-checks.mjs";
@@ -85,4 +87,24 @@ test("the sign route must show its refusal page, not just answer 200", () => {
 test("an unknown path must be a 404, and a body is not inspected", () => {
   assert.equal(evaluate(missing, { status: 404, body: "" }), null);
   assert.match(evaluate(missing, { status: 200, body: "" }), /expected 404/);
+});
+
+// --- MCP_EXPECTATIONS / MCP_SMOKE_KEY ---------------------------------------
+
+test("the MCP smoke key is long enough for the gateway's minimum and is not a secret", () => {
+  assert.ok(MCP_SMOKE_KEY.length >= 43);
+  assert.match(MCP_SMOKE_KEY, /^smoke-/);
+});
+
+test("the MCP expectations cover a wrong key and a right key", () => {
+  const byName = Object.fromEntries(MCP_EXPECTATIONS.map((e) => [e.name, e]));
+  assert.equal(byName["mcp wrong key"].status, 401);
+  assert.equal(
+    byName["mcp wrong key"].headers.authorization,
+    "Bearer wrong-key-wrong-key-wrong-key-wrong-key-wrong-key",
+  );
+  assert.equal(byName["mcp initialize"].status, 200);
+  assert.equal(byName["mcp initialize"].mustContain, '"name":"giventake-crm"');
+  assert.equal(JSON.parse(byName["mcp initialize"].body).method, "initialize");
+  for (const e of MCP_EXPECTATIONS) assert.equal(e.method, "POST", e.name);
 });

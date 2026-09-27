@@ -45,6 +45,59 @@ export function pinnedCompatibilityDate(wranglerJsoncText) {
  * what was wrong. Status first: a body check on the wrong status would report
  * the symptom, not the fact.
  */
+/**
+ * A key for the local smoke run only. Passed to wrangler dev as a --var so the
+ * gateway is "configured" without any real secret; 64 characters so it clears
+ * the gateway's 43-character floor. Never used anywhere else.
+ */
+export const MCP_SMOKE_KEY = "smoke-only-not-a-secret-".padEnd(64, "0");
+
+const INITIALIZE = JSON.stringify({
+  jsonrpc: "2.0",
+  id: 1,
+  method: "initialize",
+  params: {
+    protocolVersion: "2025-06-18",
+    capabilities: {},
+    clientInfo: { name: "worker-smoke", version: "1" },
+  },
+});
+
+/**
+ * The MCP gateway under the real runtime. Two facts: a wrong key is a 401
+ * before any MCP parsing, and the right key reaches the SDK handler and gets
+ * the server's name back. `initialize` needs no database, so these hold with
+ * no other environment. The public-host 404 cannot be exercised here (Node's
+ * fetch sets Host from the URL); tests/mcp-auth.test.mjs pins it, and Task 15
+ * checks it once in production.
+ */
+export const MCP_EXPECTATIONS = Object.freeze([
+  {
+    name: "mcp wrong key",
+    path: "/mcp",
+    method: "POST",
+    headers: {
+      authorization: "Bearer wrong-key-wrong-key-wrong-key-wrong-key-wrong-key",
+      "content-type": "application/json",
+    },
+    body: INITIALIZE,
+    status: 401,
+  },
+  {
+    name: "mcp initialize",
+    path: "/mcp",
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${MCP_SMOKE_KEY}`,
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+    },
+    body: INITIALIZE,
+    status: 200,
+    mustContain: '"name":"giventake-crm"',
+  },
+]);
+
 export function evaluate(expectation, response) {
   const { path } = expectation;
   if (response.status !== expectation.status) {

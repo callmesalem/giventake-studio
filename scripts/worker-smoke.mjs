@@ -17,7 +17,13 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { EXPECTATIONS, evaluate, pinnedCompatibilityDate } from "./worker-smoke-checks.mjs";
+import {
+  EXPECTATIONS,
+  MCP_EXPECTATIONS,
+  MCP_SMOKE_KEY,
+  evaluate,
+  pinnedCompatibilityDate,
+} from "./worker-smoke-checks.mjs";
 
 // The bundled runtime caps the compatibility date it will honour, and an older
 // wrangler FALLS BACK SILENTLY to its cap: 4.76.0 ran a 2026-09-06 build as
@@ -64,9 +70,13 @@ function wranglerCommand() {
   return ["npx", ["-y", `wrangler@${WRANGLER_VERSION}`]];
 }
 
-async function answers(url, timeoutMs) {
+async function answers(url, timeoutMs, init = {}) {
   try {
-    return await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(timeoutMs) });
+    return await fetch(url, {
+      ...init,
+      redirect: "manual",
+      signal: AbortSignal.timeout(timeoutMs),
+    });
   } catch {
     return null;
   }
@@ -93,7 +103,17 @@ function preflight() {
 
 function start() {
   const [command, args] = wranglerCommand();
-  const full = [...args, "dev", "--local", "--ip", HOST, "--port", String(PORT)];
+  const full = [
+    ...args,
+    "dev",
+    "--local",
+    "--ip",
+    HOST,
+    "--port",
+    String(PORT),
+    "--var",
+    `MCP_PERPLEXITY_KEY:${MCP_SMOKE_KEY}`,
+  ];
   log(`starting: ${command} ${full.join(" ")}`);
   child = spawn(command, full, {
     cwd: ROOT, // nitro writes .wrangler/deploy/config.json here; wrangler must start here to find it
@@ -119,15 +139,20 @@ async function waitUntilReady() {
 
 async function check() {
   const problems = [];
-  for (const expectation of EXPECTATIONS) {
-    const response = await answers(`${BASE}${expectation.path}`, REQUEST_TIMEOUT_MS);
+  const all = [...EXPECTATIONS, ...MCP_EXPECTATIONS];
+  for (const expectation of all) {
+    const label = expectation.name ?? expectation.path;
+    const init = expectation.method
+      ? { method: expectation.method, headers: expectation.headers ?? {}, body: expectation.body }
+      : {};
+    const response = await answers(`${BASE}${expectation.path}`, REQUEST_TIMEOUT_MS, init);
     if (!response) {
-      problems.push(`${expectation.path}: no response within ${REQUEST_TIMEOUT_MS / 1000}s`);
+      problems.push(`${label}: no response within ${REQUEST_TIMEOUT_MS / 1000}s`);
       continue;
     }
     const body = await response.text();
-    const problem = evaluate(expectation, { status: response.status, body });
-    log(`${expectation.path} -> ${response.status} ${problem ? "FAIL" : "ok"}`);
+    const problem = evaluate({ ...expectation, path: label }, { status: response.status, body });
+    log(`${label} -> ${response.status} ${problem ? "FAIL" : "ok"}`);
     if (problem) problems.push(problem);
   }
   return problems;
@@ -163,11 +188,13 @@ async function main() {
     const problems = await check();
     if (problems.length > 0) {
       return fail(
-        `${problems.length} of ${EXPECTATIONS.length} expectations failed:\n  - ${problems.join("\n  - ")}`,
+        `${problems.length} of ${EXPECTATIONS.length + MCP_EXPECTATIONS.length} expectations failed:\n  - ${problems.join("\n  - ")}`,
       );
     }
 
-    log(`all ${EXPECTATIONS.length} expectations met under wrangler ${WRANGLER_VERSION}`);
+    log(
+      `all ${EXPECTATIONS.length + MCP_EXPECTATIONS.length} expectations met under wrangler ${WRANGLER_VERSION}`,
+    );
   } finally {
     await stop();
   }
