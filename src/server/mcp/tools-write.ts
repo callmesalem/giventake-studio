@@ -11,6 +11,8 @@ import type { McpDeps, ToolInput, ToolSpec } from "./types.ts";
 const key = () => crypto.randomUUID();
 const recordKey = z.string().min(1).max(80).optional();
 const text = (max: number) => z.string().trim().min(1).max(max);
+const CLOSE_REFUSAL_MESSAGE =
+  "Close is a proposal, not a direct write: propose a deal_close and Salem decides.";
 
 export function writeTools(getDeps: () => McpDeps): ToolSpec[] {
   const define = <S extends ToolInput>(d: Parameters<typeof defineTool<S>>[1]) =>
@@ -124,7 +126,7 @@ export function writeTools(getDeps: () => McpDeps): ToolSpec[] {
     define({
       name: "deal_upsert",
       description:
-        "Create a deal, or update one you created earlier by passing its record_key. Stage changes on existing deals go through deal_advance_stage.",
+        "Create a deal, or update one you created earlier by passing its record_key. Stage changes on existing deals go through deal_advance_stage. Close is not allowed here: propose deal_close instead.",
       readOnly: false,
       inputSchema: z.object({
         name: text(200),
@@ -134,6 +136,9 @@ export function writeTools(getDeps: () => McpDeps): ToolSpec[] {
         value_usd: z.number().min(0).max(100_000_000).optional(),
       }),
       run: async ({ name, record_key, company_id, stage, value_usd }, deps) => {
+        if (stage && isCloseStage(stage)) {
+          throw new ToolRefusal(CLOSE_REFUSAL_MESSAGE);
+        }
         const sourceRecordId = record_key ?? key();
         await deps.actions.upsertDeal({
           source: deps.config.agent,
@@ -155,9 +160,7 @@ export function writeTools(getDeps: () => McpDeps): ToolSpec[] {
       inputSchema: z.object({ deal_id: z.uuid(), to_stage: text(40), note: text(2000) }),
       run: async ({ deal_id, to_stage, note }, deps) => {
         if (isCloseStage(to_stage)) {
-          throw new ToolRefusal(
-            "Close is a proposal, not a direct write: propose a deal_close and Salem decides.",
-          );
+          throw new ToolRefusal(CLOSE_REFUSAL_MESSAGE);
         }
         await deps.actions.advanceDealStage({
           dealId: deal_id,

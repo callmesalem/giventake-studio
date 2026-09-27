@@ -177,3 +177,27 @@ test("arguments are validated: an empty note and a bad uuid are refused before a
   );
   assert.equal(calls.length, 0);
 });
+
+test("deal_upsert refuses Close stage without calling the action", async () => {
+  const { deps, calls } = fakeDeps();
+  const result = await tool(deps, "deal_upsert").handler({
+    name: "Website",
+    company_id: COMPANY,
+    stage: "Close",
+  });
+  assert.equal(result.isError, true);
+  assert.match(parse(result).error, /propose.*deal_close/i);
+  assert.equal(calls.length, 0);
+});
+
+test("deal_upsert refuses lowercase close (case-insensitive guard)", async () => {
+  const { deps, calls } = fakeDeps();
+  const result = await tool(deps, "deal_upsert").handler({
+    name: "Website",
+    company_id: COMPANY,
+    stage: "close",
+  });
+  assert.equal(result.isError, true);
+  assert.match(parse(result).error, /propose.*deal_close/i);
+  assert.equal(calls.length, 0);
+});
