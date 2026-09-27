@@ -33,30 +33,46 @@ export interface CrmActionsOptions {
   url: string;
   serviceRoleKey: string;
   fetch?: Fetch;
+  /**
+   * When set, every RPC carries `x-agent-role: <name>`. PostgREST exposes it to
+   * SQL as request.headers, and agent_require (migration 20260924120000) treats
+   * the app's call as that agent: kill switch, capability row and audit under
+   * the name. Leave unset for the human dashboard path, which is exempt.
+   */
+  actingAgent?: string;
 }
+
+const AGENT_NAME = /^agent_[a-z_]{1,40}$/;
 
 export class CrmActions {
   readonly #url: string;
   readonly #key: string;
   readonly #fetch: Fetch;
+  readonly #agent: string | null;
 
   constructor(options: CrmActionsOptions) {
     if (!options.url || !options.serviceRoleKey) {
       throw new Error("CrmActions requires url and serviceRoleKey");
     }
+    if (options.actingAgent !== undefined && !AGENT_NAME.test(options.actingAgent)) {
+      throw new Error("actingAgent must match ^agent_[a-z_]{1,40}$");
+    }
     this.#url = options.url.replace(/\/$/, "");
     this.#key = options.serviceRoleKey;
     this.#fetch = options.fetch ?? ((input, init) => fetch(input, init));
+    this.#agent = options.actingAgent ?? null;
   }
 
   async #rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
+    const headers: Record<string, string> = {
+      apikey: this.#key,
+      Authorization: `Bearer ${this.#key}`,
+      "Content-Type": "application/json",
+    };
+    if (this.#agent) headers["x-agent-role"] = this.#agent;
     const response = await this.#fetch(`${this.#url}/rest/v1/rpc/${name}`, {
       method: "POST",
-      headers: {
-        apikey: this.#key,
-        Authorization: `Bearer ${this.#key}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify(body),
     });
     if (!response.ok) {
@@ -96,6 +112,30 @@ export class CrmActions {
     return this.#rpc<unknown>("approval_mark_executed", {
       p_id: id,
       p_result: result,
+    });
+  }
+
+  /** File a proposal in the approval queue. The RPC is guarded, so with
+   *  actingAgent set this needs the agent's approval_request capability on. */
+  requestApproval(input: {
+    agentName: string;
+    actionType: string;
+    targetType: string | null;
+    targetId: string | null;
+    summary: string;
+    payload: Record<string, unknown>;
+    riskLevel: string;
+    expiresAt: string | null;
+  }): Promise<string> {
+    return this.#rpc<string>("approval_request", {
+      p_agent_name: input.agentName,
+      p_action_type: input.actionType,
+      p_target_type: input.targetType,
+      p_target_id: input.targetId,
+      p_summary: input.summary,
+      p_payload: input.payload,
+      p_risk_level: input.riskLevel,
+      p_expires_at: input.expiresAt,
     });
   }
 
