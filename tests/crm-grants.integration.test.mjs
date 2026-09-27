@@ -191,6 +191,61 @@ try {
     }
   }
 
+  // 7. The Worker can assert an agent through PostgREST's request.headers, and
+  //    the guard treats that assertion exactly like a direct agent login.
+  //    session_user here is postgres (exempt), which is the same branch the app
+  //    takes as authenticator.
+  const HEADER = `select set_config('request.headers', '{"x-agent-role":"agent_perplexity"}', false);`;
+  const asserting = (sql) => as("service_role", `${HEADER} ${sql}`);
+  const NOTE = (key) => `select public.note_upsert('agent_perplexity','${key}',null,'t','hello',null,null);`;
+
+  as("postgres", `update public.operator_system_control set operators_enabled = false where id='global';`);
+  refuses("service_role", `${HEADER} ${NOTE("n1")}`, /agent_capability_denied: operators_disabled/);
+  as("postgres", `update public.operator_system_control set operators_enabled = true where id='global';`);
+  refuses("service_role", `${HEADER} ${NOTE("n1")}`, /capability_disabled \(agent_perplexity, note_upsert\)/);
+  as("postgres", `update public.agent_capabilities set enabled = true where agent_role='agent_perplexity' and capability='note_upsert';`);
+  assert.match(asserting(NOTE("n1")), /^[0-9a-f-]{36}$/);
+  assert.equal(
+    as("postgres", `select count(*) from public.operator_audit_events where operator_key='agent_perplexity' and event_type='capability_allowed';`),
+    "1",
+  );
+  refuses(
+    "service_role",
+    `select set_config('request.headers', '{"x-agent-role":"postgres"}', false); ${NOTE("n2")}`,
+    /bad_assertion/,
+  );
+  refuses(
+    "service_role",
+    `select set_config('request.headers', '{"x-agent-role":"agent_nobody"}', false); ${NOTE("n2")}`,
+    /capability_missing \(agent_nobody, note_upsert\)/,
+  );
+  // Without the header the app path is untouched: allowed, and not audited as an agent.
+  assert.match(as("service_role", `select public.note_upsert('crm:salem','n3',null,'t','hello',null,null);`), /^[0-9a-f-]{36}$/);
+  assert.equal(as("postgres", `select count(*) from public.operator_audit_events where operator_key='agent_perplexity';`), "1");
+
+  // approval_decide is guarded the same way, by its own row.
+  as("postgres", `update public.agent_capabilities set enabled = true where agent_role='agent_perplexity' and capability='approval_request';`);
+  const proposal = asserting(
+    `select public.approval_request('agent_perplexity','deal_close','deal','${deal}','close it','{}','high',null);`,
+  );
+  assert.match(proposal, /^[0-9a-f-]{36}$/);
+  refuses(
+    "service_role",
+    `${HEADER} select public.approval_decide('${proposal}','approved','crm:salem via agent_perplexity','directed: "do it"');`,
+    /capability_disabled \(agent_perplexity, approval_decide\)/,
+  );
+  assert.equal(as("postgres", `select status from public.approval_queue where id='${proposal}';`), "pending");
+  as("postgres", `update public.agent_capabilities set enabled = true where agent_role='agent_perplexity' and capability='approval_decide';`);
+  assert.equal(
+    asserting(`select public.approval_decide('${proposal}','approved','crm:salem via agent_perplexity','directed: "do it"');`),
+    "t",
+  );
+  assert.equal(
+    as("service_role", `select capability||':'||enabled from public.agent_capabilities_for('agent_perplexity') where capability='note_upsert';`),
+    "note_upsert:true",
+  );
+  refuses("anon", `select * from public.agent_capabilities_for('agent_perplexity');`, /permission denied/);
+
   console.log(`CRM grants integration passed: ${files.length} migrations, ${tables.length} tables`);
 } finally {
   try {
