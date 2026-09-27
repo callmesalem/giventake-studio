@@ -11,7 +11,7 @@ import {
   presentedVia,
   recordChannelAuth,
   tooManyFailures,
-} from "../supabase/functions/_shared/channel-auth.ts";
+} from "../src/server/channel-auth.ts";
 
 const URL_BASE = "https://mcp.giventake.test/functions/v1/giventake-mcp";
 const req = (headers = {}, url = URL_BASE) => new Request(url, { headers });
