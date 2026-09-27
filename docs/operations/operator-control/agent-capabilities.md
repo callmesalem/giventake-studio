@@ -28,16 +28,24 @@ refused by your own guard mid-incident is a bad afternoon.
 It is a closed list, not a name pattern. Anything not on it needs a capability row,
 so a role added later denies by default instead of slipping through.
 
-So: **anything holding the service-role key is outside this boundary.** That key
-already bypasses RLS, so it was never inside it. What matters is that Sami holds a
-Postgres password for his own role and not that key.
+So: **anything holding the service-role key is outside this boundary, with one
+named exception.** Since migration `20260924120000_agent_asserted_identity.sql`
+the CRM Worker's `/mcp` gateway may send `x-agent-role: agent_perplexity` on a
+PostgREST call, and the guard then runs the full checks under that name: the
+kill switch, the capability row, the audit row. The Worker is the one trusted
+asserter; it already holds the key, so this widens the boundary by exactly one
+component and nothing else can assert an agent (only `service_role` reaches
+these functions through PostgREST). Without the header the app path is exempt
+as before. Agents today: `agent_sami` and `crm_agent` (both NOLOGIN since
+2026-09-23, no longer used) and `agent_perplexity` (asserted, see
+`docs/integrations/perplexity-mcp-connection.md`).
 
 ## Turn one capability off
 
 ```sql
 update public.agent_capabilities
    set enabled = false, updated_at = now(), updated_by = 'salem'
- where agent_role = 'agent_sami'
+ where agent_role = 'agent_perplexity'
    and capability = 'deal_advance_stage';
 ```
 

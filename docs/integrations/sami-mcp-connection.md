@@ -1,5 +1,10 @@
 # Connecting Sami to the CRM — `giventake-mcp`
 
+> **Superseded on 2026-09-24.** The `giventake-mcp` edge function is retired in
+> favour of the CRM Worker's `/mcp` gateway; see
+> `docs/integrations/perplexity-mcp-connection.md`. This document stays until the
+> function is deleted from the Supabase project.
+
 Everything needed to point an OpenClaw agent at this CRM. Written because the
 repository contained no Sami-side configuration at all.
 
