@@ -103,6 +103,24 @@ test("list_leads default limit is 20 and status is optional", async () => {
   assert.equal(calls[0].limit, 20);
 });
 
+test("list_leads limit 0 rejects with error and makes no read call", async () => {
+  const { deps, calls } = fakeDeps();
+  assert.equal((await tool(deps, "list_leads").handler({ limit: 0 })).isError, true);
+  assert.equal(calls.length, 0);
+});
+
+test("list_leads limit 2.5 rejects with error", async () => {
+  const { deps, calls } = fakeDeps();
+  assert.equal((await tool(deps, "list_leads").handler({ limit: 2.5 })).isError, true);
+  assert.equal(calls.length, 0);
+});
+
+test("list_companies limit 5000 clamps to 200 in the read call", async () => {
+  const { deps, calls } = fakeDeps();
+  await tool(deps, "list_companies").handler({ limit: 5000 });
+  assert.equal(calls[0].limit, 200);
+});
+
 test("get_lead by id returns the lead with its notes and touchpoints", async () => {
   const { deps, calls } = fakeDeps({
     byId: { [`leads:${LEAD}`]: { id: LEAD, name: "Ana", synthetic: false } },

@@ -11,8 +11,13 @@ const NOT_SYNTHETIC = { synthetic: "eq.false" } as const;
 const LEAD_COLUMNS =
   "id,name,email,company,budget,timeline,source,source_detail,status,description,attribution,captured_at,created_at";
 
-const limit = (def: number, max: number) => z.number().int().min(1).default(def);
-const clamp = (n: number, max: number) => Math.min(Math.max(1, Math.floor(n)), max);
+const limit = (def: number, max: number) =>
+  z
+    .number()
+    .int()
+    .min(1)
+    .default(def)
+    .transform((n) => Math.min(n, max));
 
 /** Letters, digits, space, @ . _ ' - only: PostgREST's or=(…) filter would read
  *  a comma or a parenthesis as syntax. Capped at 60 characters. */
@@ -92,7 +97,7 @@ export function readTools(getDeps: () => McpDeps): ToolSpec[] {
           filters,
           LEAD_COLUMNS,
           "created_at.desc",
-          clamp(n, 100),
+          n,
         );
         return { count: leads.length, leads };
       },
@@ -142,7 +147,7 @@ export function readTools(getDeps: () => McpDeps): ToolSpec[] {
           NOT_SYNTHETIC,
           "id,name,domain,description,location,source,created_at,contacts(name,email,job_title)",
           "created_at.desc",
-          clamp(n, 200),
+          n,
         );
         return { count: companies.length, companies };
       },
@@ -187,7 +192,7 @@ export function readTools(getDeps: () => McpDeps): ToolSpec[] {
           filters,
           "id,name,email,phone,job_title,company_id,lifecycle_stage,next_action,next_action_due,created_at",
           "name.asc",
-          clamp(n, 200),
+          n,
         );
         return { count: contacts.length, contacts };
       },
@@ -207,7 +212,7 @@ export function readTools(getDeps: () => McpDeps): ToolSpec[] {
           filters,
           "id,name,stage,value_usd,source,closed_at,lost_reason,created_at,companies(name,domain)",
           "created_at.desc",
-          clamp(n, 200),
+          n,
         );
         return { count: deals.length, deals };
       },
@@ -246,7 +251,7 @@ export function readTools(getDeps: () => McpDeps): ToolSpec[] {
           filters,
           "id,content,is_completed,deadline_at,created_at,companies(name)",
           "deadline_at.asc.nullslast",
-          clamp(n, 200),
+          n,
         );
         const today = deps.now().toISOString().slice(0, 10);
         const open = rows.filter((t) => t.is_completed !== true).length;
@@ -277,14 +282,14 @@ export function readTools(getDeps: () => McpDeps): ToolSpec[] {
             NOT_SYNTHETIC,
             "kind,content,lead_id,created_at",
             "created_at.desc",
-            clamp(n, 100),
+            n,
           ),
           deps.read.listWhere<Row>(
             "agent_log",
             NOT_SYNTHETIC,
             "operator,sop,step,trigger,outcome,escalated,created_at",
             "created_at.desc",
-            clamp(n, 100),
+            n,
           ),
         ]);
         return { touchpoints, agent_log };
@@ -351,7 +356,7 @@ export function readTools(getDeps: () => McpDeps): ToolSpec[] {
       run: async ({ limit: n }, deps) => {
         if (!deps.mail)
           throw new ToolRefusal("The mail surface is not available on this deployment.");
-        const threads = (await deps.mail.listInbox(clamp(n, 50), 0)) as Row[];
+        const threads = (await deps.mail.listInbox(n, 0)) as Row[];
         return {
           count: threads.length,
           threads: threads.map((t) => ({
