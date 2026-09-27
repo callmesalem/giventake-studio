@@ -74,6 +74,13 @@
     // operator, and /sign/$token is deliberately unauthenticated.
     "SITE_BASE_URL": "https://giventakedevs.com",
 
+    // The Perplexity MCP gateway (docs/superpowers/specs/2026-09-24-perplexity-mcp-gateway-design.md).
+    // Plain values, so they belong here. MCP_PERPLEXITY_KEY is a secret and stays
+    // in the dashboard. MCP_OPERATOR_EMAIL is stamped on every decision Perplexity
+    // records at Salem's direction; MCP_EXECUTE_HOURLY_LIMIT caps those per hour.
+    "MCP_OPERATOR_EMAIL": "salem@giventakedevs.com",
+    "MCP_EXECUTE_HOURLY_LIMIT": "20",
+
     // NOT YET SET - the send tick is a no-op until they are. CAMPAIGN_REPLY_TO
     // and CAMPAIGN_UNSUBSCRIBE_BASE are plain values, so per the warning above
     // they belong in this block: setting them only in the dashboard means the
