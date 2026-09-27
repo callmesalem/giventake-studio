@@ -6,9 +6,32 @@ import {
   createMcpHandler,
   type McpHttpHandler,
   type CallToolResult,
+  type StandardSchemaWithJSON,
 } from "@modelcontextprotocol/server";
 import { allTools } from "@/server/mcp/tools";
-import type { McpDeps } from "@/server/mcp/types";
+import type { McpDeps, ToolInput } from "@/server/mcp/types";
+
+/**
+ * tool.ts's own `safeParse` is the single validator for tool arguments: it
+ * produces our `{error, notice}` envelope with an "Invalid <path>: …"
+ * message. `McpServer`'s own `tools/call` handler runs its own
+ * `~standard.validate` on `inputSchema` BEFORE our handler ever sees the
+ * arguments, and on failure throws a bare "Input validation error: …" that
+ * never reaches our envelope. So every tool is registered with a schema
+ * whose `~standard.validate` always succeeds and hands the raw arguments
+ * straight through — `~standard.jsonSchema` still delegates to the real zod
+ * object, so `tools/list` advertises the exact same JSON Schema it would
+ * without this wrapper.
+ */
+function passthroughInputSchema(schema: ToolInput): StandardSchemaWithJSON {
+  const std = schema["~standard"] as unknown as StandardSchemaWithJSON["~standard"];
+  return {
+    "~standard": {
+      ...std,
+      validate: (value: unknown) => ({ value }),
+    },
+  };
+}
 
 export const SERVER_INFO = { name: "giventake-crm", version: "2.0.0" } as const;
 
@@ -27,7 +50,7 @@ export function createGatewayServer(getDeps: () => McpDeps): McpServer {
       tool.name,
       {
         description: tool.description,
-        inputSchema: tool.inputSchema,
+        inputSchema: passthroughInputSchema(tool.inputSchema),
         annotations: {
           readOnlyHint: tool.readOnly,
           destructiveHint: !tool.readOnly,
@@ -43,6 +66,11 @@ export function createGatewayServer(getDeps: () => McpDeps): McpServer {
 let handler: McpHttpHandler | null = null;
 
 export function gatewayHandler(getDeps: () => McpDeps): McpHttpHandler {
+  // "json" only governs 2026-07-28-era (modern) exchanges: it never upgrades
+  // one to an SSE stream, only the terminal result is delivered. A 2025-era
+  // client (no per-request envelope) is served by the stateless legacy
+  // fallback instead, which is unaffected by this option — a Streamable HTTP
+  // client on that era still gets SSE.
   handler ??= createMcpHandler(() => createGatewayServer(getDeps), {
     responseMode: "json",
     maxRequestBodySize: 1_000_000,

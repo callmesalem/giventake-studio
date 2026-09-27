@@ -8,6 +8,7 @@ import {
   authenticateMcpRequest,
   presentedKey,
   postgrestAuditClient,
+  hostAllowed,
 } from "../src/server/mcp/auth.ts";
 
 const KEY = "k".repeat(43);
@@ -37,6 +38,13 @@ test("presentedKey reads a bearer token, then x-api-key, else nothing", () => {
     via: "none",
   });
   assert.deepEqual(presentedKey(req()), { key: "", via: "none" });
+});
+
+test("hostAllowed: the public host is false; crm/localhost/127.0.0.1 are true", () => {
+  assert.equal(hostAllowed(req("https://giventakedevs.com/mcp")), false);
+  assert.equal(hostAllowed(req(CRM)), true);
+  assert.equal(hostAllowed(req("http://localhost:8788/mcp")), true);
+  assert.equal(hostAllowed(req("http://127.0.0.1:8788/mcp")), true);
 });
 
 test("the public host gets a plain 404 before anything else is looked at", async () => {

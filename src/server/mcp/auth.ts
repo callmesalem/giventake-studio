@@ -35,12 +35,17 @@ export function presentedKey(req: Request): { key: string; via: PresentedVia } {
   return { key, via: key ? "header" : "none" };
 }
 
+/** Whether `req`'s hostname is one of `hosts` — the same check every verb needs. */
+export function hostAllowed(req: Request, hosts: readonly string[] = ALLOWED_HOSTS): boolean {
+  return hosts.includes(new URL(req.url).hostname);
+}
+
 export async function authenticateMcpRequest(
   req: Request,
   options: McpAuthOptions,
 ): Promise<McpAuthResult> {
   const hosts = options.allowedHosts ?? ALLOWED_HOSTS;
-  if (!hosts.includes(new URL(req.url).hostname)) {
+  if (!hostAllowed(req, hosts)) {
     // A plain body on purpose: the public site must not describe an MCP endpoint.
     return { ok: false, response: new Response("Not found", { status: 404 }) };
   }
