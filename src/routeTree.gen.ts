@@ -16,6 +16,7 @@ import { Route as ProcessRouteImport } from './routes/process'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OperatorDashboardRouteImport } from './routes/operator-dashboard'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
 import { Route as GuardrailsRouteImport } from './routes/guardrails'
 import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
@@ -91,6 +92,11 @@ const PricingRoute = PricingRouteImport.update({
 const OperatorDashboardRoute = OperatorDashboardRouteImport.update({
   id: '/operator-dashboard',
   path: '/operator-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowWeUseAiRoute = HowWeUseAiRouteImport.update({
@@ -309,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/do-not-sell': typeof DoNotSellRoute
   '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
+  '/mcp': typeof McpRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/do-not-sell': typeof DoNotSellRoute
   '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
+  '/mcp': typeof McpRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/do-not-sell': typeof DoNotSellRoute
   '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
+  '/mcp': typeof McpRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -461,6 +470,7 @@ export interface FileRouteTypes {
     | '/do-not-sell'
     | '/guardrails'
     | '/how-we-use-ai'
+    | '/mcp'
     | '/operator-dashboard'
     | '/pricing'
     | '/privacy'
@@ -510,6 +520,7 @@ export interface FileRouteTypes {
     | '/do-not-sell'
     | '/guardrails'
     | '/how-we-use-ai'
+    | '/mcp'
     | '/operator-dashboard'
     | '/pricing'
     | '/privacy'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/do-not-sell'
     | '/guardrails'
     | '/how-we-use-ai'
+    | '/mcp'
     | '/operator-dashboard'
     | '/pricing'
     | '/privacy'
@@ -611,6 +623,7 @@ export interface RootRouteChildren {
   DoNotSellRoute: typeof DoNotSellRoute
   GuardrailsRoute: typeof GuardrailsRoute
   HowWeUseAiRoute: typeof HowWeUseAiRoute
+  McpRoute: typeof McpRoute
   OperatorDashboardRoute: typeof OperatorDashboardRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -676,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/operator-dashboard'
       fullPath: '/operator-dashboard'
       preLoaderRoute: typeof OperatorDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-we-use-ai': {
@@ -1046,6 +1066,7 @@ const rootRouteChildren: RootRouteChildren = {
   DoNotSellRoute: DoNotSellRoute,
   GuardrailsRoute: GuardrailsRoute,
   HowWeUseAiRoute: HowWeUseAiRoute,
+  McpRoute: McpRoute,
   OperatorDashboardRoute: OperatorDashboardRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
