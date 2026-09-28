@@ -108,3 +108,17 @@ test("the MCP expectations cover a wrong key and a right key", () => {
   assert.equal(JSON.parse(byName["mcp initialize"].body).method, "initialize");
   for (const e of MCP_EXPECTATIONS) assert.equal(e.method, "POST", e.name);
 });
+
+test("the MCP expectations also pin tools/list's argument schemas", () => {
+  const byName = Object.fromEntries(MCP_EXPECTATIONS.map((e) => [e.name, e]));
+  const toolsList = byName["mcp tools/list"];
+  assert.equal(toolsList.method, "POST");
+  assert.equal(toolsList.path, "/mcp");
+  assert.equal(toolsList.status, 200);
+  assert.equal(toolsList.mustContain, '"lead_id":{');
+  assert.equal(JSON.parse(toolsList.body).method, "tools/list");
+  // The schema check must stay specific to a JSON Schema property, not just
+  // any mention of the term - a bare '"lead_id"' would also match inside a
+  // description.
+  assert.ok(toolsList.mustContain.endsWith(":{"));
+});

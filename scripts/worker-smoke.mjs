@@ -103,6 +103,12 @@ function preflight() {
 
 function start() {
   const [command, args] = wranglerCommand();
+  // --host: wrangler dev's local runtime otherwise sets the Worker's request
+  // host/url to the zone of the project's first route (giventakedevs.com, the
+  // public site). /mcp's host gate (src/server/mcp/auth.ts) only admits
+  // crm.giventakedevs.com, localhost and 127.0.0.1, so without this every
+  // request to /mcp - any method - would 404 before auth ever runs, even
+  // though production on crm.giventakedevs.com is unaffected.
   const full = [
     ...args,
     "dev",
@@ -111,6 +117,8 @@ function start() {
     HOST,
     "--port",
     String(PORT),
+    "--host",
+    "crm.giventakedevs.com",
     "--var",
     `MCP_PERPLEXITY_KEY:${MCP_SMOKE_KEY}`,
   ];
@@ -137,20 +145,36 @@ async function waitUntilReady() {
   return `not ready within ${READY_TIMEOUT_MS / 1000}s`;
 }
 
+// wrangler 4.130.0's local runtime (Miniflare, with an Assets binding
+// configured) has a dev-only connection bug: a GET served through the Assets
+// binding, followed by a second POST to the Worker, can drop the reused
+// loopback connection and answer that POST with a 500 body of "Error:
+// Network connection lost." from miniflare's entry.worker.js - never
+// reaching the app. Running the POST-heavy MCP_EXPECTATIONS before any GET
+// avoids the trigger almost always; it can still happen (observed once
+// across many runs even with no prior GET), so a single retry below is
+// scoped to exactly that fingerprint.
+const MINIFLARE_CONNECTION_LOST = "Network connection lost";
+
 async function check() {
   const problems = [];
-  const all = [...EXPECTATIONS, ...MCP_EXPECTATIONS];
+  const all = [...MCP_EXPECTATIONS, ...EXPECTATIONS];
   for (const expectation of all) {
     const label = expectation.name ?? expectation.path;
     const init = expectation.method
       ? { method: expectation.method, headers: expectation.headers ?? {}, body: expectation.body }
       : {};
-    const response = await answers(`${BASE}${expectation.path}`, REQUEST_TIMEOUT_MS, init);
+    let response = await answers(`${BASE}${expectation.path}`, REQUEST_TIMEOUT_MS, init);
+    let body = response ? await response.text() : "";
+    if (response && response.status === 500 && body.includes(MINIFLARE_CONNECTION_LOST)) {
+      log(`${label} -> 500 (${MINIFLARE_CONNECTION_LOST}) - retrying once`);
+      response = await answers(`${BASE}${expectation.path}`, REQUEST_TIMEOUT_MS, init);
+      body = response ? await response.text() : "";
+    }
     if (!response) {
       problems.push(`${label}: no response within ${REQUEST_TIMEOUT_MS / 1000}s`);
       continue;
     }
-    const body = await response.text();
     const problem = evaluate({ ...expectation, path: label }, { status: response.status, body });
     log(`${label} -> ${response.status} ${problem ? "FAIL" : "ok"}`);
     if (problem) problems.push(problem);
