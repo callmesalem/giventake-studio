@@ -109,7 +109,8 @@ jobs:
   # runs under Node, and Node allows what Workers forbids: on 2026-09-08 a
   # Response built at module scope passed every job here and took every page
   # on every domain to 500 for a day. This boots the built Worker under a
-  # pinned wrangler and asks it for five pages (scripts/worker-smoke.mjs). It
+  # pinned wrangler and puts every expectation in scripts/worker-smoke-checks.mjs
+  # to it: the marketing and CRM pages, and the /mcp gateway's own POSTs. It
   # gates, because a green pipeline that production rejects is worse than a
   # red one.
   worker:

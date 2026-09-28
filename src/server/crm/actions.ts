@@ -116,7 +116,12 @@ export class CrmActions {
   }
 
   /** File a proposal in the approval queue. The RPC is guarded, so with
-   *  actingAgent set this needs the agent's approval_request capability on. */
+   *  actingAgent set this needs the agent's approval_request capability on.
+   *
+   *  agentName is what the row is filed under; the x-agent-role header decides
+   *  whose capability the guard checks and whose name it audits. Letting the two
+   *  disagree would file a proposal under one agent while the database vouched
+   *  for another, so a mismatch throws rather than reaching the RPC. */
   requestApproval(input: {
     agentName: string;
     actionType: string;
@@ -127,6 +132,15 @@ export class CrmActions {
     riskLevel: string;
     expiresAt: string | null;
   }): Promise<string> {
+    if (this.#agent && input.agentName !== this.#agent) {
+      // Rejected rather than thrown, like CrmRead.listWhere's bad-column guard: the
+      // signature promises a Promise, so a caller's .catch() must see this.
+      return Promise.reject(
+        new Error(
+          `requestApproval: agentName ${JSON.stringify(input.agentName)} disagrees with actingAgent ${JSON.stringify(this.#agent)}`,
+        ),
+      );
+    }
     return this.#rpc<string>("approval_request", {
       p_agent_name: input.agentName,
       p_action_type: input.actionType,

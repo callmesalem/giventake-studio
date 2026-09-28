@@ -228,3 +228,22 @@ test("requestApproval goes through the approval_request RPC and returns the id",
     p_expires_at: null,
   });
 });
+
+test("requestApproval refuses to file a row under a name the header does not vouch for", async () => {
+  const { actions, calls } = harness(() => json(null), { actingAgent: "agent_perplexity" });
+  await assert.rejects(
+    () =>
+      actions.requestApproval({
+        agentName: "agent_sami",
+        actionType: "deal_close",
+        targetType: "deal",
+        targetId: DEAL,
+        summary: "Close it",
+        payload: {},
+        riskLevel: "high",
+        expiresAt: null,
+      }),
+    /agentName .* disagrees with actingAgent/,
+  );
+  assert.equal(calls.length, 0);
+});

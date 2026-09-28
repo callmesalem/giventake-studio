@@ -190,6 +190,12 @@ test("execute runs a pending deal_close: decides as Salem via the agent, then ex
     'directed: "send it"',
   ]);
   assert.ok(calls.some((c) => c[0] === "advanceDealStage" && c[1].toStage === "Close"));
+  // The executor acts under the same recorded decider, so the stage event and the
+  // queue row name the same person: Salem, through this connector.
+  assert.equal(
+    calls.find((c) => c[0] === "advanceDealStage")[1].actor,
+    "crm:salem@giventakedevs.com via agent_perplexity",
+  );
   assert.ok(calls.some((c) => c[0] === "markExecuted"));
   assert.equal(data.outcome.ok, true);
   assert.match(data.outcome_text, /closed/i);
