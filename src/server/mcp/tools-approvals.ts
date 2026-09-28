@@ -10,7 +10,7 @@ import { z } from "zod";
 import { RISK_LEVELS, type RiskLevel } from "../../lib/approvals.ts";
 import { executeApproval, type ExecutionOutcome } from "../approvals/execute.ts";
 import { defineTool } from "./tool.ts";
-import { ToolRefusal } from "./result.ts";
+import { ToolRefusal, fence } from "./result.ts";
 import type { McpDeps, ToolInput, ToolSpec } from "./types.ts";
 
 export const PROPOSABLE_ACTIONS = new Set([
@@ -157,7 +157,12 @@ export function approvalTools(getDeps: () => McpDeps): ToolSpec[] {
           );
         if (!row.actionType || !EXECUTABLE_NOW.has(row.actionType)) {
           throw new ToolRefusal(
-            `The CRM cannot carry out ${row.actionType ?? "this action"} from here yet; it stays pending for a human on the approvals page.`,
+            `The CRM cannot carry out ${fence(row.actionType ?? "this action")} from here yet; it stays pending for a human on the approvals page.`,
+          );
+        }
+        if (!deps.config.operatorEmail) {
+          throw new ToolRefusal(
+            "The gateway has no MCP_OPERATOR_EMAIL configured, so it cannot record a decision on Salem's behalf.",
           );
         }
         const decidedBy = `crm:${deps.config.operatorEmail} via ${deps.config.agent}`;

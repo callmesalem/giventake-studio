@@ -9,8 +9,12 @@ import { CrmActions } from "@/server/crm/actions";
 import type { ExecutorDeps, StoredApproval } from "@/server/approvals/execute";
 
 export function crmExecutorDeps(config: { url: string; serviceRoleKey: string }): ExecutorDeps {
-  // Admin actor by construction, and the access control is NOT here: it is
-  // requireAdmin in decideCrmApproval, which is this module's only caller.
+  // Admin actor by construction, and the access control is NOT here: this
+  // module has two callers, each gated before it runs. decideCrmApproval
+  // (src/lib/crm-data.ts) sits behind requireAdmin. The MCP execute tool
+  // (src/server/mcp/tools-approvals.ts) sits behind the MCP_PERPLEXITY_KEY
+  // and the approval_decide capability, checked when it decides the approval
+  // just before calling executeApproval with this module's deps.
   // MEMBER_TABLE_POLICY does not protect this path, because this reader never
   // carries a member actor for #scope to filter on. Do not remove that gate on
   // the belief that scoping would catch it.
