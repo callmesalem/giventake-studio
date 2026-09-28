@@ -79,6 +79,38 @@ from the database, and a capability that is on.
 Expect `"name":"giventake-crm"` in the result. Then in Perplexity: "Use the
 Giventake CRM connector and give me the pipeline summary."
 
+## Verify the guard sees the agent (do this right after `db push`, before turning anything on)
+
+The capability guard trusts `x-agent-role: agent_perplexity` on the PostgREST
+call. If Supabase's API gateway ever strips that header before it reaches
+PostgREST's `request.headers`, the guard cannot see the agent and falls back
+to the exempt app path — no kill switch, no capability check, no audit row —
+for every Perplexity write. This can only be checked live; nothing in the unit
+suite proves the header survives the real gateway.
+
+With every `agent_perplexity` capability still **off** (the migration's
+default):
+
+1. Ask Perplexity to add a note (`note_add`). It **must be refused** with
+   `Capability "note_upsert" is off for agent_perplexity`.
+   - **If this call succeeds instead of being refused, the header is not
+     arriving.** Delete the `MCP_PERPLEXITY_KEY` secret immediately (Worker →
+     Settings → Variables and secrets) and report it — do not proceed to turn
+     any capability on until this is understood and fixed.
+2. Turn `note_upsert` on (see the SQL above) and ask Perplexity to add the
+   same note again. It should now succeed.
+3. Confirm the audit row:
+
+       select * from public.operator_audit_events
+        where operator_key = 'agent_perplexity'
+        order by created_at desc limit 5;
+
+   Expect a `capability_allowed` row for this call.
+
+This does not change how the dashboard behaves: it never sends the header, so
+the guard sees `authenticator` and stays exempt as before — the approvals
+page must keep deciding normally throughout this check.
+
 ## Before applying the migration
 
 Run `node tests/crm-grants.integration.test.mjs` with Docker Desktop running (it was not run when this was built — no Docker on the build machine — and CI does not run it) and expect it to pass before `supabase db push`.

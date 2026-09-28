@@ -40,6 +40,23 @@ as before. Agents today: `agent_sami` and `crm_agent` (both NOLOGIN since
 2026-09-23, no longer used) and `agent_perplexity` (asserted, see
 `docs/integrations/perplexity-mcp-connection.md`).
 
+**This can only be checked live, and it fails open.** If Supabase's API
+gateway ever strips `x-agent-role` before it reaches PostgREST's
+`request.headers`, the guard cannot see `agent_perplexity` and every write
+takes the exempt app path instead — no kill switch, no capability check, no
+audit row. Verify it right after `supabase db push`, before turning any
+`agent_perplexity` capability on: with every capability still off, ask
+Perplexity to add a note (`note_add`) — it must be refused with
+`Capability "note_upsert" is off for agent_perplexity`. If it succeeds
+instead, the header is not arriving: delete the `MCP_PERPLEXITY_KEY` secret
+immediately and report it. Then turn `note_upsert` on, repeat the same
+request, confirm it succeeds, and confirm
+`select * from public.operator_audit_events where operator_key = 'agent_perplexity' order by created_at desc limit 5;`
+shows a `capability_allowed` row. The dashboard approvals page must still
+decide normally throughout this check — it sends no header, so it stays on
+the exempt path regardless. Full steps:
+`docs/integrations/perplexity-mcp-connection.md`.
+
 ## Turn one capability off
 
 ```sql
