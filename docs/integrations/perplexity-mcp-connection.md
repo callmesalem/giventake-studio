@@ -113,7 +113,19 @@ page must keep deciding normally throughout this check.
 
 ## Before applying the migration
 
-Run `node tests/crm-grants.integration.test.mjs` with Docker Desktop running (it was not run when this was built — no Docker on the build machine — and CI does not run it) and expect it to pass before `supabase db push`.
+`tests/crm-grants.integration.test.mjs` is the only test that proves migration SQL
+behaves as written: it replays the whole chain on a bare `postgres:17` and asserts
+the grants and the capability guard. It was **not** run while this was built — the
+machine had no Docker — so CI's `migrations` job now runs it on every push and pull
+request.
+
+**Push first, then read that job, then `supabase db push`.** Pushing before the
+migration is safe: with no `MCP_PERPLEXITY_KEY` secret set the gateway answers 503
+and can do nothing. If the job is red, do not apply the migration.
+
+Locally, the same check is `node tests/crm-grants.integration.test.mjs` with Docker
+running. No Docker Hub login is needed — `postgres:17` is a public image and
+Docker Desktop's sign-in prompt can be skipped.
 
 ## Troubleshooting
 

@@ -69,6 +69,34 @@ jobs:
             exit 1
           fi
 
+  # The only test that proves migration SQL does what it claims, and until now
+  # nothing ever ran it: `verify` skips it through ALLOW_DOCKER_INTEGRATION_SKIP,
+  # and the machine these migrations are written on has no Docker either, so the
+  # chain shipped desk-checked and a reviewer's reading was the last line of
+  # defence. The runners have Docker. This replays every migration on a bare
+  # postgres:17 - none of Supabase's default privileges - and asserts the grants
+  # and the capability guard. It gates: migrations are applied to production by
+  # hand, where a mistake costs a restore rather than a revert.
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install
+
+      # ALLOW_DOCKER_INTEGRATION_SKIP is deliberately unset: if Docker ever
+      # leaves the runner this must go red, not quietly pass having tested
+      # nothing. That is the failure this job exists to end.
+      - name: Migrations against a real Postgres
+        run: node tests/crm-grants.integration.test.mjs
+
   # End-to-end, in a real browser, against the real app. Its own job because it
   # needs a browser download and system libraries, and because a rendering
   # failure here means something different from a unit failure.
