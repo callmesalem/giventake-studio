@@ -20,16 +20,20 @@ const files = {
 const compact = (text) => text.replace(/\s+/g, " ");
 
 assert.ok(
-  files.pricing.includes('name: "Essentials"') &&
-    files.pricing.includes('price: "$500 - $2.5K"') &&
-    files.pricing.includes("Small builds, fixes, and single-page sites."),
-  "Pricing must restore the intentionally added Essentials $500-$2.5K tier.",
+  files.pricing.includes('name: "Launch"') &&
+    files.pricing.includes('price: "$249"') &&
+    files.pricing.includes('name: "Growth"') &&
+    files.pricing.includes('price: "$399"') &&
+    files.pricing.includes('name: "Scale"') &&
+    files.pricing.includes('price: "$549"'),
+  "Pricing must keep the three managed website tiers (Launch $249, Growth $399, Scale $549).",
 );
 
 assert.ok(
-  compact(files.pricing).includes("Essentials work starts at $500") &&
-    compact(files.pricing).includes("most custom builds start at $2,500"),
-  "Pricing copy must clearly distinguish small Essentials work from larger custom builds.",
+  files.pricing.includes('name: "One-time build"') &&
+    files.pricing.includes('price: "From $4,500"') &&
+    files.pricing.includes('name: "Discovery sprint"'),
+  "Pricing must keep the one-time build and discovery sprint alternatives alongside the managed tiers.",
 );
 
 assert.ok(

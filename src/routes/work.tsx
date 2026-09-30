@@ -9,7 +9,7 @@ export const Route = createFileRoute("/work")({
       path: "/work",
       title: "Work · What We Build · GivenTake Devs",
       description:
-        "The kinds of software we take on: agentic intake and routing, booking and payments, internal dashboards that replace spreadsheets, and rebuilt marketing sites — built with AI-assisted delivery and human review.",
+        "The kinds of software we take on: intake and routing, booking and payments, internal dashboards that replace spreadsheets, and rebuilt marketing sites. Every build gets human review.",
     }),
   component: WorkPage,
 });

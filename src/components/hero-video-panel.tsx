@@ -62,7 +62,7 @@ function PlaceholderReel() {
         </span>
         <div className="leading-tight">
           <p className="text-[13px] font-medium text-white">See it in motion</p>
-          <p className="text-[11px] text-white/50">Product showreel — coming soon</p>
+          <p className="text-[11px] text-white/50">Product showreel. Coming soon</p>
         </div>
       </div>
     </div>

@@ -152,7 +152,7 @@ function OfferPage() {
                   What's not
                 </h2>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted-ink">
-                  Stated up front so there are no surprises later. Anything here can be added — it
+                  Stated up front so there are no surprises later. Anything here can be added; it
                   just gets scoped and priced separately.
                 </p>
                 <ul className="mt-5 space-y-3">
@@ -226,7 +226,7 @@ function OfferPage() {
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[16.5px] leading-relaxed text-muted-ink">
               Thirty minutes, free, no obligation. You'll leave with a clear view of what this would
-              take — whether or not you work with us.
+              take, whether or not you work with us.
             </p>
             <a
               href="/#contact"

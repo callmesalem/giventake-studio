@@ -27,15 +27,15 @@ const stages = [
     n: "02",
     title: "Discovery",
     duration: "45–60 minutes",
-    body: "A structured conversation, not a chat. We'll ask you to walk us through the last time the problem actually happened, step by step — because the general description is always tidier than the reality. Then we quantify it: how often, how long, who does it, what it costs when it goes wrong.",
+    body: "A structured conversation, not a chat. We'll ask you to walk us through the last time the problem actually happened, step by step. The general description is always tidier than the reality. Then we quantify it: how often, how long, who does it, what it costs when it goes wrong.",
     yours:
-      "A written summary within 24 hours asking “did we get this right?” — so any misunderstanding surfaces before it's priced in.",
+      "A written summary within 24 hours asking “did we get this right?” Any misunderstanding surfaces before it's priced in.",
   },
   {
     n: "03",
     title: "Scope",
     duration: "A few days, or a paid sprint",
-    body: "For a clear project, we go straight to a proposal. For anything complex or still fuzzy, we'll suggest a paid discovery sprint that maps the process properly and produces a fixed quote — the fee comes off the build if you proceed.",
+    body: "For a clear project, we go straight to a proposal. For anything complex or still fuzzy, we'll suggest a paid discovery sprint that maps the process properly and produces a fixed quote. The fee comes off the build if you proceed.",
     yours:
       "A proposal with the problem in your words, what we'll build, what we won't, objective acceptance criteria, a timeline, and a fixed price.",
   },
@@ -52,7 +52,7 @@ const stages = [
     duration: "Week 1",
     body: "We confirm who decides, collect access, put a weekly demo in the calendar, and agree how we'll communicate. Then we measure the baseline: how long the current process takes, how often it happens, what the current error or no-show rate is.",
     yours:
-      "Recorded starting numbers — so at the end, the improvement is measured rather than asserted.",
+      "Recorded starting numbers, so at the end the improvement is measured rather than asserted.",
   },
   {
     n: "06",
@@ -74,7 +74,7 @@ const stages = [
     n: "08",
     title: "Acceptance",
     duration: "10 business days",
-    body: "We test against the acceptance criteria agreed in stage 3 — not a new set invented at the end. Anything that fails those criteria gets fixed at no charge.",
+    body: "We test against the acceptance criteria agreed in stage 3, not a new set invented at the end. Anything that fails those criteria gets fixed at no charge.",
     yours:
       "A clear standard for “done” that was set before the work started, so it can't move in either direction.",
   },
@@ -98,7 +98,7 @@ const stages = [
     n: "11",
     title: "Retrospective",
     duration: "Two weeks after handoff",
-    body: "We re-measure the baseline numbers from kickoff and tell you what actually changed — including if it changed less than we hoped.",
+    body: "We re-measure the baseline numbers from kickoff and tell you what actually changed, including if it changed less than we hoped.",
     yours:
       "Real numbers on whether the investment worked. If it's ongoing work, this is where a retainer conversation makes sense.",
   },
@@ -110,7 +110,7 @@ export const Route = createFileRoute("/process")({
       path: "/process",
       title: "Our Process · How Every Project Runs · GivenTake Devs",
       description:
-        "The eleven stages every project runs through, from qualifying call to retrospective — with written scope before code, weekly working demos, a review gate, and a full handoff package.",
+        "The eleven stages every project runs through, from qualifying call to retrospective: written scope before code, weekly working demos, a review gate, and a full handoff package.",
     }),
   component: ProcessPage,
 });
@@ -120,12 +120,12 @@ function ProcessPage() {
     <ProsePage
       eyebrow="Our process"
       title="The same process, every project."
-      lede="Most development goes wrong in predictable ways: scope that was never written down, “done” that was never defined, and a change agreed in a chat message that nobody priced. This is the process we run to prevent those — published in full, so you can hold us to it."
+      lede="Most development goes wrong in predictable ways: scope that was never written down, “done” that was never defined, and a change agreed in a chat message that nobody priced. This is the process we run to prevent those. It's published in full so you can hold us to it."
     >
       <Callout title="Why this is public">
         Anyone can say they use AI coding agents; you can&rsquo;t verify it and it won&rsquo;t be a
         differentiator for long. A written process you can read before you hire us is something you
-        can actually check &mdash; and something you can hold against whoever else you&rsquo;re
+        can actually check, and something you can hold against whoever else you&rsquo;re
         considering.
       </Callout>
 
@@ -161,8 +161,8 @@ function ProcessPage() {
 
       <H2>The four rules behind it</H2>
       <P>
-        If you remember nothing else from this page, these are the commitments that matter most
-        &mdash; and the ones worth asking any developer about, not just us.
+        If you remember nothing else from this page, these are the commitments that matter most.
+        They&rsquo;re the ones worth asking any developer about, not just us.
       </P>
       <Bullets
         items={[
@@ -200,8 +200,8 @@ function ProcessPage() {
         ]}
       />
       <P>
-        Where those slip, timelines move day for day. That isn&rsquo;t a penalty &mdash; it&rsquo;s
-        the only way a fixed date can be honest when half the inputs are outside our control.
+        Where those slip, timelines move day for day. That isn&rsquo;t a penalty. It&rsquo;s the
+        only way a fixed date can be honest when half the inputs are outside our control.
       </P>
 
       <Callout title="Related">

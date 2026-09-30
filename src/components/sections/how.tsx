@@ -4,47 +4,37 @@ import { IconPlan, IconCode, IconTest, IconReview, IconDeploy } from "@/componen
 const workflow = [
   {
     step: "01",
-    title: "Plan",
-    label: "Human-led",
-    labelStyle: "bg-ink text-white",
-    body: "We start with your business, your users, and the problem. We write a short scope doc and a plan. No code is written until you sign off.",
-    checkpoint: "You approve the scope before we start building.",
+    title: "Call",
+    body: "One conversation about what you sell, who buys it, and what's eating your week. We listen, you talk.",
+    checkpoint: "You tell us the problem in plain language.",
     Icon: IconPlan,
   },
   {
     step: "02",
-    title: "Code",
-    label: "AI agents",
-    labelStyle: "bg-violet text-white",
-    body: "AI coding agents generate the first pass: components, APIs, and migrations. We steer them, fix errors, and keep the architecture coherent.",
-    checkpoint: "Every generated file is read by a human before it moves on.",
+    title: "Plan",
+    body: "Within a week you get a page-by-page plan: what we're building, what it costs, and when it's live.",
+    checkpoint: "You approve the plan before we build anything.",
     Icon: IconCode,
   },
   {
     step: "03",
-    title: "Test",
-    label: "AI + human",
-    labelStyle: "bg-violet-soft text-violet",
-    body: "Automated tests run alongside the code. We add edge cases, check the critical paths, and make sure the feature actually works.",
-    checkpoint: "Tests must pass before we move to review.",
+    title: "Build",
+    body: "We build it in weeks, not quarters. You see real pages as they go up, not a mockup a month later.",
+    checkpoint: "You see progress every week.",
     Icon: IconTest,
   },
   {
     step: "04",
-    title: "Review",
-    label: "Human checkpoint",
-    labelStyle: "bg-ink text-white",
-    body: "This is the gate. We read the code, tighten the UX, and run security checks. AI moves fast; a human decides what is ready to ship.",
-    checkpoint: "Nothing ships without manual human review.",
+    title: "Launch",
+    body: "We handle the domain, the security certificate, and your analytics setup, then test everything on real phones.",
+    checkpoint: "You get the speed numbers before it goes live.",
     Icon: IconReview,
   },
   {
     step: "05",
-    title: "Deploy",
-    label: "Human-approved",
-    labelStyle: "bg-ink text-white",
-    body: "We push to a staging environment so you can use it. Once you sign off, it goes live. We handle hosting, domains, and monitoring.",
-    checkpoint: "You sign off before the final launch.",
+    title: "Report",
+    body: "Every quarter, a plain-English report: where your visitors came from, what they did, and the one fix we'd make next.",
+    checkpoint: "You always know what the site is doing for you.",
     Icon: IconDeploy,
   },
 ];
@@ -56,11 +46,10 @@ export function HowItWorks() {
         <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">How we work</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
-            Agentic speed with human checkpoints.
+            Tell us what&rsquo;s eating your week.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            AI coding agents do the heavy lifting. We stay in the loop at every step that matters,
-            so you get speed without giving up judgment.
+            No 40-page proposals, no discovery theater. Five steps, and the last one never ends.
           </p>
         </Reveal>
 
@@ -86,12 +75,6 @@ export function HowItWorks() {
                     {w.title}
                   </h3>
 
-                  <span
-                    className={`mt-3 w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${w.labelStyle}`}
-                  >
-                    {w.label}
-                  </span>
-
                   <p className="mt-4 flex-1 text-[14.5px] leading-relaxed text-muted-ink">
                     {w.body}
                   </p>
@@ -108,9 +91,9 @@ export function HowItWorks() {
         </div>
 
         <Reveal delay={100} className="mt-10">
-          <p className="text-[14px] leading-relaxed text-muted-ink">
-            The goal is simple: move faster than a traditional team, but keep every important
-            decision in human hands. The AI helps us code; we own the result.
+          <p className="max-w-2xl text-[14px] leading-relaxed text-muted-ink">
+            We use AI tooling to build faster, and a human reviews everything before it ships.
+            That&rsquo;s the whole story. The part that matters to you is the report in step five.
           </p>
         </Reveal>
       </div>

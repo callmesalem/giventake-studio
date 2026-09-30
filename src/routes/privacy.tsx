@@ -100,17 +100,17 @@ function PrivacyPage() {
           <Section title="4. Legal basis (GDPR)">
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                <strong>Consent</strong> — analytics, marketing, and preference cookies.
+                <strong>Consent</strong>: analytics, marketing, and preference cookies.
               </li>
               <li>
-                <strong>Legitimate interest</strong> — responding to a contact-form submission you
+                <strong>Legitimate interest</strong>: responding to a contact-form submission you
                 initiated.
               </li>
               <li>
-                <strong>Contract</strong> — delivering work you have engaged us for.
+                <strong>Contract</strong>: delivering work you have engaged us for.
               </li>
               <li>
-                <strong>Legal obligation</strong> — accounting and tax records.
+                <strong>Legal obligation</strong>: accounting and tax records.
               </li>
             </ul>
           </Section>
@@ -119,7 +119,7 @@ function PrivacyPage() {
             <p>We share limited data with vetted service providers acting on our instructions:</p>
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                Email delivery provider — form submissions are sent to us by email through a
+                Email delivery provider: form submissions are sent to us by email through a
                 transactional mail service. It transmits the message; it is not used to build
                 marketing lists.
               </li>

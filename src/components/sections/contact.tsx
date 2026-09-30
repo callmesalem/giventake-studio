@@ -152,7 +152,7 @@ export function ContactCTA() {
               playsInline
               preload="none"
               poster="/hero/giventake-cta-poster.jpg"
-              aria-label="GivenTake Devs — you give us the problem, we take it from there."
+              aria-label="GivenTake Devs: you give us the problem, we take it from there."
             >
               <source src="/hero/giventake-cta.mp4" type="video/mp4" />
             </video>
@@ -194,7 +194,7 @@ export function ContactCTA() {
                       href="/book"
                       className="text-[15px] font-medium text-ink underline decoration-violet/60 underline-offset-4 hover:text-violet"
                     >
-                      {i} — book it here
+                      {i}. Book it here
                     </a>
                   ) : (
                     <span className="text-[15px] text-ink">{i}</span>
@@ -238,8 +238,8 @@ export function ContactCTA() {
                 <p className="mt-2 max-w-sm text-[15px] text-muted-ink">
                   {outcome === "sent" ? (
                     <>
-                      Thanks &mdash; we&rsquo;ve got it and we&rsquo;ll reply within one business
-                      day. If you don&rsquo;t hear back, email us directly at{" "}
+                      Thanks. We&rsquo;ve got it and we&rsquo;ll reply within one business day. If
+                      you don&rsquo;t hear back, email us directly at{" "}
                       <a
                         href={`mailto:${CONTACT_EMAIL}`}
                         className="font-semibold text-ink underline"
@@ -301,7 +301,7 @@ export function ContactCTA() {
                     required
                     maxLength={1500}
                     rows={4}
-                    placeholder="What are you building? Mention if you want AI automation, an internal agent, or a traditional web app."
+                    placeholder="What are you working on? A few lines is fine. What's eating your week?"
                     className="rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
                   />
                 </Field>
@@ -395,7 +395,7 @@ export function ContactCTA() {
                 </label>
 
                 <p className="text-[11.5px] leading-relaxed text-muted-ink">
-                  Your brief is emailed to us so we can reply — see the{" "}
+                  Your brief is emailed to us so we can reply. See the{" "}
                   <a href="/privacy" className="font-medium text-ink underline">
                     Privacy Policy
                   </a>{" "}

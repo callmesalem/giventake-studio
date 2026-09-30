@@ -87,6 +87,28 @@ export const applicationSchema = z.object({
 
 export type ApplicationInput = z.infer<typeof applicationSchema>;
 
+/** Free 5-minute site check request. Deliberately light: name, email, and the
+ *  visitor's current website URL. Persisted to the CRM as a lead (mapped onto
+ *  the contact shape) and emailed to the studio like any other enquiry. */
+export const siteCheckSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().email("Enter a valid email").max(255),
+  website: z.string().trim().min(1, "Your website URL is required").max(255),
+  // Consent evidence. Optional in the schema because the server must never
+  // depend on the client to prove consent - it records what it is given and
+  // stores nothing when it is given nothing.
+  consent_given: z.boolean().optional(),
+  consent_text: z.string().trim().max(2000).optional(),
+  utm_source: optionalAttribution,
+  utm_medium: optionalAttribution,
+  utm_campaign: optionalAttribution,
+  utm_content: optionalAttribution,
+  utm_term: optionalAttribution,
+  referrer: optionalAttribution,
+});
+
+export type SiteCheckInput = z.infer<typeof siteCheckSchema>;
+
 /** Result shape shared by both submit paths. */
 export type IntakeResult =
   | { status: "sent" }
