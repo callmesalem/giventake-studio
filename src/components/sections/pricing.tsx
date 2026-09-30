@@ -229,6 +229,19 @@ export function Pricing() {
             </ul>
           </div>
         </Reveal>
+        {/* non-website work lives on /services; give it a path from here */}
+        <Reveal delay={140}>
+          <p className="mx-auto mt-12 max-w-2xl text-center text-[15px] leading-relaxed text-muted-ink">
+            Need something that isn&rsquo;t a website? Dashboards, automations, and booking systems
+            are scoped on a call and priced fixed, in writing.{" "}
+            <a
+              href="/services"
+              className="font-medium text-violet underline-offset-4 hover:underline"
+            >
+              See services and starting prices
+            </a>
+          </p>
+        </Reveal>
       </div>
     </section>
   );

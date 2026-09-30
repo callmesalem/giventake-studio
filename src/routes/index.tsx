@@ -16,6 +16,7 @@ const named = <K extends string>(key: K, load: () => Promise<Record<K, Component
 const WhoWeHelp = named("WhoWeHelp", () => import("@/components/sections/who"));
 const Services = named("Services", () => import("@/components/sections/services"));
 const HowItWorks = named("HowItWorks", () => import("@/components/sections/how"));
+const Beyond = named("Beyond", () => import("@/components/sections/beyond"));
 const Testimonials = named("Testimonials", () => import("@/components/sections/testimonials"));
 const SiteCheck = named("SiteCheck", () => import("@/components/sections/site-check"));
 const ContactCTA = named("ContactCTA", () => import("@/components/sections/contact"));
@@ -95,6 +96,7 @@ function Index() {
         <Suspense fallback={<Placeholder h={520} />}>
           <WhoWeHelp />
           <Services />
+          <Beyond />
           <HowItWorks />
           <Testimonials />
           <SiteCheck />
