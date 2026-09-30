@@ -1,53 +1,69 @@
 import { Reveal } from "@/components/reveal";
-import { IconBriefcase, IconSeed, IconTrend } from "@/components/marks";
+import { IconClose, IconCheckCircle } from "@/components/marks";
 
-const cards = [
-  {
-    Icon: IconBriefcase,
-    title: "Small businesses",
-    body: "You're running the business on a stack of tools that don't really talk to each other. We replace the duct tape with AI-assisted software that fits how your team actually works, without hiring a full engineer.",
-  },
-  {
-    Icon: IconSeed,
-    title: "Founders",
-    body: "You have paying customers and a clear idea. What you don't have is a year to find a technical co-founder. Our AI-native workflow gets an MVP in front of users in weeks, not months.",
-  },
-  {
-    Icon: IconTrend,
-    title: "Growing companies",
-    body: "Your roadmap is longer than your engineering team. We plug in with agentic workflows and custom code for the next quarter of shipping, then step back once it's out the door.",
-  },
+const usualWay = [
+  "Pay $5,000+ upfront, then get handed the keys",
+  "Every change costs extra or waits on your \u201cweb guy\u201d",
+  "Hosting, security, and updates are your problem",
+  "Nobody tells you if the site is actually working",
+];
+
+const ourWay = [
+  "One flat monthly price: design, hosting, updates included",
+  "Changes are one email away, published in days",
+  "Your domain and content stay yours, always",
+  "Every quarter, a report in plain English: what's bringing you customers and what we'd fix next",
 ];
 
 export function WhoWeHelp() {
   return (
-    <section id="who" className="border-b border-hairline">
+    <section id="compare" className="border-b border-hairline">
       <div className="mx-auto max-w-7xl px-6 py-24 md:py-28">
         <Reveal className="mb-14 max-w-2xl">
-          <p className="text-[13px] font-medium text-violet">Who we help</p>
+          <p className="text-[13px] font-medium text-violet">How we're different</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
-            You focus on the business. We build the technology.
+            A website is not a project. It&rsquo;s a subscription to being found.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            One team doing the work you'd normally split across five or six freelancers. One point
-            of contact, one system that fits together.
+            Most small-business sites are built once, then left to quietly go stale. We do the
+            opposite: one monthly price covers the site and everything it needs to keep working.
           </p>
         </Reveal>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {cards.map((c, i) => (
-            <Reveal key={c.title} delay={i * 80}>
-              <article className="card-lift group h-full rounded-2xl border border-hairline bg-white p-7 shadow-soft">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-soft text-violet">
-                  <c.Icon className="h-6 w-6" />
-                </div>
-                <h3 className="mt-6 text-[22px] font-semibold tracking-tight text-ink">
-                  {c.title}
-                </h3>
-                <p className="mt-3 text-[15px] leading-relaxed text-muted-ink">{c.body}</p>
-              </article>
-            </Reveal>
-          ))}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Reveal>
+            <article className="h-full rounded-2xl border border-hairline bg-secondary/50 p-7 md:p-8">
+              <h3 className="text-[20px] font-semibold tracking-tight text-muted-ink">
+                The usual way
+              </h3>
+              <ul className="mt-6 space-y-4">
+                {usualWay.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="mt-1 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-ink/10 text-muted-ink">
+                      <IconClose className="h-3 w-3" />
+                    </span>
+                    <span className="text-[15px] leading-relaxed text-muted-ink">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <article className="h-full rounded-2xl border border-ink bg-ink p-7 text-white shadow-lift md:p-8">
+              <h3 className="text-[20px] font-semibold tracking-tight text-white">Our way</h3>
+              <ul className="mt-6 space-y-4">
+                {ourWay.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="mt-1 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-400/20 text-emerald-300">
+                      <IconCheckCircle className="h-3 w-3" />
+                    </span>
+                    <span className="text-[15px] leading-relaxed text-white/90">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </Reveal>
         </div>
       </div>
     </section>

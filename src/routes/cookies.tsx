@@ -135,7 +135,7 @@ function CookiesPage() {
               <li>Use the "Cookie settings" button above at any time.</li>
               <li>Block cookies in your browser (may break parts of the site).</li>
               <li>
-                Enable Global Privacy Control (GPC) — we treat it as an opt-out of analytics and
+                Enable Global Privacy Control (GPC). We treat it as an opt-out of analytics and
                 marketing.
               </li>
               <li>

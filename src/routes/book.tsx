@@ -26,7 +26,7 @@ export const Route = createFileRoute("/book")({
       path: "/book",
       title: "Book a Free Strategy Call · GivenTake Devs",
       description:
-        "Book a free 30-minute strategy call with GivenTake Devs. Tell us what you're working on and when you're free — we reply within one business day to lock in a time.",
+        "Book a free 30-minute strategy call with GivenTake Devs. Tell us what you're working on and when you're free. We reply within one business day to lock in a time.",
     }),
   component: BookPage,
 });
@@ -71,7 +71,7 @@ function BookPage() {
               <p className="mt-5 max-w-xl text-[18px] leading-relaxed text-muted-ink">
                 Tell us what you want to talk about and when you're free. A human reads every
                 request and replies within one business day to lock in a time. No pitch decks, no
-                pressure — just a working conversation about what you're trying to build.
+                pressure. Just a working conversation about what you're trying to build.
               </p>
             </Reveal>
             <Reveal delay={100}>
@@ -195,7 +195,7 @@ function BookCallForm() {
         <p className="mt-2 max-w-sm text-[15px] text-muted-ink">
           {outcome === "sent" ? (
             <>
-              Thanks — we&rsquo;ve got it and we&rsquo;ll reply within one business day to lock in a
+              Thanks. We&rsquo;ve got it and we&rsquo;ll reply within one business day to lock in a
               time. If you don&rsquo;t hear back, email us directly at{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-ink underline">
                 {CONTACT_EMAIL}
@@ -310,7 +310,7 @@ function BookCallForm() {
       </label>
 
       <p className="text-[11.5px] leading-relaxed text-muted-ink">
-        Your request is emailed to us so we can reply — see the{" "}
+        Your request is emailed to us so we can reply. See the{" "}
         <a href="/privacy" className="font-medium text-ink underline">
           Privacy Policy
         </a>{" "}

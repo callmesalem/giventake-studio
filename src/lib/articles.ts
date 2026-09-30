@@ -39,7 +39,7 @@ export const articles: Article[] = [
     slug: "what-custom-software-costs",
     title: "What does custom software actually cost?",
     summary:
-      "Real ranges for internal tools, automations, and web apps — plus what actually drives the number up or down, and when you shouldn't build at all.",
+      "Real ranges for internal tools, automations, and web apps, plus what actually drives the number up or down, and when you shouldn't build at all.",
     metaTitle: "What Does Custom Software Actually Cost? (2026 Ranges) · GivenTake Devs",
     metaDescription:
       "Honest price ranges for custom internal tools, automations, and web applications, what drives the cost up or down, and how to tell whether a quote is realistic.",
@@ -63,7 +63,7 @@ export const articles: Article[] = [
     slug: "what-you-get-at-handoff",
     title: "What you should get when a development project ends",
     summary:
-      "The handoff checklist to hold any developer to — including the two things people forget to ask for until they need them and it's too late.",
+      "The handoff checklist to hold any developer to, including the two things people forget to ask for until they need them and it's too late.",
     metaTitle: "What You Should Get at Handoff From a Development Project · GivenTake Devs",
     metaDescription:
       "The complete list of what a developer should hand over at the end of a project: code, deployment, documentation, credentials, SBOM, and access removal.",

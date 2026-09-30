@@ -16,24 +16,14 @@ import {
 
 const services = [
   {
-    Icon: IconBot,
-    title: "Agentic systems & AI workflows",
-    body: "Custom AI agents that handle intake, research, drafting, or routing. Built to plug into your existing tools, not replace your team.",
-  },
-  {
     Icon: IconGlobe,
     title: "Website development",
-    body: "Marketing sites that load fast, rank, and can be edited by someone on your team without opening a support ticket.",
+    body: "Marketing sites that load fast, rank on Google, and report back every quarter. One flat monthly price.",
   },
   {
     Icon: IconApp,
     title: "Web applications",
     body: "Custom software for the parts of your business that don't fit into Notion, Airtable, or an off-the-shelf SaaS.",
-  },
-  {
-    Icon: IconSpark,
-    title: "AI integrations",
-    body: "LLM-powered features wired into your product: summarization, extraction, search, and routing. We skip the demo and ship the workflow.",
   },
   {
     Icon: IconLoop,
@@ -42,18 +32,28 @@ const services = [
   },
   {
     Icon: IconGrid,
-    title: "Internal tools",
+    title: "Internal tools & dashboards",
     body: "Dashboards, admin panels, and ops tools your team opens every morning instead of another spreadsheet.",
   },
   {
     Icon: IconRocket,
+    title: "Booking & scheduling",
+    body: "Customers book, pay, and get reminded without the phone tag. Built around how your customers actually decide.",
+  },
+  {
+    Icon: IconInfinity,
     title: "MVP development",
     body: "A working product in front of real users in six to ten weeks. Built to be extended, not thrown away.",
   },
   {
-    Icon: IconInfinity,
-    title: "Ongoing development",
-    body: "A retained team by the month. Continuous shipping without the overhead of running a payroll.",
+    Icon: IconSpark,
+    title: "AI features, done carefully",
+    body: "Search, summarization, and routing wired into your product where they actually help. Reviewed by a human before they ship.",
+  },
+  {
+    Icon: IconBot,
+    title: "Ongoing care plans",
+    body: "Your site, managed. Hosting, updates, and a quarterly report in plain English, for one monthly price.",
   },
 ];
 
@@ -64,10 +64,11 @@ export function Services() {
         <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Services</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
-            Everything you'd staff an engineering team for.
+            One studio, one point of contact.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Pick a project or engage us continuously. One integrated team, one point of contact.
+            Tell us what&rsquo;s eating your week. A few weeks later, you&rsquo;re using the fix,
+            and every quarter after that, you get a report showing what it&rsquo;s doing for you.
           </p>
         </Reveal>
 
@@ -97,7 +98,7 @@ export function Services() {
               </h3>
               <p className="mt-3 text-[16px] leading-relaxed text-muted-ink">
                 Every project is scoped before it's quoted, but these are the shapes we build most
-                often — with what's included, what isn't, and where the price starts.
+                often, with what's included, what isn't, and where the price starts.
               </p>
             </div>
 

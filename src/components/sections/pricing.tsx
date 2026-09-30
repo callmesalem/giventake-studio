@@ -3,92 +3,87 @@ import { IconArrowRight } from "@/components/marks";
 
 const tiers = [
   {
-    name: "Essentials",
-    price: "$500 - $2.5K",
-    tagline: "Small builds, fixes, and single-page sites.",
+    name: "Launch",
+    price: "$249",
+    per: "/mo",
+    tagline: "For getting a real site up without a big upfront bill.",
     features: [
-      "One-page site, landing page, or small fix",
-      "AI-assisted build with human review",
-      "1 revision round included",
-      "Mobile responsive and accessible",
-      "Source code + deployment handoff",
-      "Live in about one week when scope is clear",
-      "14 days of tweaks after launch",
+      "Custom 5-page site, designed around your customers",
+      "Hosting, SSL, and security handled",
+      "Content updates included (hours, prices, photos)",
+      "Contact form that routes into your inbox",
+      "Quarterly performance report in plain English",
+      "12-month initial term, then month-to-month",
     ],
-    cta: "Start small",
+    cta: "Start with Launch",
+  },
+  {
+    name: "Growth",
+    price: "$399",
+    per: "/mo",
+    tagline: "For businesses that want the site to pull its weight.",
+    features: [
+      "Everything in Launch, up to 10 pages",
+      "Booking or quote forms wired to your inbox or CRM",
+      "Basic local SEO: pages built around what customers search",
+      "Google Business Profile wiring",
+      "Quarterly report with recommended fixes",
+      "12-month initial term, then month-to-month",
+    ],
+    cta: "Start with Growth",
+    featured: true,
+    // Factual descriptor of fit, not a popularity claim — no sales data exists yet.
+    badge: "Recommended",
+  },
+  {
+    name: "Scale",
+    price: "$549",
+    per: "/mo",
+    tagline: "For businesses ready to treat the site as a growth channel.",
+    features: [
+      "Everything in Growth, up to 20 pages",
+      "AI-search visibility: content structured so ChatGPT, Perplexity, and Google AI cite you",
+      "Review pipeline: we help you collect Google reviews every month",
+      "Monthly check-in call, quarterly deep report",
+      "Priority turnaround on changes",
+      "12-month initial term, then month-to-month",
+    ],
+    cta: "Start with Scale",
+  },
+];
+
+const alternatives = [
+  {
+    name: "One-time build",
+    price: "From $4,500",
+    tagline: "Prefer to own it outright? Same site, same quality.",
+    features: [
+      "Scoped on a call, fixed price in writing",
+      "Hosting ($25/mo) and updates ($50/mo) available as add-ons",
+      "30 days of post-launch support included",
+    ],
+    cta: "Request a build quote",
   },
   {
     name: "Discovery sprint",
     price: "$750 – $1,500",
-    tagline: "Not sure what you need built yet? Start here.",
+    tagline: "Not sure what you need yet? Start here.",
     features: [
       "One to two weeks, fixed fee",
-      "We map your current process end to end",
-      "Written scope, technical approach, and timeline",
-      "A fixed quote for the build",
-      "The document is yours either way",
-      "Fee credited against the project if you proceed",
+      "We map your process end to end",
+      "Written scope, approach, timeline, and fixed quote",
+      "The document is yours either way. Fee credited if you proceed",
     ],
     cta: "Book a sprint",
-  },
-  {
-    name: "Starter",
-    price: "From $2,500",
-    tagline: "Landing pages and simple builds.",
-    features: [
-      "Marketing site or landing page",
-      "AI-assisted build with human review",
-      "2 revision rounds included",
-      "CMS your team can edit",
-      "Automated tests for critical paths",
-      "Source code + deployment handoff",
-      "Live in two to three weeks",
-      "30 days of tweaks after launch",
-    ],
-    cta: "Start a project",
-  },
-  {
-    name: "Growth",
-    price: "Custom quote",
-    tagline: "Custom apps, automations, and internal tools.",
-    features: [
-      "Web app, internal tool, or automation",
-      "AI agents and agentic workflows where they fit",
-      "Scope defined in writing before we start",
-      "Unlimited revisions within signed scope",
-      "Automated tests + manual QA",
-      "Weekly demos and shared roadmap",
-      "Source code, docs, and deployment handoff",
-      "60 days of support after launch",
-    ],
-    cta: "Request a quote",
-    featured: true,
-    // Factual descriptor only. Do not use popularity or social-proof badges
-    // ("Most picked", "Most popular") until there is real sales data behind them.
-    badge: "Best for custom builds",
-  },
-  {
-    name: "Dedicated",
-    price: "Monthly retainer",
-    tagline: "An AI-native team, without hiring one.",
-    features: [
-      "Monthly senior developer retainer",
-      "Continuous shipping against your roadmap",
-      "AI-assisted delivery with human review",
-      "Shared Slack and weekly reviews",
-      "Scope adjusts monthly as priorities change",
-      "Pause or cancel with 30 days' notice",
-    ],
-    cta: "Book consultation",
   },
 ];
 
 const included = [
-  "AI-generated code is reviewed by a human before it ships",
-  "Automated tests run on every critical path",
-  "You receive source code, documentation, and a handoff walkthrough",
-  "Timeline and scope are fixed in writing before work starts",
-  "Revisions are built into the plan, not billed as surprises",
+  "You own your domain, your content, and your customer data. Always.",
+  "Every site is speed-tested on real phones before launch, and you get the numbers",
+  "A human reviews everything before it ships",
+  "Changes are one email away. No dashboard to learn, no ticket queue.",
+  "Cancel with 30 days' notice after the initial term",
 ];
 
 export function Pricing() {
@@ -98,18 +93,17 @@ export function Pricing() {
         <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Pricing</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
-            Work with us the way that fits.
+            One monthly price. The site and everything it needs.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Essentials work starts at $500 for tightly scoped fixes and small builds; most custom
-            builds start at $2,500. Every engagement is scoped on a call before a number is quoted,
-            and you'll get a fixed price, a clear timeline, and a written statement of what's
-            included before any work starts. If the problem isn't defined yet, a discovery sprint
-            defines it and the fee comes off the build.
+            No $5,000+ upfront invoice, no separate hosting bills, no surprise plugin renewals. Your
+            first month is due at signing. That covers the design and build, plus service through
+            your first billing date. After a 12-month initial term, everything continues month to
+            month.
           </p>
         </Reveal>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-3">
           {tiers.map((t, i) => (
             <Reveal key={t.name} delay={i * 80}>
               <article
@@ -149,6 +143,7 @@ export function Pricing() {
                     }`}
                   >
                     {t.price}
+                    <span className="text-[16px] font-medium text-muted-ink">{t.per}</span>
                   </p>
                 </div>
                 <ul
@@ -164,7 +159,7 @@ export function Pricing() {
                   ))}
                 </ul>
                 <a
-                  href="#contact"
+                  href="/#contact"
                   className={`mt-8 inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-3 text-[13px] font-medium transition ${
                     t.featured
                       ? "bg-white text-ink hover:bg-white/90"
@@ -179,15 +174,47 @@ export function Pricing() {
           ))}
         </div>
 
+        {/* one-time and discovery alternatives */}
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {alternatives.map((t, i) => (
+            <Reveal key={t.name} delay={i * 80}>
+              <article className="card-lift flex h-full flex-col rounded-2xl border border-hairline bg-white p-7 shadow-soft md:flex-row md:items-center md:gap-8">
+                <div className="flex-1">
+                  <h3 className="text-[20px] font-semibold tracking-tight text-ink">{t.name}</h3>
+                  <p className="mt-1.5 text-[14px] text-muted-ink">{t.tagline}</p>
+                  <ul className="mt-5 space-y-2.5">
+                    {t.features.map((f) => (
+                      <li
+                        key={f}
+                        className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85"
+                      >
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-6 flex flex-col items-start gap-4 md:mt-0 md:items-end">
+                  <p className="text-[24px] font-semibold tracking-tight text-ink">{t.price}</p>
+                  <a
+                    href="/#contact"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-full bg-ink px-5 py-3 text-[13px] font-medium text-white transition hover:opacity-90"
+                  >
+                    {t.cta}
+                    <IconArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+
         {/* transparent expectations block */}
         <Reveal delay={120}>
           <div className="mt-14 rounded-2xl border border-hairline bg-white p-7 shadow-soft">
-            <h3 className="text-[18px] font-semibold text-ink">
-              What's included with every project
-            </h3>
+            <h3 className="text-[18px] font-semibold text-ink">What you can count on</h3>
             <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-              Agentic delivery means AI coding agents do the bulk of the construction, and we verify
-              the work. Here's what that means for you in practical terms.
+              The fine print, up front. The usual way of buying websites hides it.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {included.map((item) => (
