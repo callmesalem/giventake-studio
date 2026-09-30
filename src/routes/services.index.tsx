@@ -31,7 +31,7 @@ function ServicesIndexPage() {
             <p className="mt-5 max-w-2xl text-[18px] leading-relaxed text-muted-ink">
               Every project is scoped on a call before it&rsquo;s quoted, but these are the shapes
               we build most often. Each page lists what&rsquo;s included, what isn&rsquo;t, and
-              where the price starts &mdash; so you can judge fit before booking a call.
+              where the price starts, so you can judge fit before booking a call.
             </p>
           </div>
         </section>
@@ -68,8 +68,8 @@ function ServicesIndexPage() {
                 <h2 className="text-[16px] font-semibold text-ink">Built with AI agents</h2>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
                   That&rsquo;s how the timelines are short. Everything is reviewed by a human before
-                  it ships, and we&rsquo;ll tell you exactly what that means &mdash; including the
-                  parts most studios won&rsquo;t.
+                  it ships, and we&rsquo;ll tell you exactly what that means, including the parts
+                  most studios won&rsquo;t.
                 </p>
                 <Link
                   to="/how-we-use-ai"

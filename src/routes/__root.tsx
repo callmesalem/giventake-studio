@@ -114,9 +114,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               name: SITE_NAME,
               legalName: LEGAL_ENTITY,
               url: `${BASE_URL}/`,
-              slogan: "Your On-Demand Development Team",
+              slogan: "Websites That Report Back",
               description:
-                "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders.",
+                "One-person web studio in Ohio building managed websites for small businesses: design, hosting, updates, and a plain-English performance report every quarter.",
             },
             {
               "@type": "WebSite",

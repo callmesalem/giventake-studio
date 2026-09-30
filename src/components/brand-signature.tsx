@@ -28,7 +28,7 @@ const ROWS: Row[] = [
     color: "#4f46e5",
     colorDark: "#a5b4fc",
     href: "#services",
-    label: "From an idea to a product — see our services",
+    label: "From an idea to a product: see our services",
   },
   {
     id: "r2",
@@ -37,7 +37,7 @@ const ROWS: Row[] = [
     color: "#0ea5e9",
     colorDark: "#7dd3fc",
     href: "#how",
-    label: "From a brief to a system — see how we work",
+    label: "From a brief to a system: see how we work",
   },
   {
     id: "r3",
@@ -46,7 +46,7 @@ const ROWS: Row[] = [
     color: "#f59e0b",
     colorDark: "#fcd34d",
     href: "#work",
-    label: "From a problem to a fix — see the kind of work we take",
+    label: "From a problem to a fix: see the kind of work we take",
   },
   {
     id: "r4",
@@ -55,7 +55,7 @@ const ROWS: Row[] = [
     color: "#10b981",
     colorDark: "#6ee7b7",
     href: "#contact",
-    label: "From a deadline to a launch — start a project",
+    label: "From a deadline to a launch: start a project",
   },
 ];
 

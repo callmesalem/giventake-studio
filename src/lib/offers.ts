@@ -74,7 +74,7 @@ export const offers: Offer[] = [
     questions: [
       "Who opens this, how often, and what decision are they making with it?",
       "Where does the data live now, and who owns it?",
-      "How current does it need to be — live, hourly, daily?",
+      "How current does it need to be: live, hourly, daily?",
       "What's the one number that would change how you run the business if it were always visible?",
     ],
     goodFit:
@@ -114,13 +114,13 @@ export const offers: Offer[] = [
       "Integrations not identified during scoping",
     ],
     questions: [
-      "What starts the process — an email, a form, a phone call?",
+      "What starts the process: an email, a form, a phone call?",
       "What decision is the automation making, and what are the possible outcomes?",
       "How often is a human wrong at this today?",
-      "What should happen when the system isn't confident — queue it, take a safe default, or escalate?",
+      "What should happen when the system isn't confident: queue it, take a safe default, or escalate?",
     ],
     goodFit:
-      "You get enough enquiries that sorting them is a real job, and they're varied enough that a simple rule wouldn't work. Under roughly twenty a week, a person is still cheaper — and we'll tell you so.",
+      "You get enough enquiries that sorting them is a real job, and they're varied enough that a simple rule wouldn't work. Under roughly twenty a week, a person is still cheaper, and we'll tell you so.",
   },
   {
     slug: "booking-and-payments",
@@ -195,13 +195,13 @@ export const offers: Offer[] = [
     excludes: [
       "Copywriting and content production unless scoped",
       "Photography, illustration, and licensed stock",
-      "Brand identity design — we work to your existing brand",
+      "Brand identity design: we work to your existing brand",
       "Ongoing SEO strategy beyond technical fundamentals",
       "Domain, hosting, and subscription costs",
     ],
     questions: [
       "What's the one action a visitor should take?",
-      "What's failing now — traffic, conversion, or that you can't update it?",
+      "What's failing now: traffic, conversion, or that you can't update it?",
       "Who needs to edit it, and how comfortable are they with software?",
       "Are we replacing an existing site? (Redirects are where SEO usually gets destroyed.)",
     ],
@@ -214,7 +214,7 @@ export const offers: Offer[] = [
     tagline: "The repetitive thing someone does by hand every day, done by software.",
     metaTitle: "Business Process Automation Development | GivenTake Devs",
     metaDescription:
-      "Custom automation for the repetitive manual processes running your business — data re-entry, document assembly, status chasing. Fixed price from $4,000.",
+      "Custom automation for the repetitive manual processes running your business: data re-entry, document assembly, status chasing. Fixed price from $4,000.",
     priceFrom: "From $4,000",
     timeline: "2–4 weeks",
     problem: [
@@ -247,7 +247,7 @@ export const offers: Offer[] = [
       "How often does it happen, and how long does it take each time?",
     ],
     goodFit:
-      "You can name the process and roughly how long it takes. If you can't describe how it works today, start with a discovery sprint — a scope written on guesses helps nobody.",
+      "You can name the process and roughly how long it takes. If you can't describe how it works today, start with a discovery sprint. A scope written on guesses helps nobody.",
   },
   {
     slug: "mvp-development",
@@ -255,7 +255,7 @@ export const offers: Offer[] = [
     tagline: "The smallest thing that tests whether people actually want it.",
     metaTitle: "MVP Development for Founders | GivenTake Devs",
     metaDescription:
-      "MVP development for founders with paying-customer intent — the smallest build that tests the riskiest assumption. Scoped and quoted after discovery.",
+      "MVP development for founders with paying-customer intent: the smallest build that tests the riskiest assumption. Scoped and quoted after discovery.",
     priceFrom: "Custom quote",
     timeline: "6–10 weeks",
     problem: [
@@ -265,7 +265,7 @@ export const offers: Offer[] = [
       "You're not sure how much of what you've imagined actually needs building first.",
     ],
     outcome:
-      "A working product in front of real users, built around the riskiest assumption rather than the full feature list — so you find out what's true before spending the rest of the budget.",
+      "A working product in front of real users, built around the riskiest assumption rather than the full feature list, so you find out what's true before spending the rest of the budget.",
     includes: [
       "Scoping down to the riskiest assumption",
       "A working product real users can use",
@@ -283,12 +283,12 @@ export const offers: Offer[] = [
     ],
     questions: [
       "Who are the first ten users, and can you name them?",
-      "What's the riskiest assumption — the one that, if wrong, means none of this matters?",
+      "What's the riskiest assumption: the one that, if wrong, means none of this matters?",
       "What's the smallest thing that tests it?",
       "What does 'it's working' look like in 90 days?",
     ],
     goodFit:
-      "You can name ten prospective users. If you can't, that's the real project right now, and building software won't fix it — we'd rather tell you that before you spend the money.",
+      "You can name ten prospective users. If you can't, that's the real project right now, and building software won't fix it. We'd rather tell you that before you spend the money.",
   },
 ];
 

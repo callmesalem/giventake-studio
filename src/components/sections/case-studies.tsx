@@ -29,7 +29,7 @@ const builds = [
       "Posts a structured summary, not a forward",
     ],
     approach:
-      "We'd build a custom agent to parse submissions, classify intent, and post structured summaries. The routing logic, the prompts, and the edge cases stay in human hands — that part is not delegated to the model.",
+      "We'd build a custom agent to parse submissions, classify intent, and post structured summaries. The routing logic, the prompts, and the edge cases stay in human hands. That part is not delegated to the model.",
     tags: ["AI agent", "Email parsing", "Slack"],
     image: intakeAsset.url,
     alt: "Concept render of an AI lead intake router, showing enquiries grouped by intent and routed to Slack channels.",
