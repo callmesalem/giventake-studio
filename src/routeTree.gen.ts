@@ -24,6 +24,7 @@ import { Route as CrmRouteImport } from './routes/crm'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CareersRouteImport } from './routes/careers'
+import { Route as BookRouteImport } from './routes/book'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as CrmIndexRouteImport } from './routes/crm.index'
@@ -131,6 +132,11 @@ const ComplianceRoute = ComplianceRouteImport.update({
 const CareersRoute = CareersRouteImport.update({
   id: '/careers',
   path: '/careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -301,6 +307,7 @@ const ApiUnsubscribeTokenRoute = ApiUnsubscribeTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
@@ -351,6 +358,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
@@ -401,6 +409,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
@@ -453,6 +462,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/book'
     | '/careers'
     | '/compliance'
     | '/cookies'
@@ -503,6 +513,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/book'
     | '/careers'
     | '/compliance'
     | '/cookies'
@@ -552,6 +563,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/book'
     | '/careers'
     | '/compliance'
     | '/cookies'
@@ -603,6 +615,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookRoute: typeof BookRoute
   CareersRoute: typeof CareersRoute
   ComplianceRoute: typeof ComplianceRoute
   CookiesRoute: typeof CookiesRoute
@@ -732,6 +745,13 @@ declare module '@tanstack/react-router' {
       path: '/careers'
       fullPath: '/careers'
       preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -1038,6 +1058,7 @@ const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookRoute: BookRoute,
   CareersRoute: CareersRoute,
   ComplianceRoute: ComplianceRoute,
   CookiesRoute: CookiesRoute,

@@ -189,7 +189,16 @@ export function ContactCTA() {
                       />
                     </svg>
                   </div>
-                  <span className="text-[15px] text-ink">{i}</span>
+                  {i === "A 30-minute strategy call, free" ? (
+                    <a
+                      href="/book"
+                      className="text-[15px] font-medium text-ink underline decoration-violet/60 underline-offset-4 hover:text-violet"
+                    >
+                      {i} — book it here
+                    </a>
+                  ) : (
+                    <span className="text-[15px] text-ink">{i}</span>
+                  )}
                 </li>
               ))}
             </ul>
