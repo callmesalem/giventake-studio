@@ -102,8 +102,8 @@ const bodies: ArticleBodies = {
         So here are real ranges, what moves them, and how to tell whether a quote you&rsquo;ve been
         given is realistic. These are market figures for small-business custom development in the
         US, not a price list. Ours are on the{" "}
-        <Link to="/services" className="font-semibold text-ink underline">
-          services page
+        <Link to="/pricing" className="font-semibold text-ink underline">
+          pricing page
         </Link>
         .
       </P>
@@ -116,8 +116,10 @@ const bodies: ArticleBodies = {
         migration from an old site with redirects handled properly.
       </P>
       <P>
-        Below about $2,000 you are buying a template someone configured, which is a legitimate
-        purchase. Just know that&rsquo;s what it is.
+        What moves a quote is scope, not a magic threshold: page count, how much of the design is
+        custom, how many integrations, and whether an old site has to be migrated with its redirects
+        intact. Ask any quote you get to name those things. If it can&rsquo;t, you are buying a
+        template someone configured, whatever the number on it says.
       </P>
 
       <H3>An automation or integration: $3,000 – $12,000</H3>

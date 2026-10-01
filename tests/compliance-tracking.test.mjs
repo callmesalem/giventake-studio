@@ -19,21 +19,26 @@ const files = {
 
 const compact = (text) => text.replace(/\s+/g, " ");
 
+const pricingCopy = compact(files.pricing);
+
 assert.ok(
-  files.pricing.includes('name: "Launch"') &&
-    files.pricing.includes('price: "$249"') &&
-    files.pricing.includes('name: "Growth"') &&
-    files.pricing.includes('price: "$399"') &&
-    files.pricing.includes('name: "Scale"') &&
-    files.pricing.includes('price: "$549"'),
-  "Pricing must keep the three managed website tiers (Launch $249, Growth $399, Scale $549).",
+  pricingCopy.includes("$499") &&
+    pricingCopy.includes("quoted in writing") &&
+    pricingCopy.includes("Payment plans and financing") &&
+    pricingCopy.includes("own the site outright"),
+  "Pricing must lead with custom builds starting at $499: written quote, payment plans, client owns the site.",
 );
 
 assert.ok(
-  files.pricing.includes('name: "One-time build"') &&
-    files.pricing.includes('price: "From $4,500"') &&
-    files.pricing.includes('name: "Discovery sprint"'),
-  "Pricing must keep the one-time build and discovery sprint alternatives alongside the managed tiers.",
+  pricingCopy.includes("$99") &&
+    pricingCopy.includes("Cancel any time") &&
+    pricingCopy.includes("monthly proof report"),
+  "Pricing must show the optional $99/mo care plan, cancel anytime, with the monthly proof report.",
+);
+
+assert.ok(
+  !/\$249|\$399|\$549|\$4,500|12-month initial term|Discovery sprint/.test(files.pricing),
+  "Pricing must not reintroduce the retired tiers, the 12-month term, or the priced discovery sprint.",
 );
 
 assert.ok(

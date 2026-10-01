@@ -34,8 +34,8 @@ const stages = [
   {
     n: "03",
     title: "Scope",
-    duration: "A few days, or a paid sprint",
-    body: "For a clear project, we go straight to a proposal. For anything complex or still fuzzy, we'll suggest a paid discovery sprint that maps the process properly and produces a fixed quote. The fee comes off the build if you proceed.",
+    duration: "A few days",
+    body: "For a clear project, we go straight to a proposal. For anything complex or still fuzzy, we spend longer mapping the process with you first, so the quote is based on how the work actually runs. Either way, scoping is part of quoting and you are not charged for it.",
     yours:
       "A proposal with the problem in your words, what we'll build, what we won't, objective acceptance criteria, a timeline, and a fixed price.",
   },
