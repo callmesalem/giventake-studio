@@ -24,7 +24,7 @@ export function Hero() {
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 pulse-dot" />
             </span>
-            Booking new sites for 2026
+            Taking on new projects
           </div>
 
           {/* LCP element: no entrance animation so it paints on the first frame */}
@@ -72,9 +72,8 @@ export function Hero() {
           >
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-white/55">
-              New studio, taking on our first commissions of 2026. Small team, direct access: you
-              always know who you are talking to and who is building your site. No layers in
-              between.
+              New studio, now booking. Small team, direct access: you always know who you are
+              talking to and who is building your site. No layers in between.
             </p>
           </div>
         </div>

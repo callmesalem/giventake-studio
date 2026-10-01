@@ -19,7 +19,7 @@ export const faqs = [
   },
   {
     q: "How fast can we start?",
-    a: "Scoping and the written quote usually happen within a week of your first message. Builds typically go live in two to six weeks depending on scope. You'll see real pages as they're built, not a mockup a month later.",
+    a: "Scoping and the written quote usually happen within a week of your first message. A marketing site build goes live in two to four weeks depending on scope. You'll see real pages as they're built, not a mockup a month later.",
   },
   {
     q: "What does the monthly report actually include?",

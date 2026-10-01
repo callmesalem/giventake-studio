@@ -105,7 +105,7 @@ function MobileNav() {
               ))}
             </ul>
             <a
-              href="/#contact"
+              href="/book"
               onClick={() => setOpen(false)}
               className="mt-4 flex min-h-[48px] items-center justify-center rounded-full bg-ink px-6 text-[14px] font-medium text-white"
             >
@@ -149,7 +149,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <a
-            href="/#contact"
+            href="/book"
             className="nav-link hidden text-sm font-medium text-muted-ink transition hover:text-ink sm:inline-flex"
           >
             Book a call
@@ -195,6 +195,7 @@ export function SiteFooter() {
     {
       title: "Company",
       items: [
+        { label: "Book a call", href: "/book" },
         { label: "Contact", href: "/#contact" },
         { label: "Careers", href: "/careers" },
         { label: "Privacy", href: "/privacy" },

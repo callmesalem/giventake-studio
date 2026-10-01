@@ -19,7 +19,11 @@ export function FAQ() {
                 Questions, answered.
               </h2>
               <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-muted-ink">
-                Still on the fence? Book a 30-minute call. No pitch, no pressure.
+                Still on the fence?{" "}
+                <a href="/book" className="font-medium text-ink underline">
+                  Book a 30-minute call
+                </a>
+                . No pitch, no pressure.
               </p>
             </div>
           </Reveal>

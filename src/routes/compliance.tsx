@@ -39,8 +39,8 @@ function CompliancePage() {
               {SITE_NAME} is operated by {LEGAL_ENTITY}. This page explains how we try to keep the
               website honest, privacy-forward, and clear about tracking. This is not a guarantee
               that every law or regulation applies the same way to every visitor, client, industry,
-              or project. A signed services agreement and statement of work control paid
-              engagements.
+              or project. The written quote and proposal you approve for a project is what controls
+              that paid engagement.
             </p>
           </Section>
 

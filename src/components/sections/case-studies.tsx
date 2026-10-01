@@ -153,7 +153,7 @@ export function CaseStudies() {
                       {s.approach}
                     </p>
                     <a
-                      href="#contact"
+                      href="/#contact"
                       className="btn-icon-nudge mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-violet transition hover:gap-2.5"
                     >
                       Discuss a similar project

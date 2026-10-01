@@ -20,7 +20,7 @@ export const SALES_STAGES: PlaybookStage[] = [
     actions: [
       "Confirm contact details and lead source",
       "Record the problem in the prospect's words",
-      "Book a 10-minute qualification call",
+      "Book the free 30-minute call",
     ],
   },
   {
@@ -165,7 +165,7 @@ export const SALES_STAGES: PlaybookStage[] = [
     gate: "Window expires or converts to ongoing support.",
     artifact: "Support log",
     prompt:
-      "I’ve logged this request. I’ll confirm whether it is a defect covered by the support window or a new request before work begins.",
+      "I’ve logged this request. I’ll confirm whether it is a defect covered by the 30 days of post-launch support, something the $99/mo care plan covers, or new work that needs a written quote, before work begins.",
     actions: [
       "Log every request",
       "Classify defect vs new scope",
