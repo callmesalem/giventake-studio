@@ -171,9 +171,9 @@ export const offers: Offer[] = [
     tagline: "A site that reflects what the business does now, with a CMS behind it.",
     metaTitle: "Marketing Website Development with CMS | GivenTake Devs",
     metaDescription:
-      "Fast, accessible marketing sites with a CMS your team can edit without a developer. Starting at $499, quoted in writing, live in two to three weeks.",
+      "Fast, accessible marketing sites with a CMS your team can edit without a developer. Starting at $499, quoted in writing, live in two to four weeks.",
     priceFrom: "From $499",
-    timeline: "2–3 weeks",
+    timeline: "2–4 weeks",
     problem: [
       "The current site describes a business you no longer are.",
       "Every change needs a developer, so changes don't happen.",
@@ -197,7 +197,7 @@ export const offers: Offer[] = [
       "Photography, illustration, and licensed stock",
       "Brand identity design: we work to your existing brand",
       "Ongoing SEO strategy beyond technical fundamentals",
-      "Domain, hosting, and subscription costs (the $99/mo care plan on /pricing covers hosting and upkeep if you want it)",
+      "Domain, hosting, and subscription costs (the optional $99/mo care plan on our pricing page covers hosting and upkeep if you want it)",
     ],
     questions: [
       "What's the one action a visitor should take?",

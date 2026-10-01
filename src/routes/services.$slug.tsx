@@ -56,7 +56,7 @@ function OfferPage() {
         {/* Hero */}
         <section className="border-b border-hairline">
           <div className="mx-auto max-w-4xl px-6 py-16 md:py-20">
-            <Link to="/" className="text-[13px] font-medium text-violet hover:underline">
+            <Link to="/services" className="text-[13px] font-medium text-violet hover:underline">
               ← All services
             </Link>
             <h1 className="mt-5 font-display text-[38px] font-medium leading-[1.03] tracking-[-0.03em] text-ink md:text-[52px]">

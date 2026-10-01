@@ -108,8 +108,15 @@ const bodies: ArticleBodies = {
         .
       </P>
 
-      <H2>The ranges</H2>
-      <H3>A marketing site with a CMS: $2,500 – $15,000</H3>
+      <H2>The ranges agencies quote</H2>
+      <P>
+        These are the numbers a small business typically gets back from an agency or an established
+        studio in the US. They are not our prices. Ours start at $499 because we are a small team
+        using AI tooling, with no account managers, no project coordinators, and no office to pay
+        for. Knowing what the rest of the market charges is still the useful thing here, because it
+        tells you what a quote is made of.
+      </P>
+      <H3>A marketing site with a CMS: $2,500 – $15,000 at an agency</H3>
       <P>
         The low end is a handful of pages on an existing brand, with a content editor your team can
         use. The high end adds custom design, complex content structures, integrations, and a
@@ -147,8 +154,12 @@ const bodies: ArticleBodies = {
 
       <H3>Ongoing development: $2,000 – $10,000+ / month</H3>
       <P>
-        A retainer for continuous work. Priced on capacity rather than deliverables, which suits a
-        roadmap that changes month to month.
+        A development retainer buys capacity: a share of a team&rsquo;s time every month for
+        continuous work, which suits a roadmap that changes month to month. That is a different
+        product from a care plan like our $99/mo one, which keeps a finished site running (hosting,
+        security, backups, monitoring, small content edits) and reports on it. If you need new
+        features built every month, you want the retainer. If you need a site looked after and
+        measured, you want the care plan, and new features get quoted separately.
       </P>
 
       <H2>What actually moves the number</H2>
@@ -158,7 +169,8 @@ const bodies: ArticleBodies = {
             <strong>How well you can describe the current process.</strong> The single biggest
             factor, and the one clients don&rsquo;t expect. If you can walk someone through it step
             by step, scoping is quick and accurate. If you can&rsquo;t, the first phase of the
-            project is discovering it, and that gets billed.
+            project is discovering it, and most firms bill for that as a separate engagement. Ask
+            whether scoping is included before you agree to anything. Ours is.
           </>,
           <>
             <strong>Integrations.</strong> Each system you connect to adds cost, and legacy systems
@@ -190,9 +202,13 @@ const bodies: ArticleBodies = {
             is good for you.
           </>,
           <>
-            <strong>A quote far below the ranges above.</strong> Usually means a different
-            definition of &ldquo;done&rdquo;: no tests, no documentation, no handoff, and nobody
-            available when it breaks.
+            <strong>A low price with no written definition of &ldquo;done&rdquo;.</strong> A number
+            well under the ranges above can be honest. A small team with modern tooling and no
+            overhead really does cost less than an agency. What it cannot do is skip the paperwork:
+            if a cheap quote comes with no acceptance criteria, no tests, no documentation, no
+            handoff, and nobody available when it breaks, the price is low because the work is
+            smaller than you think. Ask what is included, in writing, and compare that rather than
+            the number.
           </>,
           <>
             <strong>No written exclusion list.</strong> If nobody has told you what

@@ -60,7 +60,30 @@ function PrivacyPage() {
             <ul className="list-disc space-y-2 pl-5">
               <li>
                 <strong>Contact form data:</strong> name, email address, company (optional), project
-                description, budget range, and timeline. You provide this voluntarily.
+                description, budget range, timeline, and how you found us. You provide this
+                voluntarily.
+              </li>
+              <li>
+                <strong>Call booking form:</strong> name, email address, company (optional), what
+                you want to talk about, and the times you&apos;re free.
+              </li>
+              <li>
+                <strong>Free site check:</strong> name, email address, and the website address you
+                want reviewed.
+              </li>
+              <li>
+                <strong>Chat assistant:</strong> what you type into the assistant widget, plus the
+                name and email you give it if you ask us to follow up. The conversation is stored
+                with the inquiry so whoever replies has the context.
+              </li>
+              <li>
+                <strong>Job applications:</strong> name, email address, phone number (optional),
+                role, links, your message, and your r&eacute;sum&eacute; if you attach one.
+              </li>
+              <li>
+                <strong>Campaign attribution:</strong> the UTM parameters and referring page in the
+                link you arrived through, submitted with the form so we know which channel the
+                inquiry came from.
               </li>
               <li>
                 <strong>Technical data:</strong> IP address, browser type, device type, referrer,
@@ -93,7 +116,7 @@ function PrivacyPage() {
             </ul>
             <p className="mt-3">
               We do not sell your personal information, and we do not submit it to AI systems for
-              model training. See section 9 for how AI tools are used in our delivery work.
+              model training. See section 10 for how AI tools are used in our delivery work.
             </p>
           </Section>
 
@@ -122,6 +145,15 @@ function PrivacyPage() {
                 Email delivery provider: form submissions are sent to us by email through a
                 transactional mail service. It transmits the message; it is not used to build
                 marketing lists.
+              </li>
+              <li>
+                Database and inquiry store: submitted inquiries are held in our hosted database
+                (Supabase) so the person replying can see them.
+              </li>
+              <li>
+                Chat assistant model provider (OpenAI): what you type into the assistant widget is
+                sent to the model to generate a reply, on an API tier configured so inputs are not
+                used to train models. Don&apos;t put sensitive information in the chat.
               </li>
               <li>Google Analytics 4 (aggregate site analytics, IP anonymized).</li>
               <li>
@@ -167,11 +199,51 @@ function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="9. AI tools and your data">
+          <Section title="9. Email and SMS messaging">
+            <p>
+              When you contact us we reply by email. If you give us a mobile number and agree to
+              text messages, we may also text you about the thing you contacted us about: confirming
+              or rescheduling a call, a question we need answered to keep your project moving, or a
+              notice that your monthly report is ready. These are conversational and transactional
+              messages. We do not send marketing or promotional texts, and we do not run text
+              campaigns.
+            </p>
+            <p className="mt-3">
+              Message frequency varies and depends on your inquiry or project. Message and data
+              rates may apply. Agreeing to texts is never a condition of buying anything from us.
+            </p>
+            <p className="mt-3">
+              Reply <strong>STOP</strong> to any message to stop receiving texts from us. Reply{" "}
+              <strong>HELP</strong> for help, or email{" "}
+              <a href="mailto:privacy@giventakedevs.com" className="underline">
+                privacy@giventakedevs.com
+              </a>
+              . Opting out of texts does not opt you out of email replies about an active inquiry or
+              project.
+            </p>
+            <p className="mt-3">
+              <strong>
+                Mobile numbers and text-message consent are never shared or sold to third parties or
+                affiliates for marketing or promotional purposes.
+              </strong>{" "}
+              A number is used only to message you about your own inquiry or project, and is
+              disclosed only to the messaging provider that delivers the message on our instructions
+              and to anyone we are legally required to disclose it to.
+            </p>
+          </Section>
+
+          <Section title="10. AI tools and your data">
             <p>
               We build software using AI coding agents. That is a delivery method, not a use of your
-              personal data: information you submit through this website is not entered into AI
-              tools and is not used to train any model.
+              personal data: what you submit through our forms is not entered into AI tools and is
+              not used to train any model.
+            </p>
+            <p className="mt-3">
+              The one exception is the chat assistant on this site, and only because it cannot work
+              otherwise. What you type into it is sent to our model provider to generate the reply,
+              on an API tier configured so inputs are not retained for training. The assistant
+              qualifies and captures; a person writes every real answer about your project. Use the
+              contact form instead if you would rather no model saw your message.
             </p>
             <p className="mt-3">
               For paid engagements, AI tools may process material a client gives us to do the work.
@@ -183,7 +255,7 @@ function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="10. Security">
+          <Section title="11. Security">
             <p>
               We use TLS in transit, restrict access to submitted data, and review our providers
               annually. No system is perfectly secure; where required by law, we will notify you and
@@ -191,7 +263,7 @@ function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="11. Changes">
+          <Section title="12. Changes">
             <p>
               We may update this policy. Material changes are announced on this page and the "last
               updated" date is revised. Continued use of the site after changes means acceptance of
