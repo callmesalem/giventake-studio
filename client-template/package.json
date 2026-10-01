@@ -1,0 +1,1 @@
+{"description":"GivenTake Devs static client-site starter. Framework-free: HTML, CSS, vanilla JS.","engines":{"node":">=18"},"name":"client-template","private":true,"scripts":{"build":"node build.mjs","serve":"node giventake-kit/serve.cjs","verify":"node giventake-kit/verify.cjs"},"version":"1.0.0"}

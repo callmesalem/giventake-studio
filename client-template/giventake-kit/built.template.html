@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--
+  GIVENTAKE COLOPHON TEMPLATE
+
+  Drop this into any site as /built.html. Everything you need to change is
+  marked EDIT. Nothing else needs touching.
+
+  The numbers are not written down anywhere. They are read from the visitor's
+  own Performance API on page load, which is the whole point: the claim can be
+  checked by anyone who opens devtools, and it changes when the site does.
+-->
+<title>How This Site Was Built</title>                        <!-- EDIT: add the client name -->
+<meta name="description" content="What this website weighs, what it tracks, and how it was checked. Measured live in your browser.">
+<meta name="robots" content="index, follow">
+
+<!-- EDIT: point these at the host site's own stylesheet, or delete both lines
+     and the page falls back to the neutral theme below. -->
+<link rel="stylesheet" href="styles.css">
+
+<style>
+  /* EDIT: five values to match the host site. Everything below inherits. */
+  :root {
+    --colo-bg:     #12131A;
+    --colo-panel:  #1C1E29;
+    --colo-line:   #333749;
+    --colo-text:   #F2F0EA;
+    --colo-muted:  #A2A6BD;
+    --colo-accent: #E0B455;
+    --colo-good:   #4ED18A;
+  }
+
+  body {
+    background: var(--colo-bg);
+    color: var(--colo-text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+  }
+  .colo { max-width: 780px; margin: 0 auto; padding: 80px 24px 96px; }
+  .colo h1 { font-size: clamp(36px, 6.4vw, 58px); line-height: 1; letter-spacing: -.03em; margin: 0 0 14px; }
+  .colo .lede { font-size: 18.5px; line-height: 1.62; color: var(--colo-muted); max-width: 58ch; margin: 0 0 44px; }
+  .colo h2 {
+    font-size: 22px; letter-spacing: -.02em; margin: 52px 0 6px;
+    padding-bottom: 9px; border-bottom: 2px solid var(--colo-line);
+  }
+  .colo p { color: var(--colo-muted); font-size: 16px; line-height: 1.7; margin: 14px 0; }
+  .colo strong { color: var(--colo-text); }
+  .colo a { color: var(--colo-accent); }
+
+  .live { background: var(--colo-panel); border: 1px solid var(--colo-line); padding: 26px; margin: 28px 0 8px; }
+  .live-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); gap: 22px; }
+  .live-cell { display: flex; flex-direction: column; gap: 4px; }
+  .live-num {
+    font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -.03em;
+    color: var(--colo-accent); font-variant-numeric: tabular-nums;
+  }
+  .live-num.zero { color: var(--colo-good); }
+  .live-label { font-size: 10.5px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--colo-muted); }
+  .live-note { font-size: 13.5px; color: var(--colo-muted); margin: 16px 0 0; }
+
+  .rules { display: grid; gap: 12px; margin: 22px 0; }
+  .rule { background: var(--colo-panel); border-left: 3px solid var(--colo-accent); padding: 16px 20px; }
+  .rule h3 { font-size: 15.5px; margin: 0 0 5px; color: var(--colo-text); }
+  .rule p { margin: 0; font-size: 15px; line-height: 1.55; }
+
+  .colo-foot { margin-top: 56px; padding-top: 22px; border-top: 2px solid var(--colo-line); }
+</style>
+</head>
+<body>
+<div class="colo">
+
+  <h1>How This Site<br>Was Built</h1>
+  <p class="lede">
+    Most websites tell you they are fast. This one shows you. Every number below is
+    measured in your browser, on this page, as you read it. Reload and watch them change.
+  </p>
+
+  <h2>Measured right now</h2>
+  <div class="live">
+    <div class="live-grid">
+      <div class="live-cell"><span class="live-num" data-m="kb">&mdash;</span><span class="live-label">KB transferred</span></div>
+      <div class="live-cell"><span class="live-num" data-m="reqs">&mdash;</span><span class="live-label">Requests</span></div>
+      <div class="live-cell"><span class="live-num" data-m="ms">&mdash;</span><span class="live-label">ms to load</span></div>
+      <div class="live-cell"><span class="live-num" data-m="cookies">&mdash;</span><span class="live-label">Cookies set</span></div>
+      <div class="live-cell"><span class="live-num" data-m="third">&mdash;</span><span class="live-label">Third parties</span></div>
+    </div>
+    <p class="live-note" data-m="note">Reading your browser&rsquo;s Performance API&hellip;</p>
+  </div>
+
+  <!-- EDIT: describe the build. Keep it factual; every sentence here should be
+       something the check suite could confirm. -->
+  <h2>How it is put together</h2>
+  <p>
+    Hand-written HTML, CSS and JavaScript. No framework, no build step, no dependencies
+    at runtime. Deployed as static files, so there is nothing to patch and nothing to go down.
+  </p>
+
+  <h2>The rules we hold ourselves to</h2>
+  <div class="rules">
+    <div class="rule">
+      <h3>It works without JavaScript</h3>
+      <p>Every word renders with scripting switched off. Animation is opt-in, layered on top, never load-bearing.</p>
+    </div>
+    <div class="rule">
+      <h3>Nothing is tracked without permission</h3>
+      <p>No cookies until a visitor actively agrees. Where advertising tags exist, Accept and Decline get identical weight.</p>
+    </div>
+    <div class="rule">
+      <h3>Claims are checked, not asserted</h3>
+      <p>Automated checks run against a real browser on every change: contrast, keyboard access, structured data, page weight, reduced motion, tracking. A build that fails does not ship.</p>
+    </div>
+    <div class="rule">
+      <h3>Nothing is invented</h3>
+      <p>No stock imagery standing in for real work, no made-up ratings in the markup, no claim about a business we could not confirm with its owner.</p>
+    </div>
+  </div>
+
+  <h2>Who built it</h2>
+  <p>
+    <strong>GivenTake Devs</strong>, an AI-native development studio working with small
+    businesses, founders and growing teams. If you want a site that can publish a page
+    like this about itself, that is the whole pitch.
+  </p>
+
+  <div class="colo-foot">
+    <a href="/">&larr; Back to the site</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://giventakedevs.com" target="_blank" rel="noopener noreferrer">GivenTake Devs</a>
+  </div>
+
+</div>
+
+<script>
+  // Read from the browser's own Performance API. Nothing is hardcoded, which
+  // is the point: anyone can check it, and it changes when the site changes.
+  (function () {
+    function paint() {
+      const res = performance.getEntriesByType('resource');
+      const nav = performance.getEntriesByType('navigation')[0];
+      const kb = Math.round((res.reduce((a, r) => a + (r.transferSize || 0), 0) + (nav?.transferSize || 0)) / 1024);
+
+      const here = location.host;
+      const third = new Set();
+      for (const r of res) { try { const h = new URL(r.name).host; if (h && h !== here) third.add(h); } catch (e) {} }
+
+      const cookies = document.cookie ? document.cookie.split(';').filter(Boolean).length : 0;
+      const ms = nav ? Math.round(nav.domContentLoadedEventEnd) : Math.round(performance.now());
+
+      const set = (k, v, zeroIsGood) => {
+        const el = document.querySelector('[data-m="' + k + '"]');
+        if (!el) return;
+        el.textContent = v;
+        if (zeroIsGood && Number(v) === 0) el.classList.add('zero');
+      };
+
+      set('kb', kb);
+      set('reqs', res.length + (nav ? 1 : 0));
+      set('ms', ms);
+      set('cookies', cookies, true);
+      set('third', third.size, true);
+
+      const note = document.querySelector('[data-m="note"]');
+      if (note) {
+        note.textContent = [
+          'Measured on this page load. ' + kb + ' KB across ' + (res.length + (nav ? 1 : 0)) + ' requests.',
+          third.size === 0 ? 'No request left this domain.' : third.size + ' third-party host' + (third.size === 1 ? '' : 's') + ' contacted.',
+          cookies === 0 ? 'No cookies were set.' : cookies + ' cookies present.',
+        ].join(' ');
+      }
+    }
+    if (document.readyState === 'complete') setTimeout(paint, 60);
+    else window.addEventListener('load', () => setTimeout(paint, 60));
+  })();
+</script>
+</body>
+</html>

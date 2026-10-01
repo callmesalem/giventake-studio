@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+{{> head}}
+</head>
+<body>
+{{> header}}
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <h1>{{businessName}}</h1>
+      <p class="lede">{{tagline}}</p>
+      <div class="hero-actions">
+        <a class="btn" href="#contact" data-track="cta_click" data-track-label="hero_contact">Get in touch</a>
+        <a class="btn btn-ghost" href="{{phoneHref}}" data-track="cta_click" data-track-label="hero_call">Call {{phone}}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="services">
+    <div class="wrap">
+      <h2>What we do</h2>
+      <div class="service-grid">
+        {{serviceCards}}
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUE TOOL SLOT
+       Per-client interactive tool goes here (budget planner, quiz, calculator).
+       Wire its result with:  attachValueToolResult({ ... })
+       The result is attached to the lead form as a hidden field and sent with
+       the enquiry. See README for the wiring contract. -->
+  <section class="value-tool" id="value-tool" hidden>
+    <div class="wrap">
+      <h2>Answer a few questions</h2>
+      <p>Get a tailored estimate before you contact us.</p>
+      <div id="value-tool-mount"></div>
+    </div>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <h2>Contact us</h2>
+      <p>Tell us about your project. We reply to every enquiry.</p>
+      <form id="lead-form" action="/api/lead" method="post" novalidate>
+        <div class="field">
+          <label for="lf-name">Name</label>
+          <input id="lf-name" name="name" type="text" required autocomplete="name" maxlength="120">
+        </div>
+        <div class="field">
+          <label for="lf-email">Email</label>
+          <input id="lf-email" name="email" type="email" required autocomplete="email" maxlength="160">
+        </div>
+        <div class="field">
+          <label for="lf-phone">Phone (optional)</label>
+          <input id="lf-phone" name="phone" type="tel" autocomplete="tel" maxlength="40">
+        </div>
+        <div class="field">
+          <label for="lf-service">Service</label>
+          <select id="lf-service" name="service" required>
+            <option value="">Choose a service</option>
+            {{serviceOptions}}
+          </select>
+        </div>
+        <div class="field">
+          <label for="lf-message">Message</label>
+          <textarea id="lf-message" name="message" rows="5" required maxlength="1500"></textarea>
+        </div>
+        <div class="field-hp" aria-hidden="true">
+          <label for="lf-website">Website</label>
+          <input id="lf-website" name="company_website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="field field-check">
+          <input id="lf-consent" name="consent" type="checkbox" required value="yes">
+          <label for="lf-consent">{{consentCheckboxText}}</label>
+        </div>
+        <input type="hidden" name="value_tool_result" id="lf-value-tool" value="">
+        <button class="btn" type="submit" data-track="lead_form_submit">Send enquiry</button>
+        <p class="form-note" id="lead-form-note" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+{{> footer}}
+{{> mobileCta}}
+{{> consentBanner}}
+</body>
+</html>

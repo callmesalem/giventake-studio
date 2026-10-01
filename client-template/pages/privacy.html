@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+{{> head}}
+</head>
+<body>
+{{> header}}
+
+<main>
+  <section class="page-hero">
+    <div class="wrap narrow">
+      <h1>Privacy Policy</h1>
+      <p class="lede">Last updated: {{year}}. TODO(client): set the real date.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap narrow legal">
+      <!-- TODO(client): this page must be completed with the client's real data
+           practices BEFORE launch. Every section below is structure, not policy. -->
+
+      <h2>What we collect</h2>
+      <p>TODO(client): describe what the site collects. At minimum this template's
+      contact form collects name, email, phone (optional), and the enquiry message,
+      plus technical data about the visit when the visitor consents to analytics.</p>
+
+      <h2>How we use it</h2>
+      <p>TODO(client): describe the purposes. Typical: responding to enquiries,
+      improving the site, and, only with consent, measuring visits.</p>
+
+      <h2>Cookies and tracking</h2>
+      <p>Nothing is tracked until you choose. The site shows a consent banner on
+      your first visit. If you accept analytics, we load Google Analytics. If you
+      accept marketing, we load the Meta pixel and LinkedIn Insight tag. If you
+      decline, none of these load. You can change your choice at any time by
+      clearing this site's data in your browser.</p>
+
+      <h2>SMS communications</h2>
+      <!-- REQUIRED before any Twilio number verification submission. Twilio
+           rejects submissions whose privacy policy does not cover messaging
+           practices. TODO(client): complete this section truthfully. -->
+      <p>TODO(client): if the business sends text messages (appointment reminders,
+      follow-ups, or replies to enquiries), describe it here: what kinds of
+      messages are sent, how often, how a recipient opts in, and that message
+      and data rates may apply. Include how to opt out (reply STOP) and get help
+      (reply HELP). State that mobile numbers are never sold, rented, or shared
+      with third parties for marketing. If the business does not send text
+      messages, say so plainly instead of deleting this section.</p>
+
+      <h2>Sharing</h2>
+      <p>TODO(client): list subprocessors honestly (hosting, analytics, CRM).
+      State that mobile numbers and enquiry details are not sold or shared for
+      third-party marketing.</p>
+
+      <h2>Your rights and contact</h2>
+      <p>TODO(client): explain how to request access, correction, or deletion,
+      and give the contact: {{email}}.</p>
+    </div>
+  </section>
+</main>
+
+{{> footer}}
+{{> mobileCta}}
+{{> consentBanner}}
+</body>
+</html>

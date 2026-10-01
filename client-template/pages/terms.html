@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+{{> head}}
+</head>
+<body>
+{{> header}}
+
+<main>
+  <section class="page-hero">
+    <div class="wrap narrow">
+      <h1>Terms of Service</h1>
+      <p class="lede">Last updated: {{year}}. TODO(client): set the real date.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap narrow legal">
+      <!-- TODO(client): this page must be completed with the client's real
+           terms BEFORE launch. Every section below is structure, not terms. -->
+
+      <h2>The service</h2>
+      <p>TODO(client): describe what the business provides.</p>
+
+      <h2>Quotes and pricing</h2>
+      <p>TODO(client): explain how pricing works. Never publish invented numbers.
+      Any price shown on this site must be confirmed by the business owner.</p>
+
+      <h2>Contact and scheduling</h2>
+      <p>TODO(client): explain response times, scheduling, and cancellation terms
+      if the business takes appointments.</p>
+
+      <h2>Acceptable use</h2>
+      <p>Do not misuse this site, attempt to break it, or submit false enquiries.</p>
+
+      <h2>Limitation of liability</h2>
+      <p>TODO(client): the business's standard limitation wording, reviewed for
+      its state.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about these terms: <a href="mailto:{{email}}">{{email}}</a>.</p>
+    </div>
+  </section>
+</main>
+
+{{> footer}}
+{{> mobileCta}}
+{{> consentBanner}}
+</body>
+</html>
