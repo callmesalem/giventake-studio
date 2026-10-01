@@ -220,7 +220,7 @@ export function SiteFooter() {
             </div>
             <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-muted-ink">
               Your on-demand web studio. We build websites for small businesses that bring in work
-              and report back every quarter.
+              and report back every month.
             </p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-3 py-1.5 text-[12px] font-medium text-muted-ink">
               <span className="relative flex h-2 w-2">

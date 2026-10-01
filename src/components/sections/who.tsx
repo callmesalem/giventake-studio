@@ -9,10 +9,10 @@ const usualWay = [
 ];
 
 const ourWay = [
-  "One flat monthly price: design, hosting, updates included",
-  "Changes are one email away, published in days",
-  "Your domain and content stay yours, always",
-  "Every quarter, a report in plain English: what's bringing you customers and what we'd fix next",
+  "Custom builds start at $499, quoted in writing before work starts",
+  "Payment plans and financing available, and you own the site",
+  "Optional $99/mo care plan: hosting, updates, backups, small edits",
+  "Every month on the care plan, a report in plain English: what's bringing you customers and what we'd fix next",
 ];
 
 export function WhoWeHelp() {
@@ -22,11 +22,12 @@ export function WhoWeHelp() {
         <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">How we're different</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
-            A website is not a project. It&rsquo;s a subscription to being found.
+            You own the site. We keep it earning.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
             Most small-business sites are built once, then left to quietly go stale. We do the
-            opposite: one monthly price covers the site and everything it needs to keep working.
+            opposite: a build you own outright, starting at $499, and an optional $99 a month to
+            keep it fast, safe, and reporting back on the leads it brings you.
           </p>
         </Reveal>
 

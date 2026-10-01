@@ -41,9 +41,10 @@ export function Hero() {
             data-crit="hero-lede"
             className="mt-8 max-w-xl text-[17px] leading-[1.55] text-white/60 md:text-[18px]"
           >
-            We&rsquo;re GivenTake Devs, a one-person studio in Ohio. We build websites for small
-            businesses on one flat monthly price: design, hosting, updates, and a plain-English
-            report every quarter showing where your visitors came from and what to fix next.
+            We&rsquo;re GivenTake Devs, a small studio in Ohio. We build custom websites for small
+            businesses starting at $499, quoted in writing before we start. Add the optional $99/mo
+            care plan and you get hosting, updates, and a plain-English report every month showing
+            where your leads came from and what to fix next.
           </p>
 
           <div data-crit="hero-cta" className="mt-10 flex flex-wrap items-center gap-3 rise-in">
@@ -52,7 +53,7 @@ export function Hero() {
               data-crit="hero-cta-primary"
               className="btn-elite btn-icon-nudge inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[14px] font-medium transition hover:opacity-95"
             >
-              See plans
+              See pricing
               <IconArrowRight className="h-4 w-4" />
             </a>
             <a
@@ -71,8 +72,9 @@ export function Hero() {
           >
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-white/55">
-              New studio, taking on our first commissions of 2026. You deal directly with the person
-              building your site. No account managers, no work passed down a chain.
+              New studio, taking on our first commissions of 2026. Small team, direct access: you
+              always know who you are talking to and who is building your site. No layers in
+              between.
             </p>
           </div>
         </div>

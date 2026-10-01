@@ -193,7 +193,7 @@ export const SALES_STAGES: PlaybookStage[] = [
 export const OFFERS = [
   {
     name: "Marketing website",
-    price: "From $2,500",
+    price: "From $499",
     timeline: "2–4 weeks",
     fit: "A credible, conversion-focused public presence with clear content and lead capture.",
   },
@@ -216,10 +216,10 @@ export const OFFERS = [
     fit: "Replace fragmented spreadsheets and manual status chasing with one operating view.",
   },
   {
-    name: "Paid discovery sprint",
-    price: "$750–$1,500",
-    timeline: "1–2 weeks",
-    fit: "Required when the problem or integrations are too ambiguous for a responsible fixed quote. Credited to the build if they proceed.",
+    name: "Website care plan",
+    price: "$99/mo",
+    timeline: "Starts at launch",
+    fit: "Optional, cancel anytime: hosting, security updates, backups, uptime monitoring, a few small content edits a month, and the monthly proof report. New pages, new features, and redesigns are quoted separately as project work.",
   },
 ];
 

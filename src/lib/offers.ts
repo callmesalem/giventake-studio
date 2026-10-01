@@ -86,8 +86,8 @@ export const offers: Offer[] = [
     tagline: "Enquiries read, classified, and routed before anyone opens the inbox.",
     metaTitle: "AI Lead Intake & Routing Automation | GivenTake Devs",
     metaDescription:
-      "A custom AI agent that reads incoming enquiries, classifies intent, and routes them to the right person. Fixed price from $4,500, live in about three weeks.",
-    priceFrom: "From $4,500",
+      "A custom AI agent that reads incoming enquiries, classifies intent, and routes them to the right person. Scoped and quoted in writing, live in about three weeks.",
+    priceFrom: "Custom quote",
     timeline: "About 3 weeks",
     problem: [
       "Enquiries arrive as unstructured email and form submissions.",
@@ -171,8 +171,8 @@ export const offers: Offer[] = [
     tagline: "A site that reflects what the business does now, with a CMS behind it.",
     metaTitle: "Marketing Website Development with CMS | GivenTake Devs",
     metaDescription:
-      "Fast, accessible marketing sites with a CMS your team can edit without a developer. Fixed price from $2,500, live in two to three weeks.",
-    priceFrom: "From $2,500",
+      "Fast, accessible marketing sites with a CMS your team can edit without a developer. Starting at $499, quoted in writing, live in two to three weeks.",
+    priceFrom: "From $499",
     timeline: "2–3 weeks",
     problem: [
       "The current site describes a business you no longer are.",
@@ -197,7 +197,7 @@ export const offers: Offer[] = [
       "Photography, illustration, and licensed stock",
       "Brand identity design: we work to your existing brand",
       "Ongoing SEO strategy beyond technical fundamentals",
-      "Domain, hosting, and subscription costs",
+      "Domain, hosting, and subscription costs (the $99/mo care plan on /pricing covers hosting and upkeep if you want it)",
     ],
     questions: [
       "What's the one action a visitor should take?",
@@ -247,7 +247,7 @@ export const offers: Offer[] = [
       "How often does it happen, and how long does it take each time?",
     ],
     goodFit:
-      "You can name the process and roughly how long it takes. If you can't describe how it works today, start with a discovery sprint. A scope written on guesses helps nobody.",
+      "You can name the process and roughly how long it takes. If you can't describe how it works today, we map it with you as part of quoting the work. A scope written on guesses helps nobody.",
   },
   {
     slug: "mvp-development",

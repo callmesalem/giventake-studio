@@ -18,7 +18,7 @@ const services = [
   {
     Icon: IconGlobe,
     title: "Website development",
-    body: "Marketing sites that load fast, rank on Google, and report back every quarter. One flat monthly price.",
+    body: "Marketing sites that load fast, rank on Google, and bring in leads. Starting at $499, quoted in writing, and yours to own.",
   },
   {
     Icon: IconApp,
@@ -52,8 +52,8 @@ const services = [
   },
   {
     Icon: IconBot,
-    title: "Ongoing care plans",
-    body: "Your site, managed. Hosting, updates, and a quarterly report in plain English, for one monthly price.",
+    title: "Ongoing care plan",
+    body: "Optional, $99 a month. Hosting, security updates, backups, monitoring, small edits, and a monthly report in plain English.",
   },
 ];
 
@@ -68,7 +68,7 @@ export function Services() {
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
             Tell us what&rsquo;s eating your week. A few weeks later, you&rsquo;re using the fix,
-            and every quarter after that, you get a report showing what it&rsquo;s doing for you.
+            and on the care plan you get a report every month showing what it&rsquo;s doing for you.
           </p>
         </Reveal>
 

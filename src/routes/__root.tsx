@@ -116,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               url: `${BASE_URL}/`,
               slogan: "Websites That Report Back",
               description:
-                "One-person web studio in Ohio building managed websites for small businesses: design, hosting, updates, and a plain-English performance report every quarter.",
+                "Small web studio in Ohio building custom websites for small businesses, starting at $499 and owned by the client. An optional $99/mo care plan covers hosting, updates, and a plain-English performance report every month.",
             },
             {
               "@type": "WebSite",

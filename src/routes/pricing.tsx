@@ -9,9 +9,9 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     ...pageHead({
       path: "/pricing",
-      title: "Pricing · Managed Websites That Report Back · GivenTake Devs",
+      title: "Pricing · Custom Websites Starting at $499 · GivenTake Devs",
       description:
-        "One flat monthly price for your website: design, hosting, updates, and a plain-English performance report every quarter. Plans from $249/mo. One-time builds from $4,500.",
+        "Custom websites starting at $499, quoted in writing before work starts, with payment plans and financing available. You own the site. Optional $99/mo care plan adds hosting, updates, backups, and a plain-English monthly report.",
     }),
     // The FAQ lives here alongside pricing, so its structured data moves with it.
     scripts: [

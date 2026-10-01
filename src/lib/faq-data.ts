@@ -7,11 +7,11 @@
 export const faqs = [
   {
     q: "How much does it cost?",
-    a: "Managed website plans are $249, $399, or $549 per month depending on size and scope. Your first month is due at signing and covers the design and build. There are no setup fees and no separate hosting bills. If you'd rather own the site outright, one-time builds start at $4,500.",
+    a: "Custom websites start at $499. The final number depends on scope, and you get it in writing as a quote and proposal before any work starts. Payment plans and financing are available. After launch there's an optional care plan at $99 per month covering hosting, updates, backups, monitoring, small content edits, and a monthly report. You can skip it or cancel it any time.",
   },
   {
     q: "Do I own my website?",
-    a: "Your domain, your content, and your customer data are always yours. On a monthly plan the design and code are licensed to you for as long as you're subscribed; one-time builds transfer to you fully. If you ever leave, we hand over everything you need to keep running.",
+    a: "Yes, outright. The design, the code, your content, your domain, and your customer data are all yours once the build is paid for. The care plan is a separate, optional service, not a licence on your own site. If you cancel it, the site stays yours and we hand over everything you need to keep running.",
   },
   {
     q: "What if I already have a site?",
@@ -19,15 +19,15 @@ export const faqs = [
   },
   {
     q: "How fast can we start?",
-    a: "A discovery sprint can start within a week. Managed website builds typically go live in two to six weeks depending on scope. You'll see real pages as they're built, not a mockup a month later.",
+    a: "Scoping and the written quote usually happen within a week of your first message. Builds typically go live in two to six weeks depending on scope. You'll see real pages as they're built, not a mockup a month later.",
   },
   {
-    q: "What do the quarterly reports actually include?",
-    a: "Traffic sources, what visitors did on the site, speed scores measured on real phones, and our recommended next fix, in plain English, no jargon. The point is that you always know what the site is doing for your business.",
+    q: "What does the monthly report actually include?",
+    a: "Leads you got, where they came from, what we changed that month, what worked, and what we'd do next. Plain English, no jargon. The point is that you always know what the site is doing for your business.",
   },
   {
     q: "Can I cancel?",
-    a: "Yes. Monthly plans have a 12-month initial term, then continue month to month and can be cancelled with 30 days' notice. One-time builds are yours outright once delivered.",
+    a: "The care plan is month to month with no minimum term, so you can cancel any time. There's nothing to cancel on the build itself: once it's paid for, the site is yours.",
   },
   {
     q: "Do you use AI to build the sites?",

@@ -35,13 +35,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A one-person web studio in Ohio. Websites for small businesses on one flat monthly price: design, hosting, updates, and a plain-English report every quarter showing what's bringing you customers.",
+          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
       },
       { property: "og:title", content: "GivenTake Devs | Websites That Report Back" },
       {
         property: "og:description",
         content:
-          "A one-person web studio in Ohio. Websites for small businesses on one flat monthly price: design, hosting, updates, and a plain-English report every quarter showing what's bringing you customers.",
+          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${BASE_URL}/` },
@@ -69,7 +69,7 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:description",
         content:
-          "A one-person web studio in Ohio. Websites for small businesses on one flat monthly price: design, hosting, updates, and a plain-English report every quarter showing what's bringing you customers.",
+          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
       },
       ...(ogImageUrl ? [{ name: "twitter:image", content: ogImageUrl }] : []),
       ...(ogImageUrl

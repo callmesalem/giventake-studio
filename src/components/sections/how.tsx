@@ -33,7 +33,7 @@ const workflow = [
   {
     step: "05",
     title: "Report",
-    body: "Every quarter, a plain-English report: where your visitors came from, what they did, and the one fix we'd make next.",
+    body: "Every month on the care plan, a plain-English report: where your leads came from, what we changed, what worked, and the one fix we'd make next.",
     checkpoint: "You always know what the site is doing for you.",
     Icon: IconDeploy,
   },
