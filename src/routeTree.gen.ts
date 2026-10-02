@@ -47,6 +47,7 @@ import { Route as CrmDocumentsRouteImport } from './routes/crm.documents'
 import { Route as CrmClientsRouteImport } from './routes/crm.clients'
 import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
+import { Route as ApiPhoneMessageRouteImport } from './routes/api.phone-message'
 import { Route as CrmDealsIndexRouteImport } from './routes/crm.deals.index'
 import { Route as CrmContactsIndexRouteImport } from './routes/crm.contacts.index'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm.companies.index'
@@ -249,6 +250,11 @@ const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
   path: '/articles/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPhoneMessageRoute = ApiPhoneMessageRouteImport.update({
+  id: '/api/phone-message',
+  path: '/api/phone-message',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmDealsIndexRoute = CrmDealsIndexRouteImport.update({
   id: '/deals/',
   path: '/deals/',
@@ -323,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/work': typeof WorkRoute
+  '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -373,6 +380,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/work': typeof WorkRoute
+  '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -425,6 +433,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/work': typeof WorkRoute
+  '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -478,6 +487,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/work'
+    | '/api/phone-message'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -528,6 +538,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/work'
+    | '/api/phone-message'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -579,6 +590,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/work'
+    | '/api/phone-message'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -631,6 +643,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   WorkRoute: typeof WorkRoute
+  ApiPhoneMessageRoute: typeof ApiPhoneMessageRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
   SignTokenRoute: typeof SignTokenRoute
@@ -908,6 +921,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArticlesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/phone-message': {
+      id: '/api/phone-message'
+      path: '/api/phone-message'
+      fullPath: '/api/phone-message'
+      preLoaderRoute: typeof ApiPhoneMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/deals/': {
       id: '/crm/deals/'
       path: '/deals'
@@ -1074,6 +1094,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   WorkRoute: WorkRoute,
+  ApiPhoneMessageRoute: ApiPhoneMessageRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,
   SignTokenRoute: SignTokenRoute,
