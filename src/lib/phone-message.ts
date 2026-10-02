@@ -1,11 +1,13 @@
-import { renderBrandedEmail } from "./email-brand.ts";
-
 /**
  * Phone-message intake: the voice agent calls the /api/phone-message webhook
  * with the fields it collected, and the route fans out to email + SMS.
  *
  * Everything in this module is pure (no I/O) so it can be unit tested.
  * The live sends (Resend, Twilio) live in src/routes/api.phone-message.ts.
+ *
+ * NOTE: the HTML below mirrors src/lib/email-brand.ts (unshipped branded-email
+ * work) so this endpoint can deploy independently. If that work ships, this
+ * renderer should switch to renderBrandedEmail.
  */
 
 export interface PhoneMessage {
@@ -98,7 +100,39 @@ export function formatMessageSms(message: PhoneMessage): string {
   return `${head}${reason}`.slice(0, 160);
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Minimal branded HTML for the notification email. Mirrors the brand tokens in
+ * src/lib/email-brand.ts (ink #0a0a0a, paper #f7f7f5, indigo #6366f1).
+ */
 export function renderMessageEmailHtml(message: PhoneMessage): string {
   const { subject, textBody } = formatMessageEmail(message);
-  return renderBrandedEmail({ subject, textBody, kind: "transactional" }).html;
+  const signature = "GivenTake Goods LLC · giventakedevs.com · build@giventakedevs.com";
+  const paras = textBody
+    .split("\n")
+    .map((line) =>
+      line.trim() === ""
+        ? `<div style="height:12px"></div>`
+        : `<p style="margin:0 0 8px;color:#0a0a0a;font-size:15px;line-height:1.6">${escapeHtml(line)}</p>`,
+    )
+    .join("\n");
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>${escapeHtml(subject)}</title></head>
+<body style="margin:0;padding:0;background:#f7f7f5">
+<div style="background:#f7f7f5;padding:24px 12px;font-family:Inter Tight,system-ui,sans-serif">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #eaeaea;border-radius:10px;padding:32px">
+<div style="margin:0 0 24px"><a href="https://giventakedevs.com" aria-label="GivenTake · Devs" style="text-decoration:none;color:#0a0a0a;font-size:20px;font-weight:600">GivenTake <span style="color:#6366f1">·</span> Devs</a></div>
+${paras}
+<div style="border-top:1px solid #eaeaea;margin:24px 0 16px"></div>
+<div style="color:#565656;font-size:13px">${escapeHtml(signature)}</div>
+</div>
+</div>
+</body></html>`;
 }

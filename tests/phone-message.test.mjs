@@ -3,6 +3,7 @@ import {
   formatMessageEmail,
   formatMessageSms,
   parsePhoneMessagePayload,
+  renderMessageEmailHtml,
 } from "../src/lib/phone-message.ts";
 
 /**
@@ -111,6 +112,21 @@ for (const bad of [
     assert.ok(sms.length <= 160, `sms is ${sms.length} chars, must fit one segment`);
     assert.match(sms, /Jane Miller/);
     assert.match(sms, /\+14403347835/);
+  }
+}
+
+{
+  const parsed = parsePhoneMessagePayload({
+    ...full,
+    reason: "<script>alert(1)</script>",
+  });
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    const html = renderMessageEmailHtml(parsed.message);
+    assert.match(html, /Jane Miller/);
+    assert.doesNotMatch(html, /<script>alert/);
+    assert.match(html, /&lt;script&gt;/);
+    assert.match(html, /GivenTake Goods LLC/);
   }
 }
 
