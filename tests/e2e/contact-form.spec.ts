@@ -15,6 +15,17 @@ import { test, expect, type Page, type Request } from "@playwright/test";
 
 const SERVER_FN = /_serverFn/;
 
+/** The contact form itself, not "whichever form matched first".
+ *
+ * The home page renders a second form above this one - the site-check section -
+ * with the same field names, the same consent checkbox and the same
+ * data-consent-label. Page-wide selectors stopped being unique the moment it
+ * shipped: two of them threw strict-mode violations, and the consent assertion
+ * quietly read the other form's label instead. Every locator here hangs off the
+ * #contact section.
+ */
+const contactForm = (page: Page) => page.locator("#contact form");
+
 /** Capture the submission without letting it leave the browser. */
 async function interceptSubmit(page: Page): Promise<() => Request | undefined> {
   let captured: Request | undefined;
@@ -34,9 +45,10 @@ async function fillValidForm(page: Page) {
   // without htmlFor, so they are not programmatically associated with their
   // inputs. Worth noting on its own - that is an accessibility gap, and the
   // reason getByLabel finds nothing here.
-  await page.locator('input[name="name"]').fill("Contract Probe");
-  await page.locator('input[name="email"]').fill("probe@example.invalid");
-  await page
+  const form = contactForm(page);
+  await form.locator('input[name="name"]').fill("Contract Probe");
+  await form.locator('input[name="email"]').fill("probe@example.invalid");
+  await form
     .locator('textarea[name="description"]')
     .fill("We need an internal dashboard to replace a spreadsheet process.");
 }
@@ -49,7 +61,9 @@ async function fillValidForm(page: Page) {
  *  open, move to the first item, commit.
  */
 async function chooseFirstOption(page: Page, accessibleName: RegExp) {
-  const trigger = page.getByRole("combobox", { name: accessibleName });
+  // The trigger is scoped to the contact form; the listbox is not - Radix
+  // portals it to the end of <body>, outside the section.
+  const trigger = contactForm(page).getByRole("combobox", { name: accessibleName });
   await trigger.click();
   await page.getByRole("listbox").waitFor({ state: "visible" });
   await page.keyboard.press("ArrowDown");
@@ -64,7 +78,7 @@ test.describe("contact form", () => {
 
   test("the page renders and the form is reachable", async ({ page }) => {
     await expect(page).toHaveTitle(/GivenTake Devs/i);
-    await expect(page.locator('input[name="email"]')).toBeVisible();
+    await expect(contactForm(page).locator('input[name="email"]')).toBeVisible();
   });
 
   test("no asset is requested from the old Lovable CDN", async ({ page }) => {
@@ -88,7 +102,7 @@ test.describe("contact form", () => {
     // The original failure: click submit, nothing happens, no explanation.
     const getRequest = await interceptSubmit(page);
     await fillValidForm(page);
-    await page
+    await contactForm(page)
       .getByRole("button", { name: /send|submit/i })
       .first()
       .click();
@@ -138,8 +152,8 @@ test.describe("contact form", () => {
     await chooseFirstOption(page, /how did you hear/i);
     await chooseFirstOption(page, /budget/i);
     await chooseFirstOption(page, /timeline/i);
-    await page.locator('input[name="consent"]').check();
-    await page
+    await contactForm(page).locator('input[name="consent"]').check();
+    await contactForm(page)
       .getByRole("button", { name: /send|submit/i })
       .first()
       .click();
@@ -181,7 +195,7 @@ test.describe("contact form", () => {
   test("the consent text sent is the text the visitor actually saw", async ({ page }) => {
     // It is read from the rendered label rather than a constant, precisely so
     // the two cannot drift. This proves that still holds.
-    const rendered = (await page.locator("[data-consent-label]").first().textContent()) ?? "";
+    const rendered = (await contactForm(page).locator("[data-consent-label]").textContent()) ?? "";
     const normalised = rendered.replace(/\s+/g, " ").trim();
     expect(normalised.length).toBeGreaterThan(40);
     expect(normalised).toContain("Privacy Policy");
