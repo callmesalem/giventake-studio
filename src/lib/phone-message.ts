@@ -59,8 +59,7 @@ export function parsePhoneMessagePayload(raw: unknown): ParseOk | ParseErr {
   if (!reason) return { ok: false, error: "reason is required" };
 
   const company = pick(r, "company", "company") || null;
-  const preferredCallbackTime =
-    pick(r, "preferred_callback_time", "preferredCallbackTime") || null;
+  const preferredCallbackTime = pick(r, "preferred_callback_time", "preferredCallbackTime") || null;
 
   return {
     ok: true,

@@ -10,18 +10,18 @@
 module.exports = {
   // ── identity ──────────────────────────────────────────────────────
   // EXAMPLE: the client's business name, e.g. 'Example Plumbing LLC'
-  name: '',
+  name: "",
 
   // Local page to test. Override at run time with SITE_URL to point at a
   // deployment instead:  SITE_URL=https://example.com node verify.cjs
-  url: 'http://127.0.0.1:8899/',
+  url: "http://127.0.0.1:8899/",
 
   // Directory served by serve.cjs, relative to this config file.
   // For client-template builds this is the build output directory.
-  root: '../dist',
+  root: "../dist",
 
   // Entry file, used when a request hits "/"
-  index: 'index.html',
+  index: "index.html",
 
   // ── budgets ───────────────────────────────────────────────────────
   budgets: {
@@ -56,9 +56,9 @@ module.exports = {
     // Every one of these @types must appear across the page's JSON-LD.
     // EXAMPLE: use the client's real schema.org type, e.g. ['Plumber'],
     // ['GeneralContractor'], ['Dentist']. See client.config.json schemaType.
-    expectTypes: ['LocalBusiness'],
+    expectTypes: ["LocalBusiness"],
     // Fields that must be present on the first block of each expected type.
-    expectFields: ['url', 'telephone'],
+    expectFields: ["url", "telephone"],
   },
 
   // ── project-specific assertions ───────────────────────────────────
@@ -66,19 +66,25 @@ module.exports = {
   // page and returns an error string, or null when it passes.
   custom: [
     {
-      name: 'no unresolved placeholder links',
+      name: "no unresolved placeholder links",
       async run(page) {
-        const bad = await page.$$eval('a[href]', els =>
-          els.map(a => a.getAttribute('href'))
-             .filter(h => /PENDING|TODO|REPLACE_ME|EXAMPLE/i.test(h)));
-        return bad.length ? `${bad.length} placeholder link(s): ${[...new Set(bad)].join(', ')}` : null;
+        const bad = await page.$$eval("a[href]", (els) =>
+          els
+            .map((a) => a.getAttribute("href"))
+            .filter((h) => /PENDING|TODO|REPLACE_ME|EXAMPLE/i.test(h)),
+        );
+        return bad.length
+          ? `${bad.length} placeholder link(s): ${[...new Set(bad)].join(", ")}`
+          : null;
       },
     },
     {
-      name: 'no lorem ipsum',
+      name: "no lorem ipsum",
       async run(page) {
-        const hit = await page.evaluate(() => /lorem ipsum|dolor sit amet/i.test(document.body.innerText));
-        return hit ? 'placeholder copy is still on the page' : null;
+        const hit = await page.evaluate(() =>
+          /lorem ipsum|dolor sit amet/i.test(document.body.innerText),
+        );
+        return hit ? "placeholder copy is still on the page" : null;
       },
     },
   ],
