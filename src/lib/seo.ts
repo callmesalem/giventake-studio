@@ -20,15 +20,14 @@ export const SITE_NAME = "GivenTake Devs";
 /**
  * Legal entity that actually contracts, used in the legal pages and JSON-LD.
  *
- * TODO(before launch): confirm once the entity is formed with the Ohio SOS.
- * This is NOT GivenTake Goods LLC (SOS doc 202225804070) — that entity performed
- * contractor work and carries a construction-defect tail under ORC 2305.131, so
- * the studio is being set up in a separate LLC. See
- * docs/business/01-structure-and-formation.md. The site must never name an
- * entity other than the one that signs the client agreements.
+ * Verified 2026-10-01 via official Ohio SOS documents: "GivenTake Devs" is a
+ * registered TRADE NAME (Form 534A, Doc ID 202624306420, filed 8/31/2026,
+ * effective 08/31/2026) of GIVENTAKE GOODS LLC (#4926798). There is no separate
+ * "GivenTake Devs LLC" entity. The site brands as GivenTake Devs with the
+ * legal footer naming Giventake Goods LLC.
  */
-export const LEGAL_ENTITY = "GivenTake Devs LLC";
-export const LEGAL_ENTITY_LONG = `${SITE_NAME} is operated by ${LEGAL_ENTITY}, an Ohio limited liability company`;
+export const LEGAL_ENTITY = "Giventake Goods LLC";
+export const LEGAL_ENTITY_LONG = `${SITE_NAME} is a registered trade name of ${LEGAL_ENTITY}, an Ohio limited liability company`;
 
 /**
  * TODO(before launch): replace with the registered business address.
