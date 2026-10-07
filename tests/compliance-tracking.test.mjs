@@ -15,21 +15,81 @@ const files = {
   footer: read("src/components/site-chrome.tsx"),
   sitemap: read("src/routes/sitemap[.]xml.ts"),
   env: read(".env.example"),
+  process: read("src/routes/process.tsx"),
+  articles: read("src/routes/articles.$slug.tsx"),
+  offers: read("src/lib/offers.ts"),
+  assistant: read("src/lib/assistant.ts"),
 };
 
 const compact = (text) => text.replace(/\s+/g, " ");
 
+const pricingCopy = compact(files.pricing);
+
 assert.ok(
-  files.pricing.includes('name: "Essentials"') &&
-    files.pricing.includes('price: "$500 - $2.5K"') &&
-    files.pricing.includes("Small builds, fixes, and single-page sites."),
-  "Pricing must restore the intentionally added Essentials $500-$2.5K tier.",
+  pricingCopy.includes("$499") &&
+    pricingCopy.includes("quoted in writing") &&
+    pricingCopy.includes("Payment plans and financing") &&
+    pricingCopy.includes("own the site outright"),
+  "Pricing must lead with custom builds starting at $499: written quote, payment plans, client owns the site.",
 );
 
 assert.ok(
-  compact(files.pricing).includes("Essentials work starts at $500") &&
-    compact(files.pricing).includes("most custom builds start at $2,500"),
-  "Pricing copy must clearly distinguish small Essentials work from larger custom builds.",
+  pricingCopy.includes("$99") &&
+    pricingCopy.includes("Cancel any time") &&
+    pricingCopy.includes("monthly proof report"),
+  "Pricing must show the optional $99/mo care plan, cancel anytime, with the monthly proof report.",
+);
+
+assert.ok(
+  !/\$249|\$399|\$549|\$4,500|12-month initial term|Discovery sprint/.test(files.pricing),
+  "Pricing must not reintroduce the retired tiers, the 12-month term, or the priced discovery sprint.",
+);
+
+// The retired model leaked across more than the pricing section, so the guard
+// covers every page that describes the offer, the process, or the paperwork.
+// Each entry is [label, regex, why it is wrong now].
+const retiredModel = [
+  ["retired price tiers", /\$249|\$399|\$549/, "prices are $499 builds and the $99/mo care plan"],
+  ["12-month initial term", /12-month initial term/i, "the care plan is month to month"],
+  ["priced discovery sprint", /discovery sprint/i, "scoping is part of quoting and unbilled"],
+  ["quarterly reporting", /quarterly/i, "the proof report is monthly"],
+  [
+    "master services agreement",
+    /master services agreement/i,
+    "the written quote and proposal is the governing document",
+  ],
+  [
+    "statement of work",
+    /statement of work/i,
+    "the written quote and proposal is the governing document",
+  ],
+  [
+    "never-quote-a-price rule",
+    /NEVER quote a price/,
+    "starting prices are published, so the assistant may share them",
+  ],
+  ["licensed while subscribed", /licensed while subscribed/i, "the buyer owns the site outright"],
+];
+
+for (const [file, source] of Object.entries({
+  "pricing.tsx": files.pricing,
+  "process.tsx": files.process,
+  "terms.tsx": files.terms,
+  "articles.$slug.tsx": files.articles,
+  "offers.ts": files.offers,
+  "assistant.ts": files.assistant,
+})) {
+  for (const [label, pattern, why] of retiredModel) {
+    assert.ok(!pattern.test(source), `${file} must not reintroduce ${label}: ${why}.`);
+  }
+}
+
+assert.ok(
+  compact(files.process).includes("Call") &&
+    compact(files.process).includes("a written quote and proposal") &&
+    compact(files.process).includes("$499") &&
+    compact(files.process).includes("$99"),
+  "Process page must describe the five steps, the written quote, and both published prices.",
 );
 
 assert.ok(

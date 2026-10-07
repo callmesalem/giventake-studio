@@ -21,12 +21,12 @@ import { submitDsar } from "@/lib/intake";
 const PRIVACY_EMAIL = "privacy@giventakedevs.com";
 
 const REQUEST_TYPES = [
-  { value: "access", label: "Access — send me a copy of my data" },
-  { value: "correction", label: "Correction — fix inaccurate information" },
-  { value: "deletion", label: "Deletion — erase my data" },
-  { value: "portability", label: "Portability — export my data in a portable format" },
-  { value: "restriction", label: "Restriction — limit how my data is used" },
-  { value: "objection", label: "Objection — stop processing my data" },
+  { value: "access", label: "Access: send me a copy of my data" },
+  { value: "correction", label: "Correction: fix inaccurate information" },
+  { value: "deletion", label: "Deletion: erase my data" },
+  { value: "portability", label: "Portability: export my data in a portable format" },
+  { value: "restriction", label: "Restriction: limit how my data is used" },
+  { value: "objection", label: "Objection: stop processing my data" },
 ];
 
 const schema = dsarSchema.extend({
@@ -55,7 +55,7 @@ function DataRequestPage() {
    */
   function handOffToMailClient(d: z.infer<typeof schema>) {
     const label = REQUEST_TYPES.find((r) => r.value === d.requestType)?.label ?? d.requestType;
-    const subject = `Data rights request · ${label.split(" — ")[0]} · ${d.name}`;
+    const subject = `Data rights request · ${label.split(": ")[0]} · ${d.name}`;
     const body = [
       `Name: ${d.name}`,
       `Email on file: ${d.email}`,
@@ -244,7 +244,7 @@ function DataRequestPage() {
 
               <Field
                 label="Identity verification (optional)"
-                hint="Optional now — we may follow up to confirm your identity before acting on the request"
+                hint="Optional now. We may follow up to confirm your identity before acting on the request"
               >
                 <Textarea
                   name="identity"
@@ -273,7 +273,7 @@ function DataRequestPage() {
                 Your request is sent to our privacy team and answered within 30 days. If your
                 browser can&rsquo;t reach us, it will open your mail client with the request
                 pre-filled instead. Please don&rsquo;t include sensitive information (government
-                IDs, health, financial data) in this form &mdash; if we need identity documents,
+                IDs, health, financial data) in this form. If we need identity documents,
                 we&rsquo;ll ask through a secure channel.
               </p>
 

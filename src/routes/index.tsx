@@ -16,7 +16,9 @@ const named = <K extends string>(key: K, load: () => Promise<Record<K, Component
 const WhoWeHelp = named("WhoWeHelp", () => import("@/components/sections/who"));
 const Services = named("Services", () => import("@/components/sections/services"));
 const HowItWorks = named("HowItWorks", () => import("@/components/sections/how"));
+const Beyond = named("Beyond", () => import("@/components/sections/beyond"));
 const Testimonials = named("Testimonials", () => import("@/components/sections/testimonials"));
+const SiteCheck = named("SiteCheck", () => import("@/components/sections/site-check"));
 const ContactCTA = named("ContactCTA", () => import("@/components/sections/contact"));
 const Toaster = named("Toaster", () => import("@/components/ui/sonner"));
 
@@ -29,17 +31,17 @@ function Placeholder({ h }: { h: number }) {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GivenTake Devs | Your On-Demand Development Team" },
+      { title: "GivenTake Devs | Websites That Report Back" },
       {
         name: "description",
         content:
-          "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools, built with human review.",
+          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
       },
-      { property: "og:title", content: "GivenTake Devs | Your On-Demand Development Team" },
+      { property: "og:title", content: "GivenTake Devs | Websites That Report Back" },
       {
         property: "og:description",
         content:
-          "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools, built with human review.",
+          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${BASE_URL}/` },
@@ -55,7 +57,7 @@ export const Route = createFileRoute("/")({
         ? [
             {
               property: "og:image:alt",
-              content: "GivenTake Devs, Your On-Demand Development Team",
+              content: "GivenTake Devs, Websites That Report Back",
             },
           ]
         : []),
@@ -63,18 +65,18 @@ export const Route = createFileRoute("/")({
         name: "twitter:card",
         content: ogImageUrl ? "summary_large_image" : "summary",
       },
-      { name: "twitter:title", content: "GivenTake Devs | Your On-Demand Development Team" },
+      { name: "twitter:title", content: "GivenTake Devs | Websites That Report Back" },
       {
         name: "twitter:description",
         content:
-          "AI-native development studio for small businesses, founders, and growing teams. Websites, apps, agentic workflows, and internal tools, built with human review.",
+          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
       },
       ...(ogImageUrl ? [{ name: "twitter:image", content: ogImageUrl }] : []),
       ...(ogImageUrl
         ? [
             {
               name: "twitter:image:alt",
-              content: "GivenTake Devs, Your On-Demand Development Team",
+              content: "GivenTake Devs, Websites That Report Back",
             },
           ]
         : []),
@@ -94,8 +96,10 @@ function Index() {
         <Suspense fallback={<Placeholder h={520} />}>
           <WhoWeHelp />
           <Services />
+          <Beyond />
           <HowItWorks />
           <Testimonials />
+          <SiteCheck />
           <ContactCTA />
         </Suspense>
       </main>

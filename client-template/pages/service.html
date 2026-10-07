@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+{{> head}}
+</head>
+<body>
+{{> header}}
+
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="/">Home</a> / Services</p>
+      <h1>{{serviceName}}</h1>
+      <p class="lede">{{serviceBlurb}}</p>
+      <a class="btn" href="/#contact" data-track="cta_click" data-track-label="service_contact">Get in touch</a>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap narrow">
+      <h2>What is included</h2>
+      <!-- TODO(client): replace with the real scope of this service. -->
+      <ul class="checklist">
+        <li>TODO: first item included in this service</li>
+        <li>TODO: second item included in this service</li>
+        <li>TODO: third item included in this service</li>
+      </ul>
+      <h2>How it works</h2>
+      <!-- TODO(client): replace with the real process, in the client's own words. -->
+      <ol>
+        <li>TODO: step one</li>
+        <li>TODO: step two</li>
+        <li>TODO: step three</li>
+      </ol>
+      <h2>Common questions</h2>
+      <!-- TODO(client): replace with real questions clients ask. -->
+      <p><strong>TODO: question one?</strong><br>TODO: answer one.</p>
+      <p><strong>TODO: question two?</strong><br>TODO: answer two.</p>
+      <p class="cta-row">
+        <a class="btn" href="/#contact" data-track="cta_click" data-track-label="service_bottom_contact">Get in touch</a>
+        <a class="btn btn-ghost" href="{{phoneHref}}" data-track="cta_click" data-track-label="service_bottom_call">Call {{phone}}</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+{{> footer}}
+{{> mobileCta}}
+{{> consentBanner}}
+</body>
+</html>

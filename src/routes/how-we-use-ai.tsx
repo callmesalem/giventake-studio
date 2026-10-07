@@ -28,7 +28,7 @@ function HowWeUseAiPage() {
     <ProsePage
       eyebrow="How we work"
       title="How we use AI to build your software"
-      lede="We build with AI coding agents, and a human reviews everything before it ships. This page explains exactly what that means for you — including the parts that are genuinely less certain than a traditional development shop would tell you."
+      lede="We build with AI coding agents, and a human reviews everything before it ships. This page explains exactly what that means for you, including the parts that are genuinely less certain than a traditional development shop would tell you."
       ctaTitle="Questions about any of this?"
       ctaBody="We'd rather answer an awkward question now than have it surface after you've signed."
     >
@@ -51,15 +51,15 @@ function HowWeUseAiPage() {
       <Bullets
         items={[
           <>
-            <strong>Architecture and technical decisions</strong> &mdash; how the system is
-            structured and what it&rsquo;s built on
+            <strong>Architecture and technical decisions</strong>: how the system is structured and
+            what it&rsquo;s built on
           </>,
           <>
-            <strong>Reviewing every line before it ships</strong> &mdash; AI-generated code is read,
-            not skimmed
+            <strong>Reviewing every line before it ships</strong>: AI-generated code is read, not
+            skimmed
           </>,
           <>
-            <strong>Line-by-line review of the risky parts</strong> &mdash; anything touching login,
+            <strong>Line-by-line review of the risky parts</strong>: anything touching login,
             permissions, or payments gets manual scrutiny, because that&rsquo;s where automated
             output is most confidently wrong
           </>,
@@ -73,14 +73,14 @@ function HowWeUseAiPage() {
             <strong>Deciding what ships</strong>
           </>,
           <>
-            <strong>Talking to you</strong> &mdash; you deal with whoever is building your software,
-            not an account manager
+            <strong>Talking to you</strong>: you deal with whoever is building your software, not an
+            account manager
           </>,
         ]}
       />
       <Callout>
         <strong>Nothing is deployed without human approval.</strong> That&rsquo;s a commitment, not
-        a slogan &mdash; it&rsquo;s written into our contracts and there&rsquo;s a completed review
+        a slogan. It&rsquo;s written into our contracts and there&rsquo;s a completed review
         checklist in your project repository to prove it happened.
       </Callout>
 
@@ -106,8 +106,8 @@ function HowWeUseAiPage() {
       </P>
       <P>
         <strong>Quality.</strong> Automated tests on the paths that matter, plus human review.
-        Faster does not mean less tested &mdash; if anything, AI makes comprehensive test coverage
-        cheaper, so there tends to be more of it.
+        Faster does not mean less tested. If anything, AI makes comprehensive test coverage cheaper,
+        so there tends to be more of it.
       </P>
       <P>
         <strong>Transparency.</strong> You always know how your software was built. It&rsquo;s in
@@ -135,8 +135,8 @@ function HowWeUseAiPage() {
           <>
             <strong>If you have restrictions, tell us before we start.</strong> Some businesses,
             particularly in regulated industries, have policies against third-party AI processing.
-            That&rsquo;s a fine constraint to work within &mdash; but we need to know at the start,
-            not at delivery.
+            That&rsquo;s a fine constraint to work within, but we need to know at the start, not at
+            delivery.
           </>,
           <>
             <strong>If personal data is involved</strong>, we put a data processing agreement in
@@ -158,21 +158,21 @@ function HowWeUseAiPage() {
         <strong>What this means practically:</strong> we assign you every right we hold in your
         software, and you get complete freedom to use, modify, sell, and build on it. What we
         won&rsquo;t do is promise that an exclusive copyright exists in the AI-generated portions,
-        because that may not be legally true &mdash; and a promise we can&rsquo;t back is worth
-        nothing to you.
+        because that may not be legally true, and a promise we can&rsquo;t back is worth nothing to
+        you.
       </P>
       <Callout title="Does this matter for your business?">
         For almost every business application, no. What you need is the right to use your software,
-        change it, and stop anyone else from taking it &mdash; and you have all of that. It would
-        matter if your business model depended on suing someone for copying your source code, which
-        is unusual. We&rsquo;d rather flag it than have you discover it later.
+        change it, and stop anyone else from taking it. You have all of that. It would matter if
+        your business model depended on suing someone for copying your source code, which is
+        unusual. We&rsquo;d rather flag it than have you discover it later.
       </Callout>
 
       <H3>2. AI tools can reproduce existing code</H3>
       <P>
-        AI coding assistants learn from public code, and they can occasionally reproduce parts of it
-        &mdash; including code under licences that would impose obligations on your business if it
-        ended up in your product.
+        AI coding assistants learn from public code, and they can occasionally reproduce parts of
+        it, including code under licences that would impose obligations on your business if it ended
+        up in your product.
       </P>
       <P>
         <strong>What we do about it:</strong>
@@ -187,9 +187,9 @@ function HowWeUseAiPage() {
       />
       <P>
         <strong>What we won&rsquo;t claim:</strong> that this is a perfect guarantee. No scan
-        catches everything, and this risk exists in traditional development too &mdash; developers
-        have always copied from Stack Overflow. AI makes it more likely and more invisible, which is
-        why we scan rather than assume.
+        catches everything, and this risk exists in traditional development too. Developers have
+        always copied from Stack Overflow. AI makes it more likely and more invisible, which is why
+        we scan rather than assume.
       </P>
 
       <H2>Questions clients ask</H2>
@@ -198,8 +198,8 @@ function HowWeUseAiPage() {
       <P>
         Because the code is the easy part. Knowing what to build, structuring it so it still works
         in two years, catching what the AI got confidently wrong, and being accountable when
-        something breaks &mdash; that&rsquo;s the work. The AI made the typing faster; it
-        didn&rsquo;t make the judgment unnecessary.
+        something breaks, that&rsquo;s the work. The AI made the typing faster; it didn&rsquo;t make
+        the judgment unnecessary.
       </P>
 
       <H3>&ldquo;Is AI-built software lower quality?&rdquo;</H3>
@@ -213,8 +213,8 @@ function HowWeUseAiPage() {
       <H3>&ldquo;What if I don&rsquo;t want AI used on my project?&rdquo;</H3>
       <P>
         Tell us. We can discuss traditional development, though the timeline and cost would be
-        closer to conventional agency rates &mdash; that difference is exactly what AI-assisted
-        delivery buys you.
+        closer to conventional agency rates. That difference is exactly what AI-assisted delivery
+        buys you.
       </P>
 
       <H3>&ldquo;Who owns the software?&rdquo;</H3>

@@ -101,23 +101,32 @@ const bodies: ArticleBodies = {
       <P>
         So here are real ranges, what moves them, and how to tell whether a quote you&rsquo;ve been
         given is realistic. These are market figures for small-business custom development in the
-        US, not a price list &mdash; ours are on the{" "}
-        <Link to="/services" className="font-semibold text-ink underline">
-          services page
+        US, not a price list. Ours are on the{" "}
+        <Link to="/pricing" className="font-semibold text-ink underline">
+          pricing page
         </Link>
         .
       </P>
 
-      <H2>The ranges</H2>
-      <H3>A marketing site with a CMS: $2,500 – $15,000</H3>
+      <H2>The ranges agencies quote</H2>
+      <P>
+        These are the numbers a small business typically gets back from an agency or an established
+        studio in the US. They are not our prices. Ours start at $499 because we are a small team
+        using AI tooling, with no account managers, no project coordinators, and no office to pay
+        for. Knowing what the rest of the market charges is still the useful thing here, because it
+        tells you what a quote is made of.
+      </P>
+      <H3>A marketing site with a CMS: $2,500 – $15,000 at an agency</H3>
       <P>
         The low end is a handful of pages on an existing brand, with a content editor your team can
         use. The high end adds custom design, complex content structures, integrations, and a
         migration from an old site with redirects handled properly.
       </P>
       <P>
-        Below about $2,000 you are buying a template someone configured, which is a legitimate
-        purchase &mdash; just know that&rsquo;s what it is.
+        What moves a quote is scope, not a magic threshold: page count, how much of the design is
+        custom, how many integrations, and whether an old site has to be migrated with its redirects
+        intact. Ask any quote you get to name those things. If it can&rsquo;t, you are buying a
+        template someone configured, whatever the number on it says.
       </P>
 
       <H3>An automation or integration: $3,000 – $12,000</H3>
@@ -145,8 +154,12 @@ const bodies: ArticleBodies = {
 
       <H3>Ongoing development: $2,000 – $10,000+ / month</H3>
       <P>
-        A retainer for continuous work. Priced on capacity rather than deliverables, which suits a
-        roadmap that changes month to month.
+        A development retainer buys capacity: a share of a team&rsquo;s time every month for
+        continuous work, which suits a roadmap that changes month to month. That is a different
+        product from a care plan like our $99/mo one, which keeps a finished site running (hosting,
+        security, backups, monitoring, small content edits) and reports on it. If you need new
+        features built every month, you want the retainer. If you need a site looked after and
+        measured, you want the care plan, and new features get quoted separately.
       </P>
 
       <H2>What actually moves the number</H2>
@@ -156,7 +169,8 @@ const bodies: ArticleBodies = {
             <strong>How well you can describe the current process.</strong> The single biggest
             factor, and the one clients don&rsquo;t expect. If you can walk someone through it step
             by step, scoping is quick and accurate. If you can&rsquo;t, the first phase of the
-            project is discovering it &mdash; and that gets billed.
+            project is discovering it, and most firms bill for that as a separate engagement. Ask
+            whether scoping is included before you agree to anything. Ours is.
           </>,
           <>
             <strong>Integrations.</strong> Each system you connect to adds cost, and legacy systems
@@ -188,9 +202,13 @@ const bodies: ArticleBodies = {
             is good for you.
           </>,
           <>
-            <strong>A quote far below the ranges above.</strong> Usually means a different
-            definition of &ldquo;done&rdquo; &mdash; no tests, no documentation, no handoff, and
-            nobody available when it breaks.
+            <strong>A low price with no written definition of &ldquo;done&rdquo;.</strong> A number
+            well under the ranges above can be honest. A small team with modern tooling and no
+            overhead really does cost less than an agency. What it cannot do is skip the paperwork:
+            if a cheap quote comes with no acceptance criteria, no tests, no documentation, no
+            handoff, and nobody available when it breaks, the price is low because the work is
+            smaller than you think. Ask what is included, in writing, and compare that rather than
+            the number.
           </>,
           <>
             <strong>No written exclusion list.</strong> If nobody has told you what
@@ -220,10 +238,10 @@ const bodies: ArticleBodies = {
       </P>
 
       <Callout title="A useful way to frame the budget">
-        Work out what the problem costs you now &mdash; hours per week, times what those hours cost,
-        times fifty-two &mdash; and compare that to a build that would mostly remove it. If the
-        software pays for itself inside eighteen months, it&rsquo;s usually worth doing. If it takes
-        five years, spend the money somewhere else.
+        Work out what the problem costs you now: hours per week, times what those hours cost, times
+        fifty-two. Then compare that to a build that would mostly remove it. If the software pays
+        for itself inside eighteen months, it&rsquo;s usually worth doing. If it takes five years,
+        spend the money somewhere else.
       </Callout>
     </>
   ),
@@ -250,9 +268,9 @@ const bodies: ArticleBodies = {
             across all of them.
           </>,
           <>
-            <strong>You can&rsquo;t describe what the software should do.</strong> Not a criticism
-            &mdash; it just means you&rsquo;re not ready. Custom development converts a clear
-            specification into working software; it can&rsquo;t supply the clarity.
+            <strong>You can&rsquo;t describe what the software should do.</strong> Not a criticism.
+            It just means you&rsquo;re not ready. Custom development converts a clear specification
+            into working software; it can&rsquo;t supply the clarity.
           </>,
           <>
             <strong>The problem is a process problem.</strong> Software makes a good process faster
@@ -260,8 +278,8 @@ const bodies: ArticleBodies = {
             software won&rsquo;t change that.
           </>,
           <>
-            <strong>It&rsquo;s a compliance or accounting function.</strong> Payroll, tax, invoicing
-            &mdash; buy it. The rules change constantly and a vendor absorbs that for you.
+            <strong>It&rsquo;s a compliance or accounting function.</strong> Payroll, tax,
+            invoicing: buy it. The rules change constantly and a vendor absorbs that for you.
           </>,
         ]}
       />
@@ -276,7 +294,7 @@ const bodies: ArticleBodies = {
           <>
             <strong>The workaround has become the system.</strong> When a spreadsheet has become
             load-bearing and everyone is afraid to touch it, that spreadsheet is describing the
-            software you need &mdash; usefully, in detail.
+            software you need, usefully, in detail.
           </>,
           <>
             <strong>The thing you do differently is the thing you&rsquo;re good at.</strong> If your
@@ -291,22 +309,22 @@ const bodies: ArticleBodies = {
       />
 
       <Callout title="The most common answer is “both”">
-        Buy the commodity parts &mdash; accounting, email, payments, storage &mdash; and build the
-        thin layer that&rsquo;s specific to how you work, connecting them. That&rsquo;s usually far
-        cheaper than a full custom system and gets you most of the benefit.
+        Buy the commodity parts (accounting, email, payments, storage) and build the thin layer
+        that&rsquo;s specific to how you work, connecting them. That&rsquo;s usually far cheaper
+        than a full custom system and gets you most of the benefit.
       </Callout>
 
       <H2>The cost comparison people get wrong</H2>
       <P>
         Comparing a $6,000 build against a $200/month subscription looks obvious until you count
-        properly. Over three years the subscription is $7,200 &mdash; and that&rsquo;s before
-        per-seat increases and price rises. But the build has costs the subscription doesn&rsquo;t:
-        hosting, maintenance, and the fact that when something breaks, it&rsquo;s yours.
+        properly. Over three years the subscription is $7,200, and that&rsquo;s before per-seat
+        increases and price rises. But the build has costs the subscription doesn&rsquo;t: hosting,
+        maintenance, and the fact that when something breaks, it&rsquo;s yours.
       </P>
       <P>
         A fair comparison includes, on the buy side, subscription across all seats plus the hours
         spent working around what it doesn&rsquo;t do. On the build side: the build, hosting, and a
-        realistic maintenance allowance. Software isn&rsquo;t furniture &mdash; it needs occasional
+        realistic maintenance allowance. Software isn&rsquo;t furniture. It needs occasional
         attention or it degrades as everything around it changes.
       </P>
 
@@ -317,8 +335,8 @@ const bodies: ArticleBodies = {
       <P>
         Sometimes the answer is &ldquo;we&rsquo;d have to change how we do onboarding,&rdquo; and
         that turns out to be an improvement you&rsquo;d wanted anyway. Sometimes it&rsquo;s
-        &ldquo;we&rsquo;d have to stop doing the thing our customers choose us for&rdquo; &mdash;
-        and now you have your answer.
+        &ldquo;we&rsquo;d have to stop doing the thing our customers choose us for.&rdquo; Now you
+        have your answer.
       </P>
     </>
   ),
@@ -327,9 +345,9 @@ const bodies: ArticleBodies = {
     <>
       <P>
         The end of a project is where a lot of goodwill quietly disappears. The software works, the
-        invoice is paid, and six months later you need a change &mdash; and discover the original
-        developer still owns the hosting account, there&rsquo;s no documentation, and nobody knows
-        which of three environments is live.
+        invoice is paid, and six months later you need a change, and discover the original developer
+        still owns the hosting account, there&rsquo;s no documentation, and nobody knows which of
+        three environments is live.
       </P>
       <P>
         This is the list to agree <em>before</em> the project starts. Any competent developer will
@@ -351,7 +369,7 @@ const bodies: ArticleBodies = {
             <strong>Domain and DNS under your control.</strong>
           </>,
           <>
-            <strong>All third-party accounts in your name</strong> &mdash; payment processor, email
+            <strong>All third-party accounts in your name</strong>: payment processor, email
             service, any API.
           </>,
           <>
@@ -373,9 +391,9 @@ const bodies: ArticleBodies = {
 
       <H2>A recorded walkthrough</H2>
       <P>
-        A live walkthrough is standard. Ask for it <strong>recorded</strong> &mdash; thirty minutes
-        of screen recording. Six months later, when the person who attended has left, the recording
-        is the only thing that still knows how the system fits together.
+        A live walkthrough is standard. Ask for it <strong>recorded</strong>: thirty minutes of
+        screen recording. Six months later, when the person who attended has left, the recording is
+        the only thing that still knows how the system fits together.
       </P>
 
       <H2>The two people forget to ask for</H2>
@@ -400,8 +418,7 @@ const bodies: ArticleBodies = {
       <H3>2. Confirmation that their access was removed</H3>
       <P>
         When a project ends, the developer&rsquo;s access should be removed or cut back to whatever
-        the support window needs &mdash; and they should confirm in writing that they&rsquo;ve done
-        it.
+        the support window needs. They should confirm in writing that they&rsquo;ve done it.
       </P>
       <P>
         This protects both sides. You reduce the number of people holding keys to your systems, and
@@ -417,8 +434,8 @@ const bodies: ArticleBodies = {
             Make sure it&rsquo;s written down.
           </>,
           <>
-            <strong>Written acceptance</strong> against criteria agreed at the start &mdash; not
-            invented at the end.
+            <strong>Written acceptance</strong> against criteria agreed at the start, not invented
+            at the end.
           </>,
           <>
             <strong>Support window dates, and what&rsquo;s covered.</strong> &ldquo;Thirty days of
@@ -429,8 +446,8 @@ const bodies: ArticleBodies = {
 
       <Callout title="The test">
         Could you hand everything you received to a different developer tomorrow and have them
-        productive within a day? If not, the handoff isn&rsquo;t finished &mdash; whatever the
-        invoice says. Our full{" "}
+        productive within a day? If not, the handoff isn&rsquo;t finished, whatever the invoice
+        says. Our full{" "}
         <Link to="/process" className="font-semibold text-ink underline">
           process
         </Link>{" "}

@@ -33,11 +33,12 @@ type Role = {
   sections: { heading: string; body?: string; bullets?: string[] }[];
 };
 
+// Roles we are actively interviewing for today.
 const ROLES: Role[] = [
   {
     slug: "digital-sales-closer",
     title: "Digital Sales Closer",
-    type: "Contract or Full-Time",
+    type: "Hiring now · Contract or Full-Time",
     location: "Remote · United States",
     summary:
       "Own revenue for a lean, AI-assisted dev studio. You bring in the business; the founder builds and delivers.",
@@ -79,6 +80,19 @@ const ROLES: Role[] = [
         ],
       },
     ],
+  },
+];
+
+// Roles we expect to open as the studio grows. No applications yet: listing them
+// is a signal about direction, not a posting.
+const FUTURE_ROLES = [
+  {
+    title: "Junior developer",
+    body: "As project volume grows, we'll bring on a junior developer to build alongside the founder, with real code review and real ownership rather than ticket shuffling.",
+  },
+  {
+    title: "Additional sales roles",
+    body: "Once the first closer seat is proven, we'll add to the sales side. Likely a second closer, and eventually someone owning outbound.",
   },
 ];
 
@@ -158,9 +172,40 @@ function CareersPage() {
             <h2 className="font-display text-[26px] font-medium tracking-[-0.02em] text-ink md:text-3xl">
               Open roles
             </h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-ink">
+              Open means open: we are interviewing for this seat right now.
+            </p>
             <div className="mt-8 space-y-8">
               {ROLES.map((role) => (
                 <RoleCard key={role.slug} role={role} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Future roles */}
+        <section className="border-b border-hairline">
+          <div className="mx-auto max-w-3xl px-6 py-14">
+            <h2 className="font-display text-[26px] font-medium tracking-[-0.02em] text-ink md:text-3xl">
+              Future roles
+            </h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-ink">
+              We will post here when we are ready. No applications yet for these.
+            </p>
+            <div className="mt-8 grid gap-6 sm:grid-cols-2">
+              {FUTURE_ROLES.map((r) => (
+                <div
+                  key={r.title}
+                  className="rounded-lg border border-hairline bg-secondary/30 p-5"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[15px] font-semibold text-ink">{r.title}</h3>
+                    <span className="rounded-full border border-hairline bg-background px-2 py-0.5 text-[11px] font-medium text-muted-ink">
+                      Not open yet
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[15px] leading-relaxed text-muted-ink">{r.body}</p>
+                </div>
               ))}
             </div>
           </div>

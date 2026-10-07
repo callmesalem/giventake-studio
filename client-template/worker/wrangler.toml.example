@@ -1,0 +1,26 @@
+# EXAMPLE Cloudflare Worker config for the client-template lead endpoint.
+# Copy to wrangler.toml and fill in per client. Never commit the real file
+# with secrets.
+#
+# Deploy:  wrangler deploy
+# Secrets:  wrangler secret put SUPABASE_URL
+#           wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+
+name = "client-lead-endpoint"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# Serve the built static site alongside the worker. Build first: npm run build
+[site]
+bucket = "../dist"
+
+[vars]
+# The exact origin allowed to POST leads. No value = no cross-origin posts.
+ALLOWED_ORIGIN = "https://www.example-business.com"
+# JSON array of the client's services, copied from client.config.json services[].
+# The worker rejects any service slug not in this list.
+SERVICES = '[{"slug":"example-service-one","name":"Example Service One"},{"slug":"example-service-two","name":"Example Service Two"},{"slug":"example-service-three","name":"Example Service Three"}]'
+
+# Secrets (set with `wrangler secret put`, never in this file):
+# SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY

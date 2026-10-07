@@ -114,9 +114,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               name: SITE_NAME,
               legalName: LEGAL_ENTITY,
               url: `${BASE_URL}/`,
-              slogan: "Your On-Demand Development Team",
+              slogan: "Websites That Report Back",
               description:
-                "AI-native development studio building websites, apps, internal tools, and agentic workflows for small businesses and founders.",
+                "Small web studio in Ohio building custom websites for small businesses, starting at $499 and owned by the client. An optional $99/mo care plan covers hosting, updates, and a plain-English performance report every month.",
             },
             {
               "@type": "WebSite",

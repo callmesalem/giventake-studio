@@ -137,7 +137,11 @@ export function createQualificationBrief(input: ContactInput): QualificationBrie
   const offerMatch = matchOffer(input.description);
 
   if (offerMatch === "Uncertain") flags.push("uncertain_offer");
-  if (input.budget === "500-2.5k" || input.budget === "discovery") flags.push("below_minimum");
+  // Builds start at $499, so the $500-$2.5k band is the core buyer, not a
+  // disqualification. No listed band now falls under the starting price, so
+  // nothing produces below_minimum; the flag stays in the union for leads
+  // recorded before the pricing change.
+  if (input.budget === "discovery") missingInformation.push("Budget range");
   if (input.timeline === "asap") flags.push("urgent");
   if (regulatedPattern.test(input.description)) flags.push("regulated");
   if (!input.company) missingInformation.push("Company");

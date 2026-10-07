@@ -12,6 +12,7 @@ import {
   type ConsentSource,
   type ConsentState,
 } from "./consent-core";
+import { initTracking } from "./tracking";
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -73,6 +74,16 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     record(next, source, stored ? { ...DEFAULT_STATE, ...stored.state, necessary: true } : null);
     setReady(true);
   }, [record]);
+
+  // Switch the consent-gated tracking loaders on exactly once, after the
+  // stored (or default) consent has been restored. initTracking applies the
+  // current state on start and reacts to every later change through the
+  // "gt:consent-change" broadcast, so nothing loads before consent exists.
+  // The `initialized` guard inside initTracking makes this StrictMode-safe.
+  useEffect(() => {
+    if (!ready) return;
+    initTracking(() => stateRef.current);
+  }, [ready]);
 
   const commit = useCallback(
     (next: ConsentState, source: ConsentSource) => {

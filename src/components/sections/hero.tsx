@@ -1,4 +1,4 @@
-import { IconArrowRight, IconPlay } from "@/components/marks";
+import { IconArrowRight } from "@/components/marks";
 import { PointerGlow } from "@/components/pointer-glow";
 import { HeroVideoPanel } from "@/components/hero-video-panel";
 
@@ -24,7 +24,7 @@ export function Hero() {
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 pulse-dot" />
             </span>
-            Booking projects for 2026
+            Taking on new projects
           </div>
 
           {/* LCP element: no entrance animation so it paints on the first frame */}
@@ -32,37 +32,36 @@ export function Hero() {
             data-crit="hero-title"
             className="font-display text-[44px] font-medium leading-[0.98] tracking-[-0.035em] text-white sm:text-[56px] md:text-[72px] lg:text-[80px]"
           >
-            Software for the parts you're
+            Your website should bring in work
             <br />
-            <span className="text-elite-gradient">still doing by hand.</span>
+            <span className="text-elite-gradient">and tell you what&rsquo;s working.</span>
           </h1>
 
           <p
             data-crit="hero-lede"
             className="mt-8 max-w-xl text-[17px] leading-[1.55] text-white/60 md:text-[18px]"
           >
-            We build the software small businesses actually run on: dashboards that replace five
-            spreadsheets, booking that ends the phone tag, intake that sorts itself. Built by
-            someone who runs operations-heavy businesses, not an agency layering on overhead. Tell
-            us what's eating your week. A few weeks later, you're using the fix.
+            We&rsquo;re GivenTake Devs, a small studio in Ohio. We build custom websites for small
+            businesses starting at $499, quoted in writing before we start. Add the optional $99/mo
+            care plan and you get hosting, updates, and a plain-English report every month showing
+            where your leads came from and what to fix next.
           </p>
 
           <div data-crit="hero-cta" className="mt-10 flex flex-wrap items-center gap-3 rise-in">
             <a
-              href="#contact"
+              href="/pricing"
               data-crit="hero-cta-primary"
               className="btn-elite btn-icon-nudge inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-[14px] font-medium transition hover:opacity-95"
             >
-              Start a project
+              See pricing
               <IconArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="/work"
+              href="#site-check"
               data-crit="hero-cta-secondary"
               className="btn-icon-nudge inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3.5 text-[14px] font-medium text-white backdrop-blur transition hover:border-white/40"
             >
-              <IconPlay className="h-4 w-4" />
-              See the work
+              Get a free site check
             </a>
           </div>
 
@@ -73,9 +72,8 @@ export function Hero() {
           >
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400 pulse-dot" />
             <p className="text-[13px] leading-[1.55] text-white/55">
-              New studio, taking on our first commissions of 2026. AI-assisted delivery means faster
-              prototypes and fewer handoffs. You deal with the studio directly — no account
-              managers, no work passed down a chain.
+              New studio, now booking. Small team, direct access: you always know who you are
+              talking to and who is building your site. No layers in between.
             </p>
           </div>
         </div>

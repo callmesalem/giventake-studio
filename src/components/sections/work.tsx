@@ -87,7 +87,7 @@ function Preview({ kind }: { kind: string }) {
         {[
           { n: "A", t: "New enquiry · MVP scope", c: "bg-violet-soft text-violet" },
           { n: "B", t: "New enquiry · Internal tool", c: "bg-emerald-50 text-emerald-700" },
-          { n: "C", t: "New enquiry · Retainer", c: "bg-amber-50 text-amber-700" },
+          { n: "C", t: "New enquiry · Care plan", c: "bg-amber-50 text-amber-700" },
         ].map((r) => (
           <div key={r.n} className="flex items-center gap-2 rounded-lg bg-white/80 px-2 py-2">
             <div

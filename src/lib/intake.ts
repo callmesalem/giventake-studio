@@ -3,9 +3,11 @@ import {
   contactSchema,
   dsarSchema,
   applicationSchema,
+  siteCheckSchema,
   type ContactInput,
   type DsarInput,
   type ApplicationInput,
+  type SiteCheckInput,
   type IntakeResult,
 } from "@/lib/intake-schema";
 import {
@@ -235,6 +237,61 @@ export const submitContact = createServerFn({ method: "POST" })
     // Welcome auto-reply to the lead — dormant unless deliberately enabled; a
     // no-op (no send attempted) by default. Never blocks the human notification.
     await sendLeadAutoReply(data, persist);
+
+    // Notify the human.
+    return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);
+  });
+
+/**
+ * Free 5-minute site check request (homepage lead magnet).
+ *
+ * The visitor only gives name + email + their current website URL. The lead is
+ * persisted to the CRM through the same capture path as a contact enquiry
+ * (mapped onto the contact shape: the website URL becomes the description and
+ * the source is tagged so the studio knows it came from the free check), and
+ * the studio is notified by email. No auto-reply is sent — the "reply" is a
+ * human-recorded video, and nothing automated should pretend otherwise.
+ */
+export const submitSiteCheck = createServerFn({ method: "POST" })
+  .validator((data: SiteCheckInput) => siteCheckSchema.parse(data))
+  .handler(async ({ data }): Promise<IntakeResult> => {
+    const subject = `Free site check · ${data.name} · ${data.website}`;
+    const text = [
+      `Name: ${data.name}`,
+      `Email: ${data.email}`,
+      `Website to review: ${data.website}`,
+      data.utm_source ? `UTM source: ${data.utm_source}` : null,
+      data.utm_medium ? `UTM medium: ${data.utm_medium}` : null,
+      data.utm_campaign ? `UTM campaign: ${data.utm_campaign}` : null,
+      data.utm_content ? `UTM content: ${data.utm_content}` : null,
+      data.utm_term ? `UTM term: ${data.utm_term}` : null,
+      data.referrer ? `Referrer: ${data.referrer}` : null,
+      "",
+      "Requested a free 5-minute site check video.",
+      "Reply with the recorded teardown, not an automated email.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // Track the lead in the CRM (best-effort, no send).
+    const contactShaped: ContactInput = {
+      name: data.name,
+      email: data.email,
+      description: `Free 5-minute site check requested for: ${data.website}`,
+      budget: "discovery",
+      timeline: "exploring",
+      source: "direct",
+      source_detail: "Free site check form",
+      consent_given: data.consent_given,
+      consent_text: data.consent_text,
+      utm_source: data.utm_source,
+      utm_medium: data.utm_medium,
+      utm_campaign: data.utm_campaign,
+      utm_content: data.utm_content,
+      utm_term: data.utm_term,
+      referrer: data.referrer,
+    };
+    await persistLead(contactShaped);
 
     // Notify the human.
     return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/services/")({
       path: "/services",
       title: "Services & Pricing · GivenTake Devs",
       description:
-        "Fixed-price software development: internal dashboards, AI automation, booking systems, marketing sites, and MVPs. Real prices, real timelines, explicit exclusions.",
+        "Fixed-price software development: internal dashboards, AI automation, booking systems, marketing sites, and MVPs. Website builds start at $499, with an optional $99/mo care plan. Real prices, real timelines, explicit exclusions.",
     }),
   component: ServicesIndexPage,
 });
@@ -29,9 +29,20 @@ function ServicesIndexPage() {
               What we build, and what it costs.
             </h1>
             <p className="mt-5 max-w-2xl text-[18px] leading-relaxed text-muted-ink">
-              Every project is scoped on a call before it&rsquo;s quoted, but these are the shapes
-              we build most often. Each page lists what&rsquo;s included, what isn&rsquo;t, and
-              where the price starts &mdash; so you can judge fit before booking a call.
+              Every project is scoped on a call and quoted in writing before work starts, but these
+              are the shapes we build most often. Each page lists what&rsquo;s included, what
+              isn&rsquo;t, and where the price starts, so you can judge fit before booking a call.
+            </p>
+            <p className="mt-4 max-w-2xl text-[18px] leading-relaxed text-muted-ink">
+              Website builds start at $499. Payment plans and financing are available, and you own
+              the site. Hosting and upkeep are an optional $99 a month.{" "}
+              <Link
+                to="/pricing"
+                className="font-medium text-violet underline-offset-4 hover:underline"
+              >
+                See website pricing and the care plan
+              </Link>
+              .
             </p>
           </div>
         </section>
@@ -52,9 +63,9 @@ function ServicesIndexPage() {
               <div className="rounded-2xl border border-hairline bg-white p-6 shadow-soft">
                 <h2 className="text-[16px] font-semibold text-ink">Not sure which one?</h2>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-                  A discovery sprint maps your current process and produces a written scope and a
-                  fixed quote. The fee comes off the build if you go ahead, and the document is
-                  yours either way.
+                  Mapping your current process is part of quoting the work, not a separate purchase.
+                  You get a written scope, an approach, a timeline, and a price before you commit to
+                  anything.
                 </p>
                 <Link
                   to="/process"
@@ -68,8 +79,8 @@ function ServicesIndexPage() {
                 <h2 className="text-[16px] font-semibold text-ink">Built with AI agents</h2>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
                   That&rsquo;s how the timelines are short. Everything is reviewed by a human before
-                  it ships, and we&rsquo;ll tell you exactly what that means &mdash; including the
-                  parts most studios won&rsquo;t.
+                  it ships, and we&rsquo;ll tell you exactly what that means, including the parts
+                  most studios won&rsquo;t.
                 </p>
                 <Link
                   to="/how-we-use-ai"

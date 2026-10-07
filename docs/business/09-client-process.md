@@ -33,39 +33,48 @@ What a real process buys you, in order of value:
    honest published metric possible later
 
 That last one closes the loop on the problem that forced the site rewrite. You
-can't publish "cut admin time 60%" unless you measured what it was. **Stage 5
-is where that measurement happens**, and it is not optional.
+can't publish "cut admin time 60%" unless you measured what it was. **Step 3
+(Build) opens with that measurement**, and it is not optional.
 
 ---
 
 ## The pipeline
 
-Eleven stages. Each has an entry condition, an artifact, and an exit gate. **Do
-not skip a gate to move faster** — every gate exists because skipping it costs
-more later.
+Five steps, matching what the site publishes at `/process` and on the homepage:
+**Call, Plan, Build, Launch, Report.** Each has an entry condition, an artifact,
+and a checkpoint. **Do not wave a checkpoint through to move faster** — every one
+exists because skipping it costs more later.
 
-| # | Stage | Artifact | Gate to pass |
+| # | Step | Artifact | Checkpoint to pass |
 |---|---|---|---|
 | 0 | Lead arrives | Lead record | — |
-| 1 | Qualify (10 min) | Qualification note | Budget and fit plausible |
-| 2 | Discovery call (45–60 min) | Discovery notes | Problem understood, quantified |
-| 3 | Scope | Proposal + SOW | — |
-| 4 | Close | Signed SOW + deposit | **Signed and paid before any code** |
-| 5 | Kickoff | Kickoff note + **baseline measured** | Access granted, baseline recorded |
-| 6 | Build cycles | Weekly demo + written update | Client saw it working each week |
-| 7 | Delivery review | Review checklist | **Nothing ships without it** |
-| 8 | Acceptance | Written acceptance | Meets SOW criteria |
-| 9 | Handoff | Handoff package | Client can operate it |
-| 10 | Support window | Support log | Window expires or converts |
-| 11 | Retro | Retro note + testimonial + metrics | Case study material captured |
+| 1 | **Call** (30 min, free) | Qualification + discovery notes | Problem understood and quantified, budget plausible |
+| 2 | **Plan** | Written quote and proposal | **Approved in writing before any code** |
+| 3 | **Build** | Weekly demo + written update; baseline recorded at the start | Client saw it working each week |
+| 3a | — review checklist | Review checklist in the repo | **Nothing ships without it** |
+| 4 | **Launch** | Handoff package + written acceptance | Meets the acceptance criteria from the Plan |
+| 5 | **Report** | Monthly care-plan report | Client knows what the site is doing for them |
+
+The internal retrospective sits inside Report (see below). It is operating
+guidance, not a buyer-facing step, which is why `/process` doesn't list it.
 
 ---
 
-## Stage 0–1: Lead and qualification
+## Step 0: Lead arrives
 
-**Purpose: don't spend an hour on a call that was never going to work.**
+**Track the lead source.** With no ad budget you're spending time instead of
+money, so knowing which channel produced the conversation is the only way to
+allocate it ([08](./08-marketing-and-client-acquisition.md) §10).
 
-A 10-minute screening call, or a short email exchange. Five things to establish:
+---
+
+## Step 1: Call
+
+**30 minutes, free, and it is the only session before the quote.** Qualification
+and discovery happen on the same call — a second paid or unpaid discovery session
+is not something we sell.
+
+First, five things to establish:
 
 1. What are they trying to build or fix?
 2. **What happens if they do nothing?** — the single best qualifier. If the honest
@@ -74,19 +83,11 @@ A 10-minute screening call, or a short email exchange. Five things to establish:
 4. What's driving the timeline?
 5. Who makes the decision?
 
-**Exit gate:** budget plausibly in range and a real problem exists. If not, say so
-directly and offer a referral. Declining well is worth more than a bad project —
-people remember it and refer you anyway.
+If budget isn't plausibly in range or there's no real problem, say so on the call
+and offer a referral. Declining well is worth more than a bad project — people
+remember it and refer you anyway.
 
-**Track the lead source.** With no ad budget you're spending time instead of
-money, so knowing which channel produced the conversation is the only way to
-allocate it ([08](./08-marketing-and-client-acquisition.md) §10).
-
----
-
-## Stage 2: Discovery call
-
-**45–60 minutes. Structured, not a chat.** Use
+Then, on the same call, go deeper. Use
 [10-discovery-questions.md](./10-discovery-questions.md): the core set for
 everyone, plus the module for their business type and the module for what
 they're building.
@@ -108,58 +109,52 @@ Three rules that matter more than the questions themselves:
 completed same day while it's fresh. Send a summary to the client asking "did I
 get this right?" — cheap, and it catches misunderstandings before they're priced.
 
-**Exit gate:** you can describe their current process step by step, and you have
+**Checkpoint:** you can describe their current process step by step, and you have
 numbers on how often it happens and what it costs.
 
 ---
 
-## Stage 3: Scope
+## Step 2: Plan
 
-For a small, clear project: go straight to a proposal.
+**Within a week of the call, the written quote and proposal goes out.** Scoping is
+part of quoting, so it isn't billed and there is no discovery sprint to sell.
+Where part of the process is still fuzzy, map that part with the client before
+pricing it rather than guessing — still inside the quote, still unbilled.
 
-For anything complex or ambiguous: **sell a paid discovery sprint**
-($750–$1,500, credited against the build — see
-[05](./05-pricing-and-positioning.md) §1). You are doing this work regardless;
-the only question is whether you're paid for it. It also qualifies the client
-hard — someone who won't pay $750 to define the problem won't pay $15,000 to
-solve it.
+**The quote and proposal contains:**
 
-**The proposal contains:**
-
-- The problem in **their** words, from the discovery notes
+- The problem in **their** words, from the call notes
 - What you'll build, and explicitly what you won't
 - Acceptance criteria — objective and testable
 - Timeline with their dependencies marked
-- Fixed price with the payment schedule
+- The price, with the payment schedule (payment plans and financing available)
+- What "done" means
 - What you need from them, and by when
 
 **Rule: never quote on a call.** Nothing good comes from a number you produced
 under social pressure.
 
----
+**Checkpoint: the quote and proposal is approved in writing, and the deposit has
+cleared, before any code is written. No exceptions.** This is the rule most likely
+to be broken for a client who seems trustworthy and is in a hurry. Breaking it is
+how studios end up building for free.
 
-## Stage 4: Close
-
-**Signed SOW and cleared deposit before any code is written. No exceptions.**
-
-This is the one rule most likely to be broken for a client who seems trustworthy
-and is in a hurry. Breaking it is how studios end up building for free.
-
-Documents: MSA (once per client) + SOW (per project), from
-[`../contracts/`](../contracts/). Send the
+The approved quote and proposal is the governing project document — it is what
+defines scope, price, and acceptance, and it is what an acceptance dispute is
+measured against. Templates live in [`../contracts/`](../contracts/). Send the
 [AI use disclosure](../contracts/ai-use-disclosure.md) alongside — leading with
 it defuses the objection before the client raises it, and it makes you look like
 the only serious vendor they've spoken to.
 
 ---
 
-## Stage 5: Kickoff
+## Step 3: Build — opening the cycle
 
 - Confirm the single decision-maker and their availability
 - Collect access: repos, hosting, domain, third-party accounts
 - Set the weekly demo slot, in the calendar, recurring
 - Agree the communication channel and expected response times
-- Confirm no AI restrictions on their material (MSA §3.4)
+- Confirm no AI restrictions on their material (quote and proposal, AI terms)
 
 ### ⚠️ Measure the baseline — do not skip this
 
@@ -179,9 +174,9 @@ Get it in writing, from the client, so it's their number rather than your claim.
 
 ---
 
-## Stage 6: Build cycles
+## Step 3: Build — the weekly cycle
 
-**Weekly rhythm, non-negotiable:**
+**Two to four weeks for a marketing site. Weekly rhythm, non-negotiable:**
 
 - A **working demo** every week. Not a status update — something they can click.
   Weekly demos are the single strongest defence against "this isn't what I
@@ -190,7 +185,7 @@ Get it in writing, from the client, so it's their number rather than your claim.
   anything at risk
 - Any scope change goes through a **written Change Order** before the work
   happens. Verbal and chat agreements do not change scope
-  ([`../contracts/sow-template.md`](../contracts/sow-template.md) §8)
+  ([`../contracts/`](../contracts/), change-order template)
 
 **If the client goes quiet:** note it in writing, and note the timeline impact.
 Dependencies that slip are the most common cause of a late project, and the
@@ -198,7 +193,7 @@ record protects both sides.
 
 ---
 
-## Stage 7: Delivery review gate
+## Step 3 checkpoint: delivery review
 
 **Nothing ships without this.** It is the specific commitment made publicly on
 the site ("nothing ships without manual human review"), so it is now a
@@ -216,10 +211,10 @@ into something demonstrable.
 
 ---
 
-## Stage 8: Acceptance
+## Step 4: Launch — acceptance
 
-Test against the SOW's acceptance criteria — the ones written in Stage 3, not a
-new set invented now.
+Test against the acceptance criteria in the approved quote and proposal — the ones
+written at Plan, not a new set invented now.
 
 Client has 10 business days to accept or report a material defect in writing.
 Defects against the criteria get fixed free. Anything beyond them is a change
@@ -229,7 +224,7 @@ request, and saying so calmly and immediately is the whole skill.
 
 ---
 
-## Stage 9: Handoff
+## Step 4: Launch — handoff
 
 The handoff package is what the site promises and what makes you hard to
 replace *for the right reason* — the client stays because they want to, not
@@ -248,20 +243,27 @@ Run [`../templates/handoff-checklist.md`](../templates/handoff-checklist.md).
 
 ---
 
-## Stage 10: Support window
+## Step 5: Report
 
-14 / 30 / 60 days depending on tier. Log every request: what it was, whether it
-was a defect or a new request, and how long it took.
+**The build includes 30 days of post-launch support** for defects against the
+acceptance criteria. Log every request: what it was, whether it was a defect or a
+new request, and how long it took. That log is your evidence for whether 30 days
+is priced correctly, and it classifies the work honestly before you touch it.
 
-That log is your evidence for whether the support window is priced correctly. It
-is also the natural opening for a retainer conversation — when requests keep
-arriving after the window, the client has just demonstrated they need one.
+**After those 30 days, the $99/mo care plan is the ongoing mechanism:** hosting,
+security, backups, uptime monitoring, small content edits within two business
+days, and the monthly report — leads, sources, what changed, what worked, and the
+one fix we'd make next. Month to month, cancel any time. New pages, new features,
+and redesigns are separate project work and go back through Plan for a written
+quote.
 
----
+When requests keep arriving and they aren't defects, that's the care-plan
+conversation, not free work.
 
-## Stage 11: Retrospective
+### Internal retrospective
 
-**Two weeks after handoff. This is where compounding happens.**
+**Two weeks after handoff. This is where compounding happens.** Not published on
+`/process` — it's operating guidance.
 
 **Internal:**
 - Estimated vs. actual hours. Where was the estimate wrong, and why?
@@ -272,11 +274,12 @@ arriving after the window, the client has just demonstrated they need one.
 - **Update this process document** if you found a gap. That's how it improves
 
 **With the client:**
-- **Re-measure the baseline numbers from Stage 5.** This is the case study
+- **Re-measure the baseline numbers recorded at the start of Build.** This is the
+  case study
 - Ask for a testimonial while they're happiest
 - Ask for a Google review — your main trust asset with a faceless brand
 - Ask for referrals: "who else do you know with this problem?"
-- Raise the retainer if the work is ongoing
+- Put them on the care plan if the work is ongoing
 
 **Then, and only then:** write the case study, with real numbers and written
 permission to publish. That's how the site's "example builds" section eventually
@@ -294,7 +297,8 @@ Reasons to decline, or to price for the risk:
 - **Budget mismatch** they won't discuss
 - **"It should be simple."** Sometimes true. Usually means they haven't thought
   about it and will be surprised by the price and the timeline
-- **Wants a fixed price on undefined scope** and won't pay for discovery
+- **Wants a fixed price on undefined scope** and won't sit through the call that
+  defines it
 - **The last developer "was terrible"** with no specifics. Sometimes true. Often
   the client. Ask what happened in detail and listen for what they contributed
 - **Regulated data** — health, financial, government — that surfaced late. Not a
@@ -313,9 +317,9 @@ because you were trapped.
 Every project produces the same artifacts, in the same order:
 
 ```
-Qualification note → Discovery notes → Proposal + SOW → Kickoff note (+ baseline)
+Call notes → Written quote and proposal (approved) → Kickoff note (+ baseline)
   → Weekly updates → Review checklist → Written acceptance → Handoff package
-  → Support log → Retro note (+ measured results)
+  → Support log → Monthly report → Retro note (+ measured results)
 ```
 
 **Keep them together per client**, in one folder or one CRM record. When a

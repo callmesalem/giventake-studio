@@ -7,7 +7,7 @@ import { Reveal } from "@/components/reveal";
  */
 
 const facts = [
-  { k: "AI-assisted delivery", v: "Faster builds, fewer meetings" },
+  { k: "Reports back monthly", v: "Plain-English results" },
   { k: "Direct, no handoffs", v: "Every project" },
   { k: "Weeks, not quarters", v: "Typical timeline" },
   { k: "You own the code", v: "No lock-in" },

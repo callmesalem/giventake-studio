@@ -144,6 +144,14 @@ export function SiteAssistant() {
                   Keep chatting
                 </button>
               </div>
+              <p className="text-[11px] leading-snug text-muted-ink">
+                We use your name, email, and this conversation only to respond to your inquiry. See
+                our{" "}
+                <a href="/privacy" className="underline">
+                  privacy policy
+                </a>
+                .
+              </p>
             </form>
           ) : (
             <div className="flex items-center gap-2 border-t border-hairline px-3 py-3">

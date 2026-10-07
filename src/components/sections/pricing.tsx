@@ -1,94 +1,31 @@
 import { Reveal } from "@/components/reveal";
 import { IconArrowRight } from "@/components/marks";
 
-const tiers = [
-  {
-    name: "Essentials",
-    price: "$500 - $2.5K",
-    tagline: "Small builds, fixes, and single-page sites.",
-    features: [
-      "One-page site, landing page, or small fix",
-      "AI-assisted build with human review",
-      "1 revision round included",
-      "Mobile responsive and accessible",
-      "Source code + deployment handoff",
-      "Live in about one week when scope is clear",
-      "14 days of tweaks after launch",
-    ],
-    cta: "Start small",
-  },
-  {
-    name: "Discovery sprint",
-    price: "$750 – $1,500",
-    tagline: "Not sure what you need built yet? Start here.",
-    features: [
-      "One to two weeks, fixed fee",
-      "We map your current process end to end",
-      "Written scope, technical approach, and timeline",
-      "A fixed quote for the build",
-      "The document is yours either way",
-      "Fee credited against the project if you proceed",
-    ],
-    cta: "Book a sprint",
-  },
-  {
-    name: "Starter",
-    price: "From $2,500",
-    tagline: "Landing pages and simple builds.",
-    features: [
-      "Marketing site or landing page",
-      "AI-assisted build with human review",
-      "2 revision rounds included",
-      "CMS your team can edit",
-      "Automated tests for critical paths",
-      "Source code + deployment handoff",
-      "Live in two to three weeks",
-      "30 days of tweaks after launch",
-    ],
-    cta: "Start a project",
-  },
-  {
-    name: "Growth",
-    price: "Custom quote",
-    tagline: "Custom apps, automations, and internal tools.",
-    features: [
-      "Web app, internal tool, or automation",
-      "AI agents and agentic workflows where they fit",
-      "Scope defined in writing before we start",
-      "Unlimited revisions within signed scope",
-      "Automated tests + manual QA",
-      "Weekly demos and shared roadmap",
-      "Source code, docs, and deployment handoff",
-      "60 days of support after launch",
-    ],
-    cta: "Request a quote",
-    featured: true,
-    // Factual descriptor only. Do not use popularity or social-proof badges
-    // ("Most picked", "Most popular") until there is real sales data behind them.
-    badge: "Best for custom builds",
-  },
-  {
-    name: "Dedicated",
-    price: "Monthly retainer",
-    tagline: "An AI-native team, without hiring one.",
-    features: [
-      "Monthly senior developer retainer",
-      "Continuous shipping against your roadmap",
-      "AI-assisted delivery with human review",
-      "Shared Slack and weekly reviews",
-      "Scope adjusts monthly as priorities change",
-      "Pause or cancel with 30 days' notice",
-    ],
-    cta: "Book consultation",
-  },
+const buildPoints = [
+  "Every project gets a written quote and proposal before any work starts",
+  "Payment plans and financing available, so the whole bill isn't due at once",
+  "You own the site outright: the design, the code, the content, the domain",
+  "Designed around the one action you want a visitor to take",
+  "Speed-tested on real phones before launch, and you get the numbers",
 ];
 
+const carePlanIncluded = [
+  "Hosting",
+  "Security updates",
+  "Backups",
+  "Uptime monitoring",
+  "Small content edits, a few per month, published within 2 business days",
+  "The monthly proof report: leads, where they came from, what we changed, what worked, and what's next",
+];
+
+const carePlanExcluded = ["New pages", "New features", "Redesigns"];
+
 const included = [
-  "AI-generated code is reviewed by a human before it ships",
-  "Automated tests run on every critical path",
-  "You receive source code, documentation, and a handoff walkthrough",
-  "Timeline and scope are fixed in writing before work starts",
-  "Revisions are built into the plan, not billed as surprises",
+  "You own your domain, your content, and your customer data. Always.",
+  "The quote is written down before work starts, and the price in it is the price.",
+  "A human reviews everything before it ships",
+  "Changes are one email away. No dashboard to learn, no ticket queue.",
+  "The care plan is optional. Cancel it any time and the site stays yours.",
 ];
 
 export function Pricing() {
@@ -98,96 +35,131 @@ export function Pricing() {
         <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Pricing</p>
           <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
-            Work with us the way that fits.
+            Custom websites, starting at $499.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
-            Essentials work starts at $500 for tightly scoped fixes and small builds; most custom
-            builds start at $2,500. Every engagement is scoped on a call before a number is quoted,
-            and you'll get a fixed price, a clear timeline, and a written statement of what's
-            included before any work starts. If the problem isn't defined yet, a discovery sprint
-            defines it and the fee comes off the build.
+            Not a template someone configured. A site built for your business, scoped on a call and
+            quoted in writing before anyone starts work. Payment plans and financing are available,
+            and the site is yours to keep.
           </p>
         </Reveal>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {tiers.map((t, i) => (
-            <Reveal key={t.name} delay={i * 80}>
-              <article
-                className={`card-lift relative flex h-full flex-col rounded-2xl border p-7 ${
-                  t.featured
-                    ? "border-ink bg-ink text-white shadow-lift"
-                    : "border-hairline bg-white shadow-soft"
-                }`}
-              >
-                {t.badge && (
-                  <div className="absolute -top-3 left-7 rounded-full bg-violet px-3 py-1 text-[11px] font-medium text-white">
-                    {t.badge}
-                  </div>
-                )}
-                <h3
-                  className={`text-[22px] font-semibold tracking-tight ${
-                    t.featured ? "text-white" : "text-ink"
-                  }`}
-                >
-                  {t.name}
+        {/* headline offer */}
+        <Reveal>
+          <article className="rounded-2xl border border-ink bg-ink p-7 text-white shadow-lift md:p-9">
+            <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+              <div className="flex-1">
+                <h3 className="text-[22px] font-semibold tracking-tight text-white">
+                  Custom website build
                 </h3>
-                <p
-                  className={`mt-1.5 text-[14px] ${
-                    t.featured ? "text-white/70" : "text-muted-ink"
-                  }`}
-                >
-                  {t.tagline}
+                <p className="mt-1.5 text-[14.5px] text-white/70">
+                  One project, one written quote, one owner at the end of it: you.
                 </p>
-                <div
-                  className={`mt-6 border-t pt-5 ${
-                    t.featured ? "border-white/15" : "border-hairline"
-                  }`}
-                >
-                  <p
-                    className={`text-[28px] font-semibold tracking-tight ${
-                      t.featured ? "text-white" : "text-ink"
-                    }`}
-                  >
-                    {t.price}
-                  </p>
-                </div>
-                <ul
-                  className={`mt-6 flex-1 space-y-3 ${
-                    t.featured ? "text-white/85" : "text-ink/85"
-                  }`}
-                >
-                  {t.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-[14px] leading-snug">
+                <ul className="mt-6 space-y-3">
+                  {buildPoints.map((p) => (
+                    <li
+                      key={p}
+                      className="flex items-start gap-2.5 text-[14.5px] leading-snug text-white/85"
+                    >
                       <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
-                      <span>{f}</span>
+                      <span>{p}</span>
                     </li>
                   ))}
                 </ul>
+              </div>
+              <div className="flex flex-col items-start gap-5 md:items-end">
+                <div className="md:text-right">
+                  <p className="text-[13px] font-medium uppercase tracking-wide text-white/50">
+                    Starting at
+                  </p>
+                  <p className="mt-1 text-[40px] font-semibold leading-none tracking-tight text-white">
+                    $499
+                  </p>
+                  <p className="mt-2 max-w-[16rem] text-[13px] leading-snug text-white/60">
+                    Final price depends on scope. You see it in writing before you commit.
+                  </p>
+                </div>
                 <a
-                  href="#contact"
-                  className={`mt-8 inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-3 text-[13px] font-medium transition ${
-                    t.featured
-                      ? "bg-white text-ink hover:bg-white/90"
-                      : "bg-ink text-white hover:opacity-90"
-                  }`}
+                  href="/#contact"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white px-5 py-3 text-[13px] font-medium text-ink transition hover:bg-white/90"
                 >
-                  {t.cta}
+                  Get a quote
                   <IconArrowRight className="h-4 w-4" />
                 </a>
-              </article>
-            </Reveal>
-          ))}
-        </div>
+              </div>
+            </div>
+          </article>
+        </Reveal>
+
+        {/* optional care plan */}
+        <Reveal delay={80}>
+          <article className="card-lift mt-4 rounded-2xl border border-hairline bg-white p-7 shadow-soft md:p-9">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="text-[22px] font-semibold tracking-tight text-ink">
+                  Care plan, if you want it
+                </h3>
+                <p className="mt-1.5 text-[14.5px] text-muted-ink">
+                  Optional. Cancel any time. The site is yours either way.
+                </p>
+              </div>
+              <p className="text-[32px] font-semibold leading-none tracking-tight text-ink">
+                $99
+                <span className="text-[16px] font-medium text-muted-ink">/mo</span>
+              </p>
+            </div>
+
+            <div className="mt-7 grid gap-7 border-t border-hairline pt-7 md:grid-cols-2 md:gap-10">
+              <div>
+                <h4 className="text-[15px] font-semibold text-ink">What's included</h4>
+                <ul className="mt-4 space-y-2.5">
+                  {carePlanIncluded.map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-start gap-2.5 text-[14px] leading-snug text-ink/85"
+                    >
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-[15px] font-semibold text-ink">What isn't</h4>
+                <ul className="mt-4 space-y-2.5">
+                  {carePlanExcluded.map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-start gap-2.5 text-[14px] leading-snug text-muted-ink"
+                    >
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/20" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-[13.5px] leading-relaxed text-muted-ink">
+                  Those are project work. We scope them and quote them separately, so you always
+                  know what you're agreeing to.
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="/#contact"
+              className="btn-icon-nudge mt-8 inline-flex items-center gap-1.5 rounded-full bg-ink px-5 py-3 text-[13px] font-medium text-white transition hover:opacity-90"
+            >
+              Get a quote
+              <IconArrowRight className="h-4 w-4" />
+            </a>
+          </article>
+        </Reveal>
 
         {/* transparent expectations block */}
         <Reveal delay={120}>
           <div className="mt-14 rounded-2xl border border-hairline bg-white p-7 shadow-soft">
-            <h3 className="text-[18px] font-semibold text-ink">
-              What's included with every project
-            </h3>
+            <h3 className="text-[18px] font-semibold text-ink">What you can count on</h3>
             <p className="mt-2 text-[14.5px] leading-relaxed text-muted-ink">
-              Agentic delivery means AI coding agents do the bulk of the construction, and we verify
-              the work. Here's what that means for you in practical terms.
+              The fine print, up front. The usual way of buying websites hides it.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {included.map((item) => (
@@ -201,6 +173,19 @@ export function Pricing() {
               ))}
             </ul>
           </div>
+        </Reveal>
+        {/* non-website work lives on /services; give it a path from here */}
+        <Reveal delay={140}>
+          <p className="mx-auto mt-12 max-w-2xl text-center text-[15px] leading-relaxed text-muted-ink">
+            Need something that isn&rsquo;t a website? Dashboards, automations, and booking systems
+            are scoped on a call and priced fixed, in writing.{" "}
+            <a
+              href="/services"
+              className="font-medium text-violet underline-offset-4 hover:underline"
+            >
+              See services and starting prices
+            </a>
+          </p>
         </Reveal>
       </div>
     </section>

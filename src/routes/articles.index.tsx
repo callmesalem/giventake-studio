@@ -28,8 +28,8 @@ function ArticlesIndexPage() {
               Straight answers about custom software.
             </h1>
             <p className="mt-5 text-[18px] leading-relaxed text-muted-ink">
-              Written for people deciding whether to commission software at all &mdash; including
-              the cases where the honest answer is don&rsquo;t. No newsletter, no gated PDFs.
+              Written for people deciding whether to commission software at all, including the cases
+              where the honest answer is don&rsquo;t. No newsletter, no gated PDFs.
             </p>
           </div>
         </section>

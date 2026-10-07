@@ -14,7 +14,7 @@ export function ProsePage({
   meta,
   children,
   ctaTitle = "Start with a call.",
-  ctaBody = "Thirty minutes, free, no obligation. You'll leave with a clear view of what your project would take — whether or not you work with us.",
+  ctaBody = "Thirty minutes, free, no obligation. You'll leave with a clear view of what your project would take, whether or not you work with us.",
 }: {
   eyebrow: string;
   title: string;

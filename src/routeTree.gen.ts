@@ -25,6 +25,7 @@ import { Route as CrmRouteImport } from './routes/crm'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CareersRouteImport } from './routes/careers'
+import { Route as BookRouteImport } from './routes/book'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as CrmIndexRouteImport } from './routes/crm.index'
@@ -47,6 +48,7 @@ import { Route as CrmDocumentsRouteImport } from './routes/crm.documents'
 import { Route as CrmClientsRouteImport } from './routes/crm.clients'
 import { Route as CrmApprovalsRouteImport } from './routes/crm.approvals'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
+import { Route as ApiPhoneMessageRouteImport } from './routes/api.phone-message'
 import { Route as CrmDealsIndexRouteImport } from './routes/crm.deals.index'
 import { Route as CrmContactsIndexRouteImport } from './routes/crm.contacts.index'
 import { Route as CrmCompaniesIndexRouteImport } from './routes/crm.companies.index'
@@ -137,6 +139,11 @@ const ComplianceRoute = ComplianceRouteImport.update({
 const CareersRoute = CareersRouteImport.update({
   id: '/careers',
   path: '/careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -249,6 +256,11 @@ const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
   path: '/articles/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPhoneMessageRoute = ApiPhoneMessageRouteImport.update({
+  id: '/api/phone-message',
+  path: '/api/phone-message',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmDealsIndexRoute = CrmDealsIndexRouteImport.update({
   id: '/deals/',
   path: '/deals/',
@@ -307,6 +319,7 @@ const ApiUnsubscribeTokenRoute = ApiUnsubscribeTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
@@ -323,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/work': typeof WorkRoute
+  '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -358,6 +372,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
@@ -373,6 +388,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/work': typeof WorkRoute
+  '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -409,6 +425,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/careers': typeof CareersRoute
   '/compliance': typeof ComplianceRoute
   '/cookies': typeof CookiesRoute
@@ -425,6 +442,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/work': typeof WorkRoute
+  '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
   '/crm/approvals': typeof CrmApprovalsRoute
   '/crm/clients': typeof CrmClientsRoute
@@ -462,6 +480,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/book'
     | '/careers'
     | '/compliance'
     | '/cookies'
@@ -478,6 +497,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/work'
+    | '/api/phone-message'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -513,6 +533,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/book'
     | '/careers'
     | '/compliance'
     | '/cookies'
@@ -528,6 +549,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/work'
+    | '/api/phone-message'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -563,6 +585,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/book'
     | '/careers'
     | '/compliance'
     | '/cookies'
@@ -579,6 +602,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/work'
+    | '/api/phone-message'
     | '/articles/$slug'
     | '/crm/approvals'
     | '/crm/clients'
@@ -615,6 +639,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookRoute: typeof BookRoute
   CareersRoute: typeof CareersRoute
   ComplianceRoute: typeof ComplianceRoute
   CookiesRoute: typeof CookiesRoute
@@ -631,6 +656,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   WorkRoute: typeof WorkRoute
+  ApiPhoneMessageRoute: typeof ApiPhoneMessageRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
   SignTokenRoute: typeof SignTokenRoute
@@ -752,6 +778,13 @@ declare module '@tanstack/react-router' {
       path: '/careers'
       fullPath: '/careers'
       preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -908,6 +941,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArticlesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/phone-message': {
+      id: '/api/phone-message'
+      path: '/api/phone-message'
+      fullPath: '/api/phone-message'
+      preLoaderRoute: typeof ApiPhoneMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crm/deals/': {
       id: '/crm/deals/'
       path: '/deals'
@@ -1058,6 +1098,7 @@ const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookRoute: BookRoute,
   CareersRoute: CareersRoute,
   ComplianceRoute: ComplianceRoute,
   CookiesRoute: CookiesRoute,
@@ -1074,6 +1115,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   WorkRoute: WorkRoute,
+  ApiPhoneMessageRoute: ApiPhoneMessageRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
   ServicesSlugRoute: ServicesSlugRoute,
   SignTokenRoute: SignTokenRoute,

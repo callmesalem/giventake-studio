@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
 
+# Private surfaces. /sign/ carries a bearer token in the URL, so it must never
+# be crawled, cached, or indexed.
+Disallow: /crm
+Disallow: /crm/login
+Disallow: /operator-dashboard
+Disallow: /sign/
+
 # Static file — cannot import BASE_URL from src/lib/seo.ts.
 # Update this line whenever the production origin changes there.
 Sitemap: https://giventakedevs.com/sitemap.xml
