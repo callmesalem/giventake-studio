@@ -47,14 +47,21 @@ try {
     bindings === "null" || bindings === "{}",
     `container unexpectedly publishes ports: ${bindings}`,
   );
+  // -h 127.0.0.1 on purpose: without it pg_isready asks the unix socket, which
+  // is answered by the temporary listen_addresses='' server the entrypoint runs
+  // initdb against. That server then shuts down, and the first real statement
+  // fails on a socket with nothing behind it. Only the final server takes TCP.
+  let ready = false;
   for (let i = 0; i < 30; i++) {
     try {
-      docker("exec", name, "pg_isready", "-U", "postgres");
+      docker("exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "postgres");
+      ready = true;
       break;
     } catch {
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
     }
   }
+  assert.ok(ready, "postgres never accepted a TCP connection within 15s");
   psql(
     "create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;",
   );

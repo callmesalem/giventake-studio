@@ -60,14 +60,24 @@ const WRITE_RPCS = [
 
 try {
   docker("run", "-d", "--rm", "--name", name, "-e", "POSTGRES_PASSWORD=local-synthetic-only", "postgres:17"); // prettier-ignore
+  // Probe over TCP, not the unix socket. The image's entrypoint brings up a
+  // temporary server with listen_addresses='' to run initdb and the init
+  // scripts, then shuts it down and starts the real one. A socket probe is
+  // answered by that throwaway server, so the loop breaks early and the next
+  // statement hits a socket with nothing behind it:
+  //   psql: error: connection to server on socket ... No such file or directory
+  // Only the real server listens on 127.0.0.1, so this waits for the right one.
+  let ready = false;
   for (let i = 0; i < 60; i++) {
     try {
-      docker("exec", name, "psql", "-U", "postgres", "-qAt", "-c", "select 1");
+      docker("exec", name, "psql", "-h", "127.0.0.1", "-U", "postgres", "-qAt", "-c", "select 1");
+      ready = true;
       break;
     } catch {
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
     }
   }
+  assert.ok(ready, "postgres:17 never accepted a TCP connection within 30s");
 
   // What a Supabase project supplies before the first migration runs.
   run(`
