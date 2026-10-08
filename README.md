@@ -1,29 +1,31 @@
-# Welcome to your Lovable project
+# GivenTake Studio
 
-This project was built with [Lovable](https://lovable.dev).
+The codebase behind [giventakedevs.com](https://giventakedevs.com): the GivenTake Devs studio website plus its production CRM.
 
-## Build with Lovable
+## What is this
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+GivenTake Devs is an AI development studio building websites, web apps, MVPs, internal tools, automations, and AI agents for small businesses. This repo holds:
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Studio website** — marketing site, service pages, and contact flows.
+- **CRM** (`/crm`) — authenticated team dashboard with prospecting, campaign, newsletter, and referral engines, plus a human-approval queue on all outbound actions.
+- **Voice agent integration** — Maya, a live voice-AI phone agent handling real business calls, with automated message delivery to email and SMS.
+- **MCP bridge** — a Model Context Protocol integration exposing CRM pipeline, leads, deals, tasks, and activity to AI assistants.
+
+## Stack
+
+TypeScript, React, TanStack Start, Tailwind CSS, Supabase (PostgreSQL, Auth, row-level security), Vercel, ElevenLabs.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
+git clone https://github.com/callmesalem/giventake-studio.git
+cd giventake-studio
 npm i
 npm run dev
 ```
 
-## Built with
+Environment variables go in `.env` (see `.env.example`). Never commit real keys.
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## Approach
+
+Designed and shipped via AI-assisted development: the founder reads and directs the code; AI writes, reviews, and audits it.
