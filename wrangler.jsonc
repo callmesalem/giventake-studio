@@ -86,15 +86,16 @@
     // the recipient is never a CRM user.
     "CAMPAIGN_UNSUBSCRIBE_BASE": "https://giventakedevs.com/api/unsubscribe",
 
-    // NOT YET SET - the send tick is a no-op until it is. A plain value, so it
-    // belongs in this block, not only the dashboard. Deliberately left unset
-    // rather than guessed: the reply address must be one Cloudflare Email
-    // Routing delivers to this Worker (src/nitro/campaign-email.ts), or replies
-    // are never detected and the sequence keeps mailing someone who answered.
-    // As of 2026-10-12 giventakedevs.com MX points at Google Workspace and
-    // Email Routing is unconfigured, so no such address exists yet.
-    //
-    //   "CAMPAIGN_REPLY_TO": "<a mailbox routed to this Worker>",
+    // Where campaign replies go. Cloudflare Email Routing is enabled on the
+    // reply.giventakedevs.com SUBDOMAIN only - the apex MX stays on Google
+    // Workspace - with a literal rule that hands this address to the Worker
+    // (src/nitro/campaign-email.ts). The handler forwards every reply to
+    // CAMPAIGN_FORWARD_TO first, then marks the enrollment replied so the
+    // sequence stops. Both are plain values, so they live here, not only in
+    // the dashboard. The forward target must be a verified Email Routing
+    // destination address or the forward is rejected.
+    "CAMPAIGN_REPLY_TO": "reply@reply.giventakedevs.com",
+    "CAMPAIGN_FORWARD_TO": "build@giventakedevs.com",
     //
     // CAMPAIGN_TOKEN_SECRET, RESEND_API_KEY and the SUPABASE_* values are
     // secrets and stay in the dashboard, where a deploy cannot clear them.
