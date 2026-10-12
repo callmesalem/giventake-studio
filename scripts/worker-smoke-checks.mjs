@@ -25,6 +25,20 @@ export const EXPECTATIONS = Object.freeze([
     mustContain: "Link unavailable",
     mustNotContain: ERROR_PAGE_MARKER,
   },
+  {
+    // An AI agent or fetch tool asking for Markdown. TanStack Start answers
+    // any page request whose Accept names neither text/html nor */* with a
+    // 500 "Only HTML requests are supported here"; src/lib/ssr-accept.ts
+    // asks the router for HTML on its behalf. Without this check that 500
+    // is invisible to every other suite, as it was until 2026-10-12.
+    name: "/pricing as an agent (Accept: text/markdown)",
+    path: "/pricing",
+    method: "GET",
+    headers: { accept: "text/markdown" },
+    status: 200,
+    mustContain: "<!DOCTYPE html",
+    mustNotContain: ERROR_PAGE_MARKER,
+  },
   { path: "/definitely-not-a-page", status: 404 },
 ]);
 
