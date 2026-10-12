@@ -31,8 +31,8 @@ assertFileContains(
 );
 assertFileContains(
   "src/lib/seo.ts",
-  'export const LEGAL_ENTITY = "GivenTake Devs LLC";',
-  "Legal entity must match the new LLC name.",
+  'export const LEGAL_ENTITY = "Giventake Goods LLC";',
+  "Legal entity must match the contracting LLC named on the site.",
 );
 assertFileContains(
   "public/robots.txt",
