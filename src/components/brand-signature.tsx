@@ -45,8 +45,8 @@ const ROWS: Row[] = [
     take: "a fix",
     color: "#f59e0b",
     colorDark: "#fcd34d",
-    href: "#work",
-    label: "From a problem to a fix — see the kind of work we take",
+    href: "#site-check",
+    label: "From a problem to a fix — get a free site check",
   },
   {
     id: "r4",
@@ -93,17 +93,19 @@ export function BrandSignature() {
 
   const smoothScrollTo = (href: string) => {
     const el = document.querySelector(href);
-    if (!el) return;
+    if (!el) return false;
     el.scrollIntoView({
       behavior: reduced ? "auto" : "smooth",
       block: "start",
     });
+    return true;
   };
 
   const handleActivate = (row: Row) => (e: React.MouseEvent | React.KeyboardEvent) => {
     if ("key" in e && e.key !== "Enter" && e.key !== " ") return;
-    e.preventDefault();
-    smoothScrollTo(row.href);
+    // Only swallow the click when there is something to scroll to; otherwise the
+    // plain href still navigates.
+    if (smoothScrollTo(row.href)) e.preventDefault();
   };
 
   return (
