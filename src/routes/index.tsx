@@ -14,8 +14,10 @@ const named = <K extends string>(key: K, load: () => Promise<Record<K, Component
   lazy(() => load().then((m) => ({ default: m[key] })));
 
 const WhoWeHelp = named("WhoWeHelp", () => import("@/components/sections/who"));
+const Exchange = named("Exchange", () => import("@/components/sections/exchange"));
 const Services = named("Services", () => import("@/components/sections/services"));
 const HowItWorks = named("HowItWorks", () => import("@/components/sections/how"));
+const QualityGuardrails = named("QualityGuardrails", () => import("@/components/sections/quality"));
 const Beyond = named("Beyond", () => import("@/components/sections/beyond"));
 const Testimonials = named("Testimonials", () => import("@/components/sections/testimonials"));
 const SiteCheck = named("SiteCheck", () => import("@/components/sections/site-check"));
@@ -94,10 +96,12 @@ function Index() {
         <Hero />
         <TrustedPartner />
         <Suspense fallback={<Placeholder h={520} />}>
+          <Exchange />
           <WhoWeHelp />
           <Services />
           <Beyond />
           <HowItWorks />
+          <QualityGuardrails />
           <Testimonials />
           <SiteCheck />
           <ContactCTA />
