@@ -29,6 +29,8 @@ export interface Mailer {
     text: string;
     replyTo: string;
     headers?: Record<string, string>;
+    /** Branded HTML part (src/lib/email-brand.ts). Omitted means text only. */
+    html?: string;
   }): Promise<SendOutcome>;
 }
 

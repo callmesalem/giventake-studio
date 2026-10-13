@@ -28,6 +28,9 @@ export function createResendMailer(config: {
             to: [input.to],
             subject: input.subject,
             text: input.text,
+            // Only sent when the caller rendered one, so campaign behaviour
+            // for a text-only step is byte-identical to before.
+            ...(input.html ? { html: input.html } : {}),
             reply_to: input.replyTo,
             headers: input.headers,
           }),
