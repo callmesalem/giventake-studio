@@ -23,6 +23,7 @@ export const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   email: z.string().trim().email("Enter a valid email").max(255),
   company: z.string().trim().max(120).optional(),
+  phone: z.string().trim().max(30).optional(),
   description: z.string().trim().min(10, "Tell us a bit more about your project").max(1500),
   budget: z.enum(CONTACT_BUDGET_VALUES, { error: "Select a budget" }),
   timeline: z.enum(CONTACT_TIMELINE_VALUES, { error: "Select a timeline" }),

@@ -13,6 +13,7 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { IconArrowRight } from "@/components/marks";
+import { BUSINESS_PHONE, BUSINESS_PHONE_DISPLAY } from "@/lib/seo";
 import {
   contactSchema,
   CONTACT_BUDGET_OPTIONS,
@@ -58,6 +59,7 @@ export function ContactCTA() {
       `Name: ${d.name}`,
       `Email: ${d.email}`,
       d.company ? `Company: ${d.company}` : null,
+      d.phone ? `Phone: ${d.phone}` : null,
       `Budget: ${d.budget}`,
       `Timeline: ${d.timeline}`,
       `Source: ${d.source}`,
@@ -200,13 +202,20 @@ export function ContactCTA() {
 
             <div className="mt-12 rounded-2xl border border-hairline bg-white p-5 shadow-soft card-lift">
               <p className="text-[12px] font-medium uppercase tracking-wider text-muted-ink">
-                Prefer email?
+                Prefer to talk?
               </p>
               <a
-                href="mailto:build@giventakedevs.com"
+                href={`tel:${BUSINESS_PHONE}`}
                 className="mt-1 block text-[16px] font-semibold text-ink hover:text-violet"
               >
-                build@giventakedevs.com
+                {BUSINESS_PHONE_DISPLAY}
+              </a>
+              <p className="mt-0.5 text-[13px] text-muted-ink">Call or text, Mon to Fri.</p>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="mt-3 block text-[14px] font-medium text-ink hover:text-violet"
+              >
+                {CONTACT_EMAIL}
               </a>
             </div>
           </div>
@@ -282,14 +291,26 @@ export function ContactCTA() {
                     />
                   </Field>
                 </div>
-                <Field label="Company">
-                  <Input
-                    name="company"
-                    maxLength={120}
-                    placeholder="Company Inc."
-                    className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
-                  />
-                </Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Company">
+                    <Input
+                      name="company"
+                      maxLength={120}
+                      placeholder="Company Inc."
+                      className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
+                    />
+                  </Field>
+                  <Field label="Phone (optional)">
+                    <Input
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      maxLength={30}
+                      placeholder="(216) 555-0100"
+                      className="h-11 rounded-xl border-hairline bg-paper focus-visible:border-violet focus-visible:ring-0"
+                    />
+                  </Field>
+                </div>
                 <Field label="Project description">
                   <Textarea
                     name="description"
@@ -377,8 +398,10 @@ export function ContactCTA() {
                       Privacy Policy
                     </a>{" "}
                     and agree that GivenTake Devs may use the details I've submitted to reply to my
-                    enquiry and prepare a proposal. My data is not sold, not used to train AI
-                    models, and I can request deletion any time at{" "}
+                    enquiry and prepare a proposal, including by email, phone call, or text message
+                    if I give a number. Message and data rates may apply; reply STOP to any text to
+                    opt out. My data is not sold, not used to train AI models, and I can request
+                    deletion any time at{" "}
                     <a
                       href="mailto:privacy@giventakedevs.com"
                       className="font-medium text-ink underline"

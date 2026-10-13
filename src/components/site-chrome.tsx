@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { LogoMark, IconMenu, IconClose } from "@/components/marks";
 import { useConsent } from "@/lib/use-consent";
 import { offers } from "@/lib/offers";
+import { BUSINESS_PHONE, BUSINESS_PHONE_DISPLAY } from "@/lib/seo";
 import { SiteAssistant } from "@/components/site-assistant";
 
 /**
@@ -229,6 +230,19 @@ export function SiteFooter() {
               </span>
               Booking projects for {new Date().getFullYear()}
             </div>
+            <p className="mt-5 text-[14px] text-muted-ink">
+              Call or text{" "}
+              <a href={`tel:${BUSINESS_PHONE}`} className="font-medium text-ink hover:text-violet">
+                {BUSINESS_PHONE_DISPLAY}
+              </a>{" "}
+              ·{" "}
+              <a
+                href="mailto:build@giventakedevs.com"
+                className="font-medium text-ink hover:text-violet"
+              >
+                build@giventakedevs.com
+              </a>
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-8">
