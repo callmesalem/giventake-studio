@@ -12,12 +12,17 @@ export const criticalCss = `
 :root{--crit-ink:#0a0a0a;--crit-paper:#f7f7f5;--crit-hairline:#eaeaea;--crit-muted:#565656}
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background-color:var(--crit-paper);color:var(--crit-ink);font-family:"Inter Tight","Inter Tight Fallback",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background-color:var(--crit-paper);color:var(--crit-ink);font-family:"Inter Tight","Inter Tight Fallback",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01"}
 [data-crit] a:not([class]){color:inherit;text-decoration:none}
 [data-crit="header"]{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--crit-hairline);background:color-mix(in srgb,var(--crit-paper) 80%,transparent);backdrop-filter:blur(20px)}
 [data-crit="header-inner"]{display:flex;height:64px;max-width:80rem;margin:0 auto;padding:0 24px;align-items:center;justify-content:space-between}
 [data-crit="hero"]{position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.1);background:radial-gradient(125% 90% at 50% -12%,#12142e 0%,#080912 55%,#06070d 100%)}
-[data-crit="hero-grid"]{display:grid;grid-template-columns:1fr;gap:40px;max-width:80rem;margin:0 auto;padding:64px 24px 96px}
+/* minmax(0,1fr), not 1fr: a bare 1fr has an auto minimum, and the 520px media
+   panel pushed the column to 520px on a 412px phone, so every text block wrapped
+   differently once the real grid-cols-1 landed. The orb is absolute for the same
+   reason: as a static grid item it cost one row plus the 40px gap. */
+[data-crit="hero-grid"]{display:grid;grid-template-columns:minmax(0,1fr);gap:40px;max-width:80rem;margin:0 auto;padding:64px 24px 96px}
+.pointer-glow-orb{position:absolute;inset:0;z-index:0;pointer-events:none}
 [data-crit="hero-left"]{display:flex;flex-direction:column;justify-content:center}
 [data-crit="hero-title"]{margin:0;font-size:44px;font-weight:500;line-height:.98;letter-spacing:-.035em;color:#f5f6fb}
 [data-crit="hero-lede"]{margin:32px 0 0;max-width:36rem;font-size:17px;line-height:1.55;color:rgba(255,255,255,.62)}
@@ -39,8 +44,11 @@ body{margin:0;background-color:var(--crit-paper);color:var(--crit-ink);font-fami
    inner showreel/placeholder fills in on promote without reflowing the box. */
 [data-crit="hero-right"]{position:relative;display:flex;align-items:center;justify-content:center}
 [data-crit="hero-signature"]{width:100%;max-width:520px}
-[data-crit="hero-signature"]>div{aspect-ratio:4/5;width:100%;border-radius:1.25rem;border:1px solid rgba(255,255,255,.12);background:linear-gradient(160deg,#0e1022,#070812)}
-@media(min-width:1024px){[data-crit="hero-grid"]{grid-template-columns:1.15fr 1fr;gap:64px}[data-crit="hero-title"]{font-size:80px}[data-crit="hero-right"]{justify-content:flex-end}}
+[data-crit="hero-signature"]>div{aspect-ratio:4/5;width:100%;overflow:hidden;border-radius:1.25rem;border:1px solid rgba(255,255,255,.12);background:linear-gradient(160deg,#0e1022,#070812)}
+/* The poster is 576x720; unsized, the video paints at that intrinsic size and
+   grows the 4:5 box by ~270px on a phone until the main stylesheet lands. */
+[data-crit="hero-signature"] video{display:block;width:100%;height:auto}
+@media(min-width:1024px){[data-crit="hero-grid"]{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:64px}[data-crit="hero-title"]{font-size:80px}[data-crit="hero-right"]{justify-content:flex-end}}
 /* Entrance + ambient motion declared up front: the first painted frame already
    has the final rules, so promoting the main stylesheet never re-triggers or
    flashes hero content. Ambient loops stay paused until <html data-motion="on">. */
