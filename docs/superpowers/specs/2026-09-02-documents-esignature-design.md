@@ -1,7 +1,7 @@
 # Documents & E-Signature — Design
 
 **Date:** 2026-09-02
-**Status:** Approved, not yet implemented
+**Status:** Built. src/server/documents, the /sign routes, and the operator half in crm.deals.$id.tsx.
 **Scope:** Document generation, storage and in-house electronic signature
 
 ## The gap

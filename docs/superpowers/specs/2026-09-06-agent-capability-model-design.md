@@ -1,7 +1,7 @@
 # Agent Capability Model — Design
 
 **Date:** 2026-09-06
-**Status:** Approved, not yet implemented
+**Status:** Built. supabase/migrations/20260906120000_agent_capabilities.sql and 20260924120000_agent_asserted_identity.sql.
 **Scope:** Enforcing what an agent may do in the CRM database. Subsystem C of four.
 
 ## The gap

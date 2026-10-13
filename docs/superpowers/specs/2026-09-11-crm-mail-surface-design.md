@@ -1,6 +1,6 @@
 # The CRM mail surface — design
 
-**Status:** approved design, not yet planned or built.
+**Status:** Phase 1 built (src/routes/crm.inbox.tsx, src/server/mail); phases 2 to 5 outstanding.
 **Date:** 2026-09-11.
 **Scope:** connecting Gmail to the CRM, a threaded client-communication surface
 with AI assistance, and the design system that surface establishes.

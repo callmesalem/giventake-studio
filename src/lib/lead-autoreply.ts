@@ -4,7 +4,7 @@
  * drafts/welcome-email-lead-form.md). This is the copy a new lead receives after
  * the contact form is submitted.
  *
- * Guardrails, from the agent operating charter (docs/operations/00-...charter.md):
+ * Guardrails, from the agent operating charter (docs/operations/00-agent-operating-charter.md):
  *   §5  Every automated outbound message carries the disclosure footer verbatim,
  *       sends AS THE STUDIO, and never as a named individual with a personal
  *       sign-off.

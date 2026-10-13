@@ -261,7 +261,7 @@ function Deal() {
  * The operator half of the documents feature. Everything here reads the same
  * Card / Disclosure / FormControl kit the rest of this page uses; no new design
  * system, and nothing here writes except through the four server functions in
- * src/server/documents/deal-actions.ts.
+ * src/lib/documents-data.ts.
  *
  * The workflow is four steps on purpose — DRAFT → EDIT → FINALISE → SEND —
  * because docs/contracts/sow-template.md carries merge fields this system
