@@ -190,9 +190,10 @@ time someone rewords the gate, so the executor reports one outcome and claims
 only what it can stand behind: the deal was not advanced.
 
 Separating them properly means giving `CrmActions` a typed error, a change
-eleven call sites depend on. It is worth doing **before the `send_email`
-handler** lands, where "it was refused" and "it did not run" send an operator in
-different directions.
+eleven call sites depend on. It was not done before the `send_email` handler
+landed (PR #54, 2026-10-12), so that handler inherits the same single shape;
+it is still worth doing, because "it was refused" and "it did not run" send an
+operator in different directions.
 
 The `demo_site` handler (phase 2) shows what the intent buys where it is cheap:
 its gates are returned as values rather than thrown, so it records and reports
