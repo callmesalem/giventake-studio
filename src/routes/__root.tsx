@@ -88,7 +88,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: ({ matches }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -96,12 +96,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
     ],
     links: [
-      // Fetch the main sheet at high priority even though it is applied
-      // non-blocking below (media="print" alone gets a low fetch priority).
-      { rel: "preload", as: "style", href: appCss },
-      // Loaded non-blocking: the inlined critical CSS paints the header and
-      // hero, then this sheet is promoted to `all` right after first paint.
-      { rel: "stylesheet", href: appCss, media: "print", "data-main-css": "" },
+      // The inlined critical CSS styles only the home hero, so deferring the
+      // main sheet is a win on "/" alone. Everywhere else the first paint was
+      // unstyled and the promotion reflowed the whole fold (CLS 0.77 on the
+      // service pages, 2026-10-13 Observatory run). Those routes load it
+      // blocking, which is the ordinary, shift-free path.
+      ...((matches[matches.length - 1]?.pathname ?? "/") === "/"
+        ? [
+            // Fetch the main sheet at high priority even though it is applied
+            // non-blocking below (media="print" alone gets a low fetch priority).
+            { rel: "preload", as: "style", href: appCss },
+            // Loaded non-blocking: the inlined critical CSS paints the header and
+            // hero, then this sheet is promoted to `all` right after first paint.
+            { rel: "stylesheet", href: appCss, media: "print", "data-main-css": "" },
+          ]
+        : [{ rel: "stylesheet", href: appCss }]),
 
       {
         rel: "preload",
