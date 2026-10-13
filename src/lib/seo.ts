@@ -37,6 +37,12 @@ export const LEGAL_ENTITY_LONG = `${SITE_NAME} is a registered trade name of ${L
  */
 export const BUSINESS_ADDRESS = "[registered business address, Ohio]";
 
+/** Published business line (Twilio). E.164 for schema and tel: links, the
+ *  display form for people. Shown on every page so carrier registration can
+ *  verify the number against the site. */
+export const BUSINESS_PHONE = "+12164285999";
+export const BUSINESS_PHONE_DISPLAY = "(216) 428-5999";
+
 /** Governing law / venue for the website terms. */
 export const GOVERNING_STATE = "the State of Ohio";
 

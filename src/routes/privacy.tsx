@@ -59,9 +59,9 @@ function PrivacyPage() {
           <Section title="2. What we collect">
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                <strong>Contact form data:</strong> name, email address, company (optional), project
-                description, budget range, timeline, and how you found us. You provide this
-                voluntarily.
+                <strong>Contact form data:</strong> name, email address, company (optional), phone
+                number (optional), project description, budget range, timeline, and how you found
+                us. You provide this voluntarily.
               </li>
               <li>
                 <strong>Call booking form:</strong> name, email address, company (optional), what

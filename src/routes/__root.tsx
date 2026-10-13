@@ -17,6 +17,7 @@ import { ConsentProvider } from "../lib/consent";
 import { DeferredConsentBanner } from "../components/deferred-consent-banner";
 import {
   BASE_URL,
+  BUSINESS_PHONE,
   SITE_NAME,
   LEGAL_ENTITY,
   FOUNDER_ID,
@@ -128,6 +129,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               legalName: LEGAL_ENTITY,
               url: `${BASE_URL}/`,
               email: "build@giventakedevs.com",
+              telephone: BUSINESS_PHONE,
               slogan: "Websites That Report Back",
               description:
                 "Small web studio in Ohio building custom websites for small businesses, starting at $499 and owned by the client. An optional $99/mo care plan covers hosting, updates, and a plain-English performance report every month.",

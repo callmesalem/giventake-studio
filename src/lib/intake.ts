@@ -236,6 +236,7 @@ export const submitContact = createServerFn({ method: "POST" })
       `Name: ${data.name}`,
       `Email: ${data.email}`,
       data.company ? `Company: ${data.company}` : null,
+      data.phone ? `Phone: ${data.phone}` : null,
       `Budget: ${data.budget}`,
       `Timeline: ${data.timeline}`,
       `Source: ${data.source}`,
