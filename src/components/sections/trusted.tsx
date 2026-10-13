@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/reveal";
+import { LazyVideo } from "@/components/lazy-video";
 
 /**
  * Honest "trusted partner" band — no fake client logos.
@@ -16,20 +17,14 @@ const facts = [
 export function TrustedPartner() {
   return (
     <section className="relative overflow-hidden border-b border-white/10 bg-[#06070d]">
-      {/* Ambient global-network backdrop — muted autoplay loop, reduced-motion
-          safe (the poster paints and the file is preload="none"). */}
-      <video
+      {/* Ambient global-network backdrop — muted autoplay loop, fetched only
+          when the section is near the viewport (the poster paints first). */}
+      <LazyVideo
         className="absolute inset-0 h-full w-full object-cover opacity-95"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="none"
-        poster="/hero/globe-poster.jpg"
+        src="/hero/globe.mp4"
+        poster="/hero/globe-poster.webp"
         aria-hidden="true"
-      >
-        <source src="/hero/globe.mp4" type="video/mp4" />
-      </video>
+      />
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,13,.78),rgba(6,7,13,.3)_50%,rgba(6,7,13,.78))]"

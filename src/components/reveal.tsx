@@ -14,7 +14,7 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-function useIsInViewportOnce(
+export function useIsInViewportOnce(
   ref: React.RefObject<HTMLElement | null>,
   { threshold, rootMargin }: { threshold: number; rootMargin: string },
 ) {

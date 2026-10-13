@@ -1,13 +1,14 @@
 import { IconPlay } from "@/components/marks";
+import { LazyVideo } from "@/components/lazy-video";
 
 /**
  * Cinematic hero media slot.
  *
  * Renders a real autoplay-muted-loop video when a `src` is provided (poster
- * paints first, the file is `preload="none"` so it never blocks the LCP
- * headline). Until Salem drops in the GivenTake footage it shows a designed
- * "showreel" placeholder rather than an empty box — so the slot reads as
- * intentional, not broken.
+ * paints first, the file is fetched only once the frame is near the viewport,
+ * so it never competes with the LCP headline). Until Salem drops in the
+ * GivenTake footage it shows a designed "showreel" placeholder rather than an
+ * empty box — so the slot reads as intentional, not broken.
  */
 export function HeroVideoPanel({ src, poster }: { src?: string; poster?: string }) {
   return (
@@ -15,17 +16,7 @@ export function HeroVideoPanel({ src, poster }: { src?: string; poster?: string 
       <div className="vf-glow" aria-hidden="true" />
       <div className="relative z-10 h-full w-full">
         {src ? (
-          <video
-            className="h-full w-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="none"
-            poster={poster}
-          >
-            <source src={src} />
-          </video>
+          <LazyVideo className="h-full w-full object-cover" src={src} poster={poster} />
         ) : (
           <PlaceholderReel />
         )}

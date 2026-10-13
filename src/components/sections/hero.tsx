@@ -14,7 +14,13 @@ export function Hero() {
       <div aria-hidden="true" className="elite-grid" />
       <div aria-hidden="true" className="elite-veil" />
 
-      <PointerGlow className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 pt-16 pb-24 md:pt-24 md:pb-32 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+      {/* data-crit="hero-grid" is what the inlined critical CSS keys the grid and
+          padding on; without it the hero painted unpadded and then shifted down
+          when the main stylesheet landed (CLS 0.19 on mobile). */}
+      <PointerGlow
+        data-crit="hero-grid"
+        className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 pt-16 pb-24 md:pt-24 md:pb-32 lg:grid-cols-[1.15fr_1fr] lg:gap-16"
+      >
         {/* LEFT */}
         <div data-crit="hero-left" className="relative z-10 flex flex-col justify-center">
           <div
@@ -86,7 +92,7 @@ export function Hero() {
           <div data-crit="hero-signature" className="w-full max-w-[520px]">
             <HeroVideoPanel
               src="/hero/giventake-reel.mp4"
-              poster="/hero/giventake-reel-poster.jpg"
+              poster="/hero/giventake-reel-poster.webp"
             />
           </div>
         </div>

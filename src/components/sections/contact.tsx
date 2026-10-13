@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Reveal } from "@/components/reveal";
+import { LazyVideo } from "@/components/lazy-video";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -144,18 +145,12 @@ export function ContactCTA() {
       <div className="mx-auto max-w-7xl px-6 pt-24 md:pt-28">
         <Reveal>
           <div className="aspect-[1904/480] overflow-hidden rounded-2xl border border-hairline shadow-soft">
-            <video
+            <LazyVideo
               className="block h-full w-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="none"
-              poster="/hero/giventake-cta-poster.jpg"
+              src="/hero/giventake-cta.mp4"
+              poster="/hero/giventake-cta-poster.webp"
               aria-label="GivenTake Devs: you give us the problem, we take it from there."
-            >
-              <source src="/hero/giventake-cta.mp4" type="video/mp4" />
-            </video>
+            />
           </div>
         </Reveal>
       </div>

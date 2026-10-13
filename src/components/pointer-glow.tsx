@@ -1,12 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ComponentProps } from "react";
 
 export function PointerGlow({
   children,
   className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+  ...rest
+}: ComponentProps<"div"> & { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
 
@@ -54,7 +52,7 @@ export function PointerGlow({
   }, []);
 
   return (
-    <div ref={ref} className={`pointer-glow-wrap ${className}`}>
+    <div ref={ref} className={`pointer-glow-wrap ${className}`} {...rest}>
       <div className="pointer-glow-orb" aria-hidden="true" />
       {children}
     </div>
