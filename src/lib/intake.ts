@@ -1,4 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import {
   contactSchema,
   dsarSchema,
@@ -279,12 +279,14 @@ export const submitContact = createServerFn({ method: "POST" })
  * MCP tool (src/server/mcp/public-server.ts). `sourceDetail` is what the lead
  * record says it came from, so an agent-originated request is attributed as
  * one rather than passed off as a form fill.
+ *
+ * createServerOnlyFn, not a bare export: this module is imported by the form
+ * component, and a plain export would keep persistLead's server-only import
+ * reachable in the client bundle, which Start's import protection refuses.
+ * On the client this is a stub that throws; the form never calls it.
  */
-export async function requestSiteCheck(
-  data: SiteCheckInput,
-  sourceDetail = "Free site check form",
-): Promise<IntakeResult> {
-  {
+export const requestSiteCheck = createServerOnlyFn(
+  async (data: SiteCheckInput, sourceDetail = "Free site check form"): Promise<IntakeResult> => {
     const subject = `Free site check · ${data.name} · ${data.website}`;
     const text = [
       `Name: ${data.name}`,
@@ -325,8 +327,8 @@ export async function requestSiteCheck(
 
     // Notify the human.
     return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);
-  }
-}
+  },
+);
 
 export const submitSiteCheck = createServerFn({ method: "POST" })
   .validator((data: SiteCheckInput) => siteCheckSchema.parse(data))
