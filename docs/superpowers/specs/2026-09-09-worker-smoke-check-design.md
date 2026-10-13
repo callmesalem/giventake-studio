@@ -1,7 +1,7 @@
 # Worker smoke check and pinned compatibility date
 
 **Date:** 2026-09-09
-**Status:** approved design, not yet implemented
+**Status:** Built. scripts/worker-smoke.mjs, run in CI and before every deploy.
 **Follows:** PR #40 (`fix(sign): build the refusal page per request, not at module scope`)
 
 ## Why

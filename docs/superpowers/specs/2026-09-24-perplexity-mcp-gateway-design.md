@@ -1,6 +1,6 @@
 # The Perplexity MCP gateway — design
 
-**Status:** design agreed in conversation on 2026-09-24; nothing built.
+**Status:** Phases 1 and 2 built (src/server/mcp); phases 3 and 4 outstanding.
 **Date:** 2026-09-24.
 **Scope:** an MCP endpoint inside the CRM Worker that lets Perplexity read the
 CRM, write to it under the capability model, propose outward actions into the

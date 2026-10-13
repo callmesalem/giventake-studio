@@ -1,6 +1,6 @@
 # The approval executor — design
 
-**Status:** Phase 1 built and reviewed; phases 2 and 3 outstanding.
+**Status:** Phases 1 to 3 built (deal_close, send_email, demo_site executors; PR #54, 2026-10-12).
 **Date:** 2026-09-13.
 **Scope:** making an approved proposal actually happen, so Sami can propose the
 three actions he must never take on his own.

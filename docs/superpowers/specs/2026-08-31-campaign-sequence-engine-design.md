@@ -1,7 +1,7 @@
 # Campaign Sequence Engine — Design
 
 **Date:** 2026-08-31
-**Status:** Approved, not yet implemented
+**Status:** Built. Engine in src/server/campaigns (cron tick live since 2026-10-12), authoring in the CRM campaign pages. Open: cold-versus-opt-in audience handling.
 **Scope:** Email only
 
 ## The gap
