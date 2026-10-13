@@ -13,7 +13,7 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { IconArrowRight } from "@/components/marks";
-import { BUSINESS_PHONE, BUSINESS_PHONE_DISPLAY } from "@/lib/seo";
+import { BUSINESS_PHONE, BUSINESS_PHONE_DISPLAY, LEGAL_ENTITY } from "@/lib/seo";
 import {
   contactSchema,
   CONTACT_BUDGET_OPTIONS,
@@ -397,11 +397,11 @@ export function ContactCTA() {
                     <a href="/privacy" className="font-medium text-ink underline">
                       Privacy Policy
                     </a>{" "}
-                    and agree that GivenTake Devs may use the details I've submitted to reply to my
-                    enquiry and prepare a proposal, including by email, phone call, or text message
-                    if I give a number. Message and data rates may apply; reply STOP to any text to
-                    opt out. My data is not sold, not used to train AI models, and I can request
-                    deletion any time at{" "}
+                    and agree that GivenTake Devs (a trade name of {LEGAL_ENTITY}) may use the
+                    details I've submitted to reply to my enquiry and prepare a proposal, including
+                    by email, phone call, or text message from {LEGAL_ENTITY} if I give a number.
+                    Message and data rates may apply; reply STOP to any text to opt out. My data is
+                    not sold, not used to train AI models, and I can request deletion any time at{" "}
                     <a
                       href="mailto:privacy@giventakedevs.com"
                       className="font-medium text-ink underline"
