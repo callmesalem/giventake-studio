@@ -15,6 +15,7 @@ import {
   renderLeadAutoReply,
   shouldSendAutoReply,
 } from "@/lib/lead-autoreply";
+import { renderBrandedEmail } from "@/lib/email-brand";
 
 /**
  * Server-side intake for the contact and data-request forms.
@@ -47,10 +48,20 @@ import {
 
 const FALLBACK_TO = "build@giventakedevs.com";
 const PRIVACY_TO = "privacy@giventakedevs.com";
+const FROM_NAME = "GivenTake Devs";
 
 function env(key: string): string | undefined {
   const value = process.env[key];
   return value && value.trim() ? value.trim() : undefined;
+}
+
+/**
+ * Give the verified sender address the studio's name, so inboxes show
+ * "GivenTake Devs" and not a bare mailbox. An INTAKE_FROM_EMAIL that already
+ * carries a display name is passed through untouched.
+ */
+function brandedFrom(from: string): string {
+  return from.includes("<") ? from : `${FROM_NAME} <${from}>`;
 }
 
 /**
@@ -172,10 +183,20 @@ export async function sendMail(
   text: string,
   replyTo: string,
   attachments?: { filename: string; content: string }[],
+  html?: string,
 ): Promise<IntakeResult> {
   const apiKey = env("RESEND_API_KEY");
   const from = env("INTAKE_FROM_EMAIL");
   if (!apiKey || !from) return { status: "unconfigured" };
+
+  // Branding happens HERE rather than at each call site, so no sender can ship
+  // an unbranded email by forgetting to render one: every transactional send
+  // the studio makes, including the documents signature request, routes
+  // through this function. A caller that has already rendered its own HTML
+  // (campaign-style mail) passes it in and keeps both parts as given.
+  const rendered = html
+    ? { html, text }
+    : renderBrandedEmail({ subject, textBody: text, kind: "transactional" });
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -185,10 +206,11 @@ export async function sendMail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from,
+        from: brandedFrom(from),
         to: [to],
         subject,
-        text,
+        text: rendered.text,
+        html: rendered.html,
         reply_to: replyTo,
         ...(attachments && attachments.length ? { attachments } : {}),
       }),
