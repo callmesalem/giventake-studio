@@ -62,6 +62,12 @@ const ROWS: Row[] = [
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
+    // A renderer without matchMedia (some crawlers and screenshot services)
+    // gets the content shown, not the error boundary.
+    if (typeof window.matchMedia !== "function") {
+      setReduced(true);
+      return;
+    }
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const on = () => setReduced(mq.matches);
     on();
@@ -76,6 +82,7 @@ function useIsDark() {
   useEffect(() => {
     const check = () => setDark(document.documentElement.classList.contains("dark"));
     check();
+    if (typeof MutationObserver === "undefined") return;
     const mo = new MutationObserver(check);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     return () => mo.disconnect();

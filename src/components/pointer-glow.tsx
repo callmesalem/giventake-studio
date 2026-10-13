@@ -12,6 +12,7 @@ export function PointerGlow({
     const wrap = ref.current;
     if (!wrap) return;
 
+    if (typeof window.matchMedia !== "function") return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const coarse = window.matchMedia("(pointer: coarse)").matches;
     if (reduced || coarse) return;
