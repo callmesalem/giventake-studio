@@ -34,9 +34,9 @@ export function Pricing() {
       <div className="mx-auto max-w-7xl px-6 py-24 md:py-28">
         <Reveal className="mb-14 max-w-2xl">
           <p className="text-[13px] font-medium text-violet">Pricing</p>
-          <h2 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
+          <h1 className="mt-3 font-display text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-ink md:text-5xl">
             Custom websites, starting at $499.
-          </h2>
+          </h1>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
             Not a template someone configured. A site built for your business, scoped on a call and
             quoted in writing before anyone starts work. Payment plans and financing are available,

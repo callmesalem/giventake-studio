@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { ProsePage, H2, H3, P, Bullets, Callout } from "@/components/prose-page";
-import { pageHead, BASE_URL, SITE_NAME } from "@/lib/seo";
+import { pageHead, breadcrumbList, BASE_URL, FOUNDER_ID, SITE_NAME } from "@/lib/seo";
 import {
   articleBySlug,
   articles,
@@ -39,10 +39,22 @@ export const Route = createFileRoute("/articles/$slug")({
             description: article.metaDescription,
             datePublished: article.published,
             dateModified: article.published,
-            author: { "@id": `${BASE_URL}/#organization` },
+            // A named person, not the company: E-E-A-T reads authorship off
+            // the author node, and an organization is not an author.
+            author: { "@id": FOUNDER_ID },
             publisher: { "@id": `${BASE_URL}/#organization` },
             mainEntityOfPage: `${BASE_URL}/articles/${article.slug}`,
           }),
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbList([
+              { name: "Home", path: "/" },
+              { name: "Articles", path: "/articles" },
+              { name: article.title, path: `/articles/${article.slug}` },
+            ]),
+          ),
         },
       ],
     };

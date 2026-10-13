@@ -41,7 +41,7 @@ export const offers: Offer[] = [
     slug: "internal-dashboard",
     title: "Replace your spreadsheets with one dashboard",
     tagline: "Job status, invoices, and numbers in one place instead of five files.",
-    metaTitle: "Internal Dashboard Development | Replace Spreadsheets · GivenTake Devs",
+    metaTitle: "Internal Dashboard Development · GivenTake Devs",
     metaDescription:
       "Custom internal dashboards that replace shared spreadsheets with one source of truth. Fixed price from $6,000, live in about four weeks.",
     priceFrom: "From $6,000",

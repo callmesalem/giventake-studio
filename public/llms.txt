@@ -1,0 +1,35 @@
+# GivenTake Devs
+
+> A small web studio in Northeast Ohio. Custom websites for small businesses from $499, quoted in writing before work starts and owned outright by the client. An optional $99/mo care plan covers hosting, updates and a plain-English monthly report. The studio also builds internal dashboards, booking and payment systems, business automation and MVPs at fixed prices. GivenTake Devs is a registered trade name of Giventake Goods LLC.
+
+Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.com.
+
+## Services and pricing
+
+- [Services](https://giventakedevs.com/services): every fixed-price offer with scope, price and timeline
+- [Pricing and FAQ](https://giventakedevs.com/pricing): website pricing, the care plan, and answers to common questions
+- [Marketing website](https://giventakedevs.com/services/marketing-site)
+- [Internal dashboard](https://giventakedevs.com/services/internal-dashboard)
+- [Booking and payments](https://giventakedevs.com/services/booking-and-payments)
+- [Business automation](https://giventakedevs.com/services/business-automation)
+- [AI lead intake](https://giventakedevs.com/services/ai-lead-intake)
+- [MVP development](https://giventakedevs.com/services/mvp-development)
+
+## How the studio works
+
+- [Process](https://giventakedevs.com/process): the five steps every project runs through
+- [How we use AI](https://giventakedevs.com/how-we-use-ai): AI writes code, a human reviews everything before it ships
+- [Work](https://giventakedevs.com/work): the kinds of projects the studio takes on
+- [Book a call](https://giventakedevs.com/book)
+
+## Articles
+
+- [What custom software costs](https://giventakedevs.com/articles/what-custom-software-costs)
+- [Buy or build](https://giventakedevs.com/articles/buy-or-build)
+- [What you should get at handoff](https://giventakedevs.com/articles/what-you-get-at-handoff)
+
+## Optional
+
+- [Careers](https://giventakedevs.com/careers)
+- [Privacy](https://giventakedevs.com/privacy)
+- [Terms](https://giventakedevs.com/terms)
