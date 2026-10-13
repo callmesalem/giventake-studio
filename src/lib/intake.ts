@@ -274,9 +274,17 @@ export const submitContact = createServerFn({ method: "POST" })
  * the studio is notified by email. No auto-reply is sent — the "reply" is a
  * human-recorded video, and nothing automated should pretend otherwise.
  */
-export const submitSiteCheck = createServerFn({ method: "POST" })
-  .validator((data: SiteCheckInput) => siteCheckSchema.parse(data))
-  .handler(async ({ data }): Promise<IntakeResult> => {
+/**
+ * The site-check request itself, shared by the website form and the public
+ * MCP tool (src/server/mcp/public-server.ts). `sourceDetail` is what the lead
+ * record says it came from, so an agent-originated request is attributed as
+ * one rather than passed off as a form fill.
+ */
+export async function requestSiteCheck(
+  data: SiteCheckInput,
+  sourceDetail = "Free site check form",
+): Promise<IntakeResult> {
+  {
     const subject = `Free site check · ${data.name} · ${data.website}`;
     const text = [
       `Name: ${data.name}`,
@@ -303,7 +311,7 @@ export const submitSiteCheck = createServerFn({ method: "POST" })
       budget: "discovery",
       timeline: "exploring",
       source: "direct",
-      source_detail: "Free site check form",
+      source_detail: sourceDetail,
       consent_given: data.consent_given,
       consent_text: data.consent_text,
       utm_source: data.utm_source,
@@ -317,7 +325,12 @@ export const submitSiteCheck = createServerFn({ method: "POST" })
 
     // Notify the human.
     return sendMail(env("INTAKE_TO_EMAIL") ?? FALLBACK_TO, subject, text, data.email);
-  });
+  }
+}
+
+export const submitSiteCheck = createServerFn({ method: "POST" })
+  .validator((data: SiteCheckInput) => siteCheckSchema.parse(data))
+  .handler(({ data }) => requestSiteCheck(data));
 
 export const submitDsar = createServerFn({ method: "POST" })
   .validator((data: DsarInput) => dsarSchema.parse(data))

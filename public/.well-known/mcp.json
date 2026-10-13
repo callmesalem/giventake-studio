@@ -1,0 +1,21 @@
+{
+  "name": "giventake-devs",
+  "description": "GivenTake Devs, a web studio in Northeast Ohio building custom websites for small businesses from $499. One public tool: request a free five-minute recorded site check for a small-business website.",
+  "homepage": "https://giventakedevs.com/",
+  "documentation": "https://giventakedevs.com/llms.txt",
+  "contact": "build@giventakedevs.com",
+  "servers": [
+    {
+      "name": "giventake-devs",
+      "url": "https://giventakedevs.com/mcp",
+      "transport": "streamable-http",
+      "authentication": { "type": "none" },
+      "tools": [
+        {
+          "name": "request_site_check",
+          "description": "Request a free five-minute recorded review of a small-business website. A person records it and emails it back. Requires the person's name, email address, the site URL, and their consent to be emailed."
+        }
+      ]
+    }
+  ]
+}

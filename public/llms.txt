@@ -28,6 +28,11 @@ Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.co
 - [Buy or build](https://giventakedevs.com/articles/buy-or-build)
 - [What you should get at handoff](https://giventakedevs.com/articles/what-you-get-at-handoff)
 
+## For agents
+
+- MCP endpoint: https://giventakedevs.com/mcp (Streamable HTTP, no key). One tool, request_site_check, files a free five-minute recorded site check for a named person who asked for it and agreed to be emailed.
+- [Server card](https://giventakedevs.com/.well-known/mcp.json)
+
 ## Optional
 
 - [Careers](https://giventakedevs.com/careers)
