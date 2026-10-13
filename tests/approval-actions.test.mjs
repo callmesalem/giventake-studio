@@ -10,8 +10,22 @@ import {
   validateDealClose,
 } from "../src/lib/approval-actions.ts";
 
-test("the executable set is exactly the three the spec names", () => {
-  assert.deepEqual([...EXECUTABLE_ACTIONS], ["send_email", "deal_close", "demo_site"]);
+test("the executable set is exactly the ten the spec names through phase 4", () => {
+  assert.deepEqual(
+    [...EXECUTABLE_ACTIONS],
+    [
+      "send_email",
+      "deal_close",
+      "demo_site",
+      "lead_set_status",
+      "crm_assign",
+      "deal_link_lead",
+      "client_create",
+      "project_create",
+      "invoice_create",
+      "document_request_signature",
+    ],
+  );
 });
 
 test("anything outside the set is not executable", () => {

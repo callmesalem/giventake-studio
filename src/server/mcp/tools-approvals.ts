@@ -27,14 +27,27 @@ export const PROPOSABLE_ACTIONS = new Set([
   "document_request_signature",
 ]);
 
-/** Extended one action per phase as its executor lands (spec section 3). */
-export const EXECUTABLE_NOW = new Set(["deal_close", "send_email", "demo_site"]);
+/** Extended one action per phase as its executor lands (spec section 3).
+ *  Phase 3 (site_publish) waits on GITHUB_TOKEN_SITE; send_sms has no provider. */
+export const EXECUTABLE_NOW = new Set([
+  "deal_close",
+  "send_email",
+  "demo_site",
+  "lead_set_status",
+  "crm_assign",
+  "deal_link_lead",
+  "client_create",
+  "project_create",
+  "invoice_create",
+  "document_request_signature",
+]);
 
 const DEFAULT_RISK: Record<string, RiskLevel> = {
   send_email: "high",
   send_sms: "high",
   deal_close: "high",
   site_publish: "high",
+  document_request_signature: "high",
 };
 const EXPIRY_HOURS = 72;
 const APPROVAL_COLUMNS =

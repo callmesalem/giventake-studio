@@ -20,8 +20,15 @@
  */
 import {
   isExecutableAction,
+  validateClientCreate,
+  validateCrmAssign,
   validateDealClose,
+  validateDealLinkLead,
   validateDemoSite,
+  validateDocumentRequestSignature,
+  validateInvoiceCreate,
+  validateLeadSetStatus,
+  validateProjectCreate,
   validateSendEmail,
 } from "../../lib/approval-actions.ts";
 import { buildDemoSiteGates, isDemoSiteRequestable } from "../../lib/crm-guards.ts";
@@ -77,6 +84,53 @@ export interface ExecutorDeps {
     address: string | null;
     vertical: string | null;
   }): Promise<string>;
+
+  /* Phase 4 record writes. Each is the CrmActions method of the same name;
+   * the RPC behind it raises on a missing record or a bad value, and that
+   * raise is reported as a refusal without its text (it can name a person). */
+  setLeadStatus(leadId: string, status: string): Promise<void>;
+  assignRecord(input: {
+    table: string;
+    column: string;
+    id: string;
+    userId: string | null;
+  }): Promise<void>;
+  linkDealToLead(dealId: string, leadId: string): Promise<void>;
+  createClient(input: {
+    name: string;
+    leadId: string | null;
+    dealId: string;
+    aiProcessingAllowed: boolean;
+    ownerId: string | null;
+  }): Promise<string>;
+  createProject(clientId: string, name: string): Promise<void>;
+  createInvoice(input: {
+    projectId: string;
+    amountCents: number;
+    currency: string;
+    status: string;
+    dueAt: string | null;
+  }): Promise<void>;
+
+  /** The document as it is now, or null when it is not on that deal. */
+  documentForSignature(
+    dealId: string,
+    documentId: string,
+  ): Promise<{ status: string; bodyHash: string; title: string } | null>;
+  /** null is the database refusing because the body moved on; nothing was written. */
+  requestSignature(input: {
+    documentId: string;
+    bodyHash: string;
+    recipientName: string;
+    recipientEmail: string;
+    sentBy: string | null;
+  }): Promise<{ id: string; signingToken: string } | null>;
+  sendSignatureEmail(input: {
+    to: string;
+    recipientName: string;
+    documentTitle: string;
+    signingToken: string;
+  }): Promise<{ sent: boolean }>;
 }
 
 export type ExecutionOutcome =
@@ -199,6 +253,11 @@ export async function executeApproval(
 
   if (actionType === "send_email") return executeSendEmail(deps, approval, refuse, done);
   if (actionType === "demo_site") return executeDemoSite(deps, approval, refuse, done);
+  if (actionType === "document_request_signature") {
+    return executeSignatureRequest(deps, approval, refuse, done);
+  }
+  if (actionType !== "deal_close")
+    return executeRecordWrite(deps, approval, actionType, refuse, done);
 
   const validated = validateDealClose(approval.targetType, approval.targetId, approval.payload);
   if (!validated.ok) {
@@ -341,4 +400,155 @@ async function executeDemoSite(
     return refuse("The demo was not queued. Approving it again will not help until you check why.");
   }
   return done({ demoSiteId });
+}
+
+/**
+ * Phase 4 record writes: one validator and one CrmActions call each. The RPC
+ * is the gate (crm_assign checks the column, lead_set_status checks the word,
+ * client_create checks the deal), and its raise is reported the way deal_close
+ * reports one: as "not carried out", with no message text, because the text
+ * can name a client or a contact.
+ */
+async function executeRecordWrite(
+  deps: ExecutorDeps,
+  approval: StoredApproval,
+  actionType: string,
+  refuse: Refuse,
+  done: Done,
+): Promise<ExecutionOutcome> {
+  const { targetType, targetId, payload } = approval;
+  let run: () => Promise<Record<string, unknown>>;
+
+  switch (actionType) {
+    case "lead_set_status": {
+      const v = validateLeadSetStatus(targetType, targetId, payload);
+      if (!v.ok) return refuse(v.reason);
+      run = async () => {
+        await deps.setLeadStatus(v.value.leadId, v.value.status);
+        return { status: v.value.status };
+      };
+      break;
+    }
+    case "crm_assign": {
+      const v = validateCrmAssign(targetType, targetId, payload);
+      if (!v.ok) return refuse(v.reason);
+      run = async () => {
+        await deps.assignRecord(v.value);
+        return { column: v.value.column, userId: v.value.userId };
+      };
+      break;
+    }
+    case "deal_link_lead": {
+      const v = validateDealLinkLead(targetType, targetId, payload);
+      if (!v.ok) return refuse(v.reason);
+      run = async () => {
+        await deps.linkDealToLead(v.value.dealId, v.value.leadId);
+        return { leadId: v.value.leadId };
+      };
+      break;
+    }
+    case "client_create": {
+      const v = validateClientCreate(targetType, targetId, payload);
+      if (!v.ok) return refuse(v.reason);
+      run = async () => ({ clientId: await deps.createClient(v.value) });
+      break;
+    }
+    case "project_create": {
+      const v = validateProjectCreate(targetType, targetId, payload);
+      if (!v.ok) return refuse(v.reason);
+      run = async () => {
+        await deps.createProject(v.value.clientId, v.value.name);
+        return {};
+      };
+      break;
+    }
+    case "invoice_create": {
+      const v = validateInvoiceCreate(targetType, targetId, payload);
+      if (!v.ok) return refuse(v.reason);
+      run = async () => {
+        await deps.createInvoice(v.value);
+        return { amountCents: v.value.amountCents, currency: v.value.currency };
+      };
+      break;
+    }
+    default:
+      return refuse("The CRM cannot execute this kind of proposal.");
+  }
+
+  let extra: Record<string, unknown>;
+  try {
+    extra = await run();
+  } catch {
+    return refuse(
+      `The ${actionType} was not carried out. Approving it again will not help until you check why.`,
+    );
+  }
+  return done(extra);
+}
+
+/**
+ * document_request_signature: the one phase-4 action that reaches a person,
+ * so it runs the same outbound and do_not_contact checks as send_email, and
+ * the same draft and stale-hash refusals as the deal page's Send button.
+ */
+async function executeSignatureRequest(
+  deps: ExecutorDeps,
+  approval: StoredApproval,
+  refuse: Refuse,
+  done: Done,
+): Promise<ExecutionOutcome> {
+  const validated = validateDocumentRequestSignature(
+    approval.targetType,
+    approval.targetId,
+    approval.payload,
+  );
+  if (!validated.ok) return refuse(validated.reason);
+  const { documentId, dealId, recipientName, recipientEmail } = validated.value;
+
+  const control = await deps.outboundControl().catch(() => ({ outboundEnabled: false }));
+  if (control.outboundEnabled !== true) {
+    return refuse("Outbound is switched off (operator_system_control). Nothing was sent.");
+  }
+  if (await deps.isSuppressed(recipientEmail)) {
+    return refuse("The address is on do_not_contact. A hit is final.");
+  }
+
+  const document = await deps.documentForSignature(dealId, documentId);
+  if (!document) return refuse("The document is not on that deal, or no longer exists.");
+  if (document.status !== "final") {
+    return refuse("The document is still a draft. Finalise it in the CRM before sending it.");
+  }
+
+  let request: { id: string; signingToken: string } | null;
+  try {
+    request = await deps.requestSignature({
+      documentId,
+      bodyHash: document.bodyHash,
+      recipientName,
+      recipientEmail,
+      sentBy: null,
+    });
+  } catch {
+    return refuse("The signature request was not created: the CRM could not be reached.");
+  }
+  if (!request) {
+    return refuse(
+      "The document changed while this ran. Nothing was sent; look at it and propose again.",
+    );
+  }
+
+  // From here the request row exists, so the outcome is "done" whatever the
+  // mail provider says: the deal page shows the request and can resend it.
+  let sent = false;
+  try {
+    ({ sent } = await deps.sendSignatureEmail({
+      to: recipientEmail,
+      recipientName,
+      documentTitle: document.title,
+      signingToken: request.signingToken,
+    }));
+  } catch {
+    sent = false;
+  }
+  return done({ signatureRequestId: request.id, sent });
 }

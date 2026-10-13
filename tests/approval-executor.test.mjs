@@ -21,16 +21,43 @@ function fakeDeps({
   outbound = { outboundEnabled: true },
   sendStatus = "sent",
   demoFacts = { exists: true, existingStatuses: [] },
+  writeThrows = null,
+  document = { status: "final", bodyHash: "h1", title: "SOW" },
+  signatureRequest = { id: "sig-1", signingToken: "tok" },
+  signatureSent = true,
 } = {}) {
   const marked = [];
   const advanced = [];
   const sent = [];
   const demos = [];
+  const writes = [];
+  const write =
+    (name) =>
+    async (...args) => {
+      writes.push({ name, args });
+      if (writeThrows) throw new Error(writeThrows);
+      if (name === "createClient") return "client-1";
+      if (name === "requestSignature") return signatureRequest;
+      if (name === "sendSignatureEmail") return { sent: signatureSent };
+      return undefined;
+    };
   return {
     marked,
     advanced,
     sent,
     demos,
+    writes,
+    setLeadStatus: write("setLeadStatus"),
+    assignRecord: write("assignRecord"),
+    linkDealToLead: write("linkDealToLead"),
+    createClient: write("createClient"),
+    createProject: write("createProject"),
+    createInvoice: write("createInvoice"),
+    async documentForSignature() {
+      return document;
+    },
+    requestSignature: write("requestSignature"),
+    sendSignatureEmail: write("sendSignatureEmail"),
     async getApproval() {
       return approval ?? null;
     },
@@ -351,4 +378,173 @@ test("attribution never invents a confidence value", () => {
 test("the operator's own text is preserved verbatim ahead of the attribution", () => {
   const out = attributedNote("Ready to close.", "sami", "crm:x@example.com", AT);
   assert.ok(out.startsWith("Ready to close.\n\nProposed by"));
+});
+
+/* ── Phase 4: record writes ─────────────────────────────────────────────── */
+
+const CLIENT = "cccccccc-1111-2222-3333-444444444444";
+const PROJECT = "dddddddd-1111-2222-3333-444444444444";
+const DOC = "eeeeeeee-1111-2222-3333-444444444444";
+
+const writeApproval = (actionType, targetType, targetId, payload) => ({
+  id: "w1",
+  actionType,
+  agentName: "agent_perplexity",
+  targetType,
+  targetId,
+  status: "approved",
+  payload,
+});
+
+test("lead_set_status sets the status named in the payload on the target lead", async () => {
+  const deps = fakeDeps({
+    approval: writeApproval("lead_set_status", "lead", LEAD, { status: "qualified" }),
+  });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.deepEqual(out, { ok: true, action: "lead_set_status" });
+  assert.deepEqual(deps.writes, [{ name: "setLeadStatus", args: [LEAD, "qualified"] }]);
+  assert.equal(deps.marked[0].result.status, "qualified");
+});
+
+test("lead_set_status refuses a status that is not one lowercase word, before any write", async () => {
+  const deps = fakeDeps({
+    approval: writeApproval("lead_set_status", "lead", LEAD, { status: "Won!; drop table" }),
+  });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.equal(out.ok, false);
+  assert.equal(out.reason, "refused");
+  assert.equal(deps.writes.length, 0);
+  assert.equal(deps.marked[0].result.refused, "lead_set_status");
+});
+
+test("crm_assign refuses a table/column pair outside ASSIGNABLE", async () => {
+  const deps = fakeDeps({
+    approval: writeApproval("crm_assign", "approval_queue", DEAL, { column: "decided_by" }),
+  });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.equal(out.ok, false);
+  assert.equal(deps.writes.length, 0);
+});
+
+test("crm_assign with an empty userId unassigns the record", async () => {
+  const deps = fakeDeps({
+    approval: writeApproval("crm_assign", "deals", DEAL, { column: "owner_id", userId: "" }),
+  });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.equal(out.ok, true);
+  assert.deepEqual(deps.writes[0], {
+    name: "assignRecord",
+    args: [{ table: "deals", column: "owner_id", id: DEAL, userId: null }],
+  });
+});
+
+test("deal_link_lead links the target deal to the lead in the payload", async () => {
+  const deps = fakeDeps({
+    approval: writeApproval("deal_link_lead", "deal", DEAL, { leadId: LEAD }),
+  });
+  assert.equal((await executeApproval(deps, "w1", "salem")).ok, true);
+  assert.deepEqual(deps.writes[0].args, [DEAL, LEAD]);
+});
+
+test("client_create never assumes AI-processing consent and records the new id", async () => {
+  const deps = fakeDeps({
+    approval: writeApproval("client_create", "deal", DEAL, { name: "Acme Patios" }),
+  });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.equal(out.ok, true);
+  assert.deepEqual(deps.writes[0].args[0], {
+    dealId: DEAL,
+    name: "Acme Patios",
+    leadId: null,
+    aiProcessingAllowed: false,
+    ownerId: null,
+  });
+  assert.equal(deps.marked[0].result.clientId, "client-1");
+});
+
+test("project_create targets a client and needs a name", async () => {
+  const deps = fakeDeps({ approval: writeApproval("project_create", "client", CLIENT, {}) });
+  assert.equal((await executeApproval(deps, "w1", "salem")).ok, false);
+  assert.equal(deps.writes.length, 0);
+});
+
+test("invoice_create defaults currency and status and refuses a fractional amount", async () => {
+  const ok = fakeDeps({
+    approval: writeApproval("invoice_create", "project", PROJECT, { amountCents: 49900 }),
+  });
+  assert.equal((await executeApproval(ok, "w1", "salem")).ok, true);
+  assert.deepEqual(ok.writes[0].args[0], {
+    projectId: PROJECT,
+    amountCents: 49900,
+    currency: "usd",
+    status: "draft",
+    dueAt: null,
+  });
+
+  const bad = fakeDeps({
+    approval: writeApproval("invoice_create", "project", PROJECT, { amountCents: 499.5 }),
+  });
+  assert.equal((await executeApproval(bad, "w1", "salem")).ok, false);
+  assert.equal(bad.writes.length, 0);
+});
+
+test("a record write the database refuses is recorded as not carried out, without its text", async () => {
+  const deps = fakeDeps({
+    approval: writeApproval("lead_set_status", "lead", LEAD, { status: "qualified" }),
+    writeThrows: "lead not found: ana@example.com",
+  });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.equal(out.ok, false);
+  assert.doesNotMatch(out.detail, /example\.com/);
+  assert.doesNotMatch(JSON.stringify(deps.marked), /example\.com/);
+});
+
+const signatureApproval = (over = {}) =>
+  writeApproval("document_request_signature", "document", DOC, {
+    dealId: DEAL,
+    recipientName: "Ana",
+    recipientEmail: "Ana@Example.com",
+    ...over,
+  });
+
+test("document_request_signature creates the request and sends the link", async () => {
+  const deps = fakeDeps({ approval: signatureApproval() });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.deepEqual(out, { ok: true, action: "document_request_signature" });
+  assert.deepEqual(
+    deps.writes.map((w) => w.name),
+    ["requestSignature", "sendSignatureEmail"],
+  );
+  assert.equal(deps.writes[0].args[0].bodyHash, "h1");
+  assert.equal(deps.writes[0].args[0].recipientEmail, "ana@example.com");
+  assert.equal(deps.writes[1].args[0].signingToken, "tok");
+  assert.deepEqual(deps.marked[0].result, {
+    ok: true,
+    action: "document_request_signature",
+    signatureRequestId: "sig-1",
+    sent: true,
+  });
+});
+
+test("document_request_signature refuses a draft, a suppressed address, and outbound off", async () => {
+  for (const over of [
+    { document: { status: "draft", bodyHash: "h1", title: "SOW" } },
+    { suppressed: true },
+    { outbound: { outboundEnabled: false } },
+  ]) {
+    const deps = fakeDeps({ approval: signatureApproval(), ...over });
+    const out = await executeApproval(deps, "w1", "salem");
+    assert.equal(out.ok, false, JSON.stringify(over));
+    assert.equal(deps.writes.length, 0, JSON.stringify(over));
+  }
+});
+
+test("a stale document hash refuses without sending", async () => {
+  const deps = fakeDeps({ approval: signatureApproval(), signatureRequest: null });
+  const out = await executeApproval(deps, "w1", "salem");
+  assert.equal(out.ok, false);
+  assert.deepEqual(
+    deps.writes.map((w) => w.name),
+    ["requestSignature"],
+  );
 });

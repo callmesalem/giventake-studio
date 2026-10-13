@@ -8,6 +8,8 @@
 import { CrmRead } from "@/server/crm/read";
 import { CrmActions } from "@/server/crm/actions";
 import { createSupabaseDemoSiteStore } from "@/server/demo-sites/store";
+import { createSupabaseDocumentStore } from "@/server/documents/store";
+import { sendSignatureRequest } from "@/server/documents/mailer";
 import { sendMail } from "@/lib/intake";
 import type { ExecutorDeps, StoredApproval } from "@/server/approvals/execute";
 
@@ -26,6 +28,7 @@ export function crmExecutorDeps(config: { url: string; serviceRoleKey: string })
   const read = new CrmRead({ ...config, actor: { id: null, isAdmin: true } });
   const actions = new CrmActions(config);
   const demos = createSupabaseDemoSiteStore(config);
+  const documents = createSupabaseDocumentStore(config);
 
   return {
     async getApproval(id: string): Promise<StoredApproval | null> {
@@ -83,5 +86,42 @@ export function crmExecutorDeps(config: { url: string; serviceRoleKey: string })
     },
 
     requestDemoSite: (input) => demos.requestDemoSite({ ...input, requestedBy: null }),
+
+    setLeadStatus: (leadId, status) => actions.setLeadStatus(leadId, status),
+    assignRecord: ({ table, column, id, userId }) => actions.assign(table, column, id, userId),
+    linkDealToLead: (dealId, leadId) => actions.linkDealToLead(dealId, leadId),
+    createClient: (input) => actions.createClient(input),
+    createProject: (clientId, name) => actions.createProject(clientId, name),
+    createInvoice: (input) => actions.createInvoice(input),
+
+    async documentForSignature(dealId, documentId) {
+      const document = (await documents.listDealDocuments(dealId)).find((d) => d.id === documentId);
+      return document
+        ? { status: document.status, bodyHash: document.bodyHash, title: document.title }
+        : null;
+    },
+
+    requestSignature: (input) =>
+      documents.createSignatureRequest({
+        documentId: input.documentId,
+        recipientName: input.recipientName,
+        recipientEmail: input.recipientEmail,
+        expectedHash: input.bodyHash,
+        sentBy: input.sentBy,
+      }),
+
+    // Same mailer and link shape as the deal page's Send button. Replies go to
+    // the studio mailbox; there is no operator session on this path.
+    sendSignatureEmail({ to, recipientName, documentTitle, signingToken }) {
+      const base = process.env.SITE_BASE_URL?.trim().replace(/\/+$/, "");
+      if (!base) throw new Error("SITE_BASE_URL is not set");
+      return sendSignatureRequest(sendMail, {
+        to,
+        recipientName,
+        documentTitle,
+        signUrl: `${base}/sign/${encodeURIComponent(signingToken)}`,
+        replyTo: process.env.INTAKE_TO_EMAIL ?? FALLBACK_REPLY_TO,
+      });
+    },
   };
 }

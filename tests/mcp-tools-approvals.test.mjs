@@ -88,8 +88,22 @@ const tool = (deps, name) => {
   return spec;
 };
 
-test("phases 1 to 3 execute deal_close, send_email and demo_site; the proposable set is the spec's", () => {
-  assert.deepEqual([...EXECUTABLE_NOW], ["deal_close", "send_email", "demo_site"]);
+test("phases 1, 2 and 4 execute ten actions; site_publish and send_sms stay proposable only", () => {
+  assert.deepEqual(
+    [...EXECUTABLE_NOW],
+    [
+      "deal_close",
+      "send_email",
+      "demo_site",
+      "lead_set_status",
+      "crm_assign",
+      "deal_link_lead",
+      "client_create",
+      "project_create",
+      "invoice_create",
+      "document_request_signature",
+    ],
+  );
   assert.deepEqual([...PROPOSABLE_ACTIONS].sort(), [
     "client_create",
     "crm_assign",
@@ -166,11 +180,11 @@ test("propose says when the action can be proposed but not yet executed", async 
   const { deps } = fakeDeps();
   const data = parse(
     await tool(deps, "propose").handler({
-      action_type: "lead_set_status",
-      target_type: "lead",
-      target_id: DEAL,
-      summary: "mark qualified",
-      payload: { status: "qualified" },
+      action_type: "site_publish",
+      target_type: "pull_request",
+      target_id: "42",
+      summary: "publish the new pricing page",
+      payload: { branch: "perplexity/20261013-pricing" },
     }),
   ).data;
   assert.equal(data.executable_now, false);
@@ -233,13 +247,13 @@ test("execute refuses a row that is not pending, and never decides", async () =>
 });
 
 test("execute refuses an action without an executor BEFORE deciding, leaving it pending", async () => {
-  const { deps, calls } = fakeDeps({ approval: pending("lead_set_status") });
+  const { deps, calls } = fakeDeps({ approval: pending("site_publish") });
   const result = await tool(deps, "execute").handler({
     approval_id: APPROVAL,
     instruction: "do it",
   });
   assert.equal(result.isError, true);
-  assert.match(parse(result).error, /lead_set_status.*human|human.*lead_set_status/);
+  assert.match(parse(result).error, /site_publish.*human|human.*site_publish/);
   assert.equal(
     calls.some((c) => c[0] === "decideApproval"),
     false,
