@@ -477,6 +477,15 @@ export class CrmActions {
     });
   }
 
+  /** cold (per-SOP allowlist) or opt_in (the lead's own recorded consent).
+   *  The RPC refuses any other word; see policy.ts for what each means. */
+  setCampaignAudienceKind(campaignId: string, kind: "cold" | "opt_in"): Promise<unknown> {
+    return this.#rpc<unknown>("campaign_set_audience_kind", {
+      p_campaign_id: campaignId,
+      p_kind: kind,
+    });
+  }
+
   /** One step of a campaign sequence. Merge-field validation happens in the
    *  server function (src/lib/crm-data.ts); the RPC enforces the shape. */
   upsertCampaignStep(input: {

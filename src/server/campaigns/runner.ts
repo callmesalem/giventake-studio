@@ -36,7 +36,12 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
     try {
       // Charter §3.8: re-checked here, never trusted from enrollment time. An
       // address can reach do_not_contact, or an approval can expire, mid-sequence.
-      const gate = await evaluateGates(deps.store, { email: row.email, sop: row.sop });
+      const gate = await evaluateGates(deps.store, {
+        email: row.email,
+        sop: row.sop,
+        audienceKind: row.audienceKind,
+        consentGiven: row.consentGiven,
+      });
       if (!gate.allow) {
         skipped++;
         await deps.store.markStatus(
