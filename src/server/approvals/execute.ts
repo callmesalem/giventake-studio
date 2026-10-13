@@ -18,7 +18,13 @@
  * issue.ts: a narrow interface declared here rather than importing CrmActions,
  * so this module is testable with a small fake instead of a database.
  */
-import { isExecutableAction, validateDealClose } from "../../lib/approval-actions.ts";
+import {
+  isExecutableAction,
+  validateDealClose,
+  validateDemoSite,
+  validateSendEmail,
+} from "../../lib/approval-actions.ts";
+import { buildDemoSiteGates, isDemoSiteRequestable } from "../../lib/crm-guards.ts";
 
 /** The stage a deal_close proposal advances into. A literal rather than a
  *  lookup for the reason crm-guards.ts gives about CLOSE_STAGE_NAME: a gate
@@ -47,6 +53,30 @@ export interface ExecutorDeps {
     actor: string;
   }): Promise<unknown>;
   markExecuted(id: string, result: Record<string, unknown>): Promise<void>;
+
+  /** The address on the target record, re-read now. null when the record is
+   *  missing; { email: null } when it exists but has no address. */
+  recipientFor(
+    targetType: "lead" | "contact",
+    targetId: string,
+  ): Promise<{ email: string | null } | null>;
+  /** do_not_contact, checked fresh against the address on the record. */
+  isSuppressed(address: string): Promise<boolean>;
+  /** The section 10 kill switch. Anything but an explicit true is off. */
+  outboundControl(): Promise<{ outboundEnabled?: boolean; reason?: string }>;
+  sendEmail(input: { to: string; subject: string; text: string }): Promise<{ status: string }>;
+  /** Whether the record exists and what demos it already carries. */
+  demoSiteFacts(
+    targetType: "deal" | "company",
+    targetId: string,
+  ): Promise<{ exists: boolean; existingStatuses: string[] }>;
+  requestDemoSite(input: {
+    companyId: string | null;
+    dealId: string | null;
+    businessName: string;
+    address: string | null;
+    vertical: string | null;
+  }): Promise<string>;
 }
 
 export type ExecutionOutcome =
@@ -154,15 +184,21 @@ export async function executeApproval(
       : { ok: false, reason: "not-executable", actionType, recorded: false };
   }
 
-  if (actionType !== "deal_close") {
-    // send_email and demo_site are later phases. Recognised, deliberately not
-    // yet runnable, and said so rather than failing silently.
-    const detail = "This action is recognised but not implemented yet.";
+  const refuse = async (detail: string): Promise<ExecutionOutcome> => {
     const recorded = await record(deps, id, { ok: false, refused: actionType, detail });
     return recorded
       ? { ok: false, reason: "refused", detail }
       : { ok: false, reason: "refused", detail, recorded: false };
-  }
+  };
+  const done = async (extra: Record<string, unknown> = {}): Promise<ExecutionOutcome> => {
+    const recorded = await record(deps, id, { ok: true, action: actionType, ...extra });
+    return recorded
+      ? { ok: true, action: actionType }
+      : { ok: true, action: actionType, recorded: false };
+  };
+
+  if (actionType === "send_email") return executeSendEmail(deps, approval, refuse, done);
+  if (actionType === "demo_site") return executeDemoSite(deps, approval, refuse, done);
 
   const validated = validateDealClose(approval.targetType, approval.targetId, approval.payload);
   if (!validated.ok) {
@@ -203,4 +239,106 @@ export async function executeApproval(
   return recorded
     ? { ok: true, action: "deal_close" }
     : { ok: true, action: "deal_close", recorded: false };
+}
+
+type Refuse = (detail: string) => Promise<ExecutionOutcome>;
+type Done = (extra?: Record<string, unknown>) => Promise<ExecutionOutcome>;
+
+/**
+ * send_email: the one action that reaches a person.
+ *
+ * The human approved the subject and body verbatim, so they are sent verbatim:
+ * no attribution line is appended, because the recipient is a prospect, not a
+ * record. What the approval did NOT settle is re-checked here against the
+ * database, never the payload: that the record still exists, that its address
+ * is what the agent thought it was, that it is not on do_not_contact, and that
+ * outbound is switched on at all.
+ */
+async function executeSendEmail(
+  deps: ExecutorDeps,
+  approval: StoredApproval,
+  refuse: Refuse,
+  done: Done,
+): Promise<ExecutionOutcome> {
+  const validated = validateSendEmail(approval.targetType, approval.targetId, approval.payload);
+  if (!validated.ok) return refuse(validated.reason);
+  const { targetType, targetId, subject, body, claimedTo } = validated.value;
+
+  const control = await deps.outboundControl().catch(() => ({ outboundEnabled: false }));
+  if (control.outboundEnabled !== true) {
+    return refuse("Outbound is switched off (operator_system_control). Nothing was sent.");
+  }
+
+  const recipient = await deps.recipientFor(targetType, targetId);
+  if (!recipient) return refuse(`The ${targetType} this proposal targets no longer exists.`);
+  const to = recipient.email?.trim().toLowerCase() ?? "";
+  if (!to) return refuse(`The ${targetType} has no email address on record.`);
+  if (claimedTo && claimedTo !== to) {
+    return refuse("The payload and the record disagree about the recipient's address.");
+  }
+  if (await deps.isSuppressed(to)) {
+    return refuse("The address is on do_not_contact. A hit is final.");
+  }
+
+  let status: string;
+  try {
+    status = (await deps.sendEmail({ to, subject, text: body })).status;
+  } catch {
+    return refuse("The email was not sent: the mail provider could not be reached.");
+  }
+  if (status !== "sent") {
+    // "unconfigured" and "error" both end here. The address is deliberately
+    // not recorded: campaigns/mailer.ts sets the rule that errors never echo
+    // personal data, and an execution_result is read by every admin.
+    return refuse(`The email was not sent (${status}). Check the mail configuration.`);
+  }
+  return done();
+}
+
+/**
+ * demo_site: publishes under a prospect's name, so it runs the same gates the
+ * CRM's own demo button runs (buildDemoSiteGates), against facts read now.
+ */
+async function executeDemoSite(
+  deps: ExecutorDeps,
+  approval: StoredApproval,
+  refuse: Refuse,
+  done: Done,
+): Promise<ExecutionOutcome> {
+  const validated = validateDemoSite(approval.targetType, approval.targetId, approval.payload);
+  if (!validated.ok) return refuse(validated.reason);
+  const { targetType, targetId, businessName, address, vertical } = validated.value;
+
+  const control = await deps.outboundControl().catch(() => ({
+    outboundEnabled: false,
+    reason: "control unreadable",
+  }));
+  const facts = await deps.demoSiteFacts(targetType, targetId);
+  if (!facts.exists) return refuse(`The ${targetType} this proposal targets no longer exists.`);
+
+  const gates = buildDemoSiteGates({
+    outboundEnabled: control.outboundEnabled,
+    outboundReason: control.reason,
+    hasTarget: true,
+    businessName,
+    existingStatuses: facts.existingStatuses,
+  });
+  if (!isDemoSiteRequestable(gates)) {
+    const failed = gates.find((g) => g.blocking && !g.pass);
+    return refuse(failed ? `${failed.label}: ${failed.detail}` : "A demo-site gate refused.");
+  }
+
+  let demoSiteId: string;
+  try {
+    demoSiteId = await deps.requestDemoSite({
+      companyId: targetType === "company" ? targetId : null,
+      dealId: targetType === "deal" ? targetId : null,
+      businessName,
+      address,
+      vertical,
+    });
+  } catch {
+    return refuse("The demo was not queued. Approving it again will not help until you check why.");
+  }
+  return done({ demoSiteId });
 }

@@ -88,8 +88,8 @@ const tool = (deps, name) => {
   return spec;
 };
 
-test("phase 1 executes only deal_close, and the proposable set is the spec's", () => {
-  assert.deepEqual([...EXECUTABLE_NOW], ["deal_close"]);
+test("phases 1 to 3 execute deal_close, send_email and demo_site; the proposable set is the spec's", () => {
+  assert.deepEqual([...EXECUTABLE_NOW], ["deal_close", "send_email", "demo_site"]);
   assert.deepEqual([...PROPOSABLE_ACTIONS].sort(), [
     "client_create",
     "crm_assign",
@@ -166,11 +166,11 @@ test("propose says when the action can be proposed but not yet executed", async 
   const { deps } = fakeDeps();
   const data = parse(
     await tool(deps, "propose").handler({
-      action_type: "send_email",
-      target_type: "contact",
+      action_type: "lead_set_status",
+      target_type: "lead",
       target_id: DEAL,
-      summary: "send email",
-      payload: { subject: "x", body: "y" },
+      summary: "mark qualified",
+      payload: { status: "qualified" },
     }),
   ).data;
   assert.equal(data.executable_now, false);
@@ -198,7 +198,7 @@ test("execute runs a pending deal_close: decides as Salem via the agent, then ex
   );
   assert.ok(calls.some((c) => c[0] === "markExecuted"));
   assert.equal(data.outcome.ok, true);
-  assert.match(data.outcome_text, /closed/i);
+  assert.match(data.outcome_text, /deal_close was carried out/i);
   // The limit check happened before the decision, against the rolling hour.
   const limitCheck = calls.find((c) => c[0] === "listWhere");
   assert.equal(limitCheck[2].decided_by, "eq.crm:salem@giventakedevs.com via agent_perplexity");
@@ -233,13 +233,13 @@ test("execute refuses a row that is not pending, and never decides", async () =>
 });
 
 test("execute refuses an action without an executor BEFORE deciding, leaving it pending", async () => {
-  const { deps, calls } = fakeDeps({ approval: pending("send_email") });
+  const { deps, calls } = fakeDeps({ approval: pending("lead_set_status") });
   const result = await tool(deps, "execute").handler({
     approval_id: APPROVAL,
-    instruction: "send it",
+    instruction: "do it",
   });
   assert.equal(result.isError, true);
-  assert.match(parse(result).error, /send_email.*human|human.*send_email/);
+  assert.match(parse(result).error, /lead_set_status.*human|human.*lead_set_status/);
   assert.equal(
     calls.some((c) => c[0] === "decideApproval"),
     false,

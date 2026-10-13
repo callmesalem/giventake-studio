@@ -198,6 +198,56 @@ function ProposalDetail({ approval }: { approval: ApprovalRow }) {
     );
   }
 
+  if (approval.action_type === "send_email") {
+    // You approve the artifact, not a description of it: the subject and body
+    // shown here are what reaches the recipient, verbatim.
+    const subject = typeof payload?.subject === "string" ? payload.subject : "";
+    const body = typeof payload?.body === "string" ? payload.body : "";
+    return (
+      <div className="mt-3 rounded-md border border-border p-3">
+        <p className="text-xs text-muted-foreground">
+          Sends this email to the {approval.target_type ?? "record"}
+          {approval.target_label ? ` ${approval.target_label}` : ""}, at the address on their record
+        </p>
+        <p className="mt-2 break-words text-sm font-medium text-foreground">
+          {subject || "(no subject)"}
+        </p>
+        <pre className="mt-2 whitespace-pre-wrap break-words font-sans text-sm text-foreground">
+          {body || "(empty body)"}
+        </pre>
+        <p className="mt-2 text-xs text-muted-foreground">
+          do_not_contact and the outbound switch are checked again when this runs. Approving does
+          not skip them.
+        </p>
+      </div>
+    );
+  }
+
+  if (approval.action_type === "demo_site") {
+    const field = (k: string) => (typeof payload?.[k] === "string" ? (payload[k] as string) : "");
+    return (
+      <div className="mt-3 rounded-md border border-border p-3">
+        <p className="text-xs text-muted-foreground">
+          Queues a public demo site, attached to the {approval.target_type ?? "record"}
+          {approval.target_label ? ` ${approval.target_label}` : ""}
+        </p>
+        <p className="mt-1 break-words text-sm font-medium text-foreground">
+          {field("businessName") || "(no business name)"}
+        </p>
+        {field("address") && (
+          <p className="mt-1 break-words text-sm text-foreground">{field("address")}</p>
+        )}
+        {field("vertical") && (
+          <p className="mt-1 text-xs text-muted-foreground">{field("vertical")}</p>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">
+          The same gates as the Request demo button apply when this runs: outbound on, nothing
+          already building.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-3 rounded-md border border-border p-3">
       <p className="text-xs text-muted-foreground">
