@@ -5,6 +5,12 @@ const DEFAULT_THRESHOLD = 0.12;
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
+    // A renderer without matchMedia (some crawlers and screenshot services)
+    // gets the content shown, not the error boundary.
+    if (typeof window.matchMedia !== "function") {
+      setReduced(true);
+      return;
+    }
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const on = () => setReduced(mq.matches);
     on();
@@ -29,7 +35,7 @@ export function useIsInViewportOnce(
     // below the fold, we hide it so the reveal animation can play on scroll.
     const rect = el.getBoundingClientRect();
     const inViewport = rect.top < window.innerHeight && rect.bottom > 0;
-    if (inViewport) {
+    if (inViewport || typeof IntersectionObserver === "undefined") {
       setRevealed(true);
       return;
     }
