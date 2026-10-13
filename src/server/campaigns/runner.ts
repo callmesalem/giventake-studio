@@ -1,6 +1,8 @@
 import { evaluateGates } from "./policy.ts";
 import { type CampaignStore, type Mailer, type DueSend } from "./types.ts";
 import { unsubscribeToken } from "./tokens.ts";
+import { renderTemplate } from "../../lib/campaign-template.ts";
+import { renderBrandedEmail } from "../../lib/email-brand.ts";
 
 export interface RunnerDeps {
   store: CampaignStore;
@@ -10,16 +12,6 @@ export interface RunnerDeps {
   secret: string;
   limit?: number;
   leaseSeconds?: number;
-}
-
-/**
- * The replacement is a function, not a string: a lead named `Marks & Co` or
- * anything containing `$&`, `$'` or `$1` would otherwise be reinterpreted as a
- * replacement pattern and mangle the greeting on a real prospect's email.
- */
-function render(template: string, row: DueSend): string {
-  const name = row.name ?? "there";
-  return template.replace(/\{\{name\}\}/g, () => name);
 }
 
 /**
@@ -89,10 +81,25 @@ export async function runSendTick(deps: RunnerDeps): Promise<{ sent: number; ski
 
       const token = await unsubscribeToken(row.enrollmentId, deps.secret);
       const url = `${deps.unsubscribeBase}/${token}`;
+      // Merge fields were validated when the step was saved
+      // (src/lib/campaign-template.ts); an unknown token left in an old row
+      // passes through untouched rather than throwing inside the tick.
+      const ctx = { name: row.name, company: row.company };
+      const subject = renderTemplate(row.template.subject ?? "", ctx);
+      // Branded like every other outbound email. The signed link is the
+      // opt-out that works without a reply, so it stays in the body and in
+      // the List-Unsubscribe header; "marketing" adds the reply-to-opt-out
+      // line on top, which the inbound handler honours as a reply.
+      const branded = renderBrandedEmail({
+        subject,
+        textBody: `${renderTemplate(row.template.text ?? "", ctx)}\n\n---\nUnsubscribe: ${url}`,
+        kind: "marketing",
+      });
       const outcome = await deps.mailer.send({
         to: row.email as string,
-        subject: render(row.template.subject ?? "", row),
-        text: `${render(row.template.text ?? "", row)}\n\n---\nUnsubscribe: ${url}`,
+        subject,
+        text: branded.text,
+        html: branded.html,
         replyTo: deps.replyTo,
         headers: { "List-Unsubscribe": `<${url}>` },
       });

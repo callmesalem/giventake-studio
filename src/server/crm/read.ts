@@ -357,6 +357,12 @@ export class CrmRead {
     return this.#rpc<T[]>("document_list_for_deal", { p_deal_id: dealId });
   }
 
+  /** A campaign with its steps and enrollments, from campaign_detail
+   *  (migration 20261012130000). Campaigns are shared across members. */
+  campaignDetail<T = Record<string, unknown>>(id: string): Promise<T> {
+    return this.#rpc<T>("campaign_detail", { p_campaign_id: id });
+  }
+
   /** Which capabilities an agent holds, from agent_capabilities_for (migration
    *  20260924120000). service_role cannot read the table directly. */
   capabilitiesFor(agent: string): Promise<Array<{ capability: string; enabled: boolean }>> {

@@ -56,6 +56,7 @@ import { Route as CrmLeadsIdRouteImport } from './routes/crm.leads.$id'
 import { Route as CrmDealsIdRouteImport } from './routes/crm.deals.$id'
 import { Route as CrmContactsIdRouteImport } from './routes/crm.contacts.$id'
 import { Route as CrmCompaniesIdRouteImport } from './routes/crm.companies.$id'
+import { Route as CrmCampaignsIdRouteImport } from './routes/crm.campaigns.$id'
 import { Route as CrmAuthGoogleRouteImport } from './routes/crm.auth.google'
 import { Route as CrmAuthCallbackRouteImport } from './routes/crm.auth.callback'
 import { Route as ApiWebhooksResendRouteImport } from './routes/api.webhooks.resend'
@@ -296,6 +297,11 @@ const CrmCompaniesIdRoute = CrmCompaniesIdRouteImport.update({
   path: '/companies/$id',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmCampaignsIdRoute = CrmCampaignsIdRouteImport.update({
+  id: '/campaigns/$id',
+  path: '/campaigns/$id',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmAuthGoogleRoute = CrmAuthGoogleRouteImport.update({
   id: '/auth/google',
   path: '/auth/google',
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/api/webhooks/resend': typeof ApiWebhooksResendRoute
   '/crm/auth/callback': typeof CrmAuthCallbackRoute
   '/crm/auth/google': typeof CrmAuthGoogleRoute
+  '/crm/campaigns/$id': typeof CrmCampaignsIdRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/contacts/$id': typeof CrmContactsIdRoute
   '/crm/deals/$id': typeof CrmDealsIdRoute
@@ -414,6 +421,7 @@ export interface FileRoutesByTo {
   '/api/webhooks/resend': typeof ApiWebhooksResendRoute
   '/crm/auth/callback': typeof CrmAuthCallbackRoute
   '/crm/auth/google': typeof CrmAuthGoogleRoute
+  '/crm/campaigns/$id': typeof CrmCampaignsIdRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/contacts/$id': typeof CrmContactsIdRoute
   '/crm/deals/$id': typeof CrmDealsIdRoute
@@ -468,6 +476,7 @@ export interface FileRoutesById {
   '/api/webhooks/resend': typeof ApiWebhooksResendRoute
   '/crm/auth/callback': typeof CrmAuthCallbackRoute
   '/crm/auth/google': typeof CrmAuthGoogleRoute
+  '/crm/campaigns/$id': typeof CrmCampaignsIdRoute
   '/crm/companies/$id': typeof CrmCompaniesIdRoute
   '/crm/contacts/$id': typeof CrmContactsIdRoute
   '/crm/deals/$id': typeof CrmDealsIdRoute
@@ -523,6 +532,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/resend'
     | '/crm/auth/callback'
     | '/crm/auth/google'
+    | '/crm/campaigns/$id'
     | '/crm/companies/$id'
     | '/crm/contacts/$id'
     | '/crm/deals/$id'
@@ -575,6 +585,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/resend'
     | '/crm/auth/callback'
     | '/crm/auth/google'
+    | '/crm/campaigns/$id'
     | '/crm/companies/$id'
     | '/crm/contacts/$id'
     | '/crm/deals/$id'
@@ -628,6 +639,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/resend'
     | '/crm/auth/callback'
     | '/crm/auth/google'
+    | '/crm/campaigns/$id'
     | '/crm/companies/$id'
     | '/crm/contacts/$id'
     | '/crm/deals/$id'
@@ -997,6 +1009,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmCompaniesIdRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/crm/campaigns/$id': {
+      id: '/crm/campaigns/$id'
+      path: '/campaigns/$id'
+      fullPath: '/crm/campaigns/$id'
+      preLoaderRoute: typeof CrmCampaignsIdRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/crm/auth/google': {
       id: '/crm/auth/google'
       path: '/auth/google'
@@ -1059,6 +1078,7 @@ interface CrmRouteChildren {
   CrmIndexRoute: typeof CrmIndexRoute
   CrmAuthCallbackRoute: typeof CrmAuthCallbackRoute
   CrmAuthGoogleRoute: typeof CrmAuthGoogleRoute
+  CrmCampaignsIdRoute: typeof CrmCampaignsIdRoute
   CrmCompaniesIdRoute: typeof CrmCompaniesIdRoute
   CrmContactsIdRoute: typeof CrmContactsIdRoute
   CrmDealsIdRoute: typeof CrmDealsIdRoute
@@ -1086,6 +1106,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmIndexRoute: CrmIndexRoute,
   CrmAuthCallbackRoute: CrmAuthCallbackRoute,
   CrmAuthGoogleRoute: CrmAuthGoogleRoute,
+  CrmCampaignsIdRoute: CrmCampaignsIdRoute,
   CrmCompaniesIdRoute: CrmCompaniesIdRoute,
   CrmContactsIdRoute: CrmContactsIdRoute,
   CrmDealsIdRoute: CrmDealsIdRoute,
