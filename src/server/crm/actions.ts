@@ -477,6 +477,39 @@ export class CrmActions {
     });
   }
 
+  /** One step of a campaign sequence. Merge-field validation happens in the
+   *  server function (src/lib/crm-data.ts); the RPC enforces the shape. */
+  upsertCampaignStep(input: {
+    campaignId: string;
+    stepOrder: number;
+    delayHours: number;
+    subject: string;
+    text: string;
+  }): Promise<unknown> {
+    return this.#rpc<unknown>("campaign_step_upsert", {
+      p_campaign_id: input.campaignId,
+      p_step_order: input.stepOrder,
+      p_delay_hours: input.delayHours,
+      p_template: { subject: input.subject, text: input.text },
+    });
+  }
+
+  deleteCampaignStep(campaignId: string, stepOrder: number): Promise<unknown> {
+    return this.#rpc<unknown>("campaign_step_delete", {
+      p_campaign_id: campaignId,
+      p_step_order: stepOrder,
+    });
+  }
+
+  /** campaign_enroll_lead checks do_not_contact itself and enrols a suppressed
+   *  address as 'suppressed', so the sequence never sends to it. */
+  enrollLead(campaignId: string, leadId: string): Promise<unknown> {
+    return this.#rpc<unknown>("campaign_enroll_lead", {
+      p_campaign_id: campaignId,
+      p_lead_id: leadId,
+    });
+  }
+
   /** Amounts are held in CENTS - the column is amount_cents and money in floating
    *  point is how totals drift by a penny and nobody can say why. invoices is the
    *  table 20260817120000 locked away from service_role by name; invoice_create is

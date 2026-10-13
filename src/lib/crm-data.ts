@@ -23,6 +23,7 @@ import {
 } from "@/lib/crm-guards";
 import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
 import type { ExecutionOutcome } from "@/server/approvals/execute";
+import { MERGE_FIELDS, unknownMergeFields } from "@/lib/campaign-template";
 
 function config() {
   const url = process.env.SUPABASE_URL;
@@ -1749,5 +1750,143 @@ export const createInvoice = createServerFn({ method: "POST" })
     const { actions, session } = await writer();
     assertAdmin(session);
     await actions.createInvoice(data);
+    return { ok: true };
+  });
+
+/* ── Campaign authoring: steps and enrollments ───────────────────────── */
+
+export interface CampaignDetailVM {
+  campaign: {
+    id: string;
+    name: string;
+    goal: string | null;
+    channel: string | null;
+    status: string | null;
+    sop: string | null;
+  } | null;
+  steps: Array<{
+    id: string;
+    stepOrder: number;
+    delayHours: number;
+    subject: string;
+    text: string;
+  }>;
+  enrollments: Array<{
+    id: string;
+    leadId: string;
+    name: string | null;
+    email: string | null;
+    status: string | null;
+    currentStep: number;
+    updatedAt: string | null;
+  }>;
+}
+
+export const crmCampaign = createServerFn({ method: "GET" })
+  .validator((d: Record<string, unknown>) => ({ id: requireUuid(d?.id) }))
+  .handler(async ({ data }): Promise<CampaignDetailVM> => {
+    const read = await reader();
+    const raw = await read.campaignDetail<Record<string, unknown>>(data.id);
+    const c =
+      raw.campaign && typeof raw.campaign === "object"
+        ? (raw.campaign as Record<string, unknown>)
+        : null;
+    const steps = Array.isArray(raw.steps) ? (raw.steps as Record<string, unknown>[]) : [];
+    const enrollments = Array.isArray(raw.enrollments)
+      ? (raw.enrollments as Record<string, unknown>[])
+      : [];
+    return {
+      campaign: c
+        ? {
+            id: String(c.id),
+            name: str(c.name) ?? "(unnamed)",
+            goal: str(c.goal),
+            channel: str(c.channel),
+            status: str(c.status),
+            sop: str(c.sop),
+          }
+        : null,
+      steps: steps.map((s) => {
+        const t =
+          s.template && typeof s.template === "object"
+            ? (s.template as Record<string, unknown>)
+            : {};
+        return {
+          id: String(s.id),
+          stepOrder: num(s.stepOrder) ?? 0,
+          delayHours: num(s.delayHours) ?? 0,
+          subject: str(t.subject) ?? "",
+          text: str(t.text) ?? "",
+        };
+      }),
+      enrollments: enrollments.map((e) => ({
+        id: String(e.id),
+        leadId: String(e.leadId),
+        name: str(e.name),
+        email: str(e.email),
+        status: str(e.status),
+        currentStep: num(e.currentStep) ?? 0,
+        updatedAt: str(e.updatedAt),
+      })),
+    };
+  });
+
+function wholeNumber(value: unknown, field: string, max: number): number {
+  const n =
+    typeof value === "string" ? Number(value.trim()) : typeof value === "number" ? value : NaN;
+  if (!Number.isInteger(n) || n < 0 || n > max) {
+    throw new Response(`${field} must be a whole number between 0 and ${max}`, { status: 400 });
+  }
+  return n;
+}
+
+export const saveCampaignStep = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const subject = text(d?.subject, "Subject", 200, true) as string;
+    const body = text(d?.text, "Body", 10_000, true) as string;
+    // Refused here, at authoring time, so an unsupported token can never reach
+    // a prospect's subject line raw. The runner leaves unknown tokens alone.
+    const unknown = unknownMergeFields(`${subject}\n${body}`);
+    if (unknown.length > 0) {
+      throw new Response(
+        `Unknown merge field${unknown.length > 1 ? "s" : ""}: ${unknown
+          .map((u) => `{{${u}}}`)
+          .join(", ")}. Supported: ${MERGE_FIELDS.map((f) => `{{${f}}}`).join(", ")}.`,
+        { status: 400 },
+      );
+    }
+    return {
+      campaignId: requireUuid(d?.campaignId),
+      stepOrder: wholeNumber(d?.stepOrder, "Step", 99),
+      delayHours: wholeNumber(d?.delayHours, "Delay (hours)", 24 * 365),
+      subject,
+      text: body,
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.upsertCampaignStep(data);
+    return { ok: true };
+  });
+
+export const removeCampaignStep = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    campaignId: requireUuid(d?.campaignId),
+    stepOrder: wholeNumber(d?.stepOrder, "Step", 99),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.deleteCampaignStep(data.campaignId, data.stepOrder);
+    return { ok: true };
+  });
+
+export const enrollLeadInCampaign = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    campaignId: requireUuid(d?.campaignId),
+    leadId: requireUuid(d?.leadId),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await actions.enrollLead(data.campaignId, data.leadId);
     return { ok: true };
   });

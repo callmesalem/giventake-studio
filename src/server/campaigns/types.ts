@@ -6,6 +6,8 @@ export interface DueSend {
   sop: string | null;
   email: string | null;
   name: string | null;
+  /** The lead's company, for {{company}}. Older claim_due definitions omit it. */
+  company?: string | null;
   template: { subject?: string; text?: string };
 }
 
