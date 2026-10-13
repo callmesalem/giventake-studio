@@ -40,6 +40,35 @@ export const BUSINESS_ADDRESS = "[registered business address, Ohio]";
 /** Governing law / venue for the website terms. */
 export const GOVERNING_STATE = "the State of Ohio";
 
+/**
+ * Entity signals for search and answer engines: who is behind the name, where
+ * it operates, and which profiles are the same entity. These are what let a
+ * model connect "GivenTake Devs" to a person and a place; without them the
+ * brand is a string with no graph around it.
+ */
+export const FOUNDER_NAME = "Salem";
+export const FOUNDER_ID = `${BASE_URL}/#founder`;
+export const ORGANIZATION_ID = `${BASE_URL}/#organization`;
+export const SERVICE_AREA = "Northeast Ohio";
+export const SOCIAL_PROFILES = [
+  "https://www.instagram.com/given.take.devs/",
+  "https://www.facebook.com/giventakedevs",
+];
+
+/** A BreadcrumbList for a leaf page. `path` begins with a slash. */
+export function breadcrumbList(items: Array<{ name: string; path: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: `${BASE_URL}${item.path}`,
+    })),
+  };
+}
+
 type PageHeadInput = {
   /** Route path beginning with a slash, e.g. "/privacy". */
   path: string;

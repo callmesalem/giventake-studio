@@ -37,13 +37,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
+          "A small web studio in Ohio. Custom websites for small businesses from $499, quoted in writing and yours to own. Optional $99/mo care plan with a monthly report.",
       },
       { property: "og:title", content: "GivenTake Devs | Websites That Report Back" },
       {
         property: "og:description",
         content:
-          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
+          "A small web studio in Ohio. Custom websites for small businesses from $499, quoted in writing and yours to own. Optional $99/mo care plan with a monthly report.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${BASE_URL}/` },
@@ -71,7 +71,7 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:description",
         content:
-          "A small web studio in Ohio. Custom websites for small businesses starting at $499, quoted in writing, and yours to own. The optional $99/mo care plan adds hosting, updates, and a plain-English report every month showing what's bringing you customers.",
+          "A small web studio in Ohio. Custom websites for small businesses from $499, quoted in writing and yours to own. Optional $99/mo care plan with a monthly report.",
       },
       ...(ogImageUrl ? [{ name: "twitter:image", content: ogImageUrl }] : []),
       ...(ogImageUrl

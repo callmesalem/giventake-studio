@@ -11,7 +11,7 @@ export const Route = createFileRoute("/services/")({
       path: "/services",
       title: "Services & Pricing · GivenTake Devs",
       description:
-        "Fixed-price software development: internal dashboards, AI automation, booking systems, marketing sites, and MVPs. Website builds start at $499, with an optional $99/mo care plan. Real prices, real timelines, explicit exclusions.",
+        "Fixed-price development: dashboards, AI automation, booking systems, marketing sites and MVPs. Websites from $499 with an optional $99/mo care plan.",
     }),
   component: ServicesIndexPage,
 });

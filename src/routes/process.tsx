@@ -80,7 +80,7 @@ export const Route = createFileRoute("/process")({
   head: () =>
     pageHead({
       path: "/process",
-      title: "Our Process · The Five Steps Every Project Runs · GivenTake Devs",
+      title: "Our Five-Step Process · GivenTake Devs",
       description:
         "The five steps every project runs through, from a free 30-minute call to a monthly report: a written quote before any code, weekly working demos, a review checklist you keep, and a full handoff package.",
     }),

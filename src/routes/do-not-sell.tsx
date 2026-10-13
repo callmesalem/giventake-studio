@@ -8,7 +8,7 @@ export const Route = createFileRoute("/do-not-sell")({
   head: () =>
     pageHead({
       path: "/do-not-sell",
-      title: "Do Not Sell or Share My Personal Information · GivenTake Devs",
+      title: "Do Not Sell or Share My Information · GivenTake Devs",
       description:
         "Exercise your CCPA and CPRA right to opt out of the sale or sharing of your personal information by GivenTake Devs.",
     }),

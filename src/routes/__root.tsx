@@ -15,7 +15,16 @@ import { criticalCss } from "../lib/critical-css";
 
 import { ConsentProvider } from "../lib/consent";
 import { DeferredConsentBanner } from "../components/deferred-consent-banner";
-import { BASE_URL, SITE_NAME, LEGAL_ENTITY } from "../lib/seo";
+import {
+  BASE_URL,
+  SITE_NAME,
+  LEGAL_ENTITY,
+  FOUNDER_ID,
+  FOUNDER_NAME,
+  ORGANIZATION_ID,
+  SERVICE_AREA,
+  SOCIAL_PROFILES,
+} from "../lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -109,14 +118,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@graph": [
             {
-              "@type": "Organization",
-              "@id": `${BASE_URL}/#organization`,
+              // ProfessionalService is a LocalBusiness subtype: it is what
+              // lets a local or AI answer attach the studio to a place. The
+              // street address is deliberately absent until BUSINESS_ADDRESS
+              // is real; a region and service area are true today.
+              "@type": ["Organization", "ProfessionalService"],
+              "@id": ORGANIZATION_ID,
               name: SITE_NAME,
               legalName: LEGAL_ENTITY,
               url: `${BASE_URL}/`,
+              email: "build@giventakedevs.com",
               slogan: "Websites That Report Back",
               description:
                 "Small web studio in Ohio building custom websites for small businesses, starting at $499 and owned by the client. An optional $99/mo care plan covers hosting, updates, and a plain-English performance report every month.",
+              address: { "@type": "PostalAddress", addressRegion: "OH", addressCountry: "US" },
+              areaServed: [SERVICE_AREA, "United States"],
+              priceRange: "$499 - $10000",
+              founder: { "@id": FOUNDER_ID },
+              sameAs: SOCIAL_PROFILES,
+            },
+            {
+              "@type": "Person",
+              "@id": FOUNDER_ID,
+              name: FOUNDER_NAME,
+              jobTitle: "Founder",
+              worksFor: { "@id": ORGANIZATION_ID },
+              url: `${BASE_URL}/how-we-use-ai`,
+              sameAs: SOCIAL_PROFILES,
             },
             {
               "@type": "WebSite",

@@ -1,7 +1,7 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { IconArrowRight } from "@/components/marks";
-import { pageHead, BASE_URL, SITE_NAME } from "@/lib/seo";
+import { pageHead, breadcrumbList, BASE_URL, SITE_NAME } from "@/lib/seo";
 import { offerBySlug, offers, type Offer } from "@/lib/offers";
 
 export const Route = createFileRoute("/services/$slug")({
@@ -35,6 +35,16 @@ export const Route = createFileRoute("/services/$slug")({
             provider: { "@id": `${BASE_URL}/#organization` },
             url: `${BASE_URL}/services/${offer.slug}`,
           }),
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbList([
+              { name: "Home", path: "/" },
+              { name: "Services", path: "/services" },
+              { name: offer.title, path: `/services/${offer.slug}` },
+            ]),
+          ),
         },
       ],
     };
