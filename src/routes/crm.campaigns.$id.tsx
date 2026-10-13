@@ -6,6 +6,7 @@ import {
   saveCampaignStep,
   removeCampaignStep,
   enrollLeadInCampaign,
+  setCampaignAudience,
 } from "@/lib/crm-data";
 import { MERGE_FIELDS } from "@/lib/campaign-template";
 import { PageHeader, Card, EmptyState, Badge, EntityForm, Disclosure } from "@/components/crm/ui";
@@ -60,6 +61,16 @@ function CampaignDetail() {
     }
   }
 
+  async function changeAudience(kind: string) {
+    try {
+      await setCampaignAudience({ data: { campaignId, kind } });
+      await router.invalidate();
+      toast.success(kind === "opt_in" ? "Opt-in: sends on recorded consent" : "Cold: allowlist");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not change the audience");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title={campaign.name} subtitle={campaign.goal ?? "Campaign sequence"} />
@@ -70,6 +81,18 @@ function CampaignDetail() {
         <span aria-hidden="true">/</span>
         <span>{campaign.name}</span>
         <span className="ml-auto flex items-center gap-2">
+          <label className="flex items-center gap-1.5">
+            <span>Audience</span>
+            <select
+              className="rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground"
+              value={campaign.audienceKind}
+              onChange={(e) => changeAudience(e.target.value)}
+              aria-label="Audience kind"
+            >
+              <option value="cold">Cold: approved allowlist</option>
+              <option value="opt_in">Opt-in: recorded consent</option>
+            </select>
+          </label>
           {campaign.channel && <Badge value={campaign.channel} />}
           {campaign.status && <Badge value={campaign.status} />}
         </span>
@@ -80,6 +103,9 @@ function CampaignDetail() {
           Step 0 sends when a lead is enrolled, after its delay. Each later step waits its delay
           after the previous send. Merge fields: {mergeHint}. The sequence stops on a reply, an
           unsubscribe, or a conversion.
+          {campaign.audienceKind === "opt_in"
+            ? " Opt-in audience: a step sends only to leads whose consent was recorded at intake. No allowlist is needed; do_not_contact still applies."
+            : " Cold audience: every address must be on the approved-recipient list for this SOP before a step sends."}
         </p>
         <div className="mb-4">
           <Disclosure label="Add step" openLabel="Add a step">

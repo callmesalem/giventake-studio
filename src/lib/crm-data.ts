@@ -1763,6 +1763,8 @@ export interface CampaignDetailVM {
     channel: string | null;
     status: string | null;
     sop: string | null;
+    /** cold: per-SOP allowlist. opt_in: the lead's recorded consent. */
+    audienceKind: "cold" | "opt_in";
   } | null;
   steps: Array<{
     id: string;
@@ -1804,6 +1806,7 @@ export const crmCampaign = createServerFn({ method: "GET" })
             channel: str(c.channel),
             status: str(c.status),
             sop: str(c.sop),
+            audienceKind: c.audienceKind === "opt_in" ? "opt_in" : "cold",
           }
         : null,
       steps: steps.map((s) => {
@@ -1888,5 +1891,22 @@ export const enrollLeadInCampaign = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { actions } = await writer();
     await actions.enrollLead(data.campaignId, data.leadId);
+    return { ok: true };
+  });
+
+/** Admin only: switching to opt_in drops the allowlist gate for every
+ *  enrollment in the campaign, so it is the same class of decision as
+ *  approving a recipient. */
+export const setCampaignAudience = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const kind: "cold" | "opt_in" | null =
+      d?.kind === "opt_in" ? "opt_in" : d?.kind === "cold" ? "cold" : null;
+    if (!kind) throw new Response("Audience must be cold or opt_in", { status: 400 });
+    return { campaignId: requireUuid(d?.campaignId), kind };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions, session } = await writer();
+    assertAdmin(session);
+    await actions.setCampaignAudienceKind(data.campaignId, data.kind);
     return { ok: true };
   });

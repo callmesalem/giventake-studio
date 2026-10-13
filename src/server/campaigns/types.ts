@@ -8,6 +8,10 @@ export interface DueSend {
   name: string | null;
   /** The lead's company, for {{company}}. Older claim_due definitions omit it. */
   company?: string | null;
+  /** campaigns.audience.kind. Absent (older claim_due) means cold. */
+  audienceKind?: "cold" | "opt_in";
+  /** leads.consent_given as recorded at intake. Only an opt_in campaign reads it. */
+  consentGiven?: boolean;
   template: { subject?: string; text?: string };
 }
 
