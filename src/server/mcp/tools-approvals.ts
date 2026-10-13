@@ -28,7 +28,7 @@ export const PROPOSABLE_ACTIONS = new Set([
 ]);
 
 /** Extended one action per phase as its executor lands (spec section 3). */
-export const EXECUTABLE_NOW = new Set(["deal_close"]);
+export const EXECUTABLE_NOW = new Set(["deal_close", "send_email", "demo_site"]);
 
 const DEFAULT_RISK: Record<string, RiskLevel> = {
   send_email: "high",
@@ -44,7 +44,7 @@ export function describeOutcome(outcome: ExecutionOutcome): string {
   if (outcome.ok) {
     return outcome.recorded === false
       ? `Done: ${outcome.action} was carried out, but recording it failed; check the approvals page.`
-      : `Done: the deal was closed and the approval is recorded as executed.`;
+      : `Done: ${outcome.action} was carried out and the approval is recorded as executed.`;
   }
   switch (outcome.reason) {
     case "not-found":

@@ -13,12 +13,24 @@ const DEAL = "11111111-2222-3333-4444-555555555555";
 /** Records calls rather than persisting. `advanceThrows` is how a real gate
  *  refusal is simulated: CrmActions.advanceDealStage throws on a Close with no
  *  signed SOW. */
-function fakeDeps({ approval, advanceThrows = null } = {}) {
+function fakeDeps({
+  approval,
+  advanceThrows = null,
+  recipient = { email: "Ana@Example.com" },
+  suppressed = false,
+  outbound = { outboundEnabled: true },
+  sendStatus = "sent",
+  demoFacts = { exists: true, existingStatuses: [] },
+} = {}) {
   const marked = [];
   const advanced = [];
+  const sent = [];
+  const demos = [];
   return {
     marked,
     advanced,
+    sent,
+    demos,
     async getApproval() {
       return approval ?? null;
     },
@@ -30,8 +42,52 @@ function fakeDeps({ approval, advanceThrows = null } = {}) {
     async markExecuted(id, result) {
       marked.push({ id, result });
     },
+    async recipientFor() {
+      return recipient;
+    },
+    async isSuppressed() {
+      return suppressed;
+    },
+    async outboundControl() {
+      return outbound;
+    },
+    async sendEmail(input) {
+      sent.push(input);
+      return { status: sendStatus };
+    },
+    async demoSiteFacts() {
+      return demoFacts;
+    },
+    async requestDemoSite(input) {
+      demos.push(input);
+      return "demo-1";
+    },
   };
 }
+
+const LEAD = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+
+const emailApproval = (over = {}) => ({
+  id: "a2",
+  actionType: "send_email",
+  agentName: "sami",
+  targetType: "lead",
+  targetId: LEAD,
+  status: "approved",
+  payload: { subject: "Your patio quote", body: "Hi Ana,\n\nHere is the quote." },
+  ...over,
+});
+
+const demoApproval = (over = {}) => ({
+  id: "a3",
+  actionType: "demo_site",
+  agentName: "sami",
+  targetType: "deal",
+  targetId: DEAL,
+  status: "approved",
+  payload: { businessName: "Ana's Patios", address: "1 Main St", vertical: "landscaping" },
+  ...over,
+});
 
 const approved = (over = {}) => ({
   id: "a1",
@@ -85,16 +141,108 @@ test("an unexecutable action_type never reaches a handler", async () => {
   assert.equal(deps.marked[0].result.ok, false);
 });
 
-test("a recognised but unimplemented action refuses and records, without acting", async () => {
-  // send_email and demo_site are both in EXECUTABLE_ACTIONS, so they pass the
-  // closed-set gate and land on the not-implemented path. Sami can propose
-  // either today, and this branch writes a terminal row.
-  for (const actionType of ["send_email", "demo_site"]) {
-    const deps = fakeDeps({ approval: approved({ actionType }) });
-    const outcome = await executeApproval(deps, "a1", "crm:salem@example.com");
-    assert.equal(outcome.ok, false, `${actionType} must refuse`);
-    assert.equal(deps.advanced.length, 0, `${actionType} must not act`);
-    assert.equal(deps.marked.length, 1, `${actionType} must be recorded`);
+test("an approved send_email sends the approved text verbatim to the record's address", async () => {
+  const deps = fakeDeps({ approval: emailApproval() });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, true);
+  assert.equal(deps.sent.length, 1);
+  // Lower-cased from the record, never taken from the payload.
+  assert.equal(deps.sent[0].to, "ana@example.com");
+  assert.equal(deps.sent[0].subject, "Your patio quote");
+  assert.equal(deps.sent[0].text, "Hi Ana,\n\nHere is the quote.");
+  assert.equal(deps.marked[0].result.ok, true);
+  assert.equal(deps.marked[0].result.action, "send_email");
+  // The recipient's address is personal data and never lands in the result.
+  assert.doesNotMatch(JSON.stringify(deps.marked[0].result), /example\.com/);
+});
+
+test("send_email re-checks do_not_contact against the record and refuses a hit", async () => {
+  const deps = fakeDeps({ approval: emailApproval(), suppressed: true });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.equal(outcome.reason, "refused");
+  assert.match(outcome.detail, /do_not_contact/);
+  assert.equal(deps.sent.length, 0);
+  assert.equal(deps.marked.length, 1);
+});
+
+test("send_email refuses when outbound is switched off", async () => {
+  const deps = fakeDeps({ approval: emailApproval(), outbound: { outboundEnabled: false } });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.equal(deps.sent.length, 0);
+});
+
+test("send_email refuses when the payload names a different address than the record", async () => {
+  const deps = fakeDeps({
+    approval: emailApproval({
+      payload: { subject: "s", body: "b", to: "attacker@example.net" },
+    }),
+  });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.match(outcome.detail, /disagree/);
+  assert.equal(deps.sent.length, 0);
+});
+
+test("send_email refuses a missing record or one with no address, without sending", async () => {
+  for (const recipient of [null, { email: null }]) {
+    const deps = fakeDeps({ approval: emailApproval(), recipient });
+    const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+    assert.equal(outcome.ok, false);
+    assert.equal(deps.sent.length, 0);
+    assert.equal(deps.marked.length, 1);
+  }
+});
+
+test("send_email records a provider failure as a refusal, naming no address", async () => {
+  const deps = fakeDeps({ approval: emailApproval(), sendStatus: "error" });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.doesNotMatch(JSON.stringify(deps.marked[0].result), /example\.com/);
+});
+
+test("send_email refuses a header injection in the subject", async () => {
+  const deps = fakeDeps({
+    approval: emailApproval({ payload: { subject: "Hi\r\nBcc: x@y.z", body: "b" } }),
+  });
+  const outcome = await executeApproval(deps, "a2", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.equal(deps.sent.length, 0);
+});
+
+test("an approved demo_site queues a demo against the targeted deal", async () => {
+  const deps = fakeDeps({ approval: demoApproval() });
+  const outcome = await executeApproval(deps, "a3", "crm:salem@example.com");
+  assert.equal(outcome.ok, true);
+  assert.equal(deps.demos.length, 1);
+  assert.equal(deps.demos[0].dealId, DEAL);
+  assert.equal(deps.demos[0].companyId, null);
+  assert.equal(deps.demos[0].businessName, "Ana's Patios");
+  assert.equal(deps.marked[0].result.demoSiteId, "demo-1");
+});
+
+test("demo_site runs the CRM's own gates: a build already in flight refuses", async () => {
+  const deps = fakeDeps({
+    approval: demoApproval(),
+    demoFacts: { exists: true, existingStatuses: ["building"] },
+  });
+  const outcome = await executeApproval(deps, "a3", "crm:salem@example.com");
+  assert.equal(outcome.ok, false);
+  assert.match(outcome.detail, /already queued or building/);
+  assert.equal(deps.demos.length, 0);
+});
+
+test("demo_site refuses when outbound is off or the record is gone", async () => {
+  for (const over of [
+    { outbound: { outboundEnabled: false, reason: "maintenance" } },
+    { demoFacts: { exists: false, existingStatuses: [] } },
+  ]) {
+    const deps = fakeDeps({ approval: demoApproval(), ...over });
+    const outcome = await executeApproval(deps, "a3", "crm:salem@example.com");
+    assert.equal(outcome.ok, false);
+    assert.equal(deps.demos.length, 0);
+    assert.equal(deps.marked.length, 1);
   }
 });
 

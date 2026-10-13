@@ -181,6 +181,14 @@ export class CrmRead {
    * security-hardening migration), so it is read through the leads_list
    * security-definer function, which returns real (non-synthetic) leads.
    */
+  /** One lead by id, through the lead_get RPC: leads is RPC-only for the
+   *  service role, so getById cannot read it. The executor is the caller and
+   *  is admin by construction; no member scoping is applied here. */
+  async getLead<T = Record<string, unknown>>(id: string): Promise<T | null> {
+    const row = await this.#rpc<T | null>("lead_get", { p_id: id });
+    return row ?? null;
+  }
+
   async listLeads<T = Record<string, unknown>>(): Promise<T[]> {
     // leads is RPC-only; the RPC returns owner_id/assigned_to (see the
     // leads_list owner-fields migration) so member visibility applies here too.
