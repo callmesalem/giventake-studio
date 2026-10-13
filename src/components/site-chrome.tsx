@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { LogoMark, IconMenu, IconClose } from "@/components/marks";
 import { useConsent } from "@/lib/use-consent";
 import { offers } from "@/lib/offers";
-import { BUSINESS_PHONE, BUSINESS_PHONE_DISPLAY } from "@/lib/seo";
+import { BUSINESS_PHONE, BUSINESS_PHONE_DISPLAY, LEGAL_ENTITY } from "@/lib/seo";
 import { SiteAssistant } from "@/components/site-assistant";
 
 /**
@@ -270,7 +270,8 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col gap-3 border-t border-hairline pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[12px] text-muted-ink">
-            © {new Date().getFullYear()} GivenTake Devs. All rights reserved.
+            © {new Date().getFullYear()} GivenTake Devs, a trade name of {LEGAL_ENTITY}. All rights
+            reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-muted-ink">
             <a href="/privacy" className="hover:text-ink">
