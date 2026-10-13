@@ -13,7 +13,21 @@
  * pure is what makes the payload boundary testable without a database.
  */
 
-export const EXECUTABLE_ACTIONS = ["send_email", "deal_close", "demo_site"] as const;
+import { canAssign } from "./crm-guards.ts";
+
+export const EXECUTABLE_ACTIONS = [
+  "send_email",
+  "deal_close",
+  "demo_site",
+  // MCP gateway phase 4: record writes the CRM already exposes as RPCs.
+  "lead_set_status",
+  "crm_assign",
+  "deal_link_lead",
+  "client_create",
+  "project_create",
+  "invoice_create",
+  "document_request_signature",
+] as const;
 
 export type ExecutableAction = (typeof EXECUTABLE_ACTIONS)[number];
 
@@ -184,4 +198,198 @@ export function validateDemoSite(
       vertical: optional(record.vertical),
     },
   };
+}
+
+/* ── Phase 4: record writes ───────────────────────────────────────────────
+ *
+ * Each of these fronts an RPC that already validates for itself (a status must
+ * be a short lowercase word, an amount must be zero or more cents). The checks
+ * here repeat only what keeps a malformed row from reaching the executor and
+ * keep the one-source rule: the record acted on is always the structured
+ * target, never something the payload names.
+ */
+
+/** The RPCs' own rule for lead and invoice statuses. */
+const SHORT_WORD = /^[a-z][a-z_]{0,39}$/;
+const NAME_MAX = 200;
+
+function fail<T>(reason: string): ValidationResult<T> {
+  return { ok: false, reason };
+}
+
+function targetUuid(targetId: unknown): string | null {
+  const id = typeof targetId === "string" ? targetId.trim() : "";
+  return UUID.test(id) ? id : null;
+}
+
+function payloadObject(payload: unknown): Record<string, unknown> | null {
+  return typeof payload === "object" && payload !== null && !Array.isArray(payload)
+    ? (payload as Record<string, unknown>)
+    : null;
+}
+
+function optionalUuid(v: unknown): string | null | false {
+  if (v === undefined || v === null || v === "") return null;
+  return typeof v === "string" && UUID.test(v.trim()) ? v.trim() : false;
+}
+
+function shortName(v: unknown): string {
+  return typeof v === "string" ? v.trim().slice(0, NAME_MAX) : "";
+}
+
+export function validateLeadSetStatus(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<{ leadId: string; status: string }> {
+  if (targetType !== "lead") return fail("A lead_set_status proposal must target a lead.");
+  const leadId = targetUuid(targetId);
+  if (!leadId) return fail("The proposal does not name a valid lead.");
+  const record = payloadObject(payload);
+  const status = typeof record?.status === "string" ? record.status.trim() : "";
+  if (!SHORT_WORD.test(status)) {
+    return fail("A status is required: one short lowercase word, such as qualified.");
+  }
+  return { ok: true, value: { leadId, status } };
+}
+
+export function validateCrmAssign(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<{ table: string; column: string; id: string; userId: string | null }> {
+  const record = payloadObject(payload);
+  const column = typeof record?.column === "string" ? record.column.trim() : "";
+  if (!canAssign(targetType, column)) {
+    return fail("That record and column cannot be assigned (see ASSIGNABLE in crm-guards).");
+  }
+  const id = targetUuid(targetId);
+  if (!id) return fail("The proposal does not name a valid record.");
+  const userId = optionalUuid(record?.userId);
+  if (userId === false) return fail("userId must be a member id, or empty to unassign.");
+  return { ok: true, value: { table: targetType as string, column, id, userId } };
+}
+
+export function validateDealLinkLead(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<{ dealId: string; leadId: string }> {
+  if (targetType !== "deal") return fail("A deal_link_lead proposal must target a deal.");
+  const dealId = targetUuid(targetId);
+  if (!dealId) return fail("The proposal does not name a valid deal.");
+  const leadId = optionalUuid(payloadObject(payload)?.leadId);
+  if (!leadId) return fail("leadId is required: the lead this deal came from.");
+  return { ok: true, value: { dealId, leadId } };
+}
+
+export function validateClientCreate(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<{
+  dealId: string;
+  name: string;
+  leadId: string | null;
+  aiProcessingAllowed: boolean;
+  ownerId: string | null;
+}> {
+  if (targetType !== "deal") return fail("A client_create proposal must target the won deal.");
+  const dealId = targetUuid(targetId);
+  if (!dealId) return fail("The proposal does not name a valid deal.");
+  const record = payloadObject(payload);
+  const name = shortName(record?.name);
+  if (!name) return fail("A client name is required.");
+  const leadId = optionalUuid(record?.leadId);
+  if (leadId === false) return fail("leadId must be a lead id, or empty.");
+  const ownerId = optionalUuid(record?.ownerId);
+  if (ownerId === false) return fail("ownerId must be a member id, or empty.");
+  const ai = record?.aiProcessingAllowed;
+  if (ai !== undefined && typeof ai !== "boolean") {
+    return fail("aiProcessingAllowed must be true or false.");
+  }
+  // Consent to AI processing is never assumed: absent means no.
+  return {
+    ok: true,
+    value: { dealId, name, leadId, aiProcessingAllowed: ai === true, ownerId },
+  };
+}
+
+export function validateProjectCreate(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<{ clientId: string; name: string }> {
+  if (targetType !== "client") return fail("A project_create proposal must target a client.");
+  const clientId = targetUuid(targetId);
+  if (!clientId) return fail("The proposal does not name a valid client.");
+  const name = shortName(payloadObject(payload)?.name);
+  if (!name) return fail("A project name is required.");
+  return { ok: true, value: { clientId, name } };
+}
+
+export function validateInvoiceCreate(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<{
+  projectId: string;
+  amountCents: number;
+  currency: string;
+  status: string;
+  dueAt: string | null;
+}> {
+  if (targetType !== "project") return fail("An invoice_create proposal must target a project.");
+  const projectId = targetUuid(targetId);
+  if (!projectId) return fail("The proposal does not name a valid project.");
+  const record = payloadObject(payload);
+  const amountCents = record?.amountCents;
+  if (typeof amountCents !== "number" || !Number.isInteger(amountCents) || amountCents < 0) {
+    return fail("amountCents must be a whole number of cents, zero or more.");
+  }
+  const currency =
+    typeof record?.currency === "string" && record.currency.trim()
+      ? record.currency.trim().toLowerCase()
+      : "usd";
+  if (!/^[a-z]{3}$/.test(currency)) return fail("currency must be a three-letter code.");
+  const status =
+    typeof record?.status === "string" && record.status.trim() ? record.status.trim() : "draft";
+  if (!SHORT_WORD.test(status)) return fail("status must be one short lowercase word.");
+  let dueAt: string | null = null;
+  if (record?.dueAt !== undefined && record?.dueAt !== null && record?.dueAt !== "") {
+    const parsed = typeof record.dueAt === "string" ? Date.parse(record.dueAt) : NaN;
+    if (Number.isNaN(parsed)) return fail("dueAt must be an ISO date, or empty.");
+    dueAt = new Date(parsed).toISOString();
+  }
+  return { ok: true, value: { projectId, amountCents, currency, status, dueAt } };
+}
+
+export function validateDocumentRequestSignature(
+  targetType: unknown,
+  targetId: unknown,
+  payload: unknown,
+): ValidationResult<{
+  documentId: string;
+  dealId: string;
+  recipientName: string;
+  recipientEmail: string;
+}> {
+  if (targetType !== "document") {
+    return fail("A document_request_signature proposal must target a document.");
+  }
+  const documentId = targetUuid(targetId);
+  if (!documentId) return fail("The proposal does not name a valid document.");
+  const record = payloadObject(payload);
+  const dealId = optionalUuid(record?.dealId);
+  if (!dealId) return fail("dealId is required: the deal the document belongs to.");
+  const recipientName = shortName(record?.recipientName);
+  if (!recipientName || /[\r\n]/.test(recipientName)) {
+    return fail("A recipient name is required, on one line.");
+  }
+  const recipientEmail =
+    typeof record?.recipientEmail === "string" ? record.recipientEmail.trim().toLowerCase() : "";
+  if (recipientEmail.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+    return fail("A recipient email address is required.");
+  }
+  return { ok: true, value: { documentId, dealId, recipientName, recipientEmail } };
 }

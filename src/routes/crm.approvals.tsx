@@ -155,6 +155,18 @@ function Approvals() {
  * description rather than the artifact. For a deal_close that means seeing
  * which deal and the note that will be recorded as evidence the gate was met.
  */
+/** Phase-4 record writes: one line each, the payload shown as proposed. */
+const RECORD_WRITE_SUMMARY: Record<string, string> = {
+  lead_set_status: "Sets the status of",
+  crm_assign: "Assigns",
+  deal_link_lead: "Links a lead to",
+  client_create: "Creates a client from",
+  project_create: "Creates a project for",
+  invoice_create: "Creates an invoice on",
+  document_request_signature:
+    "Emails a signing link for, after the outbound and do_not_contact checks,",
+};
+
 function ProposalDetail({ approval }: { approval: ApprovalRow }) {
   const payload =
     approval.proposed_payload && typeof approval.proposed_payload === "object"
@@ -243,6 +255,26 @@ function ProposalDetail({ approval }: { approval: ApprovalRow }) {
         <p className="mt-2 text-xs text-muted-foreground">
           The same gates as the Request demo button apply when this runs: outbound on, nothing
           already building.
+        </p>
+      </div>
+    );
+  }
+
+  if (Object.prototype.hasOwnProperty.call(RECORD_WRITE_SUMMARY, approval.action_type)) {
+    return (
+      <div className="mt-3 rounded-md border border-border p-3">
+        <p className="text-xs text-muted-foreground">
+          {RECORD_WRITE_SUMMARY[approval.action_type]} the {approval.target_type ?? "record"}
+          {approval.target_label ? ` ${approval.target_label}` : ""}
+        </p>
+        {payload && (
+          <pre className="mt-2 overflow-x-auto text-xs text-foreground">
+            {JSON.stringify(payload, null, 2)}
+          </pre>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Checked again when it runs: the record must still exist and the values must pass the
+          database's own rules. A refusal is recorded here.
         </p>
       </div>
     );

@@ -1,6 +1,6 @@
 # The Perplexity MCP gateway — design
 
-**Status:** Phases 1 and 2 built (src/server/mcp); phases 3 and 4 outstanding.
+**Status:** Phases 1, 2 and 4 built (src/server/mcp, executors in src/server/approvals/execute.ts). Phase 3 (site_publish) outstanding; it waits on GITHUB_TOKEN_SITE and the WAF check in section 10.
 **Date:** 2026-09-24.
 **Scope:** an MCP endpoint inside the CRM Worker that lets Perplexity read the
 CRM, write to it under the capability model, propose outward actions into the
