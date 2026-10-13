@@ -6,32 +6,10 @@ import {
   createMcpHandler,
   type McpHttpHandler,
   type CallToolResult,
-  type StandardSchemaWithJSON,
 } from "@modelcontextprotocol/server";
 import { allTools } from "@/server/mcp/tools";
-import type { McpDeps, ToolInput } from "@/server/mcp/types";
-
-/**
- * tool.ts's own `safeParse` is the single validator for tool arguments: it
- * produces our `{error, notice}` envelope with an "Invalid <path>: …"
- * message. `McpServer`'s own `tools/call` handler runs its own
- * `~standard.validate` on `inputSchema` BEFORE our handler ever sees the
- * arguments, and on failure throws a bare "Input validation error: …" that
- * never reaches our envelope. So every tool is registered with a schema
- * whose `~standard.validate` always succeeds and hands the raw arguments
- * straight through — `~standard.jsonSchema` still delegates to the real zod
- * object, so `tools/list` advertises the exact same JSON Schema it would
- * without this wrapper.
- */
-function passthroughInputSchema(schema: ToolInput): StandardSchemaWithJSON {
-  const std = schema["~standard"] as unknown as StandardSchemaWithJSON["~standard"];
-  return {
-    "~standard": {
-      ...std,
-      validate: (value: unknown) => ({ value }),
-    },
-  };
-}
+import { passthroughInputSchema } from "@/server/mcp/tool";
+import type { McpDeps } from "@/server/mcp/types";
 
 export const SERVER_INFO = { name: "giventake-crm", version: "2.0.0" } as const;
 
