@@ -254,11 +254,12 @@ export const offers: Offer[] = [
   },
   {
     slug: "business-automation",
-    title: "Automate the process eating your week",
-    tagline: "The repetitive thing someone does by hand every day, done by software.",
-    metaTitle: "Business Process Automation Development | GivenTake Devs",
+    title: "AI automation services for small businesses",
+    tagline:
+      "The repetitive work someone does by hand every day, done by software: AI where it reads and sorts, plain rules where it has to be exact.",
+    metaTitle: "AI Automation Services for Small Business | GivenTake Devs",
     metaDescription:
-      "Custom automation for the repetitive manual processes running your business: data re-entry, document assembly, status chasing. Fixed price from $4,000.",
+      "AI and workflow automation for small businesses: data re-entry, inbox and lead sorting, document assembly, status chasing. Based in Parma, Ohio. Fixed price from $4,000.",
     priceFrom: "From $4,000",
     timeline: "2–4 weeks",
     problem: [
@@ -266,12 +267,14 @@ export const offers: Offer[] = [
       "Someone assembles the same document from the same sources every time.",
       "Chasing status takes longer than doing the work.",
       "It only works because one person remembers all the steps.",
+      "Emails, forms, and PDFs arrive in different shapes, and someone has to read each one before anything happens.",
     ],
     outcome:
-      "The repetitive path runs on its own, with a human checkpoint where judgement is genuinely needed and a clear record of what ran and what didn't.",
+      "The repetitive path runs on its own. AI handles the parts that need reading: sorting incoming emails and leads, pulling details out of documents, drafting a first reply. Plain rule-based workflows handle the parts that must be exact every time: moving data between systems, sending on schedule, updating records. A human checkpoint sits where judgement is genuinely needed, and there's a clear record of what ran and what didn't.",
     includes: [
       "Mapping your current process end to end before anything is built",
-      "Automation of the repetitive path",
+      "Rule-based workflow automation for the steps that must be exact",
+      "AI steps only where the input is messy: reading, sorting, extracting, drafting",
       "Human checkpoints where judgement is required",
       "Error handling and alerting when something fails",
       "A log of what ran, so you can audit it",
@@ -282,7 +285,8 @@ export const offers: Offer[] = [
       "Licences for systems being integrated",
       "Changes to third-party systems we don't control",
       "Processes that aren't documented or agreed before we start",
-      "Ongoing subscription and usage costs",
+      "Ongoing subscription and usage costs, including AI model usage",
+      "AI making final decisions on money, legal, or customer commitments without a human check",
     ],
     questions: [
       "Walk me through the last time this happened, start to finish.",
