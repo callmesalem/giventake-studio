@@ -1,6 +1,6 @@
 # GivenTake Devs
 
-> A small web studio in Northeast Ohio. Custom websites for small businesses from $499, quoted in writing before work starts and owned outright by the client. An optional $99/mo care plan covers hosting, updates and a plain-English monthly report. The studio also builds internal dashboards, booking and payment systems, business automation and MVPs at fixed prices. GivenTake Devs is a registered trade name of Giventake Goods LLC.
+> A small web studio based in Parma, Ohio, serving Cleveland, Northeast Ohio and clients across the US. Custom websites for small businesses from $499, quoted in writing before work starts and owned outright by the client. An optional $99/mo care plan covers hosting, updates and a plain-English monthly report. The studio also builds internal dashboards, booking and payment systems, business automation and MVPs at fixed prices. GivenTake Devs is a registered trade name of Giventake Goods LLC.
 
 Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.com.
 
@@ -14,6 +14,8 @@ Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.co
 - [Business automation](https://giventakedevs.com/services/business-automation)
 - [AI lead intake](https://giventakedevs.com/services/ai-lead-intake)
 - [MVP development](https://giventakedevs.com/services/mvp-development)
+- [Websites for contractors](https://giventakedevs.com/services/websites-for-contractors): plumbers, HVAC, roofers, remodelers, landscapers
+- [Web design in Cleveland](https://giventakedevs.com/web-design-cleveland): in-person meetings within 30 to 45 minutes of Parma, virtual anywhere
 
 ## How the studio works
 
@@ -24,6 +26,7 @@ Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.co
 
 ## Articles
 
+- [How much a small business website costs](https://giventakedevs.com/articles/small-business-website-cost): DIY vs freelancer vs studio vs agency, redesign cost, yearly costs
 - [What custom software costs](https://giventakedevs.com/articles/what-custom-software-costs)
 - [Buy or build](https://giventakedevs.com/articles/buy-or-build)
 - [What you should get at handoff](https://giventakedevs.com/articles/what-you-get-at-handoff)
