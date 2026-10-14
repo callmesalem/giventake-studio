@@ -48,6 +48,18 @@ export const articles: Article[] = [
     topic: "Budgeting",
   },
   {
+    slug: "small-business-website-cost",
+    title: "How much does a small business website cost?",
+    summary:
+      "What a site costs from a DIY builder, a freelancer, a small studio, or an agency, what a redesign costs, the yearly bills that come after launch, and our own prices.",
+    metaTitle: "How Much Does a Small Business Website Cost? · GivenTake Devs",
+    metaDescription:
+      "Small business website cost in 2026: DIY builder vs freelancer vs studio vs agency, website redesign cost, ongoing yearly costs, and what should be in a quote.",
+    published: "2026-10-13",
+    readingMinutes: 6,
+    topic: "Budgeting",
+  },
+  {
     slug: "buy-or-build",
     title: "Should you buy software or build it?",
     summary:

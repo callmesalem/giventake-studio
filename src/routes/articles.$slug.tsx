@@ -258,6 +258,132 @@ const bodies: ArticleBodies = {
     </>
   ),
 
+  "small-business-website-cost": () => (
+    <>
+      <P>
+        Most small business websites cost between $500 and $15,000 to build, plus somewhere between
+        $200 and $1,500 a year to keep online. Where you land depends on who builds it and on how
+        much of the work you do yourself. Our own builds start at $499, and the full numbers are on
+        the{" "}
+        <Link to="/pricing" className="font-semibold text-ink underline">
+          pricing page
+        </Link>
+        . Below is what the rest of the market charges, and what you get at each price.
+      </P>
+
+      <H2>The four ways to get a site, and what each costs</H2>
+      <H3>A DIY website builder: a monthly fee, plus your time</H3>
+      <P>
+        Squarespace, Wix and similar tools charge a monthly subscription and give you templates.
+        The cash cost is low. The real cost is your time, and the fact that you rent the site
+        rather than own it: stop paying and it goes offline, and you can&rsquo;t take the design
+        with you. For a brand-new business that just needs to exist online, this is often the
+        right answer.
+      </P>
+      <H3>A freelancer: roughly $1,000 – $5,000</H3>
+      <P>
+        Quality varies more here than anywhere else. A good freelancer can be excellent value. The
+        risk is what happens after launch: who fixes it when it breaks, and whether you have the
+        logins and the code if they move on. Ask before you hire.
+      </P>
+      <H3>A small studio: roughly $500 – $5,000</H3>
+      <P>
+        This is where we sit. A small team with modern tooling and no account managers can build a
+        custom site for far less than an agency. What you should still expect at this price: a
+        written quote, a written list of what isn&rsquo;t included, and a proper handoff.
+      </P>
+      <H3>An agency: roughly $2,500 – $15,000 and up</H3>
+      <P>
+        You pay for more people: a strategist, a designer, a project manager and developers.
+        That&rsquo;s worth it when you need brand strategy, a large content programme, or complex
+        integrations. For a five-to-ten page site for a local business, most of that team
+        isn&rsquo;t needed.
+      </P>
+
+      <H2>What moves the price</H2>
+      <Bullets
+        items={[
+          <>
+            <strong>Page count.</strong> Five pages and twenty-five pages are different projects.
+            Each page is design, build, content and testing.
+          </>,
+          <>
+            <strong>Who writes the words.</strong> Copywriting is often the line item people forget.
+            If you supply the text, the price drops.
+          </>,
+          <>
+            <strong>Custom design versus a starting template.</strong> Fully custom design costs
+            more, and is worth it when the site has to stand apart from competitors.
+          </>,
+          <>
+            <strong>Features.</strong> Online booking, payments, a members area or a live chat each
+            add cost. Each one should be priced as its own line item in a quote.
+          </>,
+          <>
+            <strong>Moving from an old site.</strong> Redirects from old addresses to new ones are
+            where search rankings usually get lost. Doing it properly takes time, and it should be
+            in the quote.
+          </>,
+        ]}
+      />
+
+      <H2>What a website redesign costs</H2>
+      <P>
+        A redesign usually costs about the same as a new build of the same size, and sometimes more.
+        The extra work is the migration: mapping every old page to a new address, keeping what
+        already ranks in search, and moving content across without breaking it. If a redesign quote
+        doesn&rsquo;t mention redirects, ask about them before you sign. A redesign done without
+        them can wipe out years of search traffic in a week.
+      </P>
+      <P>
+        Before paying for a redesign, check whether you need one. If the problem is that nobody can
+        update the site, or that it&rsquo;s slow on a phone, a smaller fix can sometimes solve it
+        for less.
+      </P>
+
+      <H2>The costs after launch</H2>
+      <Bullets
+        items={[
+          <>
+            <strong>Domain name:</strong> usually $10 – $30 a year.
+          </>,
+          <>
+            <strong>Hosting:</strong> from a few dollars to a few hundred a year for a small site,
+            depending on the host and the traffic.
+          </>,
+          <>
+            <strong>Upkeep:</strong> security updates, backups and small edits. You can do it
+            yourself, pay by the hour when something breaks, or pay a monthly plan. Our care plan is
+            $99 a month and covers hosting, updates, backups, monitoring, a few small edits, and a
+            monthly report on leads. It&rsquo;s optional, and the site is yours either way.
+          </>,
+        ]}
+      />
+
+      <H2>What a fair quote includes</H2>
+      <P>
+        Whatever the number, a quote should say in writing what you&rsquo;re getting: the pages,
+        the features, who writes the content, what happens to the old site, and what&rsquo;s
+        excluded. It should say you own the domain, the content and the code. Compare quotes on
+        that list, not on the bottom line. The checklist in{" "}
+        <Link
+          to="/articles/$slug"
+          params={{ slug: "what-you-get-at-handoff" }}
+          className="font-semibold text-ink underline"
+        >
+          what you should get at handoff
+        </Link>{" "}
+        is a good thing to hold any builder to.
+      </P>
+
+      <Callout title="The short answer">
+        For a typical local business site of five to ten pages: a few hundred dollars a year if you
+        build it yourself, $500 – $5,000 from a freelancer or small studio, and $2,500 – $15,000
+        from an agency. Then budget $200 – $1,500 a year to keep it running.
+      </Callout>
+    </>
+  ),
+
   "buy-or-build": () => (
     <>
       <P>
