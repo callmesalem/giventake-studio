@@ -62,8 +62,8 @@ function ClevelandPage() {
     >
       <H2>Meet in person, or don&rsquo;t</H2>
       <P>
-        If you&rsquo;re within roughly 30 to 45 minutes of Parma, we can meet at your shop, office or
-        job site. That covers Cleveland, Lakewood, Westlake, Strongsville, North Royalton,
+        If you&rsquo;re within roughly 30 to 45 minutes of Parma, we can meet at your shop, office
+        or job site. That covers Cleveland, Lakewood, Westlake, Strongsville, North Royalton,
         Independence, Brunswick, Medina, and most of Cuyahoga County. Seeing how a business actually
         runs is often the fastest way to work out what the site needs to do.
       </P>
