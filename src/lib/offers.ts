@@ -209,6 +209,50 @@ export const offers: Offer[] = [
       "You need a working site quickly and you'd rather own it than rent a page builder. If you need brand strategy and a content programme, that's a different engagement and we'll say so.",
   },
   {
+    slug: "websites-for-contractors",
+    title: "Websites for contractors and home-service trades",
+    tagline: "A site built to turn a search on a phone into a call or a quote request.",
+    metaTitle: "Contractor Website Design | GivenTake Devs",
+    metaDescription:
+      "Contractor website design for plumbers, HVAC, roofers, remodelers, and landscapers. Click-to-call, quote forms, service-area pages. From $499, live in two to four weeks.",
+    priceFrom: "From $499",
+    timeline: "2–4 weeks",
+    problem: [
+      "Most of your work comes from referrals, and the website doesn't help close any of it.",
+      "On a phone, the number is hard to find and the quote form is a chore.",
+      "The site doesn't say which towns you serve, so it doesn't show up when people search for them.",
+      "Your best finished jobs are on your phone, not on your site.",
+    ],
+    outcome:
+      "A fast, mobile-first site where every page leads to a call or a quote request. It lists your services and the towns you cover, shows photos of real jobs, and sends every quote request somewhere you'll see it.",
+    includes: [
+      "Design and build, mobile-first, with tap-to-call on every page",
+      "A short quote request form that emails you, or posts to your CRM",
+      "One page per core service, plus a service-area section listing the towns you cover",
+      "A project gallery you can add job photos to yourself",
+      "Your license, insurance, and reviews shown where buyers look for them",
+      "LocalBusiness schema and technical SEO fundamentals",
+      "Links to and from your Google Business Profile",
+      "Source code, documentation, and a recorded walkthrough",
+      "30 days of tweaks after launch",
+    ],
+    excludes: [
+      "Paid ads and lead-buying services",
+      "Setting up or managing your Google Business Profile, unless scoped",
+      "Copywriting beyond the core pages, unless scoped",
+      "Professional photography",
+      "Domain, hosting, and subscription costs (the optional $99/mo care plan on our pricing page covers hosting and upkeep if you want it)",
+    ],
+    questions: [
+      "Which jobs do you want more of, and which ones would you rather turn down?",
+      "Which towns do you actually drive to?",
+      "When a lead comes in, who answers it, and how fast?",
+      "Do you have photos of finished work, and reviews we can show?",
+    ],
+    goodFit:
+      "You run a trade business with a phone that should ring more, and you want a site you own outright. If you need someone to run ads or buy leads for you, that's a different service and we'll say so.",
+  },
+  {
     slug: "business-automation",
     title: "Automate the process eating your week",
     tagline: "The repetitive thing someone does by hand every day, done by software.",
