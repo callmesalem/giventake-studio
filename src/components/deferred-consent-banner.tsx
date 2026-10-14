@@ -1,7 +1,14 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 
+// Cookie-banner blocklists (uBlock annoyance filters, Brave, AdGuard) block any
+// URL containing "consent-banner". A rejected lazy import throws to the nearest
+// error boundary, which is the whole page, so a blocked chunk renders nothing
+// instead. Safe for consent: trackers only load after a choice in the banner.
 const ConsentBanner = lazy(() =>
-  import("@/components/consent-banner").then((m) => ({ default: m.ConsentBanner })),
+  import("@/components/consent-banner").then(
+    (m) => ({ default: m.ConsentBanner }),
+    () => ({ default: () => null }),
+  ),
 );
 
 /**
