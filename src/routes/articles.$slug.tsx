@@ -274,11 +274,10 @@ const bodies: ArticleBodies = {
       <H2>The four ways to get a site, and what each costs</H2>
       <H3>A DIY website builder: a monthly fee, plus your time</H3>
       <P>
-        Squarespace, Wix and similar tools charge a monthly subscription and give you templates.
-        The cash cost is low. The real cost is your time, and the fact that you rent the site
-        rather than own it: stop paying and it goes offline, and you can&rsquo;t take the design
-        with you. For a brand-new business that just needs to exist online, this is often the
-        right answer.
+        Squarespace, Wix and similar tools charge a monthly subscription and give you templates. The
+        cash cost is low. The real cost is your time, and the fact that you rent the site rather
+        than own it: stop paying and it goes offline, and you can&rsquo;t take the design with you.
+        For a brand-new business that just needs to exist online, this is often the right answer.
       </P>
       <H3>A freelancer: roughly $1,000 – $5,000</H3>
       <P>
@@ -362,10 +361,10 @@ const bodies: ArticleBodies = {
 
       <H2>What a fair quote includes</H2>
       <P>
-        Whatever the number, a quote should say in writing what you&rsquo;re getting: the pages,
-        the features, who writes the content, what happens to the old site, and what&rsquo;s
-        excluded. It should say you own the domain, the content and the code. Compare quotes on
-        that list, not on the bottom line. The checklist in{" "}
+        Whatever the number, a quote should say in writing what you&rsquo;re getting: the pages, the
+        features, who writes the content, what happens to the old site, and what&rsquo;s excluded.
+        It should say you own the domain, the content and the code. Compare quotes on that list, not
+        on the bottom line. The checklist in{" "}
         <Link
           to="/articles/$slug"
           params={{ slug: "what-you-get-at-handoff" }}
