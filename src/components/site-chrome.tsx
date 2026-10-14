@@ -190,6 +190,7 @@ export function SiteFooter() {
         { label: "Our process", href: "/process" },
         { label: "How we use AI", href: "/how-we-use-ai" },
         { label: "Articles", href: "/articles" },
+        { label: "Web design in Cleveland", href: "/web-design-cleveland" },
         { label: "FAQ", href: "/pricing#faq" },
       ],
     },

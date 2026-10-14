@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkRouteImport } from './routes/work'
+import { Route as WebDesignClevelandRouteImport } from './routes/web-design-cleveland'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProcessRouteImport } from './routes/process'
@@ -65,6 +66,11 @@ import { Route as ApiUnsubscribeTokenRouteImport } from './routes/api.unsubscrib
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
   path: '/work',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebDesignClevelandRoute = WebDesignClevelandRouteImport.update({
+  id: '/web-design-cleveland',
+  path: '/web-design-cleveland',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -341,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/web-design-cleveland': typeof WebDesignClevelandRoute
   '/work': typeof WorkRoute
   '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/web-design-cleveland': typeof WebDesignClevelandRoute
   '/work': typeof WorkRoute
   '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
@@ -449,6 +457,7 @@ export interface FileRoutesById {
   '/process': typeof ProcessRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/web-design-cleveland': typeof WebDesignClevelandRoute
   '/work': typeof WorkRoute
   '/api/phone-message': typeof ApiPhoneMessageRoute
   '/articles/$slug': typeof ArticlesSlugRoute
@@ -505,6 +514,7 @@ export interface FileRouteTypes {
     | '/process'
     | '/sitemap.xml'
     | '/terms'
+    | '/web-design-cleveland'
     | '/work'
     | '/api/phone-message'
     | '/articles/$slug'
@@ -558,6 +568,7 @@ export interface FileRouteTypes {
     | '/process'
     | '/sitemap.xml'
     | '/terms'
+    | '/web-design-cleveland'
     | '/work'
     | '/api/phone-message'
     | '/articles/$slug'
@@ -612,6 +623,7 @@ export interface FileRouteTypes {
     | '/process'
     | '/sitemap.xml'
     | '/terms'
+    | '/web-design-cleveland'
     | '/work'
     | '/api/phone-message'
     | '/articles/$slug'
@@ -667,6 +679,7 @@ export interface RootRouteChildren {
   ProcessRoute: typeof ProcessRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  WebDesignClevelandRoute: typeof WebDesignClevelandRoute
   WorkRoute: typeof WorkRoute
   ApiPhoneMessageRoute: typeof ApiPhoneMessageRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
@@ -685,6 +698,13 @@ declare module '@tanstack/react-router' {
       path: '/work'
       fullPath: '/work'
       preLoaderRoute: typeof WorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/web-design-cleveland': {
+      id: '/web-design-cleveland'
+      path: '/web-design-cleveland'
+      fullPath: '/web-design-cleveland'
+      preLoaderRoute: typeof WebDesignClevelandRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1135,6 +1155,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProcessRoute: ProcessRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  WebDesignClevelandRoute: WebDesignClevelandRoute,
   WorkRoute: WorkRoute,
   ApiPhoneMessageRoute: ApiPhoneMessageRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
