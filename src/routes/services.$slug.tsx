@@ -94,7 +94,10 @@ function OfferPage() {
                 {offer.priceFrom === "Custom quote" && (
                   <p className="mt-1 text-[13px] text-muted-ink">
                     Call{" "}
-                    <a href={`tel:${BUSINESS_PHONE}`} className="font-medium text-ink hover:text-violet">
+                    <a
+                      href={`tel:${BUSINESS_PHONE}`}
+                      className="font-medium text-ink hover:text-violet"
+                    >
                       {BUSINESS_PHONE_DISPLAY}
                     </a>{" "}
                     or{" "}

@@ -18,6 +18,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OperatorDashboardRouteImport } from './routes/operator-dashboard'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as HvacWebsiteDesignRouteImport } from './routes/hvac-website-design'
 import { Route as HowWeUseAiRouteImport } from './routes/how-we-use-ai'
 import { Route as GuardrailsRouteImport } from './routes/guardrails'
 import { Route as DoNotSellRouteImport } from './routes/do-not-sell'
@@ -106,6 +107,11 @@ const OperatorDashboardRoute = OperatorDashboardRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HvacWebsiteDesignRoute = HvacWebsiteDesignRouteImport.update({
+  id: '/hvac-website-design',
+  path: '/hvac-website-design',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowWeUseAiRoute = HowWeUseAiRouteImport.update({
@@ -340,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/do-not-sell': typeof DoNotSellRoute
   '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
+  '/hvac-website-design': typeof HvacWebsiteDesignRoute
   '/mcp': typeof McpRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
   '/pricing': typeof PricingRoute
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/do-not-sell': typeof DoNotSellRoute
   '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
+  '/hvac-website-design': typeof HvacWebsiteDesignRoute
   '/mcp': typeof McpRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
   '/pricing': typeof PricingRoute
@@ -450,6 +458,7 @@ export interface FileRoutesById {
   '/do-not-sell': typeof DoNotSellRoute
   '/guardrails': typeof GuardrailsRoute
   '/how-we-use-ai': typeof HowWeUseAiRoute
+  '/hvac-website-design': typeof HvacWebsiteDesignRoute
   '/mcp': typeof McpRoute
   '/operator-dashboard': typeof OperatorDashboardRoute
   '/pricing': typeof PricingRoute
@@ -507,6 +516,7 @@ export interface FileRouteTypes {
     | '/do-not-sell'
     | '/guardrails'
     | '/how-we-use-ai'
+    | '/hvac-website-design'
     | '/mcp'
     | '/operator-dashboard'
     | '/pricing'
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/do-not-sell'
     | '/guardrails'
     | '/how-we-use-ai'
+    | '/hvac-website-design'
     | '/mcp'
     | '/operator-dashboard'
     | '/pricing'
@@ -616,6 +627,7 @@ export interface FileRouteTypes {
     | '/do-not-sell'
     | '/guardrails'
     | '/how-we-use-ai'
+    | '/hvac-website-design'
     | '/mcp'
     | '/operator-dashboard'
     | '/pricing'
@@ -672,6 +684,7 @@ export interface RootRouteChildren {
   DoNotSellRoute: typeof DoNotSellRoute
   GuardrailsRoute: typeof GuardrailsRoute
   HowWeUseAiRoute: typeof HowWeUseAiRoute
+  HvacWebsiteDesignRoute: typeof HvacWebsiteDesignRoute
   McpRoute: typeof McpRoute
   OperatorDashboardRoute: typeof OperatorDashboardRoute
   PricingRoute: typeof PricingRoute
@@ -754,6 +767,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hvac-website-design': {
+      id: '/hvac-website-design'
+      path: '/hvac-website-design'
+      fullPath: '/hvac-website-design'
+      preLoaderRoute: typeof HvacWebsiteDesignRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-we-use-ai': {
@@ -1148,6 +1168,7 @@ const rootRouteChildren: RootRouteChildren = {
   DoNotSellRoute: DoNotSellRoute,
   GuardrailsRoute: GuardrailsRoute,
   HowWeUseAiRoute: HowWeUseAiRoute,
+  HvacWebsiteDesignRoute: HvacWebsiteDesignRoute,
   McpRoute: McpRoute,
   OperatorDashboardRoute: OperatorDashboardRoute,
   PricingRoute: PricingRoute,
