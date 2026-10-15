@@ -214,7 +214,7 @@ export const offers: Offer[] = [
     tagline: "A site built to turn a search on a phone into a call or a quote request.",
     metaTitle: "Contractor Website Design | GivenTake Devs",
     metaDescription:
-      "Contractor website design for plumbers, HVAC, roofers, remodelers, and landscapers. Click-to-call, quote forms, service-area pages. From $499, live in two to four weeks.",
+      "Contractor website design for plumbers, HVAC, roofers, restoration, remodelers, and landscapers. Click-to-call, quote forms, service-area pages. From $499.",
     priceFrom: "From $499",
     timeline: "2–4 weeks",
     problem: [

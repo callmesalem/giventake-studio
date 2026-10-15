@@ -4,7 +4,7 @@ These server-only operators are a **local behavior-test layer**, not a live sale
 
 ## Operators
 
-- **CFO compliance gate** checks required fields, suppression, banned phrases, regulated-data signals, ambiguity, and ATC conflicts. Trades and ordinary small businesses are allowed. Restoration/public-adjuster/adjuster categories are flagged for Salem human review, not automatically rejected. Missing or ambiguous facts escalate. Output always says `sendAuthorized: false`.
+- **CFO compliance gate** checks required fields, suppression, banned phrases, regulated-data signals, and ambiguity. Trades (restoration included) and ordinary small businesses are allowed; the ATC conflict check was removed 2026-10-14 when Salem gave up the public adjuster license. Missing or ambiguous facts escalate. Output always says `sendAuthorized: false`.
 - **CRO synthetic pipeline** accepts only `synthetic: true` leads, runs the CFO gate, maps the lead to a slug in `src/lib/offers.ts`, writes an individualized draft of at most 85 words with the charter-required automated-message disclosure footer, and marks it awaiting human review. It cannot send or introduce a price, scope, deadline, scarcity, proof, or outcome claim.
 - **CTO synthetic public-site audit** examines supplied synthetic facts only. It never fetches a URL. It returns at most two supplied, verified gaps mapped to an existing offer; when none exist it reports no verified gaps. It cannot edit code or deploy.
 - **Orchestrator** aggregates supplied operator results into one plain report with counts, blocks, escalations, review queue count, and explicit zero action authority.

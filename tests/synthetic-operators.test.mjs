@@ -36,21 +36,18 @@ const lead = (patch = {}) => ({
 const rejects = (promise, code) =>
   assert.rejects(promise, (error) => error.code === code || error.message === code);
 
-test("green trades and general small businesses pass without ATC flags", async () => {
-  for (const category of ["electrical contractor", "plumber", "general small business"]) {
+test("trades, restoration, adjusters and general small businesses pass without flags", async () => {
+  for (const category of [
+    "electrical contractor",
+    "plumber",
+    "general small business",
+    "water restoration",
+    "public adjuster",
+  ]) {
     const result = await runCfoComplianceGate(store(), lead({ category }));
     assert.equal(result.decision, "pass");
     assert.deepEqual(result.flags, []);
     assert.equal(result.sendAuthorized, false);
-  }
-});
-test("restoration, PA, and adjuster categories flag and escalate rather than blanket drop", async () => {
-  for (const category of ["water restoration", "public adjuster", "insurance claims adjuster"]) {
-    const result = await runCfoComplianceGate(store(), lead({ category }));
-    assert.equal(result.decision, "escalate");
-    assert.deepEqual(result.blocks, []);
-    assert.ok(result.flags.includes("atc_conflict_review"));
-    assert.ok(result.escalations.includes("salem_human_review"));
   }
 });
 test("regulated and missing or ambiguous data escalate", async () => {
@@ -100,7 +97,7 @@ test("CRO maps an offer, stays under cap, invents no forbidden commitments, and 
 });
 test("CRO stops on CFO escalation or block", async () => {
   await rejects(
-    runCroSyntheticPipeline(store(), lead({ category: "public adjuster" })),
+    runCroSyntheticPipeline(store(), lead({ containsRegulatedData: true })),
     "cfo_escalate",
   );
   const s = store();
