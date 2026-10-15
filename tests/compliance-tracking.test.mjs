@@ -49,7 +49,11 @@ assert.ok(
 // covers every page that describes the offer, the process, or the paperwork.
 // Each entry is [label, regex, why it is wrong now].
 const retiredModel = [
-  ["retired price tiers", /\$249|\$399|\$499|\$549/, "prices are $999 builds and the $99/mo care plan"],
+  [
+    "retired price tiers",
+    /\$249|\$399|\$499|\$549/,
+    "prices are $999 builds and the $99/mo care plan",
+  ],
   ["12-month initial term", /12-month initial term/i, "the care plan is month to month"],
   ["priced discovery sprint", /discovery sprint/i, "scoping is part of quoting and unbilled"],
   ["quarterly reporting", /quarterly/i, "the proof report is monthly"],
