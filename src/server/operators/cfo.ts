@@ -15,8 +15,6 @@ const BANNED = [
   /we (?:will|can) (?:double|triple)/i,
   /save(?:s|d)? \d+ (?:hours?|%)/i,
 ];
-const CONFLICT =
-  /(?:restoration|public[- ]adjuster|\bpa\b|claims?[- ]adjuster|insurance[- ]adjuster)/i;
 const REGULATED =
   /(?:patient|medical|health record|bank account|social security|government id|credit card)/i;
 
@@ -44,10 +42,6 @@ export async function runCfoComplianceGate(
   const scan = [lead.sourceText, lead.observedNeed].filter(Boolean).join(" ");
   if (BANNED.some((phrase) => phrase.test(scan))) blocks.push("banned_phrase");
   if (lead.containsRegulatedData || REGULATED.test(scan)) escalations.push("regulated_data");
-  if (CONFLICT.test(lead.category || "")) {
-    flags.push("atc_conflict_review");
-    escalations.push("salem_human_review");
-  }
   const decision = blocks.length ? "block" : escalations.length ? "escalate" : "pass";
   const result: CfoResult = {
     operator: OPERATOR_NAMES.cfo,

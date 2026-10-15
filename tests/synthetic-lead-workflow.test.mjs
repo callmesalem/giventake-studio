@@ -132,7 +132,7 @@ test("CFO block and escalation persist stop outcomes and never draft", async () 
   const escalated = store();
   result = await runPersistedSyntheticLeadWorkflow(
     escalated,
-    fixture({ category: "public-adjuster" }),
+    fixture({ observedNeed: "synthetic government id intake" }),
   );
   assert.equal(result.compliance.decision, "escalate");
   assert.equal(escalated.drafts.length, 0);
