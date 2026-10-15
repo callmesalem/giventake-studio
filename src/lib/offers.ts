@@ -43,8 +43,8 @@ export const offers: Offer[] = [
     tagline: "Job status, invoices, and numbers in one place instead of five files.",
     metaTitle: "Internal Dashboard Development · GivenTake Devs",
     metaDescription:
-      "Custom internal dashboards that replace shared spreadsheets with one source of truth. Fixed price from $6,000, live in about four weeks.",
-    priceFrom: "From $6,000",
+      "Custom internal dashboards that replace shared spreadsheets with one source of truth. Quoted in writing, live in about four weeks.",
+    priceFrom: "Custom quote",
     timeline: "About 4 weeks",
     problem: [
       "Job status, invoices, and client notes live across several shared spreadsheets.",
@@ -128,8 +128,8 @@ export const offers: Offer[] = [
     tagline: "Customers book, pay, and reschedule themselves.",
     metaTitle: "Booking & Payment System Development | GivenTake Devs",
     metaDescription:
-      "Custom self-service booking with deposits, reminders, and rescheduling for service businesses. Fixed price from $5,000, live in three to four weeks.",
-    priceFrom: "From $5,000",
+      "Custom self-service booking with deposits, reminders, and rescheduling for service businesses. Quoted in writing, live in three to four weeks.",
+    priceFrom: "Custom quote",
     timeline: "3–4 weeks",
     problem: [
       "Customers book by phone or DM, so someone has to be available to answer.",
@@ -171,8 +171,8 @@ export const offers: Offer[] = [
     tagline: "A site that reflects what the business does now, with a CMS behind it.",
     metaTitle: "Marketing Website Development with CMS | GivenTake Devs",
     metaDescription:
-      "Fast, accessible marketing sites with a CMS your team can edit without a developer. Starting at $499, quoted in writing, live in two to four weeks.",
-    priceFrom: "From $499",
+      "Fast, accessible marketing sites with a CMS your team can edit without a developer. Starting at $999, quoted in writing, live in two to four weeks.",
+    priceFrom: "From $999",
     timeline: "2–4 weeks",
     problem: [
       "The current site describes a business you no longer are.",
@@ -214,8 +214,8 @@ export const offers: Offer[] = [
     tagline: "A site built to turn a search on a phone into a call or a quote request.",
     metaTitle: "Contractor Website Design | GivenTake Devs",
     metaDescription:
-      "Contractor website design for plumbers, HVAC, roofers, restoration, remodelers, and landscapers. Click-to-call, quote forms, service-area pages. From $499.",
-    priceFrom: "From $499",
+      "Contractor website design for plumbers, HVAC, roofers, restoration, remodelers, and landscapers. Click-to-call, quote forms, service-area pages. From $1,999.",
+    priceFrom: "From $1,999",
     timeline: "2–4 weeks",
     problem: [
       "Most of your work comes from referrals, and the website doesn't help close any of it.",
@@ -259,8 +259,8 @@ export const offers: Offer[] = [
       "The repetitive work someone does by hand every day, done by software: AI where it reads and sorts, plain rules where it has to be exact.",
     metaTitle: "AI Automation Services for Small Business | GivenTake Devs",
     metaDescription:
-      "AI and workflow automation for small businesses: data re-entry, inbox and lead sorting, document assembly, status chasing. Based in Parma, Ohio. Fixed price from $4,000.",
-    priceFrom: "From $4,000",
+      "AI and workflow automation for small businesses: data re-entry, inbox and lead sorting, document assembly, status chasing. Based in Parma, Ohio. Fixed price from $3,999.",
+    priceFrom: "From $3,999",
     timeline: "2–4 weeks",
     problem: [
       "The same information gets typed into two or three systems.",

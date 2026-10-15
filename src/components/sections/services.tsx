@@ -18,7 +18,7 @@ const services = [
   {
     Icon: IconGlobe,
     title: "Website development",
-    body: "Marketing sites that load fast, rank on Google, and bring in leads. Starting at $499, quoted in writing, and yours to own.",
+    body: "Marketing sites that load fast, rank on Google, and bring in leads. Starting at $999, quoted in writing, and yours to own.",
   },
   {
     Icon: IconApp,

@@ -48,7 +48,7 @@ export function Hero() {
             className="mt-8 max-w-xl text-[17px] leading-[1.55] text-white/60 md:text-[18px]"
           >
             We&rsquo;re GivenTake Devs, a small studio in Ohio. We build custom websites for small
-            businesses starting at $499, quoted in writing before we start. Add the optional $99/mo
+            businesses starting at $999, quoted in writing before we start. Add the optional $99/mo
             care plan and you get hosting, updates, and a plain-English report every month showing
             where your leads came from and what to fix next.
           </p>

@@ -193,7 +193,7 @@ export const SALES_STAGES: PlaybookStage[] = [
 export const OFFERS = [
   {
     name: "Marketing website",
-    price: "From $499",
+    price: "From $999",
     timeline: "2–4 weeks",
     fit: "A credible, conversion-focused public presence with clear content and lead capture.",
   },
@@ -205,13 +205,13 @@ export const OFFERS = [
   },
   {
     name: "Booking + payments",
-    price: "From $5,000",
+    price: "Custom quote",
     timeline: "4–6 weeks",
     fit: "Reduce scheduling friction and collect payment through a defined customer flow.",
   },
   {
     name: "Internal dashboard",
-    price: "From $6,000",
+    price: "Custom quote",
     timeline: "4–8 weeks",
     fit: "Replace fragmented spreadsheets and manual status chasing with one operating view.",
   },

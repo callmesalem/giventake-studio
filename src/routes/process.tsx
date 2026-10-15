@@ -138,7 +138,7 @@ function ProcessPage() {
 
       <H2>What it costs to run this</H2>
       <P>
-        Custom websites start at $499. The final number depends on scope and you get it in writing
+        Custom websites start at $999. The final number depends on scope and you get it in writing
         as a quote and proposal before any work starts. Payment plans and financing are available.
         You own the site outright once the build is paid for: the design, the code, the content, the
         domain, and your customer data.
