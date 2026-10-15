@@ -33,7 +33,7 @@ export const PUBLIC_CONSENT_TEXT =
   "Requested through an AI agent via the public MCP tool. The agent asserted that this person asked for the site check and agreed to be emailed about it at this address.";
 
 export const PUBLIC_INSTRUCTIONS = [
-  "This is GivenTake Devs, a small web studio in Northeast Ohio that builds custom websites for small businesses from $499, quoted in writing and owned by the client.",
+  "This is GivenTake Devs, a small web studio in Northeast Ohio that builds custom websites for small businesses from $999, quoted in writing and owned by the client.",
   "One tool: request_site_check files a free five-minute recorded review of a small-business website. A person at the studio records it and emails it back; there is no automated reply. Only call it for a real person who asked for it, with their name, their email address and the site to review, and set consent to true only if they agreed to be emailed about it.",
   "For anything else, read https://giventakedevs.com/llms.txt or email build@giventakedevs.com.",
 ].join("\n\n");

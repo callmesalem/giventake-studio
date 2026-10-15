@@ -123,7 +123,7 @@ const bodies: ArticleBodies = {
       <H2>The ranges agencies quote</H2>
       <P>
         These are the numbers a small business typically gets back from an agency or an established
-        studio in the US. They are not our prices. Ours start at $499 because we are a small team
+        studio in the US. They are not our prices. Ours start at $999 because we are a small team
         using AI tooling, with no account managers, no project coordinators, and no office to pay
         for. Knowing what the rest of the market charges is still the useful thing here, because it
         tells you what a quote is made of.
@@ -263,7 +263,7 @@ const bodies: ArticleBodies = {
       <P>
         Most small business websites cost between $500 and $15,000 to build, plus somewhere between
         $200 and $1,500 a year to keep online. Where you land depends on who builds it and on how
-        much of the work you do yourself. Our own builds start at $499, and the full numbers are on
+        much of the work you do yourself. Our own builds start at $999, and the full numbers are on
         the{" "}
         <Link to="/pricing" className="font-semibold text-ink underline">
           pricing page

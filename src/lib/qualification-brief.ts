@@ -137,7 +137,7 @@ export function createQualificationBrief(input: ContactInput): QualificationBrie
   const offerMatch = matchOffer(input.description);
 
   if (offerMatch === "Uncertain") flags.push("uncertain_offer");
-  // Builds start at $499, so the $500-$2.5k band is the core buyer, not a
+  // Builds start at $999, so the $500-$2.5k band is the core buyer, not a
   // disqualification. No listed band now falls under the starting price, so
   // nothing produces below_minimum; the flag stays in the union for leads
   // recorded before the pricing change.

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/web-design-cleveland")({
       path: PATH,
       title: "Web Design in Cleveland for Small Businesses · GivenTake Devs",
       description:
-        "Small business web design in Cleveland and Northeast Ohio from a Parma-based studio. Meet in person or online, fixed written quotes from $499, and you own the site.",
+        "Small business web design in Cleveland and Northeast Ohio from a Parma-based studio. Meet in person or online, fixed written quotes from $999, and you own the site.",
     }),
     scripts: [
       {
@@ -82,7 +82,7 @@ function ClevelandPage() {
               params={{ slug: "marketing-site" }}
               className="font-semibold text-ink underline"
             >
-              From $499
+              From $999
             </Link>
             .
           </>,

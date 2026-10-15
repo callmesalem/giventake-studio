@@ -1,7 +1,14 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { IconArrowRight } from "@/components/marks";
-import { pageHead, breadcrumbList, BASE_URL, SITE_NAME } from "@/lib/seo";
+import {
+  pageHead,
+  breadcrumbList,
+  BASE_URL,
+  SITE_NAME,
+  BUSINESS_PHONE,
+  BUSINESS_PHONE_DISPLAY,
+} from "@/lib/seo";
 import { offerBySlug, offers, type Offer } from "@/lib/offers";
 
 export const Route = createFileRoute("/services/$slug")({
@@ -84,6 +91,19 @@ function OfferPage() {
                 <dd className="mt-1 text-[22px] font-semibold tracking-tight text-ink">
                   {offer.priceFrom}
                 </dd>
+                {offer.priceFrom === "Custom quote" && (
+                  <p className="mt-1 text-[13px] text-muted-ink">
+                    Call{" "}
+                    <a href={`tel:${BUSINESS_PHONE}`} className="font-medium text-ink hover:text-violet">
+                      {BUSINESS_PHONE_DISPLAY}
+                    </a>{" "}
+                    or{" "}
+                    <a href="/#contact" className="font-medium text-ink hover:text-violet">
+                      fill out the form
+                    </a>{" "}
+                    for a written quote.
+                  </p>
+                )}
               </div>
               <div>
                 <dt className="text-[12px] font-semibold uppercase tracking-wider text-muted-ink">

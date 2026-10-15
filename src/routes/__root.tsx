@@ -141,10 +141,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               telephone: BUSINESS_PHONE,
               slogan: "Websites That Report Back",
               description:
-                "Small web studio in Ohio building custom websites for small businesses, starting at $499 and owned by the client. An optional $99/mo care plan covers hosting, updates, and a plain-English performance report every month.",
+                "Small web studio in Ohio building custom websites for small businesses, starting at $999 and owned by the client. An optional $99/mo care plan covers hosting, updates, and a plain-English performance report every month.",
               address: { "@type": "PostalAddress", addressRegion: "OH", addressCountry: "US" },
               areaServed: [SERVICE_AREA, "United States"],
-              priceRange: "$499 - $10000",
+              priceRange: "$999 - $10000",
               founder: { "@id": FOUNDER_ID },
               sameAs: SOCIAL_PROFILES,
             },

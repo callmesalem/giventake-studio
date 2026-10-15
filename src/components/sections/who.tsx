@@ -9,7 +9,7 @@ const usualWay = [
 ];
 
 const ourWay = [
-  "Custom builds start at $499, quoted in writing before work starts",
+  "Custom builds start at $999, quoted in writing before work starts",
   "Payment plans and financing available, and you own the site",
   "Optional $99/mo care plan: hosting, updates, backups, small edits",
   "Every month on the care plan, a report in plain English: what's bringing you customers and what we'd fix next",
@@ -26,7 +26,7 @@ export function WhoWeHelp() {
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-ink">
             Most small-business sites are built once, then left to quietly go stale. We do the
-            opposite: a build you own outright, starting at $499, and an optional $99 a month to
+            opposite: a build you own outright, starting at $999, and an optional $99 a month to
             keep it fast, safe, and reporting back on the leads it brings you.
           </p>
         </Reveal>
