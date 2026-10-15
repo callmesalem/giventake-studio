@@ -191,6 +191,7 @@ export function SiteFooter() {
         { label: "How we use AI", href: "/how-we-use-ai" },
         { label: "Articles", href: "/articles" },
         { label: "Web design in Cleveland", href: "/web-design-cleveland" },
+        { label: "HVAC website design", href: "/hvac-website-design" },
         { label: "FAQ", href: "/pricing#faq" },
       ],
     },
