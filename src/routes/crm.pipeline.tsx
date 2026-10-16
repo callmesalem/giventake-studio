@@ -33,6 +33,7 @@ function Pipeline() {
   const [error, setError] = useState<string | null>(null);
 
   const totalValue = columns.reduce((sum, c) => sum + c.total_usd, 0);
+  const weightedValue = columns.reduce((sum, c) => sum + c.weighted_usd, 0);
   const totalDeals = columns.reduce((sum, c) => sum + c.deals.length, 0);
 
   async function confirmMove(event: React.FormEvent) {
@@ -58,7 +59,7 @@ function Pipeline() {
     <div>
       <PageHeader
         title="Pipeline"
-        subtitle={`${totalDeals} deals · ${usd.format(totalValue)} total`}
+        subtitle={`${totalDeals} open deals · ${usd.format(totalValue)} total · ${usd.format(weightedValue)} weighted forecast`}
       />
 
       {pending && (
@@ -162,6 +163,9 @@ function Pipeline() {
                 <h2 className="text-sm font-semibold text-foreground">{col.name}</h2>
                 <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
                   {col.deals.length} · {usd.format(col.total_usd)}
+                  {col.total_usd > 0 && col.weighted_usd !== col.total_usd
+                    ? ` · ${usd.format(col.weighted_usd)} weighted`
+                    : ""}
                 </p>
                 {col.gate && (
                   <p className="mt-1.5 border-l-2 border-border pl-2 text-[11px] leading-snug text-muted-foreground">
@@ -198,6 +202,21 @@ function Pipeline() {
                     {deal.value_usd != null && (
                       <p className="mt-1 text-xs font-medium tabular-nums text-foreground">
                         {usd.format(deal.value_usd)}
+                      </p>
+                    )}
+                    {deal.days_in_stage != null && (
+                      <p
+                        className={
+                          "mt-1 text-xs tabular-nums " +
+                          // Two weeks without moving is worth a look, not an alarm.
+                          (deal.days_in_stage >= 14
+                            ? "font-medium text-amber-700"
+                            : "text-muted-foreground")
+                        }
+                      >
+                        {deal.days_in_stage === 0
+                          ? "Entered today"
+                          : `${deal.days_in_stage}d in stage`}
                       </p>
                     )}
                     {/* Dragging is a convenience for pointers. This is the path

@@ -8,7 +8,26 @@ import {
   hasPostalAddress,
   dollarsToCents,
   passesListFilter,
+  winProbability,
+  daysSince,
 } from "../src/lib/crm-guards.ts";
+
+test("winProbability: signed stages count in full, early stages scale up", () => {
+  assert.equal(winProbability(0), 0.05);
+  assert.equal(winProbability(3), 0.5);
+  assert.equal(winProbability(4), 1);
+  assert.equal(winProbability(11), 1);
+  assert.equal(winProbability(-1), 0.05);
+});
+
+test("daysSince counts whole days and refuses junk", () => {
+  const now = Date.parse("2026-10-16T12:00:00Z");
+  assert.equal(daysSince("2026-10-16T01:00:00Z", now), 0);
+  assert.equal(daysSince("2026-10-01T12:00:00Z", now), 15);
+  assert.equal(daysSince("2026-10-20T00:00:00Z", now), 0);
+  assert.equal(daysSince(null, now), null);
+  assert.equal(daysSince("not a date", now), null);
+});
 
 /* ── UUID validation ────────────────────────────────────────────────────────
  * PostgREST filters are built by string concatenation, so an id that is not a

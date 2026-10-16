@@ -19,6 +19,8 @@ import {
   isSendable,
   conversionKey,
   canAssign,
+  winProbability,
+  daysSince,
   type Gate,
 } from "@/lib/crm-guards";
 import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
@@ -987,8 +989,17 @@ export interface PipelineColumn {
   sort_order: number;
   artifact: string | null;
   gate: string | null;
-  deals: { id: string; name: string; value_usd: number | null; company: string | null }[];
+  deals: {
+    id: string;
+    name: string;
+    value_usd: number | null;
+    company: string | null;
+    /** Days since the deal entered its current stage (or was created). */
+    days_in_stage: number | null;
+  }[];
   total_usd: number;
+  /** total_usd × the stage's win probability. */
+  weighted_usd: number;
 }
 
 /** Stages and their deals together. Deals whose stage does not match a seeded
@@ -998,13 +1009,27 @@ export interface PipelineColumn {
 export const crmPipeline = createServerFn({ method: "GET" }).handler(
   async (): Promise<PipelineColumn[]> => {
     const read = await reader();
-    const [stages, deals, companies] = await Promise.all([
+    const [stages, deals, companies, events] = await Promise.all([
       read.listStages<Record<string, unknown>>(),
       read.listDeals<Record<string, unknown>>(),
       read.listCompanies<Record<string, unknown>>(),
+      // Newest first, so the first row seen per deal is its latest stage change.
+      // ponytail: 2,000 events covers years at this volume; page it if it doesn't.
+      read.listWhere<Record<string, unknown>>(
+        "deal_stage_events",
+        {},
+        "deal_id,created_at",
+        "created_at.desc",
+        2000,
+      ),
     ]);
     const companyName = new Map(companies.map((c) => [String(c.id), str(c.name)]));
     const known = new Set(stages.map((s) => str(s.name)));
+    const enteredStage = new Map<string, string | null>();
+    for (const e of events) {
+      const id = String(e.deal_id);
+      if (!enteredStage.has(id)) enteredStage.set(id, str(e.created_at));
+    }
 
     const columns: PipelineColumn[] = stages.map((s) => ({
       name: str(s.name) ?? "",
@@ -1013,22 +1038,29 @@ export const crmPipeline = createServerFn({ method: "GET" }).handler(
       gate: str(s.gate),
       deals: [],
       total_usd: 0,
+      weighted_usd: 0,
     }));
     const byName = new Map(columns.map((c) => [c.name, c]));
 
     for (const d of deals) {
+      // Lost deals (closed with a reason) leave the board; they stay on the deals
+      // list and their page. Closed without a reason is "won" (see attribution_snapshot).
+      if (d.lost_reason) continue;
       const stage = str(d.stage);
       const column = (stage && known.has(stage) ? byName.get(stage) : undefined) ?? columns[0];
       if (!column) continue;
       const value = num(d.value_usd);
+      const id = String(d.id);
       column.deals.push({
-        id: String(d.id),
+        id,
         name: str(d.name) ?? "(unnamed)",
         value_usd: value,
         company: d.company_id ? (companyName.get(String(d.company_id)) ?? null) : null,
+        days_in_stage: daysSince(enteredStage.get(id) ?? d.created_at),
       });
       column.total_usd += value ?? 0;
     }
+    for (const c of columns) c.weighted_usd = c.total_usd * winProbability(c.sort_order);
     return columns;
   },
 );
