@@ -8,7 +8,19 @@ import {
   assignRecord,
   addNote,
   convertDealToClient,
+  setDealOutcome,
 } from "@/lib/crm-data";
+
+/** Fixed list so lost reasons can be counted later; detail goes after a colon. */
+const LOST_REASONS = [
+  "Price",
+  "Went with someone else",
+  "No budget",
+  "Timing",
+  "Stopped responding",
+  "Not a fit",
+  "Other",
+];
 import { listAssignableMembers } from "@/lib/crm-auth";
 import {
   generateSowDraft,
@@ -248,6 +260,47 @@ function Deal() {
                   {deal.created_at ? new Date(deal.created_at).toLocaleDateString() : null}
                 </Field>
               </FieldList>
+              <div className="mt-4">
+                {deal.closed_at ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDealOutcome({ data: { dealId: deal.id, lostReason: null } }).then(() =>
+                        router.invalidate(),
+                      )
+                    }
+                    className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    Reopen deal
+                  </button>
+                ) : (
+                  <Disclosure label="Mark lost">
+                    <EntityForm
+                      fields={[
+                        {
+                          name: "reason",
+                          label: "Why",
+                          type: "select",
+                          required: true,
+                          options: LOST_REASONS.map((r) => ({ value: r, label: r })),
+                        },
+                        { name: "detail", label: "Detail", placeholder: "Optional" },
+                      ]}
+                      submitLabel="Mark lost"
+                      onSubmit={(data) =>
+                        setDealOutcome({
+                          data: {
+                            dealId: deal.id,
+                            lostReason: data.detail
+                              ? `${data.reason}: ${data.detail}`
+                              : data.reason,
+                          },
+                        })
+                      }
+                    />
+                  </Disclosure>
+                )}
+              </div>
             </Card>
           </>
         }

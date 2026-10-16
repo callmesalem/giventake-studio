@@ -912,6 +912,43 @@ export const setTaskCompleted = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** A task is always new here; completion goes through setTaskCompleted. The
+ *  actor is the source, as with notes, so the audit trail names the person. */
+export const createTask = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const deadline = text(d?.deadlineAt, "Due date", 40);
+    if (deadline && Number.isNaN(Date.parse(deadline))) {
+      throw new Response("Due date is not a valid date", { status: 400 });
+    }
+    return {
+      companyId: optionalUuid(d?.companyId),
+      content: text(d?.content, "Task", 2000, true) as string,
+      deadlineAt: deadline ? new Date(deadline).toISOString() : null,
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions, actor } = await writer();
+    await actions.upsertTask({ source: actor, sourceRecordId: crypto.randomUUID(), ...data });
+    return { ok: true };
+  });
+
+/** Lost needs a reason; null reopens. "Won" is passing stage 4, already gated. */
+export const setDealOutcome = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    dealId: requireUuid(d?.dealId),
+    lostReason:
+      d?.lostReason === null ? null : (text(d?.lostReason, "Lost reason", 500, true) as string),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    // Read through the scoped reader first so a member cannot close a deal
+    // they cannot see; the RPC itself runs as service_role.
+    const read = await reader();
+    notFound(await read.getById<Record<string, unknown>>("deals", data.dealId, "id"));
+    await actions.setDealOutcome(data.dealId, data.lostReason);
+    return { ok: true };
+  });
+
 export const advanceStage = createServerFn({ method: "POST" })
   .validator((d: Record<string, unknown>) => ({
     dealId: requireUuid(d?.dealId),

@@ -52,6 +52,7 @@ const READABLE = [
 const WRITE_RPCS = [
   "crm_assign(text,text,uuid,uuid)",
   "deal_link_lead(uuid,uuid)",
+  "deal_set_outcome(uuid,text)",
   "lead_set_status(uuid,text)",
   "client_create(text,uuid,uuid,boolean,uuid)",
   "project_create(uuid,text)",
@@ -160,6 +161,13 @@ try {
   assert.equal(as("postgres", `select lead_id from public.deals where id='${deal}';`), lead);
   refuses("service_role", `select public.deal_link_lead('${missing}','${lead}');`, /deal not found/); // prettier-ignore
   refuses("service_role", `select public.deal_link_lead('${deal}','${missing}');`, /foreign key/);
+
+  as("service_role", `select public.deal_set_outcome('${deal}','Price');`);
+  assert.equal(as("postgres", `select lost_reason || '|' || (closed_at is not null) from public.deals where id='${deal}';`), "Price|true"); // prettier-ignore
+  as("service_role", `select public.deal_set_outcome('${deal}',null);`);
+  assert.equal(as("postgres", `select (lost_reason is null) || '|' || (closed_at is null) from public.deals where id='${deal}';`), "true|true"); // prettier-ignore
+  refuses("service_role", `select public.deal_set_outcome('${deal}','  ');`, /lost reason/);
+  refuses("service_role", `select public.deal_set_outcome('${missing}','Price');`, /deal not found/); // prettier-ignore
 
   as("service_role", `select public.crm_assign('deals','assigned_to','${deal}','${user}');`);
   assert.equal(as("postgres", `select assigned_to from public.deals where id='${deal}';`), user);

@@ -401,6 +401,14 @@ export class CrmActions {
     await this.#rpc<unknown>("deal_link_lead", { p_deal_id: dealId, p_lead_id: leadId });
   }
 
+  /** A reason marks the deal lost and stamps closed_at; null reopens it. */
+  async setDealOutcome(dealId: string, lostReason: string | null): Promise<void> {
+    await this.#rpc<unknown>("deal_set_outcome", {
+      p_deal_id: dealId,
+      p_lost_reason: lostReason,
+    });
+  }
+
   async setLeadStatus(leadId: string, status: string): Promise<void> {
     await this.#rpc<unknown>("lead_set_status", { p_lead_id: leadId, p_status: status });
   }

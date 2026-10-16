@@ -57,6 +57,16 @@ test("linkDealToLead goes through the deal_link_lead RPC", async () => {
   assert.deepEqual(calls[0].body, { p_deal_id: DEAL, p_lead_id: LEAD });
 });
 
+test("setDealOutcome goes through the deal_set_outcome RPC, reason or null", async () => {
+  const { actions, calls } = harness();
+  await actions.setDealOutcome(DEAL, "Price");
+  await actions.setDealOutcome(DEAL, null);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].path, "/rest/v1/rpc/deal_set_outcome");
+  assert.deepEqual(calls[0].body, { p_deal_id: DEAL, p_lost_reason: "Price" });
+  assert.deepEqual(calls[1].body, { p_deal_id: DEAL, p_lost_reason: null });
+});
+
 test("assign goes through the crm_assign RPC", async () => {
   const { actions, calls } = harness();
   await actions.assign("deals", "assigned_to", DEAL, USER);
