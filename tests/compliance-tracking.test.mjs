@@ -51,7 +51,8 @@ assert.ok(
 const retiredModel = [
   [
     "retired price tiers",
-    /\$249|\$399|\$499|\$549/,
+    // $499/mo is the automation retainer; a one-off $499 build price stays retired.
+    /\$249|\$399|\$499(?!\/mo)|\$549/,
     "prices are $999 builds and the $99/mo care plan",
   ],
   ["12-month initial term", /12-month initial term/i, "the care plan is month to month"],

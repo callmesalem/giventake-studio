@@ -7,7 +7,7 @@
 export const faqs = [
   {
     q: "How much does it cost?",
-    a: "Custom websites start at $999. The final number depends on scope, and you get it in writing as a quote and proposal before any work starts. Payment plans and financing are available. After launch there's an optional care plan at $99 per month covering hosting, updates, backups, monitoring, small content edits, and a monthly report. You can skip it or cancel it any time.",
+    a: "Custom websites start at $999. The final number depends on scope, and you get it in writing as a quote and proposal before any work starts. Payment plans and financing are available, including an own-it plan: $0 down and $149 a month for 12 months on a standard site, then it's yours. After launch there's an optional care plan at $99 per month covering hosting, updates, backups, monitoring, small content edits, and a monthly report. If you only want hosting, SSL, and backups, that's $49 a month. You can skip either or cancel any time.",
   },
   {
     q: "Do I own my website?",

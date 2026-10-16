@@ -1,6 +1,6 @@
 # GivenTake Devs
 
-> A small web studio based in Parma, Ohio, serving Cleveland, Northeast Ohio and clients across the US. Custom websites for small businesses from $999, quoted in writing before work starts and owned outright by the client. An optional $99/mo care plan covers hosting, updates and a plain-English monthly report. The studio also builds internal dashboards, booking and payment systems, business automation and MVPs at fixed prices. GivenTake Devs is a registered trade name of Giventake Goods LLC.
+> A small web studio based in Parma, Ohio, serving Cleveland, Northeast Ohio and clients across the US. Custom websites for small businesses from $999, quoted in writing before work starts and owned outright by the client. An own-it plan spreads a standard site over 12 payments of $149/mo with $0 down. An optional $99/mo care plan covers hosting, updates and a plain-English monthly report; hosting only is $49/mo. Automation work can start with a $749 audit, credited toward the build, and ongoing automation support starts at $499/mo. The studio also builds internal dashboards, booking and payment systems, business automation and MVPs at fixed prices. GivenTake Devs is a registered trade name of Giventake Goods LLC.
 
 Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.com.
 

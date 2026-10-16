@@ -286,6 +286,7 @@ export const offers: Offer[] = [
       "Changes to third-party systems we don't control",
       "Processes that aren't documented or agreed before we start",
       "Ongoing subscription and usage costs, including AI model usage",
+      "Changes after the 60-day support window (the automation retainer, from $499/mo, covers those)",
       "AI making final decisions on money, legal, or customer commitments without a human check",
     ],
     questions: [
@@ -295,7 +296,7 @@ export const offers: Offer[] = [
       "How often does it happen, and how long does it take each time?",
     ],
     goodFit:
-      "You can name the process and roughly how long it takes. If you can't describe how it works today, we map it with you as part of quoting the work. A scope written on guesses helps nobody.",
+      "You can name the process and roughly how long it takes. If you can't describe how it works today, the $749 automation audit maps it with you, and the full fee comes off the build if you sign within 30 days. A scope written on guesses helps nobody.",
   },
   {
     slug: "mvp-development",
