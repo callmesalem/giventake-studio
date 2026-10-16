@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { crmContact, saveContact } from "@/lib/crm-data";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { crmContact, saveContact, setContactNextAction } from "@/lib/crm-data";
 import {
   Card,
   DetailHeader,
@@ -71,6 +71,7 @@ function Contact() {
         }
         aside={
           <>
+            <NextStep contact={contact} />
             <Card title="Details">
               <FieldList>
                 <Field label="Role">{contact.job_title}</Field>
@@ -112,5 +113,65 @@ function Contact() {
         }
       />
     </div>
+  );
+}
+
+/** The one thing to do next for this person, and when. New leads arrive with
+ *  "Reply to new lead" due in four hours (database trigger). */
+function NextStep({ contact }: { contact: ReturnType<typeof Route.useLoaderData> }) {
+  const router = useRouter();
+  const due = contact.next_action_due ? new Date(contact.next_action_due) : null;
+  const overdue = due ? due < new Date() : false;
+  return (
+    <Card title="Next step">
+      {contact.next_action ? (
+        <div className="mb-3">
+          <p className="text-sm font-medium text-foreground">{contact.next_action}</p>
+          {due && (
+            <p
+              className={
+                "mt-0.5 text-xs " +
+                (overdue ? "font-semibold text-red-600" : "text-muted-foreground")
+              }
+            >
+              {overdue ? "Overdue since " : "Due "}
+              {due.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              setContactNextAction({
+                data: { contactId: contact.id, action: null, due: null },
+              }).then(() => router.invalidate())
+            }
+            className="mt-2 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+          >
+            Mark done
+          </button>
+        </div>
+      ) : (
+        <p className="mb-3 text-sm text-muted-foreground">Nothing scheduled.</p>
+      )}
+      <Disclosure label={contact.next_action ? "Change" : "Set next step"}>
+        <EntityForm
+          fields={[
+            {
+              name: "action",
+              label: "Next step",
+              required: true,
+              placeholder: "Call back about the quote",
+            },
+            { name: "due", label: "Due", type: "datetime-local" },
+          ]}
+          submitLabel="Save"
+          onSubmit={(data) =>
+            setContactNextAction({
+              data: { contactId: contact.id, action: data.action, due: data.due || null },
+            })
+          }
+        />
+      </Disclosure>
+    </Card>
   );
 }

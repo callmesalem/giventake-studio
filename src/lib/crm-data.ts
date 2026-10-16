@@ -651,6 +651,8 @@ export interface ContactDetail {
   email: string | null;
   phone: string | null;
   job_title: string | null;
+  next_action: string | null;
+  next_action_due: string | null;
   created_at: string | null;
   company: { id: string; name: string } | null;
   deals: { id: string; name: string; stage: string | null; value_usd: number | null }[];
@@ -697,6 +699,8 @@ export const crmContact = createServerFn({ method: "GET" })
       email: str(row.email),
       phone: str(row.phone),
       job_title: str(row.job_title),
+      next_action: str(row.next_action),
+      next_action_due: str(row.next_action_due),
       created_at: str(row.created_at),
       company: company ? { id: String(company.id), name: str(company.name) ?? "(unnamed)" } : null,
       deals: deals.map((d) => ({
@@ -931,6 +935,29 @@ export const createTask = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { actions, actor } = await writer();
     await actions.upsertTask({ source: actor, sourceRecordId: crypto.randomUUID(), ...data });
+    return { ok: true };
+  });
+
+/** Mark the next step done (action null) or set a new one. New leads get
+ *  "Reply to new lead", due in four hours, from a database trigger. */
+export const setContactNextAction = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const action = d?.action === null ? null : (text(d?.action, "Next step", 300, true) as string);
+    const due = action === null ? null : text(d?.due, "Due", 40);
+    if (due && Number.isNaN(Date.parse(due))) {
+      throw new Response("Due is not a valid date", { status: 400 });
+    }
+    return {
+      contactId: requireUuid(d?.contactId),
+      action,
+      due: due ? new Date(due).toISOString() : null,
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    const read = await reader();
+    notFound(await read.getById<Record<string, unknown>>("contacts", data.contactId, "id"));
+    await actions.setContactNextAction(data.contactId, data.action, data.due);
     return { ok: true };
   });
 

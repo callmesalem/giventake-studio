@@ -319,7 +319,16 @@ export function LinkedTable({
 export interface FormFieldDef {
   name: string;
   label: string;
-  type?: "text" | "email" | "tel" | "number" | "textarea" | "select" | "date" | "checkbox";
+  type?:
+    | "text"
+    | "email"
+    | "tel"
+    | "number"
+    | "textarea"
+    | "select"
+    | "date"
+    | "datetime-local"
+    | "checkbox";
   required?: boolean;
   placeholder?: string;
   options?: { value: string; label: string }[];
