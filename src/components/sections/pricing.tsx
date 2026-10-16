@@ -20,6 +20,19 @@ const carePlanIncluded = [
 
 const carePlanExcluded = ["New pages", "New features", "Redesigns"];
 
+const automationOptions = [
+  {
+    name: "Automation audit",
+    price: "$749",
+    body: "We map one process end to end and hand you a written plan: what to automate, what to leave alone, and a fixed quote. The full $749 comes off the build if you sign within 30 days of the report.",
+  },
+  {
+    name: "Automation retainer",
+    price: "From $499/mo",
+    body: "Monitoring, fixes, and small changes to automations we built, about 4 hours a month. Month to month, cancel with 30 days' notice.",
+  },
+];
+
 const included = [
   "You own your domain, your content, and your customer data. Always.",
   "The quote is written down before work starts, and the price in it is the price.",
@@ -77,6 +90,10 @@ export function Pricing() {
                   </p>
                   <p className="mt-2 max-w-[16rem] text-[13px] leading-snug text-white/60">
                     Final price depends on scope. You see it in writing before you commit.
+                  </p>
+                  <p className="mt-3 max-w-[16rem] text-[13px] leading-snug text-white/80">
+                    Or the own-it plan: $0 down, $149/mo for 12 months on a standard site, then
+                    it&rsquo;s yours. Leave early by paying the remaining months.
                   </p>
                 </div>
                 <a
@@ -141,6 +158,11 @@ export function Pricing() {
                   Those are project work. We scope them and quote them separately, so you always
                   know what you're agreeing to.
                 </p>
+                <p className="mt-4 text-[13.5px] leading-relaxed text-muted-ink">
+                  <span className="font-medium text-ink">Just need hosting? $49/mo.</span> Hosting,
+                  SSL, and backups only. Edits are quoted per request, or move up to the care plan
+                  any time.
+                </p>
               </div>
             </div>
 
@@ -152,6 +174,24 @@ export function Pricing() {
               <IconArrowRight className="h-4 w-4" />
             </a>
           </article>
+        </Reveal>
+
+        {/* automation audit + retainer */}
+        <Reveal delay={100}>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {automationOptions.map((o) => (
+              <article
+                key={o.name}
+                className="card-lift rounded-2xl border border-hairline bg-white p-7 shadow-soft"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="text-[18px] font-semibold tracking-tight text-ink">{o.name}</h3>
+                  <p className="shrink-0 text-[18px] font-semibold text-ink">{o.price}</p>
+                </div>
+                <p className="mt-3 text-[14px] leading-relaxed text-muted-ink">{o.body}</p>
+              </article>
+            ))}
+          </div>
         </Reveal>
 
         {/* transparent expectations block */}

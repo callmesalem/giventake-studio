@@ -199,7 +199,7 @@ export const OFFERS = [
   },
   {
     name: "AI lead intake",
-    price: "From $4,500",
+    price: "Custom quote",
     timeline: "3–5 weeks",
     fit: "Qualify, route, and follow up with inbound leads while preserving human review.",
   },
@@ -220,6 +220,30 @@ export const OFFERS = [
     price: "$99/mo",
     timeline: "Starts at launch",
     fit: "Optional, cancel anytime: hosting, security updates, backups, uptime monitoring, a few small content edits a month, and the monthly proof report. New pages, new features, and redesigns are quoted separately as project work.",
+  },
+  {
+    name: "Own-it plan",
+    price: "$0 down, $149/mo x 12",
+    timeline: "Starts at kickoff",
+    fit: "A standard site with nothing due upfront. The site is theirs after the 12th payment; leaving early means paying the remaining months.",
+  },
+  {
+    name: "Hosting only",
+    price: "$49/mo",
+    timeline: "Starts at launch",
+    fit: "Hosting, SSL, and backups only. Edits are quoted per request, or they upgrade to the $99/mo care plan.",
+  },
+  {
+    name: "Automation audit",
+    price: "$749",
+    timeline: "About 1 week",
+    fit: "One process mapped end to end, with a written plan and fixed quote. Fully credited toward a build signed within 30 days of the report.",
+  },
+  {
+    name: "Automation retainer",
+    price: "From $499/mo",
+    timeline: "After launch",
+    fit: "About 4 hours a month of monitoring, fixes, and small changes to automations we built. Month to month, 30 days' notice to cancel.",
   },
 ];
 
