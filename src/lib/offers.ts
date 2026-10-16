@@ -34,6 +34,8 @@ export type Offer = {
   /** Discovery prompts shown as "questions we'll ask" — signals process. */
   questions: string[];
   goodFit: string;
+  /** Trade-specific landing pages built on this offer, linked from its page. */
+  tradePages?: { label: string; href: string }[];
 };
 
 export const offers: Offer[] = [
@@ -251,6 +253,10 @@ export const offers: Offer[] = [
     ],
     goodFit:
       "You run a trade business with a phone that should ring more, and you want a site you own outright. If you need someone to run ads or buy leads for you, that's a different service and we'll say so.",
+    tradePages: [
+      { label: "Websites for HVAC companies", href: "/hvac-website-design" },
+      { label: "Websites for roofing companies", href: "/roofing-website-design" },
+    ],
   },
   {
     slug: "business-automation",

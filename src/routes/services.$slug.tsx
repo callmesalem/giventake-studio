@@ -233,6 +233,16 @@ function OfferPage() {
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3">
+              {offer.tradePages?.map((t) => (
+                <a
+                  key={t.href}
+                  href={t.href}
+                  className="btn-icon-nudge inline-flex items-center gap-1.5 text-[14px] font-medium text-violet"
+                >
+                  {t.label}
+                  <IconArrowRight className="h-4 w-4" />
+                </a>
+              ))}
               <Link
                 to="/process"
                 className="btn-icon-nudge inline-flex items-center gap-1.5 text-[14px] font-medium text-violet"
