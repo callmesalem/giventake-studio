@@ -144,7 +144,7 @@ function RoofingPage() {
 
       <H2>Where we are as a studio</H2>
       <P>
-        We&rsquo;re based in Parma, Ohio. We meet in person within about 30 to 45 minutes and by
+        We&rsquo;re based in Cleveland, Ohio. We meet in person within about 30 to 45 minutes and by
         video anywhere in the US. Everything we&rsquo;ve built so far has been for our own business,
         and we&rsquo;re now taking on outside clients. We haven&rsquo;t built a roofing site for a
         client yet, so we have no roofing reviews to show you, and we won&rsquo;t invent any. You
