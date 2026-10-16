@@ -192,6 +192,7 @@ export function SiteFooter() {
         { label: "Articles", href: "/articles" },
         { label: "Web design in Cleveland", href: "/web-design-cleveland" },
         { label: "HVAC website design", href: "/hvac-website-design" },
+        { label: "Roofing website design", href: "/roofing-website-design" },
         { label: "FAQ", href: "/pricing#faq" },
       ],
     },

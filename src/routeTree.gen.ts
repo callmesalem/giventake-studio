@@ -13,6 +13,7 @@ import { Route as WorkRouteImport } from './routes/work'
 import { Route as WebDesignClevelandRouteImport } from './routes/web-design-cleveland'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RoofingWebsiteDesignRouteImport } from './routes/roofing-website-design'
 import { Route as ProcessRouteImport } from './routes/process'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -82,6 +83,11 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoofingWebsiteDesignRoute = RoofingWebsiteDesignRouteImport.update({
+  id: '/roofing-website-design',
+  path: '/roofing-website-design',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProcessRoute = ProcessRouteImport.update({
@@ -352,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
+  '/roofing-website-design': typeof RoofingWebsiteDesignRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/web-design-cleveland': typeof WebDesignClevelandRoute
@@ -407,6 +414,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
+  '/roofing-website-design': typeof RoofingWebsiteDesignRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/web-design-cleveland': typeof WebDesignClevelandRoute
@@ -464,6 +472,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/process': typeof ProcessRoute
+  '/roofing-website-design': typeof RoofingWebsiteDesignRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/web-design-cleveland': typeof WebDesignClevelandRoute
@@ -522,6 +531,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/process'
+    | '/roofing-website-design'
     | '/sitemap.xml'
     | '/terms'
     | '/web-design-cleveland'
@@ -577,6 +587,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/process'
+    | '/roofing-website-design'
     | '/sitemap.xml'
     | '/terms'
     | '/web-design-cleveland'
@@ -633,6 +644,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/process'
+    | '/roofing-website-design'
     | '/sitemap.xml'
     | '/terms'
     | '/web-design-cleveland'
@@ -690,6 +702,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ProcessRoute: typeof ProcessRoute
+  RoofingWebsiteDesignRoute: typeof RoofingWebsiteDesignRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   WebDesignClevelandRoute: typeof WebDesignClevelandRoute
@@ -732,6 +745,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roofing-website-design': {
+      id: '/roofing-website-design'
+      path: '/roofing-website-design'
+      fullPath: '/roofing-website-design'
+      preLoaderRoute: typeof RoofingWebsiteDesignRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/process': {
@@ -1174,6 +1194,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ProcessRoute: ProcessRoute,
+  RoofingWebsiteDesignRoute: RoofingWebsiteDesignRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   WebDesignClevelandRoute: WebDesignClevelandRoute,
