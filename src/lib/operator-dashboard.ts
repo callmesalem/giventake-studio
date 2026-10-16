@@ -6,8 +6,8 @@ function requestAccess(mutation: boolean) {
   const headers = getRequestHeaders();
   const cookieToken = (headers.get("cookie") ?? "")
     .split(";")
-    .map((part) => part.trim())
-    .find((part) => part.startsWith("operator_dashboard_access="))
+    .map((part: string) => part.trim())
+    .find((part: string) => part.startsWith("operator_dashboard_access="))
     ?.slice("operator_dashboard_access=".length);
   const forwarded = [
     "forwarded",
