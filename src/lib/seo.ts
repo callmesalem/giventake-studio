@@ -30,12 +30,12 @@ export const LEGAL_ENTITY = "Giventake Goods LLC";
 export const LEGAL_ENTITY_LONG = `${SITE_NAME} is a registered trade name of ${LEGAL_ENTITY}, an Ohio limited liability company`;
 
 /**
- * TODO(before launch): replace with the registered business address.
- * A registered-agent or virtual-office address is fine — the point is that the
- * legal pages identify a real, servable address for the entity. Do not publish
- * the site with this placeholder still in place.
+ * The entity's registered address, shown on the legal pages (Terms, Privacy) so
+ * they identify a real, servable address. Not used in schema: the studio is a
+ * service-area business on Google with the address hidden, so publishing the
+ * street in LocalBusiness markup would contradict that profile.
  */
-export const BUSINESS_ADDRESS = "[registered business address, Ohio]";
+export const BUSINESS_ADDRESS = "26429 Redwood Dr, Olmsted Falls, OH 44138";
 
 /** Published business line (Twilio). E.164 for schema and tel: links, the
  *  display form for people. Shown on every page so carrier registration can
