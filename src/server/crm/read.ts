@@ -160,7 +160,7 @@ export class CrmRead {
   listDeals<T = Record<string, unknown>>(): Promise<T[]> {
     return this.#select<T>(
       "deals",
-      "select=id,name,stage,value_usd,company_id,source,owner_id,assigned_to&order=created_at.desc&limit=500",
+      "select=id,name,stage,value_usd,company_id,source,owner_id,assigned_to,closed_at,lost_reason,created_at&order=created_at.desc&limit=500",
     );
   }
   listContacts<T = Record<string, unknown>>(): Promise<T[]> {

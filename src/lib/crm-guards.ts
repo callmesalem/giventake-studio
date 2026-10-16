@@ -318,6 +318,25 @@ export function advanceBlockedByUnsignedSow(toStage: unknown, hasSignedSow: unkn
   return hasSignedSow !== true;
 }
 
+/**
+ * Chance a deal at this stage (by sort_order) turns into signed work, for the
+ * weighted forecast. Stage 4 (Close) and later are signed, so they count in
+ * full. Earlier stages are judgement calls, not measured rates.
+ * ponytail: hard-coded; once there are ~20 closed deals, replace with each
+ * stage's real win rate or a pipeline_stages.win_probability column.
+ */
+export function winProbability(sortOrder: number): number {
+  if (sortOrder >= 4) return 1;
+  return [0.05, 0.1, 0.25, 0.5][Math.max(0, Math.floor(sortOrder))] ?? 0;
+}
+
+/** Whole days from an ISO timestamp to `now`; null when the input is unusable. */
+export function daysSince(iso: unknown, now: number = Date.now()): number | null {
+  const t = typeof iso === "string" ? Date.parse(iso) : NaN;
+  if (Number.isNaN(t)) return null;
+  return Math.max(0, Math.floor((now - t) / 86_400_000));
+}
+
 /* ── Demo sites ─────────────────────────────────────────────────────────────
  *
  * Requesting a demo site queues a PUBLIC WEBSITE to be built and deployed for
