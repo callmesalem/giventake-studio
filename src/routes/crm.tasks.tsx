@@ -1,14 +1,31 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { crmTasks, setTaskCompleted } from "@/lib/crm-data";
-import { PageHeader, Card, EmptyState, Badge, useListFilter } from "@/components/crm/ui";
+import {
+  crmTasks,
+  crmCompanyOptions,
+  createTask,
+  setTaskCompleted,
+  type TaskRow,
+} from "@/lib/crm-data";
+import {
+  PageHeader,
+  Card,
+  EmptyState,
+  Badge,
+  Disclosure,
+  EntityForm,
+  useListFilter,
+} from "@/components/crm/ui";
 
 export const Route = createFileRoute("/crm/tasks")({
-  loader: () => crmTasks(),
+  loader: async () => {
+    const [tasks, companies] = await Promise.all([crmTasks(), crmCompanyOptions()]);
+    return { tasks, companies };
+  },
   component: Tasks,
 });
 
-function TaskRowView({ task }: { task: ReturnType<typeof Route.useLoaderData>[number] }) {
+function TaskRowView({ task }: { task: TaskRow }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const overdue = task.deadline_at ? new Date(task.deadline_at) < new Date() : false;
@@ -60,7 +77,7 @@ function TaskRowView({ task }: { task: ReturnType<typeof Route.useLoaderData>[nu
 }
 
 function Tasks() {
-  const rows = Route.useLoaderData();
+  const { tasks: rows, companies } = Route.useLoaderData();
   const { session } = Route.useRouteContext();
   const me = session?.userId ?? null;
   const { filtered, control } = useListFilter(
@@ -74,6 +91,25 @@ function Tasks() {
   return (
     <div>
       <PageHeader title="Tasks" subtitle={`${open.length} open · ${done.length} completed`} />
+      <div className="mb-4">
+        <Disclosure label="New task">
+          <EntityForm
+            columns={2}
+            fields={[
+              { name: "content", label: "Task", type: "textarea", required: true, rows: 3 },
+              { name: "deadlineAt", label: "Due date", type: "date" },
+              {
+                name: "companyId",
+                label: "Company",
+                type: "select",
+                options: companies.map((c) => ({ value: c.id, label: c.name })),
+              },
+            ]}
+            submitLabel="Add task"
+            onSubmit={(data) => createTask({ data })}
+          />
+        </Disclosure>
+      </div>
       {control}
       {open.length === 0 && done.length === 0 ? (
         <EmptyState>Nothing here yet. Agent escalations appear on this page.</EmptyState>
