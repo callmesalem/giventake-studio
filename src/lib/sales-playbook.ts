@@ -198,6 +198,24 @@ export const OFFERS = [
     fit: "A credible, conversion-focused public presence with clear content and lead capture.",
   },
   {
+    name: "Contractor website",
+    price: "From $1,999",
+    timeline: "2–4 weeks",
+    fit: "Trades and home services: tap-to-call, quote form, service-area pages, job gallery. Trade pages: HVAC, roofing.",
+  },
+  {
+    name: "Business automation",
+    price: "From $3,999",
+    timeline: "2–4 weeks",
+    fit: "Repetitive manual work done by software: rules where it must be exact, AI where the input is messy, a human check where judgement is needed.",
+  },
+  {
+    name: "MVP",
+    price: "Custom quote",
+    timeline: "6–10 weeks",
+    fit: "Founders who can name ten prospective users: the smallest build that tests the riskiest assumption.",
+  },
+  {
     name: "AI lead intake",
     price: "Custom quote",
     timeline: "3–5 weeks",

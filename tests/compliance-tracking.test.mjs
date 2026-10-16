@@ -99,7 +99,7 @@ assert.ok(
 
 assert.ok(
   files.contact.includes("CONTACT_BUDGET_OPTIONS.map") &&
-    files.contactOptions.includes('{ value: "500-2.5k", label: "$500 to $2.5k" }') &&
+    files.contactOptions.includes('{ value: "500-2.5k", label: "$999 to $2.5k" }') &&
     compact(files.contact).includes(
       "Do not include regulated, financial, health, credential, or sensitive personal data",
     ),
