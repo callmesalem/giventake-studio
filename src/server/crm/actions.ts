@@ -409,6 +409,19 @@ export class CrmActions {
     });
   }
 
+  /** Set a contact's next step and due time; a null action clears both. */
+  async setContactNextAction(
+    contactId: string,
+    action: string | null,
+    due: string | null,
+  ): Promise<void> {
+    await this.#rpc<unknown>("contact_set_next_action", {
+      p_contact_id: contactId,
+      p_action: action,
+      p_due: due,
+    });
+  }
+
   async setLeadStatus(leadId: string, status: string): Promise<void> {
     await this.#rpc<unknown>("lead_set_status", { p_lead_id: leadId, p_status: status });
   }

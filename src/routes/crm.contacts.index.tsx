@@ -115,7 +115,12 @@ function Contacts() {
         rows={filtered.map((c) => ({
           href: `/crm/contacts/${c.id}`,
           cells: [
-            <span className="font-medium">{c.name}</span>,
+            <span className="font-medium">
+              {c.name}
+              {c.next_action_due && new Date(c.next_action_due) < new Date() && (
+                <span className="ml-2 text-xs font-semibold text-red-600">Overdue</span>
+              )}
+            </span>,
             <Badge value={STAGE_LABEL[c.lifecycle_stage] ?? c.lifecycle_stage} />,
             dash(c.job_title),
             dash(c.company),
