@@ -36,12 +36,12 @@ type ContactBudget = (typeof CONTACT_BUDGET_VALUES)[number];
 // so labels change with the pricing model and values never do.
 export const CONTACT_BUDGET_OPTIONS = [
   { value: "discovery", label: "Not sure yet, I want a quote first" },
-  { value: "500-2.5k", label: "$500 to $2.5k" },
+  { value: "500-2.5k", label: "$999 to $2.5k" },
   { value: "2.5-10k", label: "$2.5k to $10k" },
   { value: "10-25k", label: "$10k to $25k" },
   { value: "25-75k", label: "$25k to $75k" },
   { value: "75k+", label: "$75k+" },
-  { value: "retainer", label: "Care plan ($99/mo)" },
+  { value: "retainer", label: "A monthly plan ($49 to $499/mo)" },
 ] as const satisfies readonly { value: ContactBudget; label: string }[];
 
 export const CONTACT_TIMELINE_VALUES = ["asap", "1-3mo", "3-6mo", "exploring"] as const;

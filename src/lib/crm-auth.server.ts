@@ -24,6 +24,11 @@ const ALLOWED_EMAIL_DOMAIN = (
   process.env.CRM_ALLOWED_EMAIL_DOMAIN || "giventakedevs.com"
 ).toLowerCase();
 
+/** Every sign-in path and every session check goes through this, not just Google. */
+function onAllowedDomain(email: string): boolean {
+  return email.toLowerCase().endsWith(`@${ALLOWED_EMAIL_DOMAIN}`);
+}
+
 function config() {
   const url = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -94,8 +99,7 @@ export async function completeGoogleLoginImpl(code: string): Promise<void> {
   if (!verifier) throw new Error("missing_pkce");
 
   const result = await auth.exchangeCodeForSession(code, verifier);
-  const email = result.session.email.toLowerCase();
-  if (!email.endsWith(`@${ALLOWED_EMAIL_DOMAIN}`)) {
+  if (!onAllowedDomain(result.session.email)) {
     // Not a Workspace account for this domain: revoke and refuse.
     await auth.logout(result.tokens.accessToken);
     throw new Error("domain_not_allowed");
@@ -115,13 +119,14 @@ export async function resolveCrmSession(): Promise<CrmSession | null> {
   const accessToken = getCookie(ACCESS_COOKIE);
   if (accessToken) {
     const session = await auth.userFromAccessToken(accessToken);
-    if (session) return session;
+    if (session) return onAllowedDomain(session.email) ? session : endSession();
   }
 
   const refreshToken = getCookie(REFRESH_COOKIE);
   if (refreshToken) {
     const refreshed = await auth.refresh(refreshToken);
     if (refreshed) {
+      if (!onAllowedDomain(refreshed.session.email)) return endSession();
       setSessionCookies(
         refreshed.tokens.accessToken,
         refreshed.tokens.refreshToken,
@@ -131,6 +136,10 @@ export async function resolveCrmSession(): Promise<CrmSession | null> {
     }
   }
 
+  return endSession();
+}
+
+function endSession(): null {
   clearSessionCookies();
   return null;
 }
@@ -154,6 +163,10 @@ export async function loginImpl(data: CrmLoginInput): Promise<{ session: CrmSess
   try {
     result = await auth.login(data.email, data.password);
   } catch {
+    throw new Response("Invalid email or password", { status: 401 });
+  }
+  if (!onAllowedDomain(result.session.email)) {
+    await auth.logout(result.tokens.accessToken);
     throw new Response("Invalid email or password", { status: 401 });
   }
   setSessionCookies(result.tokens.accessToken, result.tokens.refreshToken, result.tokens.expiresIn);
