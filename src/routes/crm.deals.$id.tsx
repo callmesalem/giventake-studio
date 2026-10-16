@@ -261,7 +261,7 @@ function Deal() {
                 </Field>
               </FieldList>
               <div className="mt-4">
-                {deal.closed_at ? (
+                {deal.lost_reason ? (
                   <button
                     type="button"
                     onClick={() =>
