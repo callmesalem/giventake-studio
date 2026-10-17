@@ -48,6 +48,7 @@ const READABLE = [
   "leads", "companies", "contacts", "deals", "notes", "tasks", "touchpoints", "agent_log",
   "pipeline_stages", "deal_stage_events", "approval_queue", "referral_partners", "referrals",
   "clients", "projects", "invoices", "campaigns", "newsletter_subscribers", "reviews",
+  "price_book_items",
 ]; // prettier-ignore
 const WRITE_RPCS = [
   "crm_assign(text,text,uuid,uuid)",
@@ -58,6 +59,7 @@ const WRITE_RPCS = [
   "client_create(text,uuid,uuid,boolean,uuid)",
   "project_create(uuid,text)",
   "invoice_create(uuid,bigint,text,text,timestamp with time zone)",
+  "price_book_upsert(uuid,text,text,text,text,text,bigint,boolean,boolean,text[],text[],numeric,boolean,integer)",
 ];
 
 try {
@@ -179,6 +181,16 @@ try {
   assert.equal(as("postgres", `select (next_action is null) || '|' || (next_action_due is null) from public.contacts where id='${leadContact}';`), "true|true"); // prettier-ignore
   refuses("service_role", `select public.contact_set_next_action('${leadContact}', '', now());`, /next action/); // prettier-ignore
   refuses("service_role", `select public.contact_set_next_action('${missing}', 'Call', now());`, /contact not found/); // prettier-ignore
+
+  // Price book: seeded, and writable only through price_book_upsert.
+  assert.equal(as("postgres", "select count(*) from public.price_book_items;"), "16");
+  assert.equal(as("postgres", "select unit_price_cents from public.price_book_items where key='site_contractor';"), "199900"); // prettier-ignore
+  const pb = as("service_role", "select public.price_book_upsert(null,'test_item','Test','','addon','each',1900,false,false,'{}','{}',null,false,99);"); // prettier-ignore
+  as("service_role", `select public.price_book_upsert('${pb}','test_item','Test','','addon','each',2900,false,false,'{}','{}',1.5,true,99);`); // prettier-ignore
+  assert.equal(as("postgres", `select unit_price_cents || '|' || archived from public.price_book_items where id='${pb}';`), "2900|true"); // prettier-ignore
+  refuses("service_role", "select public.price_book_upsert(null,'site_standard','Dup','','website','each',1,false,false,'{}','{}',null,false,0);", /duplicate key/); // prettier-ignore
+  refuses("service_role", "select public.price_book_upsert(null,'bad_cat','X','','nope','each',1,false,false,'{}','{}',null,false,0);", /check constraint/); // prettier-ignore
+  refuses("service_role", "select public.price_book_upsert(null,'neg','X','','addon','each',-1,false,false,'{}','{}',null,false,0);", /check constraint/); // prettier-ignore
 
   as("service_role", `select public.crm_assign('deals','assigned_to','${deal}','${user}');`);
   assert.equal(as("postgres", `select assigned_to from public.deals where id='${deal}';`), user);
