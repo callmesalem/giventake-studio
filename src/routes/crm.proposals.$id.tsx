@@ -6,6 +6,7 @@ import {
   saveProposal,
   sendProposal,
   reviseProposal,
+  type ProposalDetail,
 } from "@/lib/crm-data";
 import {
   effectiveRate,
@@ -50,6 +51,21 @@ const blank = (patch: Partial<ProposalLine>): ProposalLine => ({
 function Builder() {
   const { proposal, items } = Route.useLoaderData();
   const { skipped } = Route.useSearch();
+  // key remounts the form per proposal so Revise (A to B) never keeps A's state
+  return <BuilderForm key={proposal.id} proposal={proposal} items={items} skipped={skipped} />;
+}
+
+type PriceItems = Awaited<ReturnType<typeof crmPriceBook>>;
+
+function BuilderForm({
+  proposal,
+  items,
+  skipped,
+}: {
+  proposal: ProposalDetail;
+  items: PriceItems;
+  skipped: string;
+}) {
   const router = useRouter();
   const navigate = useNavigate();
   const draft = proposal.status === "draft";
@@ -64,7 +80,8 @@ function Builder() {
   const totals = proposalTotals(lines);
   const rate = effectiveRate(lines);
   const warnings = proposalWarnings(lines);
-  const blocking = lines.length === 0 || lines.some((l) => l.needs_discovery);
+  const badDiscount = lines.some((l) => l.unit_price_cents < 0 && !l.discount_reason?.trim());
+  const blocking = lines.length === 0 || lines.some((l) => l.needs_discovery) || badDiscount;
   const set = (i: number, patch: Partial<ProposalLine>) =>
     setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
   const save = () =>
@@ -78,7 +95,14 @@ function Builder() {
     try {
       await fn();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "That didn't work. Please try again.");
+      const generic = "That didn't work. Please try again.";
+      setError(
+        cause instanceof Response
+          ? (await cause.text()) || generic
+          : cause instanceof Error
+            ? cause.message
+            : generic,
+      );
     } finally {
       setBusy(false);
     }
@@ -263,6 +287,9 @@ function Builder() {
                 ? `${rate.hours} h · ${formatUsd(rate.rateCents)}/h effective`
                 : "Add internal hours to every one-time line (in the price book) to see your effective rate."}
             </p>
+            {badDiscount && (
+              <p className="mt-2 text-xs font-medium text-amber-700">A discount needs a reason.</p>
+            )}
             {warnings.map((w) => (
               <p key={w} className="mt-2 text-xs font-medium text-amber-700">
                 {w}
@@ -277,7 +304,7 @@ function Builder() {
                 <>
                   <button
                     type="button"
-                    disabled={busy}
+                    disabled={busy || badDiscount}
                     onClick={() =>
                       run(async () => {
                         await save();
