@@ -139,6 +139,7 @@ function Deal() {
                 vm={documents}
                 defaultClientName={deal.company?.name ?? deal.name}
                 defaultProjectName={deal.name}
+                acceptedProposalId={deal.proposals.find((x) => x.status === "accepted")?.id ?? null}
                 onChanged={reload}
               />
             </Card>
@@ -421,12 +422,14 @@ function Documents({
   vm,
   defaultClientName,
   defaultProjectName,
+  acceptedProposalId,
   onChanged,
 }: {
   dealId: string;
   vm: DealDocumentsVM;
   defaultClientName: string;
   defaultProjectName: string;
+  acceptedProposalId: string | null;
   onChanged: () => void;
 }) {
   if (!vm.available) {
@@ -444,6 +447,7 @@ function Documents({
         dealId={dealId}
         defaultClientName={defaultClientName}
         defaultProjectName={defaultProjectName}
+        proposalId={acceptedProposalId}
         onGenerated={onChanged}
       />
       {vm.documents.length === 0 ? (
@@ -474,11 +478,13 @@ function GenerateSow({
   dealId,
   defaultClientName,
   defaultProjectName,
+  proposalId,
   onGenerated,
 }: {
   dealId: string;
   defaultClientName: string;
   defaultProjectName: string;
+  proposalId: string | null;
   onGenerated: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -506,6 +512,7 @@ function GenerateSow({
                 dealId,
                 clientLegalName: String(form.get("clientLegalName") ?? ""),
                 projectName: String(form.get("projectName") ?? ""),
+                proposalId,
               },
             });
             if (result.ok) {
