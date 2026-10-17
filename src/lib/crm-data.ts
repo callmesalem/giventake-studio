@@ -1086,10 +1086,11 @@ function scopingFromForm(d: Record<string, unknown>): ScopingAnswers {
   });
 }
 
-type Reader = Awaited<ReturnType<typeof reader>>;
-
 /** The deal must be visible to the caller; the scoped reader returns null otherwise. */
-async function visibleDeal(read: Reader, dealId: string): Promise<Record<string, unknown>> {
+async function visibleDeal(
+  read: Awaited<ReturnType<typeof reader>>,
+  dealId: string,
+): Promise<Record<string, unknown>> {
   const deal = await read.getById<Record<string, unknown>>(
     "deals",
     dealId,
@@ -1099,7 +1100,10 @@ async function visibleDeal(read: Reader, dealId: string): Promise<Record<string,
   return deal;
 }
 
-async function proposalSummaries(read: Reader, dealId: string): Promise<ProposalSummary[]> {
+async function proposalSummaries(
+  read: Awaited<ReturnType<typeof reader>>,
+  dealId: string,
+): Promise<ProposalSummary[]> {
   const rows = await read.listProposalsForDeal<Record<string, unknown>>(dealId).catch(() => []);
   return Promise.all(
     rows.map(async (r) => {
