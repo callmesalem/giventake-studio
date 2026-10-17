@@ -205,25 +205,25 @@ $$;
 create or replace function public.proposal_decide(
   p_token_hash text, p_decision text, p_option text, p_name text, p_reason text
 ) returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
-declare v proposals; v_total bigint; v_deal deals;
+declare v proposals; v_total bigint; v_deal deals; v_reason text;
 begin
   select * into v from proposals where token_hash = p_token_hash for update;
   if not found then raise exception 'proposal not found'; end if;
 
   if v.status in ('sent', 'viewed') and v.valid_until < current_date then
     update proposals set status = 'expired', updated_at = now() where id = v.id;
-    return jsonb_build_object('status', 'expired');
+    return jsonb_build_object('status', 'expired', 'changed', false);
   end if;
   -- Replays, double clicks and late clicks return the current state unchanged.
   if v.status not in ('sent', 'viewed') then
-    return jsonb_build_object('status', v.status);
+    return jsonb_build_object('status', v.status, 'changed', false);
   end if;
 
   if p_decision = 'decline' then
     update proposals set status = 'declined', decided_at = now(),
       decline_reason = nullif(left(btrim(coalesce(p_reason, '')), 500), ''), updated_at = now()
-    where id = v.id;
-    return jsonb_build_object('status', 'declined');
+    where id = v.id returning decline_reason into v_reason;
+    return jsonb_build_object('status', 'declined', 'changed', true, 'reason', v_reason);
   end if;
 
   if p_decision is distinct from 'accept' then raise exception 'decision must be accept or decline'; end if;
@@ -251,7 +251,8 @@ begin
           now() + interval '1 day', jsonb_build_object('deal_id', v.deal_id))
   on conflict (source, source_record_id) do nothing;
 
-  return jsonb_build_object('status', 'accepted');
+  return jsonb_build_object('status', 'accepted', 'changed', true,
+    'option', p_option, 'name', btrim(p_name));
 end $$;
 
 revoke all on function public.deal_set_scoping(uuid, jsonb) from public, anon, authenticated;

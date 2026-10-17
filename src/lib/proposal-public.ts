@@ -18,6 +18,14 @@ export interface PublicProposal {
   lines: DocLine[];
 }
 
+interface DecideResult {
+  status: string;
+  changed?: boolean;
+  option?: string;
+  name?: string;
+  reason?: string;
+}
+
 /** sendProposal issues 32 random bytes as base64url: 43 characters. */
 const CODE = /^[A-Za-z0-9_-]{43}$/;
 
@@ -31,9 +39,16 @@ async function rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    // Surface only the RPC's own refusal text (raise exception ...), never internals.
-    const detail = await response.text().catch(() => "");
-    const message = /"message"\s*:\s*"([^"]{1,200})"/.exec(detail)?.[1];
+    // Show only the RPC's own refusal (raise exception => SQLSTATE P0001); any
+    // other fault could name functions or constraints, so it gets the generic text.
+    let message: string | undefined;
+    try {
+      const err = JSON.parse(await response.text()) as { code?: string; message?: string };
+      if (err.code === "P0001" && typeof err.message === "string")
+        message = err.message.slice(0, 200);
+    } catch {
+      /* not JSON */
+    }
     throw new Error(message ?? "That didn't go through. Please try again.");
   }
   return (await response.json()) as T;
@@ -71,30 +86,29 @@ export const decideProposal = createServerFn({ method: "POST" })
       throw new Error("Tick the box to accept the proposal.");
     }
     const h = await hash(data.code);
-    const result = await rpc<{ status: string }>("proposal_decide", {
+    const result = await rpc<DecideResult>("proposal_decide", {
       p_token_hash: h,
       p_decision: data.decision,
       p_option: data.option,
       p_name: data.name,
       p_reason: data.reason,
     });
-    if (result.status === "accepted" || result.status === "declined") {
-      await notifyOwner(h, result.status, data).catch(() => undefined);
-    }
-    return result;
+    // Only a real transition notifies; replays carry changed: false. The email
+    // uses the stored values the RPC returns, never the request's.
+    if (result.changed === true) await notifyOwner(h, result).catch(() => undefined);
+    return { status: result.status };
   });
 
-async function notifyOwner(
-  tokenHash: string,
-  status: string,
-  data: { option: string; name: string; reason: string },
-): Promise<void> {
+async function notifyOwner(tokenHash: string, r: DecideResult): Promise<void> {
   const p = await rpc<PublicProposal | null>("proposal_public", { p_token_hash: tokenHash });
   const { sendMail } = await import("@/lib/intake");
-  const to = process.env.INTAKE_TO_EMAIL ?? "build@giventakedevs.com";
+  const to = process.env.INTAKE_TO_EMAIL?.trim() || "build@giventakedevs.com";
   const body =
-    status === "accepted"
-      ? `${p?.client ?? "A client"} accepted "${p?.title ?? "a proposal"}".\nPayment option: ${data.option}. Accepted by: ${data.name}.\nA task to send the SOW is on the Tasks page.`
-      : `${p?.client ?? "A client"} declined "${p?.title ?? "a proposal"}".\nReason: ${data.reason || "(none given)"}`;
-  await sendMail(to, `Proposal ${status}: ${p?.title ?? "proposal"}`, body, to);
+    r.status === "accepted"
+      ? `${p?.client ?? "A client"} accepted "${p?.title ?? "a proposal"}".
+Payment option: ${r.option}. Accepted by: ${r.name}.
+A task to send the SOW is on the Tasks page.`
+      : `${p?.client ?? "A client"} declined "${p?.title ?? "a proposal"}".
+Reason: ${r.reason || "(none given)"}`;
+  await sendMail(to, `Proposal ${r.status}: ${p?.title ?? "proposal"}`, body, to);
 }

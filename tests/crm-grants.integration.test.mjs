@@ -254,7 +254,9 @@ try {
     "select public.proposal_decide('hash-pppp','accept','full','A','');",
     /name/,
   );
-  assert.equal(JSON.parse(as("service_role", "select public.proposal_decide('hash-pppp','accept','own_it','Alex Fixture','');")).status, "accepted"); // prettier-ignore
+  const first = JSON.parse(as("service_role", "select public.proposal_decide('hash-pppp','accept','own_it','Alex Fixture','');")); // prettier-ignore
+  assert.equal(first.status, "accepted");
+  assert.equal(first.changed, true);
   assert.equal(
     as("postgres", `select value_usd::int from public.deals where id='${deal}';`),
     "999",
@@ -265,7 +267,9 @@ try {
   ); // never moves the stage
   assert.equal(as("postgres", `select count(*) from public.tasks where source='proposal' and source_record_id='${p}';`), "1"); // prettier-ignore
   // Replay is a no-op (Review Focus 4).
-  assert.equal(JSON.parse(as("service_role", "select public.proposal_decide('hash-pppp','decline','','Someone','late');")).status, "accepted"); // prettier-ignore
+  const replay = JSON.parse(as("service_role", "select public.proposal_decide('hash-pppp','decline','','Someone','late');")); // prettier-ignore
+  assert.equal(replay.status, "accepted");
+  assert.equal(replay.changed, false);
   assert.equal(
     as("postgres", `select accepted_option from public.proposals where id='${p}';`),
     "own_it",
