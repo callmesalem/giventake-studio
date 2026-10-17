@@ -1,6 +1,6 @@
 # GivenTake Devs
 
-> A small web studio based in Parma, Ohio, serving Cleveland, Northeast Ohio and clients across the US. Custom websites for small businesses from $999, quoted in writing before work starts and owned outright by the client. An own-it plan spreads a standard site over 12 payments of $149/mo with $0 down. An optional $99/mo care plan covers hosting, updates and a plain-English monthly report; hosting only is $49/mo. Automation work can start with a $749 audit, credited toward the build, and ongoing automation support starts at $499/mo. The studio also builds internal dashboards, booking and payment systems, business automation and MVPs at fixed prices. GivenTake Devs is a registered trade name of Giventake Goods LLC.
+> A small web studio based in Cleveland, Ohio, serving Northeast Ohio and clients across the US. Custom websites for small businesses from $999, quoted in writing before work starts and owned outright by the client. An own-it plan spreads a standard site over 12 payments of $149/mo with $0 down. An optional $99/mo care plan covers hosting, updates and a plain-English monthly report; hosting only is $49/mo. Automation work can start with a $749 audit, credited toward the build, and ongoing automation support starts at $499/mo. The studio also builds internal dashboards, booking and payment systems, business automation and MVPs at fixed prices. GivenTake Devs is a registered trade name of Giventake Goods LLC.
 
 Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.com.
 
@@ -15,7 +15,7 @@ Every page is server-rendered HTML with JSON-LD. Contact: build@giventakedevs.co
 - [AI lead intake](https://giventakedevs.com/services/ai-lead-intake)
 - [MVP development](https://giventakedevs.com/services/mvp-development)
 - [Websites for contractors](https://giventakedevs.com/services/websites-for-contractors): plumbers, HVAC, roofers, restoration companies, remodelers, landscapers
-- [Web design in Cleveland](https://giventakedevs.com/web-design-cleveland): in-person meetings within 30 to 45 minutes of Parma, virtual anywhere
+- [Web design in Cleveland](https://giventakedevs.com/web-design-cleveland): in-person meetings within 30 to 45 minutes of Cleveland, virtual anywhere
 - [HVAC website design](https://giventakedevs.com/hvac-website-design): sites for heating and cooling companies, from $1,999
 - [Roofing website design](https://giventakedevs.com/roofing-website-design): sites for roofing contractors, from $1,999
 

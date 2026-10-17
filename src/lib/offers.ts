@@ -265,7 +265,7 @@ export const offers: Offer[] = [
       "The repetitive work someone does by hand every day, done by software: AI where it reads and sorts, plain rules where it has to be exact.",
     metaTitle: "AI Automation Services for Small Business | GivenTake Devs",
     metaDescription:
-      "AI and workflow automation for small businesses: data re-entry, inbox and lead sorting, document assembly, status chasing. Based in Parma, Ohio. Fixed price from $3,999.",
+      "AI and workflow automation for small businesses: data re-entry, inbox and lead sorting, document assembly, status chasing. Based in Cleveland, Ohio. Fixed price from $3,999.",
     priceFrom: "From $3,999",
     timeline: "2–4 weeks",
     problem: [

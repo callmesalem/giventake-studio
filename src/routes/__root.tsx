@@ -130,8 +130,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               // ProfessionalService is a LocalBusiness subtype: it is what
               // lets a local or AI answer attach the studio to a place. The
-              // street address is deliberately absent until BUSINESS_ADDRESS
-              // is real; a region and service area are true today.
+              // street address is deliberately absent: Google lists the studio
+              // as a service-area business with the address hidden, so only
+              // the region and service area are published here.
               "@type": ["Organization", "ProfessionalService"],
               "@id": ORGANIZATION_ID,
               name: SITE_NAME,

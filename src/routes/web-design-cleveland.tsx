@@ -20,7 +20,7 @@ export const Route = createFileRoute("/web-design-cleveland")({
       path: PATH,
       title: "Web Design in Cleveland for Small Businesses · GivenTake Devs",
       description:
-        "Small business web design in Cleveland and Northeast Ohio from a Parma-based studio. Meet in person or online, fixed written quotes from $999, and you own the site.",
+        "Small business web design in Cleveland and Northeast Ohio from a Cleveland-based studio. Meet in person or online, fixed written quotes from $999, and you own the site.",
     }),
     scripts: [
       {
@@ -58,12 +58,12 @@ function ClevelandPage() {
     <ProsePage
       eyebrow="Cleveland and Northeast Ohio"
       title="Web design for Cleveland small businesses."
-      lede="GivenTake Devs is a small web studio based in Parma, about twenty minutes from downtown Cleveland. We build websites and the software behind them for small businesses, quote every project in writing before work starts, and hand you a site you own outright."
+      lede="GivenTake Devs is a small web studio based in Cleveland, Ohio. We build websites and the software behind them for small businesses, quote every project in writing before work starts, and hand you a site you own outright."
     >
       <H2>Meet in person, or don&rsquo;t</H2>
       <P>
-        If you&rsquo;re within roughly 30 to 45 minutes of Parma, we can meet at your shop, office
-        or job site. That covers Cleveland, Lakewood, Westlake, Strongsville, North Royalton,
+        If you&rsquo;re within roughly 30 to 45 minutes of Cleveland, we can meet at your shop,
+        office or job site. That covers Lakewood, Parma, Westlake, Strongsville, North Royalton,
         Independence, Brunswick, Medina, and most of Cuyahoga County. Seeing how a business actually
         runs is often the fastest way to work out what the site needs to do.
       </P>
