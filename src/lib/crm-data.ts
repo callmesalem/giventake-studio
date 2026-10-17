@@ -24,6 +24,7 @@ import {
   type Gate,
 } from "@/lib/crm-guards";
 import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
+import type { PriceBookItem } from "@/lib/proposals";
 import type { ExecutionOutcome } from "@/server/approvals/execute";
 import { MERGE_FIELDS, unknownMergeFields } from "@/lib/campaign-template";
 
@@ -958,6 +959,79 @@ export const setContactNextAction = createServerFn({ method: "POST" })
     const read = await reader();
     notFound(await read.getById<Record<string, unknown>>("contacts", data.contactId, "id"));
     await actions.setContactNextAction(data.contactId, data.action, data.due);
+    return { ok: true };
+  });
+
+function toPriceBookItem(r: Record<string, unknown>): PriceBookItem {
+  return {
+    id: String(r.id),
+    key: String(r.key),
+    name: str(r.name) ?? "",
+    description: str(r.description) ?? "",
+    category: String(r.category) as PriceBookItem["category"],
+    unit: String(r.unit) as PriceBookItem["unit"],
+    unit_price_cents: Number(r.unit_price_cents) || 0,
+    recurring: Boolean(r.recurring),
+    price_is_from: Boolean(r.price_is_from),
+    includes: Array.isArray(r.includes) ? r.includes.map(String) : [],
+    excludes: Array.isArray(r.excludes) ? r.excludes.map(String) : [],
+    internal_hours: r.internal_hours == null ? null : Number(r.internal_hours),
+    archived: Boolean(r.archived),
+    sort_order: Number(r.sort_order) || 0,
+  };
+}
+
+export const crmPriceBook = createServerFn({ method: "GET" }).handler(
+  async (): Promise<PriceBookItem[]> => {
+    const read = await reader();
+    return (await read.listPriceBook<Record<string, unknown>>()).map(toPriceBookItem);
+  },
+);
+
+/** One entry per line; blank lines dropped. */
+function textLines(value: unknown, field: string): string[] {
+  return (text(value, field, 4000) ?? "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export const savePriceBookItem = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => {
+    const hoursRaw = d?.internalHours;
+    const hours = hoursRaw === "" || hoursRaw == null ? null : Number(hoursRaw);
+    if (hours !== null && (!Number.isFinite(hours) || hours < 0)) {
+      throw new Response("Hours must be a positive number", { status: 400 });
+    }
+    const category = String(d?.category ?? "");
+    const unit = String(d?.unit ?? "");
+    if (!["website", "addon", "automation", "monthly"].includes(category)) {
+      throw new Response("Category is not valid", { status: 400 });
+    }
+    if (!["each", "page", "town", "month"].includes(unit)) {
+      throw new Response("Unit is not valid", { status: 400 });
+    }
+    return {
+      id: optionalUuid(d?.id),
+      key: (text(d?.key, "Key", 60, true) as string).toLowerCase(),
+      name: text(d?.name, "Name", 120, true) as string,
+      description: text(d?.description, "Description", 600) ?? "",
+      category,
+      unit,
+      unit_price_cents: dollarsToCents(d?.price),
+      recurring: unit === "month",
+      price_is_from: d?.priceIsFrom === "on" || d?.priceIsFrom === true,
+      includes: textLines(d?.includes, "Includes"),
+      excludes: textLines(d?.excludes, "Excludes"),
+      internal_hours: hours,
+      archived: d?.archived === "on" || d?.archived === true,
+      sort_order: Number(d?.sortOrder) || 0,
+    };
+  })
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions, session } = await writer();
+    assertAdmin(session);
+    await actions.upsertPriceBookItem(data);
     return { ok: true };
   });
 

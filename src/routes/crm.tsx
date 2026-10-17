@@ -22,6 +22,7 @@ import {
   Sparkles,
   Files,
   Mail,
+  ReceiptText,
 } from "lucide-react";
 import { getCrmSession, logoutCrm } from "@/lib/crm-auth";
 import type { CrmSession } from "@/server/crm/auth";
@@ -55,6 +56,7 @@ const NAV = [
   { to: "/crm/referrals", label: "Referrals", icon: Share2, exact: false },
   { to: "/crm/marketing", label: "Marketing", icon: Megaphone, exact: false },
   { to: "/crm/playbook", label: "Playbook", icon: BookOpen, exact: false },
+  { to: "/crm/price-book", label: "Price book", icon: ReceiptText, exact: false },
   { to: "/crm/documents", label: "Documents", icon: Files, exact: false },
   { to: "/crm/inbox", label: "Inbox", icon: Mail, exact: false },
   { to: "/crm/sami", label: "Sami", icon: Sparkles, exact: false },

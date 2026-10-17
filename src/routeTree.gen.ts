@@ -41,6 +41,7 @@ import { Route as CrmSendCheckRouteImport } from './routes/crm.send-check'
 import { Route as CrmSearchRouteImport } from './routes/crm.search'
 import { Route as CrmSamiRouteImport } from './routes/crm.sami'
 import { Route as CrmReferralsRouteImport } from './routes/crm.referrals'
+import { Route as CrmPriceBookRouteImport } from './routes/crm.price-book'
 import { Route as CrmPlaybookRouteImport } from './routes/crm.playbook'
 import { Route as CrmPipelineRouteImport } from './routes/crm.pipeline'
 import { Route as CrmMarketingRouteImport } from './routes/crm.marketing'
@@ -225,6 +226,11 @@ const CrmReferralsRoute = CrmReferralsRouteImport.update({
   path: '/referrals',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmPriceBookRoute = CrmPriceBookRouteImport.update({
+  id: '/price-book',
+  path: '/price-book',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmPlaybookRoute = CrmPlaybookRouteImport.update({
   id: '/playbook',
   path: '/playbook',
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/playbook': typeof CrmPlaybookRoute
+  '/crm/price-book': typeof CrmPriceBookRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/sami': typeof CrmSamiRoute
   '/crm/search': typeof CrmSearchRoute
@@ -430,6 +437,7 @@ export interface FileRoutesByTo {
   '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/playbook': typeof CrmPlaybookRoute
+  '/crm/price-book': typeof CrmPriceBookRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/sami': typeof CrmSamiRoute
   '/crm/search': typeof CrmSearchRoute
@@ -488,6 +496,7 @@ export interface FileRoutesById {
   '/crm/marketing': typeof CrmMarketingRoute
   '/crm/pipeline': typeof CrmPipelineRoute
   '/crm/playbook': typeof CrmPlaybookRoute
+  '/crm/price-book': typeof CrmPriceBookRoute
   '/crm/referrals': typeof CrmReferralsRoute
   '/crm/sami': typeof CrmSamiRoute
   '/crm/search': typeof CrmSearchRoute
@@ -547,6 +556,7 @@ export interface FileRouteTypes {
     | '/crm/marketing'
     | '/crm/pipeline'
     | '/crm/playbook'
+    | '/crm/price-book'
     | '/crm/referrals'
     | '/crm/sami'
     | '/crm/search'
@@ -603,6 +613,7 @@ export interface FileRouteTypes {
     | '/crm/marketing'
     | '/crm/pipeline'
     | '/crm/playbook'
+    | '/crm/price-book'
     | '/crm/referrals'
     | '/crm/sami'
     | '/crm/search'
@@ -660,6 +671,7 @@ export interface FileRouteTypes {
     | '/crm/marketing'
     | '/crm/pipeline'
     | '/crm/playbook'
+    | '/crm/price-book'
     | '/crm/referrals'
     | '/crm/sami'
     | '/crm/search'
@@ -943,6 +955,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmReferralsRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/crm/price-book': {
+      id: '/crm/price-book'
+      path: '/price-book'
+      fullPath: '/crm/price-book'
+      preLoaderRoute: typeof CrmPriceBookRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/crm/playbook': {
       id: '/crm/playbook'
       path: '/playbook'
@@ -1129,6 +1148,7 @@ interface CrmRouteChildren {
   CrmMarketingRoute: typeof CrmMarketingRoute
   CrmPipelineRoute: typeof CrmPipelineRoute
   CrmPlaybookRoute: typeof CrmPlaybookRoute
+  CrmPriceBookRoute: typeof CrmPriceBookRoute
   CrmReferralsRoute: typeof CrmReferralsRoute
   CrmSamiRoute: typeof CrmSamiRoute
   CrmSearchRoute: typeof CrmSearchRoute
@@ -1157,6 +1177,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmMarketingRoute: CrmMarketingRoute,
   CrmPipelineRoute: CrmPipelineRoute,
   CrmPlaybookRoute: CrmPlaybookRoute,
+  CrmPriceBookRoute: CrmPriceBookRoute,
   CrmReferralsRoute: CrmReferralsRoute,
   CrmSamiRoute: CrmSamiRoute,
   CrmSearchRoute: CrmSearchRoute,

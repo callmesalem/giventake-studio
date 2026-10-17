@@ -422,6 +422,41 @@ export class CrmActions {
     });
   }
 
+  /** Create (id null) or update a price book item; returns its id. */
+  upsertPriceBookItem(input: {
+    id: string | null;
+    key: string;
+    name: string;
+    description: string;
+    category: string;
+    unit: string;
+    unit_price_cents: number;
+    recurring: boolean;
+    price_is_from: boolean;
+    includes: string[];
+    excludes: string[];
+    internal_hours: number | null;
+    archived: boolean;
+    sort_order: number;
+  }): Promise<string> {
+    return this.#rpc<string>("price_book_upsert", {
+      p_id: input.id,
+      p_key: input.key,
+      p_name: input.name,
+      p_description: input.description,
+      p_category: input.category,
+      p_unit: input.unit,
+      p_unit_price_cents: input.unit_price_cents,
+      p_recurring: input.recurring,
+      p_price_is_from: input.price_is_from,
+      p_includes: input.includes,
+      p_excludes: input.excludes,
+      p_internal_hours: input.internal_hours,
+      p_archived: input.archived,
+      p_sort_order: input.sort_order,
+    });
+  }
+
   async setLeadStatus(leadId: string, status: string): Promise<void> {
     await this.#rpc<unknown>("lead_set_status", { p_lead_id: leadId, p_status: status });
   }

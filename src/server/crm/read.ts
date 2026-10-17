@@ -39,6 +39,7 @@ const MEMBER_TABLE_POLICY: Record<string, MemberVisibility> = {
   companies: "shared",
   contacts: "shared",
   pipeline_stages: "shared",
+  price_book_items: "shared",
   leads: "owned",
   deals: "owned",
   tasks: "owned",
@@ -167,6 +168,12 @@ export class CrmRead {
     return this.#select<T>(
       "contacts",
       "select=id,name,email,phone,job_title,company_id,owner_id,lifecycle_stage,assigned_to,next_action,next_action_due&order=name.asc&limit=500",
+    );
+  }
+  listPriceBook<T = Record<string, unknown>>(): Promise<T[]> {
+    return this.#select<T>(
+      "price_book_items",
+      "select=id,key,name,description,category,unit,unit_price_cents,recurring,price_is_from,includes,excludes,internal_hours,archived,sort_order&order=sort_order.asc&limit=500",
     );
   }
   listPendingApprovals<T = Record<string, unknown>>(): Promise<T[]> {
