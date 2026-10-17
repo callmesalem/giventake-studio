@@ -81,6 +81,10 @@ export function applyProposalToSow(
   return out.replace(
     feeBlock,
     () =>
-      `**Total fee: ${formatUsd(totals.oneTimeCents)}** fixed fee\n\n${schedule}${monthlyLine}\n\n`,
+      `${
+        p.option === "own_it"
+          ? `**Total fee: ${formatUsd(OWN_IT_MONTHLY_CENTS * OWN_IT_MONTHS)}** under the own-it plan`
+          : `**Total fee: ${formatUsd(totals.oneTimeCents)}** fixed fee`
+      }\n\n${schedule}${monthlyLine}\n\n`,
   );
 }

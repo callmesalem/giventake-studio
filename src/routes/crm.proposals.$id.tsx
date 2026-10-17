@@ -68,6 +68,8 @@ function BuilderForm({
 }) {
   const router = useRouter();
   const navigate = useNavigate();
+  const { session } = Route.useRouteContext();
+  const isAdmin = session?.role === "admin";
   const draft = proposal.status === "draft";
   const [title, setTitle] = useState(proposal.title);
   const [summary, setSummary] = useState(proposal.summary);
@@ -315,24 +317,26 @@ function BuilderForm({
                   >
                     Save draft
                   </button>
-                  <button
-                    type="button"
-                    disabled={busy || blocking}
-                    onClick={() =>
-                      run(async () => {
-                        await save();
-                        const { url } = await sendProposal({ data: { id: proposal.id } });
-                        setLink(url);
-                        await router.invalidate();
-                      })
-                    }
-                    className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
-                  >
-                    Send
-                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      disabled={busy || blocking}
+                      onClick={() =>
+                        run(async () => {
+                          await save();
+                          const { url } = await sendProposal({ data: { id: proposal.id } });
+                          setLink(url);
+                          await router.invalidate();
+                        })
+                      }
+                      className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+                    >
+                      Send
+                    </button>
+                  )}
                 </>
               )}
-              {["sent", "viewed", "declined", "expired"].includes(proposal.status) && (
+              {isAdmin && ["sent", "viewed", "declined", "expired"].includes(proposal.status) && (
                 <button
                   type="button"
                   disabled={busy}

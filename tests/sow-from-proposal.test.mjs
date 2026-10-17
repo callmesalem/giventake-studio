@@ -78,6 +78,8 @@ test("own-it fees show 12 x $149 and stay flagged for attorney review", () => {
   }).split("## 7. Fees and payment schedule")[1];
   assert.match(s7, /12 monthly payments of \$149/);
   assert.match(s7, /\[REVIEW with attorney/);
+  assert.match(s7, /Total fee: \$1,788\*\* under the own-it plan/);
+  assert.doesNotMatch(s7, /\$999\*\* fixed fee/);
 });
 
 test("sections 2, 5 and 8 are untouched", () => {

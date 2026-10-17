@@ -14,7 +14,8 @@ vi.mock("@tanstack/react-router", async (orig) => ({
   }),
 }));
 
-const { ProposalPage } = await import("../../src/routes/proposal.$code.tsx");
+const { Route } = await import("../../src/routes/proposal.$code.tsx");
+const ProposalPage = Route.component as () => React.JSX.Element;
 
 const proposal = (overrides = {}) => ({
   id: "p",

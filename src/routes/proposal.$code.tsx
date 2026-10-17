@@ -31,7 +31,7 @@ const MESSAGES = {
 
 type State = keyof typeof MESSAGES | "open";
 
-export function ProposalPage() {
+function ProposalPage() {
   const p = Route.useLoaderData();
   const { code } = Route.useParams();
   const [state, setState] = useState<State | null>(null);

@@ -1223,7 +1223,8 @@ export const saveProposal = createServerFn({ method: "POST" })
 export const sendProposal = createServerFn({ method: "POST" })
   .validator((d: { id: string }) => ({ id: requireUuid(d?.id) }))
   .handler(async ({ data }): Promise<{ url: string }> => {
-    const { actions } = await writer();
+    const { actions, session } = await writer();
+    assertAdmin(session);
     const read = await reader();
     const p = await read.getProposal<Record<string, unknown>>(data.id);
     notFound(p);
@@ -1231,14 +1232,18 @@ export const sendProposal = createServerFn({ method: "POST" })
     const { randomBytes, createHash } = await import("node:crypto");
     const code = randomBytes(32).toString("base64url"); // 43 chars
     await actions.sendProposal(data.id, createHash("sha256").update(code).digest("hex"), 30);
-    const base = (process.env.SITE_BASE_URL ?? "https://giventakedevs.com").replace(/\/$/, "");
+    const base = (process.env.SITE_BASE_URL?.trim() || "https://giventakedevs.com").replace(
+      /\/$/,
+      "",
+    );
     return { url: `${base}/proposal/${code}` };
   });
 
 export const reviseProposal = createServerFn({ method: "POST" })
   .validator((d: { id: string }) => ({ id: requireUuid(d?.id) }))
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { actions, actor } = await writer();
+    const { actions, actor, session } = await writer();
+    assertAdmin(session);
     const read = await reader();
     const p = await read.getProposal<Record<string, unknown>>(data.id);
     notFound(p);
