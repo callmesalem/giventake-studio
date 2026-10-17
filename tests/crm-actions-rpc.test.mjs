@@ -118,6 +118,43 @@ test("upsertPriceBookItem goes through price_book_upsert", async () => {
   });
 });
 
+test("proposal RPCs keep their wire shape", async () => {
+  const { actions, calls } = harness(() => json("66666666-6666-4666-8666-666666666666"));
+  await actions.setDealScoping(DEAL, { trade: true });
+  const id = await actions.saveProposalDraft({
+    id: null,
+    dealId: DEAL,
+    title: "Website",
+    summary: "S",
+    timeline: "3 weeks",
+    lines: [],
+    actor: "crm:a@b",
+  });
+  await actions.sendProposal(id, "hash", 30);
+  await actions.reviseProposal(id, "crm:a@b");
+  assert.deepEqual(
+    calls.map((c) => c.path),
+    [
+      "/rest/v1/rpc/deal_set_scoping",
+      "/rest/v1/rpc/proposal_save_draft",
+      "/rest/v1/rpc/proposal_send",
+      "/rest/v1/rpc/proposal_revise",
+    ],
+  );
+  assert.deepEqual(calls[0].body, { p_deal_id: DEAL, p_scoping: { trade: true } });
+  assert.deepEqual(calls[1].body, {
+    p_id: null,
+    p_deal_id: DEAL,
+    p_title: "Website",
+    p_summary: "S",
+    p_timeline: "3 weeks",
+    p_lines: [],
+    p_actor: "crm:a@b",
+  });
+  assert.deepEqual(calls[2].body, { p_id: id, p_token_hash: "hash", p_valid_days: 30 });
+  assert.deepEqual(calls[3].body, { p_id: id, p_actor: "crm:a@b" });
+});
+
 test("assign goes through the crm_assign RPC", async () => {
   const { actions, calls } = harness();
   await actions.assign("deals", "assigned_to", DEAL, USER);

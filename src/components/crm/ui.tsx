@@ -201,6 +201,7 @@ const TIMELINE_TONE: Record<string, string> = {
   stage: "bg-emerald-500",
   task: "bg-slate-400",
   deal: "bg-fuchsia-500",
+  proposal: "bg-cyan-500",
 };
 
 export interface TimelineItem {

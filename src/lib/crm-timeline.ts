@@ -9,7 +9,7 @@
 export interface TimelineEvent {
   id: string;
   at: string | null;
-  kind: "touchpoint" | "agent" | "note" | "stage" | "task" | "deal";
+  kind: "touchpoint" | "agent" | "note" | "stage" | "task" | "deal" | "proposal";
   title: string;
   detail: string | null;
   actor: string | null;
@@ -61,4 +61,41 @@ export function contactDealEvents(deals: Array<Record<string, unknown>>): Timeli
       actor: null,
     };
   });
+}
+
+export function proposalEvents(
+  rows: {
+    id: string;
+    version: number;
+    title: string;
+    status: string;
+    sent_at: string | null;
+    decided_at: string | null;
+    accepted_option: string | null;
+  }[],
+): TimelineEvent[] {
+  const events: TimelineEvent[] = [];
+  for (const p of rows) {
+    if (p.sent_at) {
+      events.push({
+        id: `ps-${p.id}`,
+        at: p.sent_at,
+        kind: "proposal",
+        title: `Proposal v${p.version} sent`,
+        detail: p.title,
+        actor: null,
+      });
+    }
+    if (p.decided_at && (p.status === "accepted" || p.status === "declined")) {
+      events.push({
+        id: `pd-${p.id}`,
+        at: p.decided_at,
+        kind: "proposal",
+        title: `Proposal v${p.version} ${p.status}`,
+        detail: p.accepted_option,
+        actor: "client",
+      });
+    }
+  }
+  return events;
 }

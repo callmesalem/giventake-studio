@@ -23,8 +23,21 @@ import {
   daysSince,
   type Gate,
 } from "@/lib/crm-guards";
-import { byNewestFirst, humanise, contactDealEvents, type TimelineEvent } from "@/lib/crm-timeline";
-import type { PriceBookItem } from "@/lib/proposals";
+import {
+  byNewestFirst,
+  humanise,
+  contactDealEvents,
+  proposalEvents,
+  type TimelineEvent,
+} from "@/lib/crm-timeline";
+import {
+  EMPTY_SCOPING,
+  scopingSuggestions,
+  proposalTotals,
+  type PriceBookItem,
+  type ProposalLine,
+  type ScopingAnswers,
+} from "@/lib/proposals";
 import type { ExecutionOutcome } from "@/server/approvals/execute";
 import { MERGE_FIELDS, unknownMergeFields } from "@/lib/campaign-template";
 
@@ -585,6 +598,8 @@ export interface DealDetail {
   company: { id: string; name: string } | null;
   lead: { id: string; name: string | null; email: string | null } | null;
   stageGate: { artifact: string | null; gate: string | null } | null;
+  scoping: ScopingAnswers;
+  proposals: ProposalSummary[];
   events: TimelineEvent[];
 }
 
@@ -598,7 +613,7 @@ export const crmDeal = createServerFn({ method: "GET" })
     const companyId = row.company_id ? String(row.company_id) : null;
     const leadId = row.lead_id ? String(row.lead_id) : null;
 
-    const [company, lead, stages, stageEvents, related] = await Promise.all([
+    const [company, lead, stages, stageEvents, related, proposals] = await Promise.all([
       companyId
         ? read.getById<Record<string, unknown>>("companies", companyId, "id,name")
         : Promise.resolve(null),
@@ -616,6 +631,7 @@ export const crmDeal = createServerFn({ method: "GET" })
         >("deal_stage_events", "deal_id", data.id, "id,from_stage,to_stage,actor,note,created_at")
         .catch(() => []),
       companyId ? companyTimeline(read, companyId) : Promise.resolve([]),
+      proposalSummaries(read, data.id),
     ]);
 
     const stageHistory: TimelineEvent[] = stageEvents.map((e) => ({
@@ -642,7 +658,9 @@ export const crmDeal = createServerFn({ method: "GET" })
       stageGate: stages[0]
         ? { artifact: str(stages[0].artifact), gate: str(stages[0].gate) }
         : null,
-      events: [...stageHistory, ...related].sort(byNewestFirst),
+      scoping: toScoping(row.scoping),
+      proposals,
+      events: [...stageHistory, ...related, ...proposalEvents(proposals)].sort(byNewestFirst),
     };
   });
 
@@ -980,6 +998,249 @@ function toPriceBookItem(r: Record<string, unknown>): PriceBookItem {
     sort_order: Number(r.sort_order) || 0,
   };
 }
+
+export interface ProposalSummary {
+  id: string;
+  version: number;
+  title: string;
+  status: string;
+  sent_at: string | null;
+  decided_at: string | null;
+  accepted_option: string | null;
+  one_time_cents: number;
+  monthly_cents: number;
+}
+
+export interface ProposalDetail extends ProposalSummary {
+  deal_id: string;
+  deal_name: string;
+  summary: string;
+  timeline: string;
+  valid_until: string | null;
+  decline_reason: string | null;
+  accepted_name: string | null;
+  lines: ProposalLine[];
+}
+
+function toLine(r: Record<string, unknown>): ProposalLine {
+  return {
+    item_key: str(r.item_key),
+    name: str(r.name) ?? "",
+    description: str(r.description) ?? "",
+    quantity: Number(r.quantity) || 0,
+    unit: (str(r.unit) ?? "each") as ProposalLine["unit"],
+    unit_price_cents: Number(r.unit_price_cents) || 0,
+    recurring: Boolean(r.recurring),
+    price_is_from: Boolean(r.price_is_from),
+    includes: Array.isArray(r.includes) ? r.includes.map(String) : [],
+    excludes: Array.isArray(r.excludes) ? r.excludes.map(String) : [],
+    internal_hours: r.internal_hours == null ? null : Number(r.internal_hours),
+    needs_discovery: Boolean(r.needs_discovery),
+    discount_reason: str(r.discount_reason),
+  };
+}
+
+/** Stored scoping JSON onto the full answer shape; unknown or bad values fall back. */
+function toScoping(raw: unknown): ScopingAnswers {
+  const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const pick = <K extends keyof ScopingAnswers>(
+    k: K,
+    ok: (v: unknown) => boolean,
+  ): ScopingAnswers[K] => (ok(o[k]) ? o[k] : EMPTY_SCOPING[k]) as ScopingAnswers[K];
+  const isBool = (v: unknown) => typeof v === "boolean";
+  const isCount = (v: unknown) =>
+    typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 100;
+  return {
+    trade: pick("trade", isBool),
+    replacing: pick("replacing", isBool),
+    extraPages: pick("extraPages", isCount),
+    townPages: pick("townPages", isCount),
+    copywriting: pick("copywriting", (v) => v === "client" || v === "us"),
+    quoteForm: pick("quoteForm", isBool),
+    booking: pick("booking", (v) => v === "none" || v === "embed" || v === "system"),
+    payments: pick("payments", isBool),
+    gbpSetUp: pick("gbpSetUp", isBool),
+    blog: pick("blog", isBool),
+    automation: pick("automation", isBool),
+    afterLaunch: pick("afterLaunch", (v) => v === "nothing" || v === "hosting" || v === "care"),
+  };
+}
+
+/** Form values arrive as strings ("yes"/"no", numbers as text). */
+function scopingFromForm(d: Record<string, unknown>): ScopingAnswers {
+  const yes = (k: string) => d[k] === "yes" || d[k] === "on" || d[k] === true;
+  const n = (k: string) => Math.min(100, Math.max(0, Math.floor(Number(d[k]) || 0)));
+  return toScoping({
+    trade: yes("trade"),
+    replacing: yes("replacing"),
+    extraPages: n("extraPages"),
+    townPages: n("townPages"),
+    copywriting: d.copywriting === "us" ? "us" : "client",
+    quoteForm: yes("quoteForm"),
+    booking: d.booking,
+    payments: yes("payments"),
+    gbpSetUp: !yes("needsGbp"),
+    blog: yes("blog"),
+    automation: yes("automation"),
+    afterLaunch: d.afterLaunch,
+  });
+}
+
+type Reader = Awaited<ReturnType<typeof reader>>;
+
+/** The deal must be visible to the caller; the scoped reader returns null otherwise. */
+async function visibleDeal(read: Reader, dealId: string): Promise<Record<string, unknown>> {
+  const deal = await read.getById<Record<string, unknown>>(
+    "deals",
+    dealId,
+    "id,name,company_id,scoping,owner_id,assigned_to",
+  );
+  notFound(deal);
+  return deal;
+}
+
+async function proposalSummaries(read: Reader, dealId: string): Promise<ProposalSummary[]> {
+  const rows = await read.listProposalsForDeal<Record<string, unknown>>(dealId).catch(() => []);
+  return Promise.all(
+    rows.map(async (r) => {
+      const lines = (await read.listProposalLines<Record<string, unknown>>(String(r.id))).map(
+        toLine,
+      );
+      const totals = proposalTotals(lines);
+      return {
+        id: String(r.id),
+        version: Number(r.version) || 1,
+        title: str(r.title) ?? "",
+        status: str(r.status) ?? "draft",
+        sent_at: str(r.sent_at),
+        decided_at: str(r.decided_at),
+        accepted_option: str(r.accepted_option),
+        one_time_cents: totals.oneTimeCents,
+        monthly_cents: totals.monthlyCents,
+      };
+    }),
+  );
+}
+
+export const saveDealScoping = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    dealId: requireUuid(d?.dealId),
+    scoping: scopingFromForm(d ?? {}),
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions } = await writer();
+    await visibleDeal(await reader(), data.dealId);
+    await actions.setDealScoping(data.dealId, data.scoping);
+    return { ok: true };
+  });
+
+export const buildProposalFromScoping = createServerFn({ method: "POST" })
+  .validator((d: { dealId: string }) => ({ dealId: requireUuid(d?.dealId) }))
+  .handler(async ({ data }): Promise<{ id: string; skipped: string[] }> => {
+    const { actions, actor } = await writer();
+    const read = await reader();
+    const deal = await visibleDeal(read, data.dealId);
+    const items = (await read.listPriceBook<Record<string, unknown>>()).map(toPriceBookItem);
+    const { lines, skipped } = scopingSuggestions(toScoping(deal.scoping), items);
+    const id = await actions.saveProposalDraft({
+      id: null,
+      dealId: data.dealId,
+      title: `Proposal for ${str(deal.name) ?? "your project"}`,
+      summary: "",
+      timeline: "",
+      lines,
+      actor,
+    });
+    return { id, skipped };
+  });
+
+export const crmProposal = createServerFn({ method: "GET" })
+  .validator((d: { id: string }) => ({ id: requireUuid(d?.id) }))
+  .handler(async ({ data }): Promise<ProposalDetail> => {
+    const read = await reader();
+    const p = await read.getProposal<Record<string, unknown>>(data.id);
+    notFound(p);
+    const deal = await visibleDeal(read, String(p.deal_id));
+    const lines = (await read.listProposalLines<Record<string, unknown>>(data.id)).map(toLine);
+    const totals = proposalTotals(lines);
+    return {
+      id: String(p.id),
+      deal_id: String(p.deal_id),
+      deal_name: str(deal.name) ?? "(unnamed)",
+      version: Number(p.version) || 1,
+      title: str(p.title) ?? "",
+      summary: str(p.summary) ?? "",
+      timeline: str(p.timeline) ?? "",
+      status: str(p.status) ?? "draft",
+      valid_until: str(p.valid_until),
+      sent_at: str(p.sent_at),
+      decided_at: str(p.decided_at),
+      accepted_option: str(p.accepted_option),
+      accepted_name: str(p.accepted_name),
+      decline_reason: str(p.decline_reason),
+      one_time_cents: totals.oneTimeCents,
+      monthly_cents: totals.monthlyCents,
+      lines,
+    };
+  });
+
+function validLine(raw: unknown): ProposalLine {
+  const line = toLine((raw ?? {}) as Record<string, unknown>);
+  if (!line.name.trim() || line.name.length > 200) {
+    throw new Response("Every line needs a name", { status: 400 });
+  }
+  if (!(line.quantity > 0))
+    throw new Response(`${line.name}: quantity must be above zero`, { status: 400 });
+  if (!Number.isInteger(line.unit_price_cents)) {
+    throw new Response(`${line.name}: price is not valid`, { status: 400 });
+  }
+  if (line.unit_price_cents < 0 && !line.discount_reason?.trim()) {
+    throw new Response(`${line.name}: a discount needs a reason`, { status: 400 });
+  }
+  return line;
+}
+
+export const saveProposal = createServerFn({ method: "POST" })
+  .validator((d: Record<string, unknown>) => ({
+    id: requireUuid(d?.id),
+    dealId: requireUuid(d?.dealId),
+    title: text(d?.title, "Title", 200, true) as string,
+    summary: text(d?.summary, "What you told us", 4000) ?? "",
+    timeline: text(d?.timeline, "Timeline", 200) ?? "",
+    lines: Array.isArray(d?.lines) ? (d.lines as unknown[]).slice(0, 100).map(validLine) : [],
+  }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { actions, actor } = await writer();
+    await visibleDeal(await reader(), data.dealId);
+    await actions.saveProposalDraft({ ...data, actor });
+    return { ok: true };
+  });
+
+export const sendProposal = createServerFn({ method: "POST" })
+  .validator((d: { id: string }) => ({ id: requireUuid(d?.id) }))
+  .handler(async ({ data }): Promise<{ url: string }> => {
+    const { actions } = await writer();
+    const read = await reader();
+    const p = await read.getProposal<Record<string, unknown>>(data.id);
+    notFound(p);
+    await visibleDeal(read, String(p.deal_id));
+    const { randomBytes, createHash } = await import("node:crypto");
+    const code = randomBytes(32).toString("base64url"); // 43 chars
+    await actions.sendProposal(data.id, createHash("sha256").update(code).digest("hex"), 30);
+    const base = (process.env.SITE_BASE_URL ?? "https://giventakedevs.com").replace(/\/$/, "");
+    return { url: `${base}/proposal/${code}` };
+  });
+
+export const reviseProposal = createServerFn({ method: "POST" })
+  .validator((d: { id: string }) => ({ id: requireUuid(d?.id) }))
+  .handler(async ({ data }): Promise<{ id: string }> => {
+    const { actions, actor } = await writer();
+    const read = await reader();
+    const p = await read.getProposal<Record<string, unknown>>(data.id);
+    notFound(p);
+    await visibleDeal(read, String(p.deal_id));
+    return { id: await actions.reviseProposal(data.id, actor) };
+  });
 
 export const crmPriceBook = createServerFn({ method: "GET" }).handler(
   async (): Promise<PriceBookItem[]> => {
