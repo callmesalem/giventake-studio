@@ -35,6 +35,7 @@ import { Route as CrmIndexRouteImport } from './routes/crm.index'
 import { Route as ArticlesIndexRouteImport } from './routes/articles.index'
 import { Route as SignTokenRouteImport } from './routes/sign.$token'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
+import { Route as ProposalCodeRouteImport } from './routes/proposal.$code'
 import { Route as CrmTeamRouteImport } from './routes/crm.team'
 import { Route as CrmTasksRouteImport } from './routes/crm.tasks'
 import { Route as CrmSendCheckRouteImport } from './routes/crm.send-check'
@@ -196,6 +197,11 @@ const SignTokenRoute = SignTokenRouteImport.update({
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/services/$slug',
   path: '/services/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProposalCodeRoute = ProposalCodeRouteImport.update({
+  id: '/proposal/$code',
+  path: '/proposal/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrmTeamRoute = CrmTeamRouteImport.update({
@@ -399,6 +405,7 @@ export interface FileRoutesByFullPath {
   '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
+  '/proposal/$code': typeof ProposalCodeRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/sign/$token': typeof SignTokenRoute
   '/articles/': typeof ArticlesIndexRoute
@@ -458,6 +465,7 @@ export interface FileRoutesByTo {
   '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
+  '/proposal/$code': typeof ProposalCodeRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/sign/$token': typeof SignTokenRoute
   '/articles': typeof ArticlesIndexRoute
@@ -519,6 +527,7 @@ export interface FileRoutesById {
   '/crm/send-check': typeof CrmSendCheckRoute
   '/crm/tasks': typeof CrmTasksRoute
   '/crm/team': typeof CrmTeamRoute
+  '/proposal/$code': typeof ProposalCodeRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/sign/$token': typeof SignTokenRoute
   '/articles/': typeof ArticlesIndexRoute
@@ -581,6 +590,7 @@ export interface FileRouteTypes {
     | '/crm/send-check'
     | '/crm/tasks'
     | '/crm/team'
+    | '/proposal/$code'
     | '/services/$slug'
     | '/sign/$token'
     | '/articles/'
@@ -640,6 +650,7 @@ export interface FileRouteTypes {
     | '/crm/send-check'
     | '/crm/tasks'
     | '/crm/team'
+    | '/proposal/$code'
     | '/services/$slug'
     | '/sign/$token'
     | '/articles'
@@ -700,6 +711,7 @@ export interface FileRouteTypes {
     | '/crm/send-check'
     | '/crm/tasks'
     | '/crm/team'
+    | '/proposal/$code'
     | '/services/$slug'
     | '/sign/$token'
     | '/articles/'
@@ -745,6 +757,7 @@ export interface RootRouteChildren {
   WorkRoute: typeof WorkRoute
   ApiPhoneMessageRoute: typeof ApiPhoneMessageRoute
   ArticlesSlugRoute: typeof ArticlesSlugRoute
+  ProposalCodeRoute: typeof ProposalCodeRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
   SignTokenRoute: typeof SignTokenRoute
   ArticlesIndexRoute: typeof ArticlesIndexRoute
@@ -935,6 +948,13 @@ declare module '@tanstack/react-router' {
       path: '/services/$slug'
       fullPath: '/services/$slug'
       preLoaderRoute: typeof ServicesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposal/$code': {
+      id: '/proposal/$code'
+      path: '/proposal/$code'
+      fullPath: '/proposal/$code'
+      preLoaderRoute: typeof ProposalCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crm/team': {
@@ -1264,6 +1284,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorkRoute: WorkRoute,
   ApiPhoneMessageRoute: ApiPhoneMessageRoute,
   ArticlesSlugRoute: ArticlesSlugRoute,
+  ProposalCodeRoute: ProposalCodeRoute,
   ServicesSlugRoute: ServicesSlugRoute,
   SignTokenRoute: SignTokenRoute,
   ArticlesIndexRoute: ArticlesIndexRoute,
