@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import {
   crmDeal,
@@ -1184,13 +1184,17 @@ function ScopeCard({ deal }: { deal: DealData }) {
 function ProposalsCard({ deal }: { deal: DealData }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
   async function build() {
     setBusy(true);
     setError(null);
     try {
-      const { id } = await buildProposalFromScoping({ data: { dealId: deal.id } });
-      // Plain navigation until Task 7 adds the typed /crm/proposals/$id route.
-      window.location.assign(`/crm/proposals/${id}`);
+      const { id, skipped } = await buildProposalFromScoping({ data: { dealId: deal.id } });
+      await navigate({
+        to: "/crm/proposals/$id",
+        params: { id },
+        search: { skipped: skipped.join(",") },
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not build a proposal.");
       setBusy(false);
