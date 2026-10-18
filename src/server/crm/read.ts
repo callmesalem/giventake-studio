@@ -39,6 +39,9 @@ const MEMBER_TABLE_POLICY: Record<string, MemberVisibility> = {
   companies: "shared",
   contacts: "shared",
   pipeline_stages: "shared",
+  price_book_items: "shared",
+  proposals: "shared",
+  proposal_lines: "shared",
   leads: "owned",
   deals: "owned",
   tasks: "owned",
@@ -167,6 +170,43 @@ export class CrmRead {
     return this.#select<T>(
       "contacts",
       "select=id,name,email,phone,job_title,company_id,owner_id,lifecycle_stage,assigned_to,next_action,next_action_due&order=name.asc&limit=500",
+    );
+  }
+  listPriceBook<T = Record<string, unknown>>(): Promise<T[]> {
+    return this.#select<T>(
+      "price_book_items",
+      "select=id,key,name,description,category,unit,unit_price_cents,recurring,price_is_from,includes,excludes,internal_hours,archived,sort_order&order=sort_order.asc&limit=500",
+    );
+  }
+  listProposalsForDeal<T = Record<string, unknown>>(dealId: string): Promise<T[]> {
+    return this.relatedBy<T>(
+      "proposals",
+      "deal_id",
+      dealId,
+      "id,version,title,status,sent_at,decided_at,accepted_option",
+      "version.desc",
+      50,
+    );
+  }
+  async getProposal<T = Record<string, unknown>>(id: string): Promise<T | null> {
+    const rows = await this.relatedBy<T>(
+      "proposals",
+      "id",
+      id,
+      "id,deal_id,version,title,summary,timeline,status,valid_until,sent_at,decided_at,accepted_option,accepted_name,decline_reason",
+      "version.desc",
+      1,
+    );
+    return rows[0] ?? null;
+  }
+  listProposalLines<T = Record<string, unknown>>(proposalId: string): Promise<T[]> {
+    return this.relatedBy<T>(
+      "proposal_lines",
+      "proposal_id",
+      proposalId,
+      "item_key,name,description,quantity,unit,unit_price_cents,recurring,price_is_from,includes,excludes,internal_hours,needs_discovery,discount_reason,position",
+      "position.asc",
+      200,
     );
   }
   listPendingApprovals<T = Record<string, unknown>>(): Promise<T[]> {

@@ -33,6 +33,7 @@
  * the deal page can explain it in words instead of showing an error nobody can
  * act on.
  */
+import { applyProposalToSow } from "@/lib/sow-from-proposal";
 import { createServerFn } from "@tanstack/react-start";
 import sowTemplate from "../../docs/contracts/sow-template.md?raw";
 
@@ -74,11 +75,20 @@ export const generateSowDraft = createServerFn({ method: "POST" })
     dealId: requireUuid(d?.dealId, "Deal"),
     clientLegalName: requireText(d?.clientLegalName, "Client legal name", 200),
     projectName: requireText(d?.projectName, "Project name", 200),
+    proposalId: d?.proposalId ? requireUuid(d.proposalId, "Proposal") : null,
   }))
   .handler(async ({ data }): Promise<GenerateSowResult> => {
     const { forDeal } = await import("@/server/documents/deal-access");
     const { session, store } = await forDeal(data.dealId);
     const { draftDocument } = await import("@/server/documents/issue");
+
+    let templateBody = sowTemplate;
+    if (data.proposalId) {
+      const { acceptedProposalForDeal } = await import("@/server/documents/deal-access");
+      const accepted = await acceptedProposalForDeal(data.dealId, data.proposalId);
+      if (!accepted) throw new Response("That proposal isn't accepted yet", { status: 409 });
+      templateBody = applyProposalToSow(sowTemplate, accepted);
+    }
 
     // Only what the deal actually knows. [GivenTake Devs LLC] is deliberately
     // NOT filled: templates.ts treats it as a merge field because
@@ -87,7 +97,7 @@ export const generateSowDraft = createServerFn({ method: "POST" })
     // table and [MSA DATE] are left for the stated reason — the operator
     // supplies them by editing, and finaliseDocument refuses until they have.
     const result = await draftDocument(store, {
-      templateBody: sowTemplate,
+      templateBody,
       data: {
         "CLIENT LEGAL NAME": data.clientLegalName,
         "PROJECT NAME": data.projectName,

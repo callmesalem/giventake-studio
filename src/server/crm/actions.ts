@@ -16,6 +16,7 @@
 // load this module: node's resolver reads "@/lib" as a package name. It is what
 // lets tests/crm-actions-rpc.test.mjs hold this class to RPC-only writes.
 import { advanceBlockedByUnsignedSow, canAssign, isCloseStage } from "../../lib/crm-guards.ts";
+import type { ProposalLine, ScopingAnswers } from "../../lib/proposals.ts";
 
 /** Re-exported so the stage-4 rule has one name wherever it is read from.
  *  It is DEFINED in crm-guards.ts rather than here so the predicate can be tested
@@ -420,6 +421,77 @@ export class CrmActions {
       p_action: action,
       p_due: due,
     });
+  }
+
+  /** Create (id null) or update a price book item; returns its id. */
+  upsertPriceBookItem(input: {
+    id: string | null;
+    key: string;
+    name: string;
+    description: string;
+    category: string;
+    unit: string;
+    unit_price_cents: number;
+    recurring: boolean;
+    price_is_from: boolean;
+    includes: string[];
+    excludes: string[];
+    internal_hours: number | null;
+    archived: boolean;
+    sort_order: number;
+  }): Promise<string> {
+    return this.#rpc<string>("price_book_upsert", {
+      p_id: input.id,
+      p_key: input.key,
+      p_name: input.name,
+      p_description: input.description,
+      p_category: input.category,
+      p_unit: input.unit,
+      p_unit_price_cents: input.unit_price_cents,
+      p_recurring: input.recurring,
+      p_price_is_from: input.price_is_from,
+      p_includes: input.includes,
+      p_excludes: input.excludes,
+      p_internal_hours: input.internal_hours,
+      p_archived: input.archived,
+      p_sort_order: input.sort_order,
+    });
+  }
+
+  async setDealScoping(dealId: string, scoping: Partial<ScopingAnswers>): Promise<void> {
+    await this.#rpc<unknown>("deal_set_scoping", { p_deal_id: dealId, p_scoping: scoping });
+  }
+
+  saveProposalDraft(input: {
+    id: string | null;
+    dealId: string;
+    title: string;
+    summary: string;
+    timeline: string;
+    lines: ProposalLine[];
+    actor: string;
+  }): Promise<string> {
+    return this.#rpc<string>("proposal_save_draft", {
+      p_id: input.id,
+      p_deal_id: input.dealId,
+      p_title: input.title,
+      p_summary: input.summary,
+      p_timeline: input.timeline,
+      p_lines: input.lines,
+      p_actor: input.actor,
+    });
+  }
+
+  async sendProposal(id: string, tokenHash: string, validDays: number): Promise<void> {
+    await this.#rpc<unknown>("proposal_send", {
+      p_id: id,
+      p_token_hash: tokenHash,
+      p_valid_days: validDays,
+    });
+  }
+
+  reviseProposal(id: string, actor: string): Promise<string> {
+    return this.#rpc<string>("proposal_revise", { p_id: id, p_actor: actor });
   }
 
   async setLeadStatus(leadId: string, status: string): Promise<void> {

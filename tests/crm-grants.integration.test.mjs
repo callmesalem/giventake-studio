@@ -48,6 +48,7 @@ const READABLE = [
   "leads", "companies", "contacts", "deals", "notes", "tasks", "touchpoints", "agent_log",
   "pipeline_stages", "deal_stage_events", "approval_queue", "referral_partners", "referrals",
   "clients", "projects", "invoices", "campaigns", "newsletter_subscribers", "reviews",
+  "price_book_items", "proposals", "proposal_lines",
 ]; // prettier-ignore
 const WRITE_RPCS = [
   "crm_assign(text,text,uuid,uuid)",
@@ -58,6 +59,14 @@ const WRITE_RPCS = [
   "client_create(text,uuid,uuid,boolean,uuid)",
   "project_create(uuid,text)",
   "invoice_create(uuid,bigint,text,text,timestamp with time zone)",
+  "price_book_upsert(uuid,text,text,text,text,text,bigint,boolean,boolean,text[],text[],numeric,boolean,integer)",
+  "deal_set_scoping(uuid,jsonb)",
+  "proposal_save_draft(uuid,uuid,text,text,text,jsonb,text)",
+  "proposal_send(uuid,text,integer)",
+  "proposal_revise(uuid,text)",
+  "proposal_public(text)",
+  "proposal_mark_viewed(text)",
+  "proposal_decide(text,text,text,text,text)",
 ];
 
 try {
@@ -179,6 +188,121 @@ try {
   assert.equal(as("postgres", `select (next_action is null) || '|' || (next_action_due is null) from public.contacts where id='${leadContact}';`), "true|true"); // prettier-ignore
   refuses("service_role", `select public.contact_set_next_action('${leadContact}', '', now());`, /next action/); // prettier-ignore
   refuses("service_role", `select public.contact_set_next_action('${missing}', 'Call', now());`, /contact not found/); // prettier-ignore
+
+  // Price book: seeded, and writable only through price_book_upsert.
+  assert.equal(as("postgres", "select count(*) from public.price_book_items;"), "16");
+  assert.equal(as("postgres", "select unit_price_cents from public.price_book_items where key='site_contractor';"), "199900"); // prettier-ignore
+  const pb = as("service_role", "select public.price_book_upsert(null,'test_item','Test','','addon','each',1900,false,false,'{}','{}',null,false,99);"); // prettier-ignore
+  as("service_role", `select public.price_book_upsert('${pb}','test_item','Test','','addon','each',2900,false,false,'{}','{}',1.5,true,99);`); // prettier-ignore
+  assert.equal(as("postgres", `select unit_price_cents || '|' || archived from public.price_book_items where id='${pb}';`), "2900|true"); // prettier-ignore
+  refuses("service_role", "select public.price_book_upsert(null,'site_standard','Dup','','website','each',1,false,false,'{}','{}',null,false,0);", /duplicate key/); // prettier-ignore
+  refuses("service_role", "select public.price_book_upsert(null,'bad_cat','X','','nope','each',1,false,false,'{}','{}',null,false,0);", /check constraint/); // prettier-ignore
+  refuses("service_role", "select public.price_book_upsert(null,'neg','X','','addon','each',-1,false,false,'{}','{}',null,false,0);", /check constraint/); // prettier-ignore
+
+  // Proposals: draft → send → view → decide, with snapshots and one-way moves.
+  as(
+    "service_role",
+    `select public.deal_set_scoping('${deal}', '{"trade":true,"townPages":3}'::jsonb);`,
+  );
+  assert.equal(
+    as("postgres", `select scoping->>'townPages' from public.deals where id='${deal}';`),
+    "3",
+  );
+  const line = (name, cents, extra = "") =>
+    `{"item_key":null,"name":"${name}","description":"","quantity":1,"unit":"each","unit_price_cents":${cents},"recurring":false,"price_is_from":false,"includes":["A"],"excludes":["B"],"internal_hours":null,"needs_discovery":false,"discount_reason":${cents < 0 ? '"Intro"' : "null"}${extra}}`;
+  const draftOf = (title, lines) =>
+    as("service_role", `select public.proposal_save_draft(null,'${deal}','${title}','','', '[${lines.join(",")}]'::jsonb,'crm:test');`); // prettier-ignore
+  refuses(
+    "service_role",
+    `select public.proposal_send('${draftOf("Empty", [])}','hash-empty',30);`,
+    /no lines/,
+  );
+  refuses("service_role", `select public.proposal_send('${draftOf("Disc", [line("Site", 99900, ',"needs_discovery":true')])}','hash-disc',30);`, /discovery/); // prettier-ignore
+  refuses(
+    "service_role",
+    `select public.proposal_send('${draftOf("Neg", [line("Site", 99900), line("Discount", -200000)])}','hash-neg',30);`,
+    /total/,
+  ); // Review Focus 2
+  const p = draftOf("Website", [line("Site", 99900)]);
+  as("service_role", `select public.proposal_send('${p}','hash-pppp',30);`);
+  refuses(
+    "service_role",
+    `select public.proposal_save_draft('${p}','${deal}','Edit','','', '[]'::jsonb,'crm:test');`,
+    /draft/,
+  );
+  // Snapshot: price book edits never reach a sent proposal (Review Focus 5).
+  as(
+    "postgres",
+    "update public.price_book_items set unit_price_cents = 1 where key='site_standard';",
+  );
+  assert.equal(as("postgres", `select unit_price_cents from public.proposal_lines where proposal_id='${p}';`), "99900"); // prettier-ignore
+  const pub = JSON.parse(as("service_role", "select public.proposal_public('hash-pppp');"));
+  assert.equal(pub.state, "open");
+  assert.equal(pub.lines[0].internal_hours, undefined);
+  assert.equal(pub.created_by, undefined);
+  assert.equal(pub.token_hash, undefined);
+  assert.equal(as("service_role", "select public.proposal_public('nope') is null;"), "t");
+  as("service_role", "select public.proposal_mark_viewed('hash-pppp');");
+  assert.equal(as("postgres", `select status from public.proposals where id='${p}';`), "viewed");
+  refuses(
+    "service_role",
+    "select public.proposal_decide('hash-pppp','accept','own_it_typo','Alex','');",
+    /option/,
+  );
+  refuses(
+    "service_role",
+    "select public.proposal_decide('hash-pppp','accept','full','A','');",
+    /name/,
+  );
+  const first = JSON.parse(as("service_role", "select public.proposal_decide('hash-pppp','accept','own_it','Alex Fixture','');")); // prettier-ignore
+  assert.equal(first.status, "accepted");
+  assert.equal(first.changed, true);
+  assert.equal(
+    as("postgres", `select value_usd::int from public.deals where id='${deal}';`),
+    "999",
+  );
+  assert.equal(
+    as("postgres", `select stage from public.deals where id='${deal}';`),
+    "Lead arrives",
+  ); // never moves the stage
+  assert.equal(as("postgres", `select count(*) from public.tasks where source='proposal' and source_record_id='${p}';`), "1"); // prettier-ignore
+  // Replay is a no-op (Review Focus 4).
+  const replay = JSON.parse(as("service_role", "select public.proposal_decide('hash-pppp','decline','','Someone','late');")); // prettier-ignore
+  assert.equal(replay.status, "accepted");
+  assert.equal(replay.changed, false);
+  assert.equal(
+    as("postgres", `select accepted_option from public.proposals where id='${p}';`),
+    "own_it",
+  );
+  assert.equal(as("postgres", `select count(*) from public.tasks where source='proposal' and source_record_id='${p}';`), "1"); // prettier-ignore
+  // Own-it refused above $1,788.
+  const big = draftOf("Big", [line("Site", 199900)]);
+  as("service_role", `select public.proposal_send('${big}','hash-big',30);`);
+  refuses(
+    "service_role",
+    "select public.proposal_decide('hash-big','accept','own_it','Alex','');",
+    /own-it/,
+  );
+  // Revise supersedes; superseded and expired links cannot be accepted (Review Focus 3).
+  refuses("service_role", `select public.proposal_revise('${p}','crm:test');`, /revised/); // accepted can't be revised
+  const v2 = as("service_role", `select public.proposal_revise('${big}','crm:test');`);
+  assert.equal(as("postgres", `select status || '|' || (superseded_by = '${v2}') from public.proposals where id='${big}';`), "superseded|true"); // prettier-ignore
+  assert.equal(
+    as("postgres", `select count(*) from public.proposal_lines where proposal_id='${v2}';`),
+    "1",
+  );
+  assert.equal(
+    JSON.parse(as("service_role", "select public.proposal_public('hash-big');")).state,
+    "superseded",
+  );
+  assert.equal(JSON.parse(as("service_role", "select public.proposal_decide('hash-big','accept','full','Alex','');")).status, "superseded"); // prettier-ignore
+  as("service_role", `select public.proposal_send('${v2}','hash-v2-x',30);`);
+  as("postgres", `update public.proposals set valid_until = current_date - 1 where id='${v2}';`);
+  assert.equal(
+    JSON.parse(as("service_role", "select public.proposal_public('hash-v2-x');")).state,
+    "expired",
+  );
+  assert.equal(JSON.parse(as("service_role", "select public.proposal_decide('hash-v2-x','accept','full','Alex','');")).status, "expired"); // prettier-ignore
 
   as("service_role", `select public.crm_assign('deals','assigned_to','${deal}','${user}');`);
   assert.equal(as("postgres", `select assigned_to from public.deals where id='${deal}';`), user);

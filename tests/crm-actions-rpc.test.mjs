@@ -80,6 +80,81 @@ test("setContactNextAction goes through contact_set_next_action", async () => {
   assert.deepEqual(calls[1].body, { p_contact_id: LEAD, p_action: null, p_due: null });
 });
 
+test("upsertPriceBookItem goes through price_book_upsert", async () => {
+  const { actions, calls } = harness(() => json("99999999-9999-4999-8999-999999999999"));
+  const id = await actions.upsertPriceBookItem({
+    id: null,
+    key: "extra_page",
+    name: "Extra page",
+    description: "",
+    category: "addon",
+    unit: "page",
+    unit_price_cents: 14900,
+    recurring: false,
+    price_is_from: false,
+    includes: [],
+    excludes: [],
+    internal_hours: 1.5,
+    archived: false,
+    sort_order: 30,
+  });
+  assert.equal(id, "99999999-9999-4999-8999-999999999999");
+  assert.equal(calls[0].path, "/rest/v1/rpc/price_book_upsert");
+  assert.deepEqual(calls[0].body, {
+    p_id: null,
+    p_key: "extra_page",
+    p_name: "Extra page",
+    p_description: "",
+    p_category: "addon",
+    p_unit: "page",
+    p_unit_price_cents: 14900,
+    p_recurring: false,
+    p_price_is_from: false,
+    p_includes: [],
+    p_excludes: [],
+    p_internal_hours: 1.5,
+    p_archived: false,
+    p_sort_order: 30,
+  });
+});
+
+test("proposal RPCs keep their wire shape", async () => {
+  const { actions, calls } = harness(() => json("66666666-6666-4666-8666-666666666666"));
+  await actions.setDealScoping(DEAL, { trade: true });
+  const id = await actions.saveProposalDraft({
+    id: null,
+    dealId: DEAL,
+    title: "Website",
+    summary: "S",
+    timeline: "3 weeks",
+    lines: [],
+    actor: "crm:a@b",
+  });
+  await actions.sendProposal(id, "hash", 30);
+  await actions.reviseProposal(id, "crm:a@b");
+  assert.deepEqual(
+    calls.map((c) => c.path),
+    [
+      "/rest/v1/rpc/deal_set_scoping",
+      "/rest/v1/rpc/proposal_save_draft",
+      "/rest/v1/rpc/proposal_send",
+      "/rest/v1/rpc/proposal_revise",
+    ],
+  );
+  assert.deepEqual(calls[0].body, { p_deal_id: DEAL, p_scoping: { trade: true } });
+  assert.deepEqual(calls[1].body, {
+    p_id: null,
+    p_deal_id: DEAL,
+    p_title: "Website",
+    p_summary: "S",
+    p_timeline: "3 weeks",
+    p_lines: [],
+    p_actor: "crm:a@b",
+  });
+  assert.deepEqual(calls[2].body, { p_id: id, p_token_hash: "hash", p_valid_days: 30 });
+  assert.deepEqual(calls[3].body, { p_id: id, p_actor: "crm:a@b" });
+});
+
 test("assign goes through the crm_assign RPC", async () => {
   const { actions, calls } = harness();
   await actions.assign("deals", "assigned_to", DEAL, USER);

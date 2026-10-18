@@ -11,6 +11,7 @@
  * import() from the stripped server-function handlers, these stay off the
  * client graph entirely.
  */
+import type { PaymentOptionKey, ProposalLine } from "@/lib/proposals";
 import { requireCrmSession } from "@/lib/crm-auth.server";
 import { CrmRead } from "@/server/crm/read";
 import { createSupabaseDocumentStore } from "@/server/documents/store";
@@ -74,4 +75,44 @@ export async function documentOnDeal(store: DocumentStoreFor, dealId: string, do
   const document = documents.find((d) => d.id === documentId);
   if (!document) throw new Response("Not found", { status: 404 });
   return document;
+}
+
+/** The deal's accepted proposal and its lines, or null. Call only after forDeal(dealId). */
+export async function acceptedProposalForDeal(
+  dealId: string,
+  proposalId: string,
+): Promise<{
+  summary: string;
+  timeline: string;
+  option: PaymentOptionKey;
+  lines: ProposalLine[];
+} | null> {
+  // forDeal has already authorised the caller for this deal, so the admin actor is safe.
+  const read = new CrmRead({ ...config(), actor: { id: null, isAdmin: true } });
+  const p = await read.getProposal<Record<string, unknown>>(proposalId);
+  if (!p || String(p.deal_id) !== dealId || p.status !== "accepted" || !p.accepted_option) {
+    return null;
+  }
+  const rows = await read.listProposalLines<Record<string, unknown>>(proposalId);
+  const lines: ProposalLine[] = rows.map((r) => ({
+    item_key: r.item_key == null ? null : String(r.item_key),
+    name: String(r.name ?? ""),
+    description: String(r.description ?? ""),
+    quantity: Number(r.quantity) || 0,
+    unit: String(r.unit ?? "each") as ProposalLine["unit"],
+    unit_price_cents: Number(r.unit_price_cents) || 0,
+    recurring: Boolean(r.recurring),
+    price_is_from: Boolean(r.price_is_from),
+    includes: Array.isArray(r.includes) ? r.includes.map(String) : [],
+    excludes: Array.isArray(r.excludes) ? r.excludes.map(String) : [],
+    internal_hours: r.internal_hours == null ? null : Number(r.internal_hours),
+    needs_discovery: Boolean(r.needs_discovery),
+    discount_reason: r.discount_reason == null ? null : String(r.discount_reason),
+  }));
+  return {
+    summary: String(p.summary ?? ""),
+    timeline: String(p.timeline ?? ""),
+    option: String(p.accepted_option) as PaymentOptionKey,
+    lines,
+  };
 }

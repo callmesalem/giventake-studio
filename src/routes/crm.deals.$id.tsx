@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import {
   crmDeal,
@@ -9,6 +9,9 @@ import {
   addNote,
   convertDealToClient,
   setDealOutcome,
+  saveDealScoping,
+  buildProposalFromScoping,
+  type DealDetail,
 } from "@/lib/crm-data";
 
 /** Fixed list so lost reasons can be counted later; detail goes after a colon. */
@@ -39,6 +42,7 @@ import {
 } from "@/lib/demo-sites-data";
 import type { Gate } from "@/lib/crm-guards";
 import { cn } from "@/lib/utils";
+import { formatUsd } from "@/lib/proposals";
 import {
   Card,
   DetailHeader,
@@ -126,12 +130,16 @@ function Deal() {
               </Card>
             )}
 
+            <ScopeCard deal={deal} />
+            <ProposalsCard deal={deal} />
+
             <Card title="Documents">
               <Documents
                 dealId={deal.id}
                 vm={documents}
                 defaultClientName={deal.company?.name ?? deal.name}
                 defaultProjectName={deal.name}
+                acceptedProposalId={deal.proposals.find((x) => x.status === "accepted")?.id ?? null}
                 onChanged={reload}
               />
             </Card>
@@ -275,6 +283,15 @@ function Deal() {
                   </button>
                 ) : (
                   <Disclosure label="Mark lost">
+                    {(() => {
+                      const declined = deal.proposals.find((x) => x.status === "declined");
+                      return declined ? (
+                        <p className="mb-2 text-xs text-muted-foreground">
+                          The client declined proposal v{declined.version}. Check its page for their
+                          reason.
+                        </p>
+                      ) : null;
+                    })()}
                     <EntityForm
                       fields={[
                         {
@@ -405,12 +422,14 @@ function Documents({
   vm,
   defaultClientName,
   defaultProjectName,
+  acceptedProposalId,
   onChanged,
 }: {
   dealId: string;
   vm: DealDocumentsVM;
   defaultClientName: string;
   defaultProjectName: string;
+  acceptedProposalId: string | null;
   onChanged: () => void;
 }) {
   if (!vm.available) {
@@ -428,6 +447,7 @@ function Documents({
         dealId={dealId}
         defaultClientName={defaultClientName}
         defaultProjectName={defaultProjectName}
+        proposalId={acceptedProposalId}
         onGenerated={onChanged}
       />
       {vm.documents.length === 0 ? (
@@ -458,11 +478,13 @@ function GenerateSow({
   dealId,
   defaultClientName,
   defaultProjectName,
+  proposalId,
   onGenerated,
 }: {
   dealId: string;
   defaultClientName: string;
   defaultProjectName: string;
+  proposalId: string | null;
   onGenerated: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -490,6 +512,7 @@ function GenerateSow({
                 dealId,
                 clientLegalName: String(form.get("clientLegalName") ?? ""),
                 projectName: String(form.get("projectName") ?? ""),
+                proposalId,
               },
             });
             if (result.ok) {
@@ -1060,5 +1083,168 @@ function DemoSitePanel({ demo }: { demo: DemoSiteVM }) {
         )}
       </p>
     </div>
+  );
+}
+
+type DealData = DealDetail;
+
+const YES_NO = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+];
+
+function ScopeCard({ deal }: { deal: DealData }) {
+  const s = deal.scoping;
+  const yn = (b: boolean) => (b ? "yes" : "no");
+  return (
+    <Card title="Scope">
+      <Disclosure label="Edit scope" openLabel="Scope this job">
+        <EntityForm
+          columns={2}
+          fields={[
+            {
+              name: "trade",
+              label: "Trade or home-service business?",
+              type: "select",
+              options: YES_NO,
+            },
+            {
+              name: "replacing",
+              label: "Replacing an existing site?",
+              type: "select",
+              options: YES_NO,
+            },
+            { name: "extraPages", label: "Pages beyond the included 5", type: "number" },
+            { name: "townPages", label: "Towns that need their own page", type: "number" },
+            {
+              name: "copywriting",
+              label: "Who writes the words?",
+              type: "select",
+              options: [
+                { value: "client", label: "The client" },
+                { value: "us", label: "Us" },
+              ],
+            },
+            {
+              name: "quoteForm",
+              label: "Quote form with photos? (standard sites)",
+              type: "select",
+              options: YES_NO,
+            },
+            {
+              name: "booking",
+              label: "Booking",
+              type: "select",
+              options: [
+                { value: "none", label: "None" },
+                { value: "embed", label: "Simple embed" },
+                { value: "system", label: "Full booking system" },
+              ],
+            },
+            { name: "payments", label: "Take payments online?", type: "select", options: YES_NO },
+            {
+              name: "needsGbp",
+              label: "Needs Google Business Profile setup?",
+              type: "select",
+              options: YES_NO,
+            },
+            { name: "blog", label: "Blog?", type: "select", options: YES_NO },
+            {
+              name: "automation",
+              label: "Repetitive process eating their time?",
+              type: "select",
+              options: YES_NO,
+            },
+            {
+              name: "afterLaunch",
+              label: "After launch",
+              type: "select",
+              options: [
+                { value: "nothing", label: "Nothing" },
+                { value: "hosting", label: "Hosting only" },
+                { value: "care", label: "Care plan" },
+              ],
+            },
+          ]}
+          values={{
+            trade: yn(s.trade),
+            replacing: yn(s.replacing),
+            extraPages: String(s.extraPages),
+            townPages: String(s.townPages),
+            copywriting: s.copywriting,
+            quoteForm: yn(s.quoteForm),
+            booking: s.booking,
+            payments: yn(s.payments),
+            needsGbp: yn(!s.gbpSetUp),
+            blog: yn(s.blog),
+            automation: yn(s.automation),
+            afterLaunch: s.afterLaunch,
+          }}
+          submitLabel="Save scope"
+          onSubmit={(data) => saveDealScoping({ data: { ...data, dealId: deal.id } })}
+        />
+      </Disclosure>
+    </Card>
+  );
+}
+
+function ProposalsCard({ deal }: { deal: DealData }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  async function build() {
+    setBusy(true);
+    setError(null);
+    try {
+      const { id, skipped } = await buildProposalFromScoping({ data: { dealId: deal.id } });
+      await navigate({
+        to: "/crm/proposals/$id",
+        params: { id },
+        search: { skipped: skipped.join(",") },
+      });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not build a proposal.");
+      setBusy(false);
+    }
+  }
+  return (
+    <Card title={`Proposals (${deal.proposals.length})`}>
+      <button
+        type="button"
+        onClick={build}
+        disabled={busy}
+        className="mb-3 rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+      >
+        {busy ? "Building…" : "Build proposal from scope"}
+      </button>
+      {error && (
+        <p role="alert" className="mb-2 text-xs font-medium text-red-600">
+          {error}
+        </p>
+      )}
+      {deal.proposals.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No proposals yet. Save the scope first, then build one.
+        </p>
+      ) : (
+        <ul className="space-y-2 text-sm">
+          {deal.proposals.map((p) => (
+            <li key={p.id} className="flex items-center justify-between gap-2">
+              <a
+                href={`/crm/proposals/${p.id}`}
+                className="font-medium underline-offset-2 hover:underline"
+              >
+                v{p.version} · {p.title}
+              </a>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                {formatUsd(p.one_time_cents)}
+                {p.monthly_cents > 0 && ` + ${formatUsd(p.monthly_cents)}/mo`}
+                <Badge value={p.status} />
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
